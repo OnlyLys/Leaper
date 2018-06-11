@@ -24,25 +24,25 @@ When the insertion of any of the trigger pairs are detected, the extension will 
 
 Move the cursor to just past the closing character of the nearest pair that is being tracked. If there are multiple nested pairs, the leap will only be out of the nearest one.
 
-This keybinding is lower in priority than accepting suggestions and jumping to next tabstops. If you should like to jump immediately, use `Shift` + `Tab` (Priority Leap) instead.
+This keybinding is lower in priority than accepting suggestions and overwriting active text selection. If you should like to jump immediately, use `Shift` + `Tab` (Priority Leap) instead.
 
 ### `Escape` - Clear Tracked Pairs
 
 Clear the list of pairs that are being tracked by the extension.
 
-This keybinding is lower in priority than closing suggestion tooltips and exiting snippet mode. To clear tracked pairs immediately, use `Shift` + `Escape` (Priority Clear Tracked Pairs) instead.
+This keybinding is lower in priority than closing suggestion tooltips. To clear tracked pairs immediately, use `Shift` + `Escape` (Priority Clear Tracked Pairs) instead.
 
 ### `Shift` + `Tab` - Priority Leap
 
 Leap out of the nearest pair that is being tracked.
 
-This keybinding does the same thing as `Tab` (Leap) but has higher priority than accepting suggestions and jumping to next tabstops.
+This keybinding does the same thing as `Tab` (Leap) but has higher priority than accepting suggestions and overwriting active text selection.
 
 ### `Shift` + `Escape` - Priority Clear Tracked Pairs
 
 Clear the list of tracked pairs that are being tracked by the extension.
 
-This keybinding does the same thing as `Escape` (Clear Tracked Pairs) but has higher priority than closing suggestion tooltips and exiting snippet mode.
+This keybinding does the same thing as `Escape` (Clear Tracked Pairs) but has higher priority than closing suggestion tooltips.
 
 ## Extension Contributions
 

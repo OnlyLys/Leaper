@@ -64,7 +64,7 @@
             {
                 "key": "tab",
                 "command": "leaper.leap",   
-                "when": "leaper.inLeaperMode && leaper.canLeap && editorTextFocus && !editorHasSelection && !editorTabMovesFocus && !suggestWidgetVisible && !inSnippetMode && !config.emmet.triggerExpansionOnTab"            
+                "when": "leaper.inLeaperMode && leaper.canLeap && editorTextFocus && !editorHasSelection && !editorTabMovesFocus && !suggestWidgetVisible && !config.emmet.triggerExpansionOnTab"            
             },
             {
                 "key": "tab",
@@ -84,7 +84,7 @@
             {
                 "key": "escape",
                 "command": "leaper.escapeLeaperMode",
-                "when": "leaper.inLeaperMode && editorTextFocus && !editorHasSelection && !inSnippetMode && !suggestWidgetVisible && !parameterHintsVisible"
+                "when": "leaper.inLeaperMode && editorTextFocus && !editorHasSelection && !suggestWidgetVisible && !parameterHintsVisible"
             },
             {
                 "key": "shift+escape",
