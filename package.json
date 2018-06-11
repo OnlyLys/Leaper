@@ -14,9 +14,6 @@
     "bugs": {
         "url": "https://github.com/OnlyLys/Leaper/issues"
     },
-    "engines": {
-        "vscode": "^1.23.0"
-    },
     "categories": [
         "Other"
     ],
@@ -92,6 +89,9 @@
                 "when": "leaper.inLeaperMode && editorTextFocus"
             }
         ]
+    },
+    "engines": {
+        "vscode": "^1.23.0"
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
