@@ -1,0 +1,109 @@
+{
+    "name": "leaper",
+    "displayName": "Leaper",
+    "description": "`Tab` to leap out of autoclosing pairs like braces and quotes.",
+    "version": "0.1.0",
+    "publisher": "OnlyLys",
+    "license": "MIT",
+    "icon": "images/icon.png",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/OnlyLys/Leaper.git"
+    },
+    "homepage": "https://github.com/OnlyLys/Leaper",
+    "bugs": {
+        "url": "https://github.com/OnlyLys/Leaper/issues"
+    },
+    "engines": {
+        "vscode": "^1.23.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "keywords": [
+        "Leap",
+        "Jump",
+        "Pairs",
+        "Out",
+        "Past",
+        "Braces",
+        "Quotes",
+        "Brackets",
+        "Parentheses"
+    ],
+    "preview": true,
+    "activationEvents": [
+        "*"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "Leaper Configuration",
+            "properties": {
+                "leaper.customDecorationOptions": {
+                    "type": "object",
+                    "default": null,
+                    "description": "[Leaper] Customize the decoration of the closing character of the pair."
+                },
+                "leaper.decorateOnlyNearestPair": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "[Leaper] If `false`, will decorate all pairs instead of just the nearest one."
+                },
+                "leaper.languageRules": {
+                    "type": "object",
+                    "default": {
+                        "*": ["()", "[]", "{}", "''", "\"\"", "``"]
+                    },
+                    "description": "[Leaper] Set the pairs that the extension is enabled for on a per language basis."
+                }
+            }
+        },
+        "keybindings": [
+            {
+                "key": "tab",
+                "command": "leaper.leap",   
+                "when": "leaper.inLeaperMode && leaper.canLeap && editorTextFocus && !editorHasSelection && !editorTabMovesFocus && !suggestWidgetVisible && !inSnippetMode && !config.emmet.triggerExpansionOnTab"            
+            },
+            {
+                "key": "tab",
+                "command": "leaper.acceptSelectedSuggestion",
+                "when": "leaper.inLeaperMode && editorTextFocus && suggestWidgetVisible && !editorTabMovesFocus"
+            },
+            {
+                "key": "shift+tab",
+                "command": "leaper.leap",
+                "when": "leaper.inLeaperMode && leaper.canLeap && editorTextFocus && !editorTabMovesFocus"
+            },
+            {
+                "key": "enter",
+                "command": "leaper.acceptSelectedSuggestion",
+                "when": "leaper.inLeaperMode && acceptSuggestionOnEnter && editorTextFocus && suggestWidgetVisible && !editorTabMovesFocus"
+            },
+            {
+                "key": "escape",
+                "command": "leaper.escapeLeaperMode",
+                "when": "leaper.inLeaperMode && editorTextFocus && !editorHasSelection && !inSnippetMode && !suggestWidgetVisible && !parameterHintsVisible"
+            },
+            {
+                "key": "shift+escape",
+                "command": "leaper.escapeLeaperMode",
+                "when": "leaper.inLeaperMode && editorTextFocus"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "devDependencies": {
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.6",
+        "tslint": "^5.8.0",
+        "@types/node": "^7.0.43",
+        "@types/mocha": "^2.2.42"
+    }
+}
