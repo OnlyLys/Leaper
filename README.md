@@ -20,7 +20,7 @@ When the insertion of any of the trigger pairs are detected, the extension will 
 
 ## Extension Keybindings
 
-### `Tab` - Execute Leap
+### `Tab` - Leap
 
 Move the cursor to just past the closing character of the nearest pair that is being tracked. If there are multiple nested pairs, the leap will only be out of the nearest one.
 
@@ -36,7 +36,7 @@ This keybinding is lower in priority than closing suggestion tooltips and exitin
 
 Leap out of the nearest pair that is being tracked.
 
-This keybinding does the same thing as `Tab` (Execute Leap) but has higher priority than accepting suggestions and jumping to next tabstops.
+This keybinding does the same thing as `Tab` (Leap) but has higher priority than accepting suggestions and jumping to next tabstops.
 
 ### `Shift` + `Escape` - Priority Clear Tracked Pairs
 
