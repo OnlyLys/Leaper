@@ -71,7 +71,7 @@
             {
                 "key": "shift+tab",
                 "command": "leaper.leap",
-                "when": "leaper.inLeaperMode && leaper.hasLineOfSight && editorTextFocus && !editorTabMovesFocus"
+                "when": "leaper.inLeaperMode && editorTextFocus && !editorTabMovesFocus"
             },
             {
                 "key": "enter",
