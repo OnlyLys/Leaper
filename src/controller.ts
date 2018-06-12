@@ -46,7 +46,7 @@ export class Controller {
         this.startSettingsChangeWatcher();
         this.registerLeapCommand();
         this.registerEscapeLeaperModeCommand();        
-        this.acceptSelectedSuggestionCommand();
+        this.registerAcceptSelectedSuggestionCommand();
     }
 
     /** To be called when the extension is shut down. */
@@ -184,7 +184,7 @@ export class Controller {
      * insertion when `leaper.inLeaperMode` is active to ensure that pairs are not erroneously removed 
      * after accepting suggestions.
      */
-    private acceptSelectedSuggestionCommand(): void {
+    private registerAcceptSelectedSuggestionCommand(): void {
         const disposable = commands.registerCommand(`${EXT_IDENT}.acceptSelectedSuggestion`, (_) => {
             // Suggested text insertions involve moving the cursor to the end of the text *before* the 
             // text is inserted. This is unlike typical text insertions (such as typing text into
