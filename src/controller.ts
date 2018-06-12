@@ -66,7 +66,7 @@ export class Controller {
             // of the pairs within the document.
             this.pairs.updateFromContentChanges(event.contentChanges);
             setInLeaperModeContext(!this.pairs.isEmpty);
-            setCanLeapContext(this.pairs.canLeap());
+            setHasLineOfSightContext(this.pairs.canLeap());
         });
         this.disposables.push(disposable);
     }
@@ -89,7 +89,7 @@ export class Controller {
             // The cursor moving out of a pair removes it from tracking.
             this.pairs.updateFromCursorChange();
             setInLeaperModeContext(!this.pairs.isEmpty);
-            setCanLeapContext(this.pairs.canLeap());
+            setHasLineOfSightContext(this.pairs.canLeap());
         });
         this.disposables.push(disposable);
     }
@@ -206,7 +206,7 @@ export class Controller {
     private escapeLeaperMode(): void {
         this.pairs.clear();
         setInLeaperModeContext(false);
-        setCanLeapContext(false);
+        setHasLineOfSightContext(false);
         this.cursorChangeWatcherIgnoreCount = 0;
     }
 
@@ -225,12 +225,12 @@ function setInLeaperModeContext(enable: boolean): void {
 }
 
 /**
- * Set the `leaper.canLeap` context. It signals that there is a pair that is possible to jump out of 
- * from the current cursor position.
+ * Set the `leaper.hasLineOfSight` context. It signals that there is line of sight to a pair from the
+ * current cursor position.
  * 
  * @param enable When `true`, the context is active. Otherwise the context is inactive.
  */
-function setCanLeapContext(enable: boolean): void {
+function setHasLineOfSightContext(enable: boolean): void {
     // Note: `setContext` is an undocumented feature, for more info: https://github.com/Microsoft/vscode/issues/10471
-    commands.executeCommand('setContext', 'leaper.canLeap', enable);
+    commands.executeCommand('setContext', 'leaper.hasLineOfSight', enable);
 }
