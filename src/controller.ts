@@ -66,7 +66,7 @@ export class Controller {
             // of the pairs within the document.
             this.pairs.updateFromContentChanges(event.contentChanges);
             setInLeaperModeContext(!this.pairs.isEmpty);
-            setHasLineOfSightContext(this.pairs.canLeap());
+            setHasLineOfSightContext(this.pairs.hasLineOfSight);
         });
         this.disposables.push(disposable);
     }
@@ -89,7 +89,7 @@ export class Controller {
             // The cursor moving out of a pair removes it from tracking.
             this.pairs.updateFromCursorChange();
             setInLeaperModeContext(!this.pairs.isEmpty);
-            setHasLineOfSightContext(this.pairs.canLeap());
+            setHasLineOfSightContext(this.pairs.hasLineOfSight);
         });
         this.disposables.push(disposable);
     }

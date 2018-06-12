@@ -30,6 +30,28 @@ export class Pairs {
         return this.list.length < 1;
     }
 
+    /** 
+     * Check if there is a line of sight from the current cursor position to the nearest available pair.
+     * Having line of sight means having no non-whitespace text between the cursor position and the
+     * closing character of the pair.
+     *
+     * @return `false` if
+     * - There is non-whitespace text between the cursor and the closing character of the nearest pair.
+     * - There are no pairs currently being tracked.
+     * 
+     * `true` otherwise.
+     */
+    get hasLineOfSight(): boolean {
+        if (!window.activeTextEditor || this.list.length < 1) {
+            return false;    // False if there no pairs being tracked
+        }
+        const cursorPos: Position = window.activeTextEditor.selection.active;
+        const textInBetween: string = window.activeTextEditor.document.getText(
+            new Range(cursorPos, this.list[this.list.length - 1].close)
+        );
+        return textInBetween.trim().length === 0;
+    }
+
     /**
      * Construct a new container of `Pair`s, which each represent pairs within the document that are 
      * being tracked.
@@ -55,26 +77,6 @@ export class Pairs {
             decorate(this.list, this.settings.decorateOnlyNearestPair);
         }
         return pair;
-    }
-
-    /** 
-     * Check if it's possible to leap out of the nearest pair from the current cursor position.
-     *
-     * @return `false` if
-     * - There is non-whitespace text between the cursor and the closing character of the nearest pair.
-     * - There are no pairs currently being tracked.
-     * 
-     * `true` otherwise.
-     */
-    public canLeap(): boolean {
-        if (!window.activeTextEditor || !this.list.length) {
-            return false;    // False if there no pairs being tracked
-        }
-        const cursorPos: Position = window.activeTextEditor.selection.active;
-        const textInBetween: string = window.activeTextEditor.document.getText(
-            new Range(cursorPos, this.list[this.list.length - 1].close)
-        );
-        return textInBetween.trim().length === 0;
     }
 
     /** 
