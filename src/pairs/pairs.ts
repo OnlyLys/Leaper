@@ -233,14 +233,14 @@ function getNewPair(contentChanges: TextDocumentContentChangeEvent[], languageRu
     decorationOptions: DecorationRenderOptions): Pair | undefined 
 {  
     // Case 1: Regular autoclosing pair. It is registered as a single content change with a text length 
-    // of two.
-    if (contentChanges.length === 1 && contentChanges[0].text.length === 2) {
-        const { range: { start: openPos }, text } = contentChanges[0];
+    // of two and an empty range.
+    const { range, text } = contentChanges[0];
+    if (contentChanges.length === 1 && text.length === 2 && range.isEmpty) {
         for (const rule of languageRule) {
             if (text === rule) {
                 return new Pair(
-                    openPos,
-                    openPos.translate({ characterDelta: 1 }),
+                    range.start,
+                    range.start.translate({ characterDelta: 1 }),
                     decorationOptions
                 );
             }
