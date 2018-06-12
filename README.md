@@ -22,27 +22,31 @@ When the insertion of any of the trigger pairs are detected, the extension will 
 
 ### `Tab` - Leap
 
-Move the cursor to just past the closing character of the nearest pair that is being tracked. If there are multiple nested pairs, the leap will only be out of the nearest one.
+Move the cursor to just past the closing character of the nearest available pair, **provided there is line of sight to the closing character of the pair**. If there is non-whitespace text between the cursor and the closing character then there is no line of sight.
 
-This keybinding is lower in priority than accepting suggestions and overwriting active text selection. If you should like to jump immediately, use `Shift` + `Tab` (Priority Leap) instead.
+If there are multiple nested pairs, a single leap command will only jump out of the nearest one.
+
+This keybinding is lower in priority than accepting suggestions and overwriting active text selection, but is higher priority than jumping to next tabstop. If you would like to jump immediately, use `Shift` + `Tab` (Priority Leap) instead.
+
+### `Shift` + `Tab` - Priority Leap
+
+Leap out of the nearest available pair. There is no need to have line of sight to the closing character of the pair.
+
+![Jump Past Text With Priority Leap](images/jump-past-text.gif) 
+
+This keybinding does the same thing as `Tab` (Leap) but has higher priority than accepting suggestions and overwriting active text selection.
 
 ### `Escape` - Clear Tracked Pairs
 
 Clear the list of pairs that are being tracked by the extension.
 
-This keybinding is lower in priority than closing suggestion tooltips. To clear tracked pairs immediately, use `Shift` + `Escape` (Priority Clear Tracked Pairs) instead.
-
-### `Shift` + `Tab` - Priority Leap
-
-Leap out of the nearest pair that is being tracked.
-
-This keybinding does the same thing as `Tab` (Leap) but has higher priority than accepting suggestions and overwriting active text selection.
+This keybinding is lower in priority than closing hover tooltips (like suggestion and parameter hints), cancelling text selection and leaving snippet mode. To clear tracked pairs immediately, use `Shift` + `Escape` (Priority Clear Tracked Pairs) instead.
 
 ### `Shift` + `Escape` - Priority Clear Tracked Pairs
 
 Clear the list of tracked pairs that are being tracked by the extension.
 
-This keybinding does the same thing as `Escape` (Clear Tracked Pairs) but has higher priority than closing suggestion tooltips.
+This keybinding does the same thing as `Escape` (Clear Tracked Pairs) but has higher priority than closing hover tooltips, cancelling text selection and leaving snippet mode.
 
 ## Extension Contributions
 
