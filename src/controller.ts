@@ -18,6 +18,9 @@ export class Controller {
     /** The cursor change watcher will ignore the next n events where n is the value of this property. */
     private cursorChangeWatcherIgnoreCount: number = 0;
     
+    /** Flag that is `true` if the extension is disabled for the current language. Otherwise `false`. */
+    private isEnabled: boolean;
+
     /** 
      * Start a new controller that begins tracking for any detected pairs. The user can then press 
      * leap out of any of the pairs that are being tracked.
@@ -27,23 +30,10 @@ export class Controller {
     public constructor() {
         const settings: Settings = Settings.getLatest();
         this.pairs = new Pairs(settings);
-        if (settings.languageRule.length !== 0) {
-            // Only start the watchers if there are rules for this language.
-            this.startWatchersAndCommands();
-        } else {
-            // If the langauge rule is empty, it means the user has turned off the extension for this 
-            // language, so we should not start the watchers and commands for it.
-            //
-            // Instead, we start a 'restart watcher' that can start them at a later time.
-            this.startRestartWatcher();
-        }
-    }
-
-    /** Registering the watchers and commands of the Controller. */
-    private startWatchersAndCommands(): void {
+        this.isEnabled = settings.isEnabled;
         this.startContentChangeWatcher();
         this.startCursorChangeWatcher();
-        this.startSettingsChangeWatcher();
+        this.startSettingsAndActiveTextEditorChangeWatchers();
         this.registerLeapCommand();
         this.registerEscapeLeaperModeCommand();        
         this.registerAcceptSelectedSuggestionCommand();
@@ -59,7 +49,7 @@ export class Controller {
     /** Start a watcher that monitors for any content changes in the currently active document. */
     private startContentChangeWatcher(): void {
         const disposable = workspace.onDidChangeTextDocument( (event) => {
-            if (!window.activeTextEditor || event.document !== window.activeTextEditor.document) {
+            if (!this.isEnabled || !window.activeTextEditor || event.document !== window.activeTextEditor.document) {
                 return;
             }
             // When there are content changes, update the list of `Pair`s to reflect the new position 
@@ -74,8 +64,8 @@ export class Controller {
     /** Start a watcher that monitors for any change in cursor position. */
     private startCursorChangeWatcher(): void {
         const disposable = window.onDidChangeTextEditorSelection( (event) => {
-            if (!window.activeTextEditor || event.textEditor !== window.activeTextEditor) {
-                return;    
+            if (!this.isEnabled || !window.activeTextEditor || event.textEditor !== window.activeTextEditor) {
+                return;
             }
             if (this.cursorChangeWatcherIgnoreCount > 0) {
                 this.cursorChangeWatcherIgnoreCount -= 1;
@@ -95,64 +85,31 @@ export class Controller {
     }
 
     /** 
-     * Start a watcher that monitors:
-     * - For changes in the configuration that affect the extension. 
-     * - For active text editor change.
+     * Start a watcher that monitors for:
+     * - Settings changes relevant to the extension.
+     * - Changes in the active text editor. 
+     * 
+     * The new language rules are loaded upon any of those changes.
      */
-    private startSettingsChangeWatcher(): void {
-        const configurationWatcher = workspace.onDidChangeConfiguration( (event) => {
+    private startSettingsAndActiveTextEditorChangeWatchers(): void {
+        const disposable1: Disposable = workspace.onDidChangeConfiguration( (event) => {
             if (event.affectsConfiguration(`${EXT_IDENT}`)) {
-                internalFn();
+                loadNewLanguageRule();
             }
         });
-        const activeTextEditorChangeWatcher = window.onDidChangeActiveTextEditor( (_) => 
-            internalFn()
+        const disposable2 = window.onDidChangeActiveTextEditor( (_) => 
+            loadNewLanguageRule()
         );
-        this.disposables.push(configurationWatcher, activeTextEditorChangeWatcher);
+        this.disposables.push(disposable1, disposable2);
 
-        // If the configuration or active text editor is changed, we load the new language rules.
-        var internalFn = () => {
+        var loadNewLanguageRule = () => {
             this.escapeLeaperMode();        // Clear all internal state.
             const latestSettings = Settings.getLatest();
-            if (latestSettings.languageRule.length < 1) {
-                // If there are no language rules for this language, we unregister the watchers and 
-                // commands. We start a restart watcher that can revive them later.
-                this.dispose();
-                this.startRestartWatcher();
-            } else {
-                // Otherwise just update pairs with the new language rule.
-                this.pairs.updateCachedSettings(latestSettings);
-            }
+            this.pairs.updateCachedSettings(latestSettings);
+            this.isEnabled = latestSettings.isEnabled;
         };
     }
-
-    /** 
-     * Start a restart watcher that will revive the controller when the user switches back to a 
-     * language that the extension is enabled for.
-     */
-    private startRestartWatcher(): void {
-        const watcher1 = workspace.onDidChangeConfiguration( (event) => {
-            if (event.affectsConfiguration(`${EXT_IDENT}`)) {
-                attemptRestart();
-            }
-        });
-        const watcher2 = window.onDidChangeActiveTextEditor( (_) =>  {
-            attemptRestart();
-        });
-
-        var attemptRestart = () => {
-            this.escapeLeaperMode();        // Clear all internal state.
-            const latestSettings: Settings = Settings.getLatest();
-            // Only restart the watchers and commands if there are langauge rules for the current language.
-            if (latestSettings.languageRule.length > 0) {
-                this.pairs.updateCachedSettings(latestSettings);
-                this.startWatchersAndCommands();
-                watcher1.dispose();  
-                watcher2.dispose();
-            }
-        };
-    }
-
+    
     /** Register a command that allows users to leap out of the nearest pair. */
     private registerLeapCommand(): void {
         const disposable = commands.registerCommand(`${EXT_IDENT}.leap`, (_) => {
