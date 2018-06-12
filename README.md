@@ -26,7 +26,7 @@ Move the cursor to just past the closing character of the nearest available pair
 
 If there are multiple nested pairs, a single leap command will only jump out of the nearest one.
 
-This keybinding is lower in priority than accepting suggestions and overwriting active text selection, but is higher priority than jumping to next tabstop.
+When there is line of sight, this keybinding is lower in priority than accepting suggestions and overwriting active text selection, but is higher priority than jumping to next tabstop.
 
 ### `Escape` - Clear Tracked Pairs
 
