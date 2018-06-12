@@ -26,27 +26,13 @@ Move the cursor to just past the closing character of the nearest available pair
 
 If there are multiple nested pairs, a single leap command will only jump out of the nearest one.
 
-This keybinding is lower in priority than accepting suggestions and overwriting active text selection, but is higher priority than jumping to next tabstop. If you would like to jump immediately, use `Shift` + `Tab` (Priority Leap) instead.
-
-### `Shift` + `Tab` - Priority Leap
-
-Leap out of the nearest available pair. There is no need to have line of sight to the closing character of the pair.
-
-![Jump Past Text With Priority Leap](images/jump-past-text.gif) 
-
-This keybinding does the same thing as `Tab` (Leap) but has higher priority than accepting suggestions and overwriting active text selection.
+This keybinding is lower in priority than accepting suggestions and overwriting active text selection, but is higher priority than jumping to next tabstop.
 
 ### `Escape` - Clear Tracked Pairs
 
 Clear the list of pairs that are being tracked by the extension.
 
-This keybinding is lower in priority than closing hover tooltips (like suggestion and parameter hints), cancelling text selection and leaving snippet mode. To clear tracked pairs immediately, use `Shift` + `Escape` (Priority Clear Tracked Pairs) instead.
-
-### `Shift` + `Escape` - Priority Clear Tracked Pairs
-
-Clear the list of tracked pairs that are being tracked by the extension.
-
-This keybinding does the same thing as `Escape` (Clear Tracked Pairs) but has higher priority than closing hover tooltips, cancelling text selection and leaving snippet mode.
+This keybinding is lower in priority than closing hover tooltips (like suggestion and parameter hints), cancelling text selection and leaving snippet mode.
 
 ## Extension Contributions
 

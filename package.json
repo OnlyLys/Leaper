@@ -69,11 +69,6 @@
                 "when": "leaper.inLeaperMode && editorTextFocus && suggestWidgetVisible && !editorTabMovesFocus"
             },
             {
-                "key": "shift+tab",
-                "command": "leaper.leap",
-                "when": "leaper.inLeaperMode && editorTextFocus && !editorTabMovesFocus"
-            },
-            {
                 "key": "enter",
                 "command": "leaper.acceptSelectedSuggestion",
                 "when": "leaper.inLeaperMode && acceptSuggestionOnEnter && editorTextFocus && suggestWidgetVisible && !editorTabMovesFocus"
@@ -81,12 +76,7 @@
             {
                 "key": "escape",
                 "command": "leaper.escapeLeaperMode",
-                "when": "leaper.inLeaperMode && editorTextFocus && !editorHasSelection && !inSnippetMode && !suggestWidgetVisible && !parameterHintsVisible"
-            },
-            {
-                "key": "shift+escape",
-                "command": "leaper.escapeLeaperMode",
-                "when": "leaper.inLeaperMode && editorTextFocus"
+                "when": "leaper.inLeaperMode && editorTextFocus && !editorHasSelection && !suggestWidgetVisible && !parameterHintsVisible"
             }
         ]
     },
