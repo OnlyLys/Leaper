@@ -52,6 +52,11 @@ export class Pairs {
         return textInBetween.trim().length === 0;
     }
 
+    /** @return (If any) a reference to the most nested `Pair` in the list. */
+    get mostNested(): Pair | undefined {
+        return this.list[this.list.length - 1];
+    }
+
     /**
      * Construct a new container of `Pair`s, which each represent pairs within the document that are 
      * being tracked.
@@ -66,17 +71,6 @@ export class Pairs {
     public clear(): void {
         this.list.forEach((pair) => pair.undecorate());
         this.list.length = 0;
-    }
-
-    /** @returns (If any) the most nested `Pair` in the list. */
-    public pop(): Pair | undefined {
-        const pair: Pair | undefined = this.list.pop();
-        // If pair exists then remove its decoration before returning.
-        if (pair) {
-            pair.undecorate();
-            decorateList(this.list, this.settings.decorateOnlyNearestPair);
-        }
-        return pair;
     }
 
     /** 

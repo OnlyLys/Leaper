@@ -116,9 +116,8 @@ export class Controller {
             if (!window.activeTextEditor) {
                 return;
             }
-            const pair: Pair | undefined = this.pairs.pop();   // Get nearest pair (if any)
+            const pair: Pair | undefined = this.pairs.mostNested;   // Get nearest pair (if any)
             if (pair) {
-                this.cursorChangeWatcherIgnoreCount += 1;   // Ignore cursor change event from leap.
                 const posPastClose: Position = pair.close.translate({ characterDelta: 1 });
                 window.activeTextEditor.selection = new Selection(posPastClose, posPastClose);
                 // Reveal the range so that the text editor's view follows the cursor after the leap.
