@@ -81,7 +81,7 @@
             {
                 "key": "escape",
                 "command": "leaper.escapeLeaperMode",
-                "when": "leaper.inLeaperMode && editorTextFocus && !editorHasSelection && !suggestWidgetVisible && !parameterHintsVisible"
+                "when": "leaper.inLeaperMode && editorTextFocus && !editorHasSelection && !inSnippetMode && !suggestWidgetVisible && !parameterHintsVisible"
             },
             {
                 "key": "shift+escape",
