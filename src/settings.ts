@@ -17,10 +17,20 @@ export class Settings {
     /* The decoration options for the closing character of a pair. */
     public readonly decorationOptions: DecorationRenderOptions = getDecorationOptions();
 
-    /* Flag for whether decoration should apply to only the most nested pair or all of them */ 
+    /* Flag for whether decoration should apply to only the most nested pair or all of them. */ 
     public readonly decorateOnlyNearestPair: boolean = getDecorateOnlyNearestPairFlag();
 
     private constructor() {}
+
+    /**
+     * Queries if the extension is enabled for the current language by checking if the language rule
+     * is non-empty.
+     * 
+     * @return `true` if the extension is enabled for the current language. Otherwise `false`.
+     */
+    get isEnabled(): boolean {
+        return this.languageRule.length > 0;
+    }
 
     /**
      * Get the latest settings from the default/global/workspace configuration.
