@@ -74,7 +74,7 @@ export class Pairs {
         // If pair exists then remove its decoration before returning.
         if (pair) {
             pair.undecorate();
-            decorate(this.list, this.settings.decorateOnlyNearestPair);
+            decorateList(this.list, this.settings.decorateOnlyNearestPair);
         }
         return pair;
     }
@@ -101,9 +101,9 @@ export class Pairs {
         }
         // Update decorations only if there were `Pair`s removed or added.
         if (removed.length > 0 || newPair) {
-            undecorate(removed);
-            undecorate(retained);
-            decorate(retained, this.settings.decorateOnlyNearestPair);
+            undecorateList(removed);
+            undecorateList(retained);
+            decorateList(retained, this.settings.decorateOnlyNearestPair);
         }
         this.list = retained;
     }
@@ -130,8 +130,8 @@ export class Pairs {
         }
         // Update decorations only if `Pair`s were removed.
         if (removed.length > 0) {
-            undecorate(removed);
-            decorate(retained, this.settings.decorateOnlyNearestPair);
+            undecorateList(removed);
+            decorateList(retained, this.settings.decorateOnlyNearestPair);
         }
         this.list = retained;
     }
@@ -262,7 +262,7 @@ function getNewPair(contentChanges: TextDocumentContentChangeEvent[], languageRu
  * @param decorateOnlyNearestPair If `true` will only decorate the most nested `Pair` in `pairs`. 
  * Otherwise decorates all `Pair`s.
  */
-function decorate(pairs: Pair[], decorateOnlyNearestPair: boolean): void {
+function decorateList(pairs: Pair[], decorateOnlyNearestPair: boolean): void {
     if (!decorateOnlyNearestPair) {
         // Decorate all pairs.
         pairs.forEach((pair) => pair.decorate());
@@ -277,6 +277,6 @@ function decorate(pairs: Pair[], decorateOnlyNearestPair: boolean): void {
  * 
  * @param pairs Vararg list of `Pair`s to remove the decorations of.
  */
-function undecorate(pairs: Pair[]): void {
+function undecorateList(pairs: Pair[]): void {
     pairs.forEach((pair) => pair.undecorate());
 }
