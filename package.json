@@ -51,7 +51,14 @@
                 "leaper.languageRules": {
                     "type": "object",
                     "default": {
-                        "*": ["()", "[]", "{}", "''", "\"\"", "``"]
+                        "*": [
+                            "()",
+                            "[]",
+                            "{}",
+                            "''",
+                            "\"\"",
+                            "``"
+                        ]
                     },
                     "description": "[Leaper] Set the pairs that the extension is enabled for on a per language basis."
                 }
@@ -60,8 +67,8 @@
         "keybindings": [
             {
                 "key": "tab",
-                "command": "leaper.leap",   
-                "when": "leaper.inLeaperMode && leaper.hasLineOfSight && editorTextFocus && !editorHasSelection && !editorTabMovesFocus && !suggestWidgetVisible && !config.emmet.triggerExpansionOnTab"            
+                "command": "leaper.leap",
+                "when": "leaper.inLeaperMode && leaper.hasLineOfSight && editorTextFocus && !editorHasSelection && !editorTabMovesFocus && !suggestWidgetVisible && !config.emmet.triggerExpansionOnTab"
             },
             {
                 "key": "tab",
@@ -81,7 +88,7 @@
         ]
     },
     "engines": {
-        "vscode": "^1.23.0"
+        "vscode": "^1.24.0"
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
@@ -90,10 +97,10 @@
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "devDependencies": {
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6",
-        "tslint": "^5.8.0",
+        "@types/mocha": "^2.2.42",
         "@types/node": "^7.0.43",
-        "@types/mocha": "^2.2.42"
+        "tslint": "^5.8.0",
+        "typescript": "^2.9.1",
+        "vscode": "^1.1.6"
     }
 }
