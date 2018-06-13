@@ -84,14 +84,11 @@ export class Pairs {
         if (contentChanges.length < 1) {
             return;
         }
-        // Update the existing `Pair`s due to text changes in the document
-        const [retained, removed] = filterTranslate(this.list, contentChanges); 
-        // Check if a new pair has been inserted
+        const [retained, removed] = filterUpdate(this.list, contentChanges); 
         const newPair = getNewPair(contentChanges, this.settings.languageRule, this.settings.decorationOptions);  
         if (newPair) {
             retained.push(newPair);
         }
-        // Update decorations only if there were `Pair`s removed or added
         if (removed.length > 0 || newPair) {
             undecorateList(removed);
             undecorateList(retained);
@@ -116,11 +113,10 @@ export class Pairs {
         const cursorPos: Position = window.activeTextEditor.selection.active;
         const retained: Pair[] = [];
         const removed: Pair[] = [];
-        // Remove from tracking any `Pair`s that the cursor has moved out of
         for (const pair of this.list) {
+            // Remove from tracking any `Pair`s that the cursor has moved out of
             pair.enclosesPos(cursorPos) ? retained.push(pair) : removed.push(pair);
         }
-        // Update decorations only if `Pair`s were removed
         if (removed.length > 0) {
             undecorateList(removed);
             decorateList(retained, this.settings.decorateOnlyNearestPair);
@@ -142,33 +138,21 @@ export class Pairs {
  * @param contentChanges The content changes that deleted or move the pairs.
  * @return A tuple containing the list of updated `Pair` followed by the list of removed `Pair`s.
  */
-function filterTranslate(list: Pair[], contentChanges: TextDocumentContentChangeEvent[]): [Pair[], Pair[]] {
+function filterUpdate(list: Pair[], contentChanges: TextDocumentContentChangeEvent[]): [Pair[], Pair[]] {
     const retained: Pair[] = [];
     const removed: Pair[] = [];
     outer:
         for (const pair of list) {
             for (const contentChange of contentChanges) {
-                if (pair.overlappedBy(contentChange.range)) {
-                    // Either side of pair overwritten: pair deleted
+                const newOpen: Position | undefined = getNewPos(pair.open, contentChange);
+                const newClose: Position | undefined = getNewPos(pair.close, contentChange);
+                if (!newOpen || !newClose || newOpen.line !== newClose.line) {
+                    // Remove if either side deleted or if multi-line text inserted in between
                     removed.push(pair);
                     continue outer;
-                } else if (pair.enclosesRange(contentChange.range)) {
-                    // Text changed between pair
-                    if (countLines(contentChange.text) > 1) {
-                        // Multiple lines inserted: pair invalidated
-                        removed.push(pair);
-                        continue outer;
-                    } else {
-                        // Single line inserted: advance right side
-                        pair.close = shift(pair.close, contentChange);                        
-                    }
-                } else if (pair.open.isAfterOrEqual(contentChange.range.end)) {
-                    // Text changed before pair: both sides moved
-                    pair.open  = shift(pair.open, contentChange);
-                    pair.close = shift(pair.close, contentChange);
-                } else {
-                    // Text inserted after pair: pair not moved or deleted so nothing to do
                 }
+                pair.open = newOpen;
+                pair.close = newClose;
             }
             retained.push(pair);
         }
@@ -176,41 +160,46 @@ function filterTranslate(list: Pair[], contentChanges: TextDocumentContentChange
     return [retained, removed];
 
     /** 
-     * Get a new position as a result of a text change. 
+     * Get a new position as a result of a text content change that occurred anywhere in the document.
+     * The position is considered deleted if the content change overwrites the position.
      * 
-     * @param pos Initial position.
-     * @param contentChange The content change that caused the position to change.
-     * @return The new shifted position.
+     * @param pos Initial position that shifted/deleted by the content change.
+     * @param contentChange The relevant content change.
+     * @return The new shifted position, but if the content change deleted the position then `undefined`
+     * is returned instead. 
      */
-    function shift(pos: Position, contentChange: TextDocumentContentChangeEvent): Position {
-        const { range, text, rangeLength } = contentChange;
-        const textLines = countLines(text);
-        let lineDelta = textLines - 1 - (range.end.line - range.start.line);  // Vertical shift
-        let characterDelta = 0;   // Horizontal shift
-        // Only shift horizontally if text to the left and on the same line as `pos` is modified
-        if (range.end.line === pos.line) {
-            if (range.isSingleLine && textLines === 1) {
-                // Single line shift
-                characterDelta = text.length - rangeLength;
-            } else {
-                // Multi line shift
-                const split = text.split('\n');
-                const lastLineLength = split[split.length - 1].length;
-                characterDelta = lastLineLength - range.end.character;
-            }
+    function getNewPos(pos: Position, contentChange: TextDocumentContentChangeEvent): Position | undefined {
+        if (pos.isAfterOrEqual(contentChange.range.start) && pos.isBefore(contentChange.range.end)) {
+            return undefined;   // Position overwritten by content change
+        } else if (pos.isBefore(contentChange.range.start)) {
+            return pos;         // Content change occurred after the position: no change
         }
-        return pos.translate({ lineDelta, characterDelta });
-    }
+        // What's left is content change that occured before the position
+        //
+        // Define gap range as the range between the overwritten range and `pos`
+        const gapRange: Range = new Range(contentChange.range.end, pos); 
+        // Get end position of the newly inserted text
+        const textEndPos: Position = getEndPos(contentChange.range.start, contentChange.text);
+        // Append the gap range to the end of the newly inserted text and find the ending position
+        return getEndPos(textEndPos, gapRange);
 
-    /** Count the number of lines in a string. */
-    function countLines(text: string): number {
-        let lines = 1;
-        for (const ch of text) {
-            if (ch === '\n') {
-                ++lines;
+        /** Get the end position of a string or a range that is appended to the end of `startPos`. */
+        function getEndPos(startPos: Position, arg: string | Range): Position {
+            let deltaLines: number;
+            let argLastLineLength: number;
+            if (typeof arg === 'string') {
+                const splitText = arg.split('\n');
+                argLastLineLength = splitText[splitText.length - 1].length;
+                deltaLines = splitText.length - 1;
+            } else {
+                argLastLineLength = arg.end.character - (arg.isSingleLine ? arg.start.character : 0);
+                deltaLines = arg.end.line - arg.start.line;
             }
+            return new Position(
+                startPos.line + deltaLines,
+                argLastLineLength + (deltaLines > 0 ? 0 : startPos.character),
+            );
         }
-        return lines;
     }
 }
 
@@ -230,8 +219,7 @@ function filterTranslate(list: Pair[], contentChanges: TextDocumentContentChange
 function getNewPair(contentChanges: TextDocumentContentChangeEvent[], languageRule: ReadonlyArray<string>,
     decorationOptions: DecorationRenderOptions): Pair | undefined 
 {  
-    // Case 1: Regular autoclosing pair
-    // It is registered as a single content change with a text length of two and an empty range
+    // Autoclosing pairs are registered as a single content change
     const { range, text } = contentChanges[0];
     if (contentChanges.length === 1 && text.length === 2 && range.isEmpty) {
         for (const rule of languageRule) {
