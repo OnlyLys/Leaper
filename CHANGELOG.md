@@ -2,8 +2,6 @@
 
 ### 0.1.0 
 
-Almost every part of the extension was rewritten, so it is given a version bump.
+Initial release of the extension. 
 
-### 0.0.1
-
-Completion of the old implementation of the extension. 
+Pre 0.1.0 versions are part of an old implementation that can be found here: https://github.com/OnlyLys/Leaper-Old-Implementation
