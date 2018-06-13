@@ -57,7 +57,7 @@ function getLanguageRule(): ReadonlyArray<string> {
     const languageId: string = window.activeTextEditor.document.languageId;
     const languageSpecificRule: ReadonlyArray<string> | undefined = languageRules.get(`${languageId}`);
     const globalRule: ReadonlyArray<string> | undefined = languageRules.get(`*`);
-    // Will check the format before returning. If format is wrong then the rule will not be used.
+    // If format is wrong then the rule will not be used
     return checkFormat(languageSpecificRule) ? languageSpecificRule : (checkFormat(globalRule) ? globalRule : []);
 
     function checkFormat(arr: ReadonlyArray<string> | undefined): arr is ReadonlyArray<string> {
@@ -81,8 +81,7 @@ function getDecorationOptions(): DecorationRenderOptions {
     const extensionConfig: WorkspaceConfiguration = workspace.getConfiguration(`${EXT_IDENT}`);
     const custom: DecorationRenderOptions | undefined = extensionConfig.get(`customDecorationOptions`);
     if (custom) {
-        // Add closed-closed range behavior to the decoration options as we want the decoration to 
-        // only stick to the closing character.
+        // We want the decoration to only stick to the closing character
         custom.rangeBehavior = DecorationRangeBehavior.ClosedClosed;
         return custom;
     }

@@ -18,12 +18,12 @@ export class Controller {
     /** The cursor change watcher will ignore the next n events where n is the value of this property. */
     private cursorChangeWatcherIgnoreCount: number = 0;
     
-    /** Flag that is `true` if the extension is disabled for the current language. Otherwise `false`. */
+    /** Flag that is `true` if the extension is enabled for the current language. */
     private isEnabled: boolean;
 
     /** 
-     * Start a new controller that begins tracking for any detected pairs. The user can then press 
-     * leap out of any of the pairs that are being tracked.
+     * Start a new controller that begins tracking for any autoclosing pairs specified in the language
+     * rule. The user can then leap out of any of the pairs that are being tracked.
      * 
      * The `Controller` has to be disposed of when the extension is shut down.
      */
@@ -53,7 +53,7 @@ export class Controller {
                 return;
             }
             // When there are content changes, update the list of `Pair`s to reflect the new position 
-            // of the pairs within the document.
+            // of the pairs within the document
             this.pairs.updateFromContentChanges(event.contentChanges);
             setInLeaperModeContext(!this.pairs.isEmpty);
             setHasLineOfSightContext(this.pairs.hasLineOfSight);
@@ -72,11 +72,11 @@ export class Controller {
                 return;
             }
             if (event.selections.length > 1) {     
-                // Clear all pairs on multicursors as Leaper doesn't support them.
+                // Clear all pairs on multicursors as Leaper doesn't support them
                 this.escapeLeaperMode();
                 return;
             }
-            // The cursor moving out of a pair removes it from tracking.
+            // The cursor moving out of a pair removes it from tracking
             this.pairs.updateFromCursorChange();
             setInLeaperModeContext(!this.pairs.isEmpty);
             setHasLineOfSightContext(this.pairs.hasLineOfSight);
@@ -103,7 +103,7 @@ export class Controller {
         this.disposables.push(disposable1, disposable2);
 
         var loadNewLanguageRule = () => {
-            this.escapeLeaperMode();        // Clear all internal state.
+            this.escapeLeaperMode();        // Clear all internal state
             const latestSettings = Settings.getLatest();
             this.pairs.updateCachedSettings(latestSettings);
             this.isEnabled = latestSettings.isEnabled;
@@ -120,7 +120,7 @@ export class Controller {
             if (pair) {
                 const posPastClose: Position = pair.close.translate({ characterDelta: 1 });
                 window.activeTextEditor.selection = new Selection(posPastClose, posPastClose);
-                // Reveal the range so that the text editor's view follows the cursor after the leap.
+                // Reveal the range so that the text editor's view follows the cursor after the leap
                 window.activeTextEditor.revealRange(new Range(posPastClose, posPastClose));
             }
             this.disposables.push(disposable);
@@ -142,16 +142,17 @@ export class Controller {
      */
     private registerAcceptSelectedSuggestionCommand(): void {
         const disposable = commands.registerCommand(`${EXT_IDENT}.acceptSelectedSuggestion`, (_) => {
-            // Suggested text insertions involve moving the cursor to the end of the text *before* the 
-            // text is inserted. This is unlike typical text insertions (such as typing text into
-            // the editor) where the cursor is moved after the text is inserted.
-            //
-            // Having the cursor move first will cause the cursor change watcher to erroneously 
-            // remove pairs from being tracked since the cursor is temporarily moved outside of a 
-            // pair.
-            // 
-            // For this reason, when we accept suggestions we ask that the cursor change watcher
-            // ignore the immediate event.
+            /**
+             * Suggested text insertions involve moving the cursor to the end of the text *before* the 
+             * text is inserted. This is unlike typical text insertions (such as typing text into the 
+             * editor) where the cursor is moved after the text is inserted.
+             * 
+             * Having the cursor move first will cause the cursor change watcher to erroneously remove 
+             * pairs from being tracked since the cursor is temporarily moved outside of a pair.
+             * 
+             * For this reason, when we accept suggestions we ask that the cursor change watcher
+             * ignore the immediate event.
+             */
             this.cursorChangeWatcherIgnoreCount += 1;
             commands.executeCommand('acceptSelectedSuggestion');
         });

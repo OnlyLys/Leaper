@@ -10,7 +10,7 @@ import { Settings } from '../settings';
  */
 export class Pairs {
     
-    /** Data structure that contains the `Pair`s. */
+    /** Data structure that contains the tracked `Pair`s. */
     private list: Pair[] = [];
 
     /** Cached settings of the extension. */
@@ -19,13 +19,13 @@ export class Pairs {
     /** 
      * Update the settings cached in `Pairs`. 
      * 
-     * @param newSettings The `Settings` object containing the new settings.
+     * @param newSettings The new settings.
      */
     public updateCachedSettings(newSettings: Settings) {
         this.settings = newSettings;
     }
     
-    /** @return `true` if empty. Otherwise `false`. */
+    /** @return `true` only if empty (i.e. no pairs being tracked). */
     get isEmpty(): boolean {
         return this.list.length < 1;
     }
@@ -38,8 +38,6 @@ export class Pairs {
      * @return `false` if
      * - There is non-whitespace text between the cursor and the closing character of the nearest pair.
      * - There are no pairs currently being tracked.
-     * 
-     * `true` otherwise.
      */
     get hasLineOfSight(): boolean {
         if (!window.activeTextEditor || this.list.length < 1) {
@@ -86,14 +84,14 @@ export class Pairs {
         if (contentChanges.length < 1) {
             return;
         }
-        // Update the existing `Pair`s due to text changes in the document.
+        // Update the existing `Pair`s due to text changes in the document
         const [retained, removed] = filterTranslate(this.list, contentChanges); 
-        // Check if a new pair has been inserted.
+        // Check if a new pair has been inserted
         const newPair = getNewPair(contentChanges, this.settings.languageRule, this.settings.decorationOptions);  
         if (newPair) {
-            retained.push(newPair);        // Add new `Pair` to be tracked.
+            retained.push(newPair);
         }
-        // Update decorations only if there were `Pair`s removed or added.
+        // Update decorations only if there were `Pair`s removed or added
         if (removed.length > 0 || newPair) {
             undecorateList(removed);
             undecorateList(retained);
@@ -118,11 +116,11 @@ export class Pairs {
         const cursorPos: Position = window.activeTextEditor.selection.active;
         const retained: Pair[] = [];
         const removed: Pair[] = [];
-        // Remove from tracking any `Pair`s that the cursor has moved out of.
+        // Remove from tracking any `Pair`s that the cursor has moved out of
         for (const pair of this.list) {
             pair.enclosesPos(cursorPos) ? retained.push(pair) : removed.push(pair);
         }
-        // Update decorations only if `Pair`s were removed.
+        // Update decorations only if `Pair`s were removed
         if (removed.length > 0) {
             undecorateList(removed);
             decorateList(retained, this.settings.decorateOnlyNearestPair);
@@ -151,25 +149,25 @@ function filterTranslate(list: Pair[], contentChanges: TextDocumentContentChange
         for (const pair of list) {
             for (const contentChange of contentChanges) {
                 if (pair.overlappedBy(contentChange.range)) {
-                    // Either side of pair overwritten: pair deleted.
+                    // Either side of pair overwritten: pair deleted
                     removed.push(pair);
                     continue outer;
                 } else if (pair.enclosesRange(contentChange.range)) {
-                    // Text changed between pair.
+                    // Text changed between pair
                     if (countLines(contentChange.text) > 1) {
-                        // Multiple lines inserted: pair invalidated.
+                        // Multiple lines inserted: pair invalidated
                         removed.push(pair);
                         continue outer;
                     } else {
-                        // Single line inserted: advance right side.
+                        // Single line inserted: advance right side
                         pair.close = shift(pair.close, contentChange);                        
                     }
                 } else if (pair.open.isAfterOrEqual(contentChange.range.end)) {
-                    // Text changed before pair: both sides moved.
-                    pair.open = shift(pair.open, contentChange);
+                    // Text changed before pair: both sides moved
+                    pair.open  = shift(pair.open, contentChange);
                     pair.close = shift(pair.close, contentChange);
                 } else {
-                    // Text inserted after pair: pair not moved or deleted so nothing to do.
+                    // Text inserted after pair: pair not moved or deleted so nothing to do
                 }
             }
             retained.push(pair);
@@ -189,13 +187,13 @@ function filterTranslate(list: Pair[], contentChanges: TextDocumentContentChange
         const textLines = countLines(text);
         let lineDelta = textLines - 1 - (range.end.line - range.start.line);  // Vertical shift
         let characterDelta = 0;   // Horizontal shift
-        // Only shift horizontally if text to the left and on the same line as `pos` is modified.
+        // Only shift horizontally if text to the left and on the same line as `pos` is modified
         if (range.end.line === pos.line) {
             if (range.isSingleLine && textLines === 1) {
-                // Single line shift.
+                // Single line shift
                 characterDelta = text.length - rangeLength;
             } else {
-                // Multi line shift.
+                // Multi line shift
                 const split = text.split('\n');
                 const lastLineLength = split[split.length - 1].length;
                 characterDelta = lastLineLength - range.end.character;
@@ -232,8 +230,8 @@ function filterTranslate(list: Pair[], contentChanges: TextDocumentContentChange
 function getNewPair(contentChanges: TextDocumentContentChangeEvent[], languageRule: ReadonlyArray<string>,
     decorationOptions: DecorationRenderOptions): Pair | undefined 
 {  
-    // Case 1: Regular autoclosing pair. It is registered as a single content change with a text length 
-    // of two and an empty range.
+    // Case 1: Regular autoclosing pair
+    // It is registered as a single content change with a text length of two and an empty range
     const { range, text } = contentChanges[0];
     if (contentChanges.length === 1 && text.length === 2 && range.isEmpty) {
         for (const rule of languageRule) {
@@ -258,10 +256,10 @@ function getNewPair(contentChanges: TextDocumentContentChangeEvent[], languageRu
  */
 function decorateList(pairs: Pair[], decorateOnlyNearestPair: boolean): void {
     if (!decorateOnlyNearestPair) {
-        // Decorate all pairs.
+        // Decorate all pairs
         pairs.forEach((pair) => pair.decorate());
     } else if (pairs[pairs.length - 1]) {
-        // Only decorate most nested pair.
+        // Only decorate most nested pair
         pairs[pairs.length - 1].decorate();
     }
 }
