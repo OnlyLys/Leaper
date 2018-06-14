@@ -1,6 +1,6 @@
 'use strict';
 
-import { workspace, DecorationRenderOptions, ThemeColor, window, WorkspaceConfiguration, DecorationRangeBehavior } from 'vscode';
+import { workspace, DecorationRenderOptions, ThemeColor, window, WorkspaceConfiguration } from 'vscode';
 import { EXT_IDENT } from './extension';
 
 /** 
@@ -87,7 +87,6 @@ const DEFAULT_DECORATION_OPTIONS: DecorationRenderOptions = {
     outlineColor: new ThemeColor('editorBracketMatch.border'),
     outlineWidth: '1px',
     outlineStyle: 'solid',
-    rangeBehavior: DecorationRangeBehavior.ClosedClosed
 };
 
 /** @return The decoration options for the closing character of a pair. */
@@ -95,8 +94,6 @@ function getDecorationOptions(): DecorationRenderOptions {
     const extensionConfig: WorkspaceConfiguration = workspace.getConfiguration(`${EXT_IDENT}`);
     const custom: DecorationRenderOptions | undefined = extensionConfig.get(`customDecorationOptions`);
     if (custom) {
-        // We want the decoration to only stick to the closing character
-        custom.rangeBehavior = DecorationRangeBehavior.ClosedClosed;
         return custom;
     }
     return DEFAULT_DECORATION_OPTIONS;   
