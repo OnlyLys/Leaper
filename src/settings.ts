@@ -7,20 +7,27 @@ import { EXT_IDENT } from './extension';
  * Class containing settings obtained from the default/global/workspace configuration. 
  * 
  * Settings obtained from the configuration are cached within this class, and it does not update on 
- * its own so the user has to retrieve the latest settings via the `getLatest()` when necessary.
+ * its own so the user has manually call `update()` when necessary.
  */
 export class Settings {
 
     /* The pairs that will trigger tracking for the current language. */
-    public readonly languageRule: ReadonlyArray<string> = getLanguageRule();
+    private _languageRule: ReadonlyArray<string> = getLanguageRule();
+    get languageRule(): ReadonlyArray<string> {
+        return this._languageRule;
+    }
 
     /* The decoration options for the closing character of a pair. */
-    public readonly decorationOptions: DecorationRenderOptions = getDecorationOptions();
+    private _decorationOptions: DecorationRenderOptions = getDecorationOptions();
+    get decorationOptions(): Readonly<DecorationRenderOptions> {
+        return this._decorationOptions;
+    }
 
     /* Flag for whether decoration should apply to only the most nested pair or all of them. */ 
-    public readonly decorateOnlyNearestPair: boolean = getDecorateOnlyNearestPairFlag();
-
-    private constructor() {}
+    private _decorateOnlyNearestPairFlag: boolean = getDecorateOnlyNearestPairFlag();
+    get decorateOnlyNearestPair(): Readonly<boolean> {
+        return this._decorateOnlyNearestPairFlag;
+    }
 
     /**
      * Queries if the extension is enabled for the current language by checking if the language rule
@@ -32,13 +39,20 @@ export class Settings {
         return this.languageRule.length > 0;
     }
 
-    /**
-     * Get the latest settings from the default/global/workspace configuration.
-     *
-     * @return An instance of `Settings` with the latest settings.
+    private constructor() {}
+
+    /** 
+     * @return An instance of `Settings` with the latest values.
      */
-    public static getLatest(): Settings {
+    public get(): Settings {
         return new Settings();
+    }
+
+    /** Update to the latest settings obtained from the default/global/workspace configuration. */
+    public update(): void {
+        this._languageRule = getLanguageRule();
+        this._decorationOptions = getDecorationOptions();
+        this._decorateOnlyNearestPairFlag = getDecorateOnlyNearestPairFlag();
     }
 
 }
