@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### 0.2.1
+- Command to 'leap' and 'escape leaper mode' added into the command pallete when the context allows for it.
+
 ### 0.2.0
 - Refactored a majority of the code. 
 - Extension now works properly during text insertion and deletion.
