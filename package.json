@@ -71,16 +71,6 @@
                 "when": "leaper.inLeaperMode && leaper.hasLineOfSight && editorTextFocus && !editorHasSelection && !editorTabMovesFocus && !suggestWidgetVisible && !config.emmet.triggerExpansionOnTab"
             },
             {
-                "key": "tab",
-                "command": "leaper.acceptSelectedSuggestion",
-                "when": "leaper.inLeaperMode && editorTextFocus && suggestWidgetVisible && !editorTabMovesFocus"
-            },
-            {
-                "key": "enter",
-                "command": "leaper.acceptSelectedSuggestion",
-                "when": "leaper.inLeaperMode && acceptSuggestionOnEnter && editorTextFocus && suggestWidgetVisible && !editorTabMovesFocus"
-            },
-            {
                 "key": "escape",
                 "command": "leaper.escapeLeaperMode",
                 "when": "leaper.inLeaperMode && editorTextFocus && !editorHasSelection && !suggestWidgetVisible && !parameterHintsVisible"
