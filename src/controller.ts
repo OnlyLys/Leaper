@@ -1,6 +1,6 @@
 'use strict';
 
-import { Disposable, workspace, window, commands, Selection, Range, Position } from 'vscode';
+import { Disposable, workspace, window, commands, Selection, Range, Position, TextEditor } from 'vscode';
 import { Pair } from './pairs/pair';
 import { Pairs } from './pairs/pairs'; 
 import { EXT_IDENT } from './extension';
@@ -64,23 +64,20 @@ export class Controller {
     });
     
     /** A command that allows users to leap out of the nearest pair. */
-    private leapCommand: Disposable = commands.registerCommand(
-        `${EXT_IDENT}.leap`, (_) => {
-            if (!window.activeTextEditor) {
-                return;
-            }
+    private leapCommand: Disposable = commands.registerTextEditorCommand(
+        `${EXT_IDENT}.leap`, (textEditor: TextEditor) => {
             const pair: Pair | undefined = this.pairs.mostNested;   // Get nearest pair (if any)
             if (pair) {
                 const posPastClose: Position = pair.close.translate({ characterDelta: 1 });
-                window.activeTextEditor.selection = new Selection(posPastClose, posPastClose);
+                textEditor.selection = new Selection(posPastClose, posPastClose);
                 // Reveal the range so that the text editor's view follows the cursor after the leap
-                window.activeTextEditor.revealRange(new Range(posPastClose, posPastClose));
+                textEditor.revealRange(new Range(posPastClose, posPastClose));
             }
         }
     );
 
     /** A command that allows users to clear all pairs that are being tracked. */
-    private escapeLeaperModeCommand: Disposable = commands.registerCommand(
+    private escapeLeaperModeCommand: Disposable = commands.registerTextEditorCommand(
         `${EXT_IDENT}.escapeLeaperMode`, (_) => this.clearInternalState()
     );
 
