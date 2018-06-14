@@ -2,7 +2,7 @@
     "name": "leaper",
     "displayName": "Leaper",
     "description": "`Tab` to leap out of autoclosing pairs like braces and quotes.",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "publisher": "OnlyLys",
     "license": "MIT",
     "icon": "images/icon.png",
@@ -64,6 +64,30 @@
                 }
             }
         },
+        "commands": [
+            {
+                "command": "leaper.leap",
+                "title": "Leap Out of the Nearest Available Pair",
+                "category": "Leaper"
+            },
+            {
+                "command": "leaper.escapeLeaperMode",
+                "title": "Escape Leaper Mode",
+                "category": "Leaper"
+            }
+        ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "leaper.leap",
+                    "when": "leaper.inLeaperMode && leaper.hasLineOfSight && !editorHasSelection && !editorTabMovesFocus && !suggestWidgetVisible && !config.emmet.triggerExpansionOnTab"
+                },
+                {
+                    "command": "leaper.escapeLeaperMode",
+                    "when": "leaper.inLeaperMode && !editorHasSelection && !suggestWidgetVisible && !parameterHintsVisible"
+                }
+            ]
+        },
         "keybindings": [
             {
                 "key": "tab",
@@ -88,9 +112,9 @@
     },
     "devDependencies": {
         "@types/mocha": "^2.2.42",
-        "@types/node": "^7.0.43",
+        "@types/node": "^7.0.66",
         "tslint": "^5.8.0",
-        "typescript": "^2.9.1",
+        "typescript": "^2.9.2",
         "vscode": "^1.1.6"
     }
 }
