@@ -44,9 +44,8 @@ export class Pair {
     }
 
     /** 
-     * Decorate the closing character of the pair. 
-     * 
-     * If decoration is already active then this method does nothing.
+     * Decorate the closing character of the pair. If decoration is already active then reapplying 
+     * the decoration does nothing.
      */
     public decorate(): void {
         if (!window.activeTextEditor || this.decoration) {
@@ -63,9 +62,8 @@ export class Pair {
     }
 
     /**
-     * Undecorate the closing character of the pair.
-     * 
-     * If this `Pair` does not have an active decoration then this method does nothing.
+     * Undecorate the closing character of the pair. If this `Pair` does not have an active decoration 
+     * then undecorating does nothing.
      */  
     public undecorate(): void {
         if (this.decoration) {
