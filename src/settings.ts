@@ -35,7 +35,7 @@ export class Settings {
      * 
      * @return `true` if the extension is enabled for the current language. Otherwise `false`.
      */
-    get isEnabled(): boolean {
+    public get isEnabled(): boolean {
         return this.languageRule.length > 0;
     }
 
@@ -44,7 +44,7 @@ export class Settings {
     /** 
      * @return An instance of `Settings` with the latest values.
      */
-    public get(): Settings {
+    public static load(): Settings {
         return new Settings();
     }
 
