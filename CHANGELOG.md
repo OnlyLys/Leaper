@@ -1,7 +1,9 @@
 # CHANGELOG
 
+### 0.2.0
+- Refactored a majority of the code. 
+- Extension now works properly during text insertion and deletion.
+
 ### 0.1.0 
-
-Initial release of the extension. 
-
-Pre 0.1.0 versions are part of an old implementation that can be found here: https://github.com/OnlyLys/Leaper-Old-Implementation
+- Initial release of the extension. 
+- Pre 0.1.0 versions are part of an old implementation that can be found here: https://github.com/OnlyLys/Leaper-Old-Implementation
