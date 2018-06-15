@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### 0.3.0
+- Change default keybinding of 'Escape Leaper Mode' to `Shift` + `Escape` so that there is less conflict with other built-in editor keybindings for `Escape`.
+
 ### 0.2.1
 - Command to 'leap' and 'escape leaper mode' added into the command pallete when the context allows for it.
 
