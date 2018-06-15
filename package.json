@@ -67,7 +67,7 @@
         "commands": [
             {
                 "command": "leaper.leap",
-                "title": "Leap Out of the Nearest Available Pair",
+                "title": "Leap",
                 "category": "Leaper"
             },
             {
@@ -80,11 +80,11 @@
             "commandPalette": [
                 {
                     "command": "leaper.leap",
-                    "when": "leaper.inLeaperMode && leaper.hasLineOfSight && !editorHasSelection && !editorTabMovesFocus && !suggestWidgetVisible && !config.emmet.triggerExpansionOnTab"
+                    "when": "leaper.inLeaperMode && leaper.hasLineOfSight"
                 },
                 {
                     "command": "leaper.escapeLeaperMode",
-                    "when": "leaper.inLeaperMode && !editorHasSelection && !suggestWidgetVisible && !parameterHintsVisible"
+                    "when": "leaper.inLeaperMode"
                 }
             ]
         },
@@ -95,9 +95,9 @@
                 "when": "leaper.inLeaperMode && leaper.hasLineOfSight && editorTextFocus && !editorHasSelection && !editorTabMovesFocus && !suggestWidgetVisible && !config.emmet.triggerExpansionOnTab"
             },
             {
-                "key": "escape",
+                "key": "shift+escape",
                 "command": "leaper.escapeLeaperMode",
-                "when": "leaper.inLeaperMode && editorTextFocus && !editorHasSelection && !suggestWidgetVisible && !parameterHintsVisible"
+                "when": "leaper.inLeaperMode"
             }
         ]
     },
