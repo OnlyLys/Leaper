@@ -66,9 +66,6 @@ export class Controller {
     /** A command that allows users to leap out of the nearest pair. */
     private leapCommand: Disposable = commands.registerTextEditorCommand(
         `${EXT_IDENT}.leap`, (textEditor: TextEditor) => {
-            if (!this.pairs.hasLineOfSight) {
-                return;
-            }
             const pair: Pair | undefined = this.pairs.mostNested;   // Get nearest pair (if any)
             if (pair) {
                 const posPastClose: Position = pair.close.translate({ characterDelta: 1 });
