@@ -2,7 +2,7 @@
     "name": "leaper",
     "displayName": "Leaper",
     "description": "`Tab` to leap out of autoclosing pairs like braces and quotes.",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "publisher": "OnlyLys",
     "license": "MIT",
     "icon": "images/icon.png",
@@ -80,7 +80,7 @@
             "commandPalette": [
                 {
                     "command": "leaper.leap",
-                    "when": "leaper.inLeaperMode && leaper.hasLineOfSight"
+                    "when": "leaper.inLeaperMode"
                 },
                 {
                     "command": "leaper.escapeLeaperMode",
