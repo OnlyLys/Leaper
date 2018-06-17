@@ -3,8 +3,9 @@
 import { Disposable, workspace, window, commands, Selection, Range, Position, TextEditor } from 'vscode';
 import { Pair } from './pairs/pair';
 import { Pairs } from './pairs/pairs'; 
-import { EXT_IDENT } from './extension';
 import { Settings } from './settings';
+
+export const EXT_IDENT = "leaper";     // Identifier of extension
 
 /** 
  * A controller that tracks any autoclosing pairs that are entered by the user. The pairs that will

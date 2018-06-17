@@ -1,7 +1,7 @@
 'use strict';
 
 import { workspace, DecorationRenderOptions, ThemeColor, window, WorkspaceConfiguration } from 'vscode';
-import { EXT_IDENT } from './extension';
+import { EXT_IDENT } from './controller';
 
 /** 
  * Class containing settings obtained from the default/global/workspace configuration. 
