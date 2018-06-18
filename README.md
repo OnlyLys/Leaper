@@ -48,7 +48,7 @@ For instance, to have a black outline appear around the closing character of a p
         "outlineStyle": "solid"
     }
 
-For the entire list of available properties, please see [Visual Studio Code - vscode namespace API - DecorationRenderOption](https://code.visualstudio.com/docs/extensionAPI/vscode-api#DecorationRenderOptions).
+For the entire list of available properties, please see [vscode namespace API - DecorationRenderOption](https://code.visualstudio.com/docs/extensionAPI/vscode-api#DecorationRenderOptions).
 
 To turn off the decoration, just set it to an empty brace:
 
@@ -58,7 +58,7 @@ To turn off the decoration, just set it to an empty brace:
 
 The default behavior of Leaper is to decorate only the nearest pair that is being tracked. 
 
-To decorate all the pairs that are being tracked, set this contribution to `true`. When enabled:
+To decorate all the pairs that are being tracked, set this contribution to `false`. The decorations will then look like:
 
 ![Decorate All Pairs](images/decorate-all-pairs.gif)
 
