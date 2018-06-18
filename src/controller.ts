@@ -13,28 +13,28 @@ export const EXT_IDENT = "leaper";     // Identifier of extension
  * 
  * Once tracked, the user can leap out of them via a `Tab` keypress.
  * 
- * The controller has have `dispose()` called on it upon shut down of the extension.
+ * The controller has to have `dispose()` called on it upon shut down of the extension.
  */
 export class Controller {
 
-    /** Current settings for the extension. */
     private settings: Settings = Settings.load();
 
-    /** List of `Pair`s which each represent a pair that is being tracked in the document. */
     private pairs: Pairs = new Pairs(this.settings);
 
-    /** A watcher that monitors for any content changes in the currently active document. */
+    /** Triggers when text is modified in the document. */
     private contentChangeWatcher: Disposable = workspace.onDidChangeTextDocument( (event) => {
         if (!this.settings.isEnabled || !window.activeTextEditor || event.document !== window.activeTextEditor.document) {
             return;
         }
+        // Update the pairs that are being tracked by the extension
+        // Also add new pairs to be tracked
         this.pairs.updateGivenContentChanges(event.contentChanges, window.activeTextEditor);
         // Update the extension's contexts so that the keybindings are appropriately activated
         setInLeaperModeContext(!this.pairs.isEmpty);
         setHasLineOfSightContext(this.pairs.hasLineOfSight);
     });
 
-    /** A watcher that monitors for any change in cursor position. */
+    /** Triggers when the cursor is moved. */
     private cursorChangeWatcher: Disposable = window.onDidChangeTextEditorSelection( (event) => {
         if (!this.settings.isEnabled || !window.activeTextEditor || event.textEditor !== window.activeTextEditor) {
             return;
@@ -44,32 +44,38 @@ export class Controller {
             this.clearInternalState();
             return;
         }
+        // Remove any pairs that the cursor has moved out of
         this.pairs.updateGivenCursorChanges(window.activeTextEditor);
         // Update the extension's contexts so that the keybindings are appropriately activated
         setInLeaperModeContext(!this.pairs.isEmpty);
         setHasLineOfSightContext(this.pairs.hasLineOfSight);
     });
 
-    /** A watcher that monitors for settings changes relevant to the extension. */
+    /** Triggers when there is a settings change. */
     private settingsChangeWatcher: Disposable = workspace.onDidChangeConfiguration( (event) => {
+        // When the settings is changed we immediately want to reload them 
+        // Pairs that were previously being tracked are immediately discarded
         if (event.affectsConfiguration(`${EXT_IDENT}`)) {
             this.clearInternalState();
             this.settings.update();
         }
     });
 
-    /** A watcher that monitors for if the active text editor is switched to another one. */
+    /** Triggers when there is a change in the currently active text editor. */
     private activeTextEditorChangeWatcher: Disposable = window.onDidChangeActiveTextEditor( (_) => {
+        // When the active text editor changes, the language ID could also change 
+        // So we have to reload settings on every active text editor change
         this.clearInternalState();
-        this.settings.update();    // New active text editor may have a different language ID.
+        this.settings.update();
     });
     
     /** A command that allows users to leap out of the nearest pair. */
     private leapCommand: Disposable = commands.registerTextEditorCommand(
         `${EXT_IDENT}.leap`, (textEditor: TextEditor) => {
-            const pair: Pair | undefined = this.pairs.mostNested;   // Get nearest pair (if any)
+            const pair: Pair | undefined = this.pairs.mostNested;
             if (pair) {
                 const posPastClose: Position = pair.close.translate({ characterDelta: 1 });
+                // Move cursor to position past the closing side of the pair
                 textEditor.selection = new Selection(posPastClose, posPastClose);
                 // Reveal the range so that the text editor's view follows the cursor after the leap
                 textEditor.revealRange(new Range(posPastClose, posPastClose));
@@ -82,10 +88,6 @@ export class Controller {
         `${EXT_IDENT}.escapeLeaperMode`, (_) => this.clearInternalState()
     );
 
-    /** 
-     * Clear all internal state of the extension by clearing the list of tracked pairs and deactivating 
-     * the keybinding contexts.
-     */
     private clearInternalState(): void {
         this.pairs.clear();
         setInLeaperModeContext(false);
@@ -101,7 +103,6 @@ export class Controller {
         this.escapeLeaperModeCommand
     ];
 
-    /** To be called when the extension is shut down. */
     public dispose(): void {
         this.clearInternalState();
         this.disposables.forEach((disposable) => disposable.dispose());
@@ -111,25 +112,22 @@ export class Controller {
 }
 
 /** 
- * Set the `leaper.inLeaperMode` context. When this context is active, the keybindings of Leaper are 
- * enabled. Therefore this context should only be activated when there are pairs being tracked by the 
- * extension. Otherwise we should set it to `false` in order to release control of the keybindings.
+ * Set the `leaper.inLeaperMode` keybinding context. This context should only be active when there 
+ * are pairs being tracked by the extension.
  * 
- * @param enable When `true`, the context is active. Otherwise the context is inactive.
+ * @param enable When `true`, the context is active. 
  */
 function setInLeaperModeContext(enable: boolean): void {
-    // Note: `setContext` is an undocumented feature, for more info: https://github.com/Microsoft/vscode/issues/10471
     commands.executeCommand('setContext', 'leaper.inLeaperMode', enable);
 }
 
 /**
- * Set the `leaper.hasLineOfSight` context. It signals that there is line of sight to a pair from the
- * current cursor position.
+ * Set the `leaper.hasLineOfSight` context. It signals that there is line of sight to a tracked pair 
+ * from the current cursor position. When active, this context enables the `Tab` keybinding to leap.
  * 
- * @param enable When `true`, the context is active. Otherwise the context is inactive.
+ * @param enable When `true`, the context is active.
  */
 function setHasLineOfSightContext(enable: boolean): void {
-    // Note: `setContext` is an undocumented feature, for more info: https://github.com/Microsoft/vscode/issues/10471
     commands.executeCommand('setContext', 'leaper.hasLineOfSight', enable);
 }
 

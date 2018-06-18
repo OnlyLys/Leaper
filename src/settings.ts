@@ -6,12 +6,16 @@ import { EXT_IDENT } from './controller';
 /** 
  * Class containing settings obtained from the default/global/workspace configuration. 
  * 
- * Settings obtained from the configuration are cached within this class, and it does not update on 
- * its own so the user has manually call `update()` when necessary.
+ * Settings obtained from the configuration are cached within each instance, and it does not update 
+ * on its own so the user has manually call `update()` when necessary.
  */
 export class Settings {
 
-    /* The pairs that will trigger tracking for the current language. */
+    /** 
+     * The pairs that will trigger tracking for the current language. The insertion of any of these 
+     * pairs is constantly being watched for by the extension. These are also known as the trigger 
+     * pairs.
+     */
     private _languageRule: ReadonlyArray<string> = getLanguageRule();
     get languageRule(): ReadonlyArray<string> {
         return this._languageRule;
@@ -33,7 +37,7 @@ export class Settings {
      * Queries if the extension is enabled for the current language by checking if the language rule
      * is non-empty.
      * 
-     * @return `true` if the extension is enabled for the current language. Otherwise `false`.
+     * @return `true` only if the extension is enabled for the current language.
      */
     public get isEnabled(): boolean {
         return this.languageRule.length > 0;
@@ -41,9 +45,7 @@ export class Settings {
 
     private constructor() {}
 
-    /** 
-     * @return An instance of `Settings` with the latest values.
-     */
+    /** @return Obtain an instance of `Settings` with the latest values. */
     public static load(): Settings {
         return new Settings();
     }
@@ -57,12 +59,6 @@ export class Settings {
 
 }
 
-/** 
- * Get the pairs that will trigger tracking for the current language. The insertion of any of 
- * these pairs is constantly being watched for.
- * 
- * @return An array containing pairs in string form. These pairs are the 'trigger pairs'.
- */
 function getLanguageRule(): ReadonlyArray<string> { 
     if (!window.activeTextEditor) {
         return [];
@@ -79,17 +75,12 @@ function getLanguageRule(): ReadonlyArray<string> {
     }
 }
 
-/** 
- * The default decoration is just an outline over the closing character. The colour is taken to be the 
- * same as the one used for bracket matching in the current theme. 
- */
 const DEFAULT_DECORATION_OPTIONS: DecorationRenderOptions = {
     outlineColor: new ThemeColor('editorBracketMatch.border'),
     outlineWidth: '1px',
     outlineStyle: 'solid',
 };
 
-/** @return The decoration options for the closing character of a pair. */
 function getDecorationOptions(): DecorationRenderOptions { 
     const extensionConfig: WorkspaceConfiguration = workspace.getConfiguration(`${EXT_IDENT}`);
     const custom: DecorationRenderOptions | undefined = extensionConfig.get(`customDecorationOptions`);
@@ -99,7 +90,6 @@ function getDecorationOptions(): DecorationRenderOptions {
     return DEFAULT_DECORATION_OPTIONS;   
 }
 
-/** @return The value of the `leaper.decorateOnlyNearestPair` contribution. */
 function getDecorateOnlyNearestPairFlag(): boolean {
     const extensionConfig: WorkspaceConfiguration = workspace.getConfiguration(`${EXT_IDENT}`);
     return extensionConfig.get(`decorateOnlyNearestPair`) === true;

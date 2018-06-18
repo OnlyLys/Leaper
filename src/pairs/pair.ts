@@ -8,9 +8,7 @@ export class Pair {
     /** Decoration for this pair. When disposed, the decoration will be removed from the editor. */
     private decoration: TextEditorDecorationType | undefined;
 
-    /** 
-     * Construct a representation of a pair that is being tracked in the document. 
-     * 
+    /**
      * @param open Position of the open side of the pair.
      * @param close Position of the closing side of the pair.
      * @param decorationOptions Decoration option for the closing character of the pair.
@@ -19,7 +17,7 @@ export class Pair {
     
     /** 
      * @param pos A position in the text editor.
-     * @return `true` onyl if this `Pair` encloses `pos`.
+     * @return `true` only if this `Pair` encloses `pos`.
      */ 
     public enclosesPos(pos: Position): boolean {
         return pos.isAfter(this.open) && pos.isBeforeOrEqual(this.close);

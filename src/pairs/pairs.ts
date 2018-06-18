@@ -5,33 +5,34 @@ import { Pair } from './pair';
 import { Settings } from '../settings';
 
 /** 
- * A list of containing `Pair`s, which are representations of pairs that are currently being tracked
- * in the text editor.
+ * A list of containing `Pair`s, which are each representations of pairs that are currently being 
+ * tracked in the text editor.
  */
 export class Pairs {
     
-    /** Data structure that contains the pairs that are being tracked in the document. */
+    /** The actual data structure that contains the pairs. */
     private data: Pair[] = [];
+
+    private settings: Readonly<Settings>;
 
     /** 
      * List of recently removed pairs by the cursor change updater. 
      * 
      * VS Code is fairly inconsistent with whether the cursor move triggers first or whether the
-     * content change is applied first when inserting or replacing text. For this reason, the update
-     * algorithm in `Pairs` can erroneously remove pairs from tracking even though the cursor is within 
-     * the pair after the text modification is complete. For example, normal text insertion has the 
-     * content change come before the cursor movement, but snippet insertions have it the other way
-     * around, which removes pairs that shouldn't be removed.
+     * content change is applied first when inserting or replacing text. For example, normal text 
+     * insertion has the content change come before the cursor movement, while snippet insertions 
+     * have it the other way around, which removes pairs that shouldn't be removed.
      * 
-     * Therefore when pairs are removed by the cursor updater, we store them in a list temporarily
-     * to give the content change watcher one chance to rescue any erroneously removed pairs.
+     * More specifically, when the cursor moves first, the `updateGivenCursorChanges()` method that triggers
+     * on a cursor move can erroneously remove pairs from tracking even though the cursor is actually
+     * within the pair after the entire text edit is complete.
+     * 
+     * Therefore when `Pair`s are removed by the cursor updater, we should store them in a temporarily
+     * list to then give the content change watcher one chance to rescue any erroneously removed ones.
      */
     private recentlyRemovedDueToCursorMove: Pair[] = [];
 
-    /** Reference to settings of the extension. */
-    private settings: Readonly<Settings>;
-    
-    /** @return `true` only if empty (i.e. no pairs being tracked). */
+    /** @return `true` only if no pairs are being tracked. */
     public get isEmpty(): boolean {
         return this.data.length < 1;
     }
@@ -41,13 +42,13 @@ export class Pairs {
      * Having line of sight means having no non-whitespace text between the cursor position and the
      * closing character of the pair.
      *
-     * @return `false` if
-     * - There is non-whitespace text between the cursor and the closing character of the nearest pair.
-     * - There are no pairs currently being tracked.
+     * @return `true` only if
+     * - There is *no* non-whitespace text between the cursor and the closing side of the nearest pair.
+     * - There are pairs available to jump out of.
      */
     public get hasLineOfSight(): boolean {
         if (!window.activeTextEditor || this.data.length < 1) {
-            return false;    // False if there no pairs being tracked
+            return false;
         }
         const cursorPos: Position = window.activeTextEditor.selection.active;
         const textInBetween: string = window.activeTextEditor.document.getText(
@@ -58,16 +59,13 @@ export class Pairs {
 
     /** @return (If any) the most nested `Pair` in the list. */
     public get mostNested(): Pair | undefined {
+        // The most nested pair is also the most recently added pair. It is also the pair that is 
+        // nearest to the current cursor position.
         return this.data[this.data.length -1];
     }
 
-    /**
-     * Construct a new container of `Pair`s, which each represent pairs within the document that are 
-     * being tracked.
-     * 
-     * @param settings The settings for the extension.
-     */
-    constructor(settings: Settings) {
+    /** @param settings A reference to the current settings for the extension. */
+    constructor(settings: Readonly<Settings>) {
         this.settings = settings;
     }
 
@@ -140,8 +138,8 @@ function applyContentChanges(pairs: Pair[], contentChanges: TextDocumentContentC
             for (const contentChange of contentChanges) {
                 const newOpen: Position | undefined = getNewPos(pair.open, contentChange);
                 const newClose: Position | undefined = getNewPos(pair.close, contentChange);
+                // Remove if either side deleted or if multi-line text inserted in between                
                 if (!newOpen || !newClose || newOpen.line !== newClose.line) {
-                    // Remove if either side deleted or if multi-line text inserted in between
                     removed.push(pair);
                     continue outer;
                 }
@@ -156,10 +154,10 @@ function applyContentChanges(pairs: Pair[], contentChanges: TextDocumentContentC
      * Get a new position as a result of a text content change that occurred anywhere in the document.
      * The position is considered deleted if the content change overwrites the position.
      * 
-     * @param pos Initial position that shifted/deleted by the content change.
+     * @param pos Initial position that is shifted/deleted by the content change.
      * @param contentChange The relevant content change.
-     * @return The new shifted position, but if the content change deleted the position then `undefined`
-     * is returned instead. 
+     * @return The new shifted position. However `undefined` is returned if the content change deleted 
+     * the position.
      */
     function getNewPos(pos: Position, contentChange: TextDocumentContentChangeEvent): Position | undefined {
         if (pos.isAfterOrEqual(contentChange.range.start) && pos.isBefore(contentChange.range.end)) {
@@ -205,15 +203,15 @@ function applyContentChanges(pairs: Pair[], contentChanges: TextDocumentContentC
  * @return (If any) a pair that was added by the content changes.
  */
 function getNewPair(contentChanges: TextDocumentContentChangeEvent[], settings: Readonly<Settings>): Pair | undefined {
-    // languageRule - A list of string pairs that will be compared against the text of the content 
-    // changes. If a content change's text matches any element in the language rule, that means 
-    // that it is a pair that we want to track, and so we create a `Pair` object that points to
-    // that actual pair in the document. The pairs in `languageRule` are also known as 'trigger pairs'.
+    // languageRule - A list of 'trigger pairs' that will be compared against the text of the content 
+    // changes. If a content change's text matches any entry in the language rule, that means that
+    // the content change is a pair that we want to track, so we create a `Pair` object that points 
+    // to that actual pair in the document.
     // 
     // decorationOptions - The decoration options for the closing character of the pair. 
     const { languageRule, decorationOptions } = settings;
     const { range, text } = contentChanges[0];
-    // Return a new pair on rule match
+    // Return a new `Pair` on rule match
     if (text.length === 2 && range.isEmpty && languageRule.some((rule) => text === rule)) {
         return new Pair(
             range.start,
@@ -225,7 +223,7 @@ function getNewPair(contentChanges: TextDocumentContentChangeEvent[], settings: 
 }
 
 /** 
- * Remove any pairs that the cursor has moved out of.
+ * Remove any `Pair`s that the cursor has moved out of.
  * 
  * @param pairs The list of `Pair`s to update.
  * @param activeTextEditor The currently active text editor.
@@ -236,7 +234,6 @@ function removeEscapedPairs(pairs: Pair[], activeTextEditor: TextEditor): [Pair[
     const retained: Pair[] = [];
     const removed: Pair[] = [];
     for (const pair of pairs) {
-        // Remove from tracking any `Pair`s that the cursor has moved out of
         pair.enclosesPos(cursorPos) ? retained.push(pair) : removed.push(pair);
     }
     return [retained, removed];
