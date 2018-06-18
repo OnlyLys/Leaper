@@ -24,7 +24,6 @@
         "Quotes",
         "Parentheses"
     ],
-    "preview": true,
     "activationEvents": [
         "*"
     ],

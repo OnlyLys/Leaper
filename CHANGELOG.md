@@ -2,6 +2,7 @@
 
 ### 0.4.2
 - Fix issues with README file.
+- Remove 'preview' from extension manifest.
 
 ### 0.4.1
 - Code clean up. No functional changes.
