@@ -91,8 +91,8 @@ export class Pairs {
         if (newPair) {
             this.data.push(newPair);
         }
-        removeDecorations(removed);
-        reapplyDecorations(this.data, this.settings.decorateOnlyNearestPair);
+        undecorate(removed);
+        decorate(this.data, this.settings.decorateOnlyNearestPair);
     }
 
     /** 
@@ -106,8 +106,8 @@ export class Pairs {
         this.recentlyRemovedDueToCursorMove = removed;
         this.data = retained;
         if (removed.length > 0) {
-            removeDecorations(removed);
-            reapplyDecorations(this.data, this.settings.decorateOnlyNearestPair);
+            undecorate(removed);
+            decorate(this.data, this.settings.decorateOnlyNearestPair);
         }
     }
 
@@ -240,15 +240,15 @@ function removeEscapedPairs(pairs: Pair[], activeTextEditor: TextEditor): [Pair[
 }
 
 /**
- * @param pairs Redecorate this list of `Pair`s.
+ * @param pairs Decorate all `Pair`s this list.
  * @param decorateOnlyNearestPair If `true` will only decorate the most nested `Pair` in `pairs`. 
  * Otherwise decorates all `Pair`s.
  */
-function reapplyDecorations(pairs: Pair[], decorateOnlyNearestPair: boolean): void {
+function decorate(pairs: Pair[], decorateOnlyNearestPair: boolean): void {
     if (pairs.length < 1) {
         return;
     }
-    removeDecorations(pairs);
+    undecorate(pairs);
     if (decorateOnlyNearestPair) {
             pairs[pairs.length - 1].decorate();
     } else {
@@ -256,7 +256,7 @@ function reapplyDecorations(pairs: Pair[], decorateOnlyNearestPair: boolean): vo
     }
 }
 
-/** @param pairs Undecorate this list of `Pair`s. */
-function removeDecorations(pairs: Pair[]): void {
+/** @param pairs Undecorate all `Pair`s this list. */
+function undecorate(pairs: Pair[]): void {
     pairs.forEach((pair) => pair.undecorate());
 }
