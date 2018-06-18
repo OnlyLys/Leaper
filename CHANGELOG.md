@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### 0.4.1
+- Code clean up. No functional changes.
+
 ### 0.4.0
 - 'Leap' command now works differently when used via the `Tab` keybinding vs. the command palette command. 'Leap' requires line of sight (i.e. have no non-whitespace text between the cursor position and the leap target) when used via the `Tab` key, while the command palette key does not.
 
