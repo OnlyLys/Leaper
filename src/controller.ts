@@ -19,6 +19,17 @@ export class Controller {
 
     private pairs: Pairs = new Pairs(this.settings);
 
+    private constructor() {}
+
+    /** 
+     * Start an instance of the controller. The controller starts running on instantiation.
+     * 
+     * @return An instance of the controller. 
+     */
+    public static start(): Controller {
+        return new Controller();
+    }
+
     /** Triggers when text is modified in the document. */
     private contentChangeWatcher: Disposable = workspace.onDidChangeTextDocument( (event) => {
         if (!window.activeTextEditor || event.document !== window.activeTextEditor.document) {

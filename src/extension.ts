@@ -4,7 +4,7 @@ import { ExtensionContext } from 'vscode';
 import { Controller } from './controller';
 
 export function activate(context: ExtensionContext) {
-    const controller = new Controller();
+    const controller = Controller.start();
     context.subscriptions.push(controller);
 }
 
