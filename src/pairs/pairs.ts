@@ -163,7 +163,7 @@ function applyContentChanges(pairs: Pair[], contentChanges: TextDocumentContentC
  * @return The new shifted position. However `undefined` is returned if the content change deleted 
  * the position.
  */
-function shift(pos: Position, replacedRange: Range, insertedText: string): Position | undefined {
+export function shift(pos: Position, replacedRange: Range, insertedText: string): Position | undefined {
     if (pos.isAfterOrEqual(replacedRange.start) && pos.isBefore(replacedRange.end)) {
         return undefined;   // Position overwritten by content change: position deleted
     } else if (pos.isBefore(replacedRange.start)) {
@@ -177,31 +177,31 @@ function shift(pos: Position, replacedRange: Range, insertedText: string): Posit
     const remainder: Range = new Range(replacedRange.end, pos); 
     // Append the remainder to the end of the newly inserted text to get the final ending position
     return getAppendEnd(insertedTextEnd, remainder);
-}
 
-/** 
- * Get the end position of a range that is appended to the end of `pos`. 
- * 
- * @param pos The position from which the range of `arg` is added to.
- * @param arg A range that is appended to `pos`. If `arg` is of type `string`, then the range of the 
- * string will be used.
- * @return The end position of the appended range. 
-*/
-function getAppendEnd(pos: Position, arg: string | Range): Position {
-    let deltaLines: number;
-    let lastLineLengthOfArg: number;
-    if (typeof arg === 'string') {
-        const splitByNewline = arg.split('\n');
-        deltaLines = splitByNewline.length - 1;
-        lastLineLengthOfArg = splitByNewline[splitByNewline.length - 1].length;
-    } else {
-        deltaLines = arg.end.line - arg.start.line;
-        lastLineLengthOfArg = arg.end.character - (arg.isSingleLine ? arg.start.character : 0);
+    /** 
+     * Get the end position of a range that is appended to the end of `pos`. 
+     * 
+     * @param pos The position from which the range of `arg` is added to.
+     * @param arg A range that is appended to `pos`. If `arg` is of type `string`, then the range of the 
+     * string will be used.
+     * @return The end position of the appended range. 
+    */
+    function getAppendEnd(pos: Position, arg: string | Range): Position {
+        let deltaLines: number;
+        let lastLineLengthOfArg: number;
+        if (typeof arg === 'string') {
+            const splitByNewline = arg.split('\n');
+            deltaLines = splitByNewline.length - 1;
+            lastLineLengthOfArg = splitByNewline[splitByNewline.length - 1].length;
+        } else {
+            deltaLines = arg.end.line - arg.start.line;
+            lastLineLengthOfArg = arg.end.character - (arg.isSingleLine ? arg.start.character : 0);
+        }
+        return new Position(
+            pos.line + deltaLines,
+            lastLineLengthOfArg + (deltaLines === 0 ? pos.character : 0)
+        );
     }
-    return new Position(
-        pos.line + deltaLines,
-        lastLineLengthOfArg + (deltaLines === 0 ? pos.character : 0)
-    );
 }
 
 /** 
