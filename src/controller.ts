@@ -30,6 +30,15 @@ export class Controller {
         return new Controller();
     }
 
+    /**
+     * Query the controller to see if there are currently any pairs being tracked.
+     * 
+     * @returns `true` only if there are pairs being tracked.
+     */
+    public get hasPairs(): boolean {
+        return !this.pairs.isEmpty;
+    }
+
     /** Triggers when text is modified in the document. */
     private contentChangeWatcher: Disposable = workspace.onDidChangeTextDocument( (event) => {
         if (!window.activeTextEditor || event.document !== window.activeTextEditor.document) {

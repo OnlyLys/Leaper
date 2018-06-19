@@ -3,8 +3,10 @@
 import { ExtensionContext } from 'vscode';
 import { Controller } from './controller';
 
+export let controller: Controller;
+
 export function activate(context: ExtensionContext) {
-    const controller = Controller.start();
+    controller = Controller.start();
     context.subscriptions.push(controller);
 }
 
