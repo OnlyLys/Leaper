@@ -1,6 +1,6 @@
 'use strict';
 
-import { workspace, DecorationRenderOptions, ThemeColor, window, WorkspaceConfiguration } from 'vscode';
+import { workspace, DecorationRenderOptions, ThemeColor, WorkspaceConfiguration } from 'vscode';
 import { EXT_IDENT } from './controller';
 
 /** 
@@ -12,13 +12,12 @@ import { EXT_IDENT } from './controller';
 export class Settings {
 
     /** 
-     * The pairs that will trigger tracking for the current language. The insertion of any of these 
-     * pairs is constantly being watched for by the extension. These are also known as the trigger 
-     * pairs.
+     * The pairs that will trigger tracking. Insertion of any of these pairs will constantly be 
+     * watched for by the extension.
      */
-    private _languageRule: ReadonlyArray<string> = getLanguageRule();
-    get languageRule(): ReadonlyArray<string> {
-        return this._languageRule;
+    private _triggerPairs: { open: string, close: string }[] = getTriggerPairs();
+    get triggerPairs(): ReadonlyArray<{ open: string, close: string }> {
+        return this._triggerPairs;
     }
 
     /* The decoration options for the closing character of a pair. */
@@ -33,45 +32,40 @@ export class Settings {
         return this._decorateOnlyNearestPairFlag;
     }
 
-    /**
-     * Queries if the extension is enabled for the current language by checking if the language rule
-     * is non-empty.
-     * 
-     * @return `true` only if the extension is enabled for the current language.
-     */
-    public get isEnabled(): boolean {
-        return this.languageRule.length > 0;
-    }
-
     private constructor() {}
 
-    /** @return Obtain an instance of `Settings` with the latest values. */
+    /** @return An instance of `Settings` with the latest values. */
     public static load(): Settings {
         return new Settings();
     }
 
     /** Update to the latest settings obtained from the default/global/workspace configuration. */
     public update(): void {
-        this._languageRule = getLanguageRule();
+        this._triggerPairs = getTriggerPairs();
         this._decorationOptions = getDecorationOptions();
         this._decorateOnlyNearestPairFlag = getDecorateOnlyNearestPairFlag();
     }
 
 }
 
-function getLanguageRule(): ReadonlyArray<string> { 
-    if (!window.activeTextEditor) {
-        return [];
-    }
-    const languageRules: WorkspaceConfiguration = workspace.getConfiguration(`${EXT_IDENT}.languageRules`);
-    const languageId: string = window.activeTextEditor.document.languageId;
-    const languageSpecificRule: ReadonlyArray<string> | undefined = languageRules.get(`${languageId}`);
-    const globalRule: ReadonlyArray<string> | undefined = languageRules.get(`*`);
-    // If format is wrong then the rule will not be used
-    return checkFormat(languageSpecificRule) ? languageSpecificRule : (checkFormat(globalRule) ? globalRule : []);
+const DEFAULT_TRIGGER_PAIRS: { open: string, close: string }[] = [
+    { "open": "(", "close": ")" },
+    { "open": "[", "close": "]" },
+    { "open": "{", "close": "}" },
+    { "open": "<", "close": ">" },
+    { "open": "`", "close": "`" },
+    { "open": "'", "close": "'" },
+    { "open": "\"", "close": "\"" }
+];
 
-    function checkFormat(arr: ReadonlyArray<string> | undefined): arr is ReadonlyArray<string> {
-        return Array.isArray(arr) && arr.every((pair) => typeof pair === 'string' && pair.length === 2);
+function getTriggerPairs(): { open: string, close: string }[] { 
+    const extensionConfig: WorkspaceConfiguration = workspace.getConfiguration(`${EXT_IDENT}`);
+    const additionalPairs: any = extensionConfig.get('additionalDetectedPairs');
+    return checkFormat(additionalPairs) ? DEFAULT_TRIGGER_PAIRS.concat(additionalPairs) : DEFAULT_TRIGGER_PAIRS;
+
+    function checkFormat(arr: any): arr is { open: string, close: string }[] {
+        return Array.isArray(arr) &&
+            arr.every(({open, close}) => typeof open === 'string' && typeof close === 'string');
     }
 }
 

@@ -43,19 +43,10 @@
                     "default": true,
                     "description": "[Leaper] If `false`, will decorate all pairs instead of just the nearest one."
                 },
-                "leaper.languageRules": {
-                    "type": "object",
-                    "default": {
-                        "*": [
-                            "()",
-                            "[]",
-                            "{}",
-                            "''",
-                            "\"\"",
-                            "``"
-                        ]
-                    },
-                    "description": "[Leaper] Set the pairs that the extension is enabled for on a per language basis."
+                "leaper.additionalDetectedPairs": {
+                    "type": "array",
+                    "default": [],
+                    "description": "[Leaper] Set additional pairs that the extension will detect. Currently there is no support for pairs that have more than 1 character on each side."
                 }
             }
         },
@@ -103,7 +94,8 @@
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install"
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
         "@types/mocha": "^2.2.42",

@@ -8,12 +8,10 @@ import { Settings } from './settings';
 export const EXT_IDENT = "leaper";     // Identifier of extension
 
 /** 
- * A controller that tracks any autoclosing pairs that are entered by the user. The pairs that will
- * be tracked are specified in the `languageRule` contribution.
+ * A controller that tracks any autoclosing pairs that are entered by the user. Once tracked, the 
+ * user can leap out of them via a `Tab` keypress.
  * 
- * Once tracked, the user can leap out of them via a `Tab` keypress.
- * 
- * The controller has to have `dispose()` called on it upon shut down of the extension.
+ * The controller has to have `.dispose()` called on it upon shut down of the extension.
  */
 export class Controller {
 
@@ -23,7 +21,7 @@ export class Controller {
 
     /** Triggers when text is modified in the document. */
     private contentChangeWatcher: Disposable = workspace.onDidChangeTextDocument( (event) => {
-        if (!this.settings.isEnabled || !window.activeTextEditor || event.document !== window.activeTextEditor.document) {
+        if (!window.activeTextEditor || event.document !== window.activeTextEditor.document) {
             return;
         }
         // Update the pairs that are being tracked by the extension
@@ -36,7 +34,7 @@ export class Controller {
 
     /** Triggers when the cursor is moved. */
     private cursorChangeWatcher: Disposable = window.onDidChangeTextEditorSelection( (event) => {
-        if (!this.settings.isEnabled || !window.activeTextEditor || event.textEditor !== window.activeTextEditor) {
+        if (!window.activeTextEditor || event.textEditor !== window.activeTextEditor) {
             return;
         }
         if (window.activeTextEditor.selections.length > 1) {     
@@ -63,9 +61,9 @@ export class Controller {
 
     /** Triggers when there is a change in the currently active text editor. */
     private activeTextEditorChangeWatcher: Disposable = window.onDidChangeActiveTextEditor( (_) => {
-        // When the active text editor changes, the language ID could also change 
-        // So we have to reload settings on every active text editor change
         this.clearInternalState();
+        // We update on every active text editor change because there is a chance that there has been
+        // a switch to a different workspace with different settings that we need to load
         this.settings.update();
     });
     

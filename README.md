@@ -12,11 +12,11 @@ Leaper provides the ability to leap out of autoclosing pairs with `Tab`!
 
 The user's input is monitored for the insertion of any autoclosing pairs. By default, these pairs (called the trigger pairs) are monitored globally:
 
-    (), {}, [], '', "", ``
+    (), {}, [], <>, '', "", ``
 
-but the user can change them via the contribution [`leaper.languageRules`](#`leaper.languageRules`).
+When the insertion of any of these pairs are detected, the extension will begin to track its position in the document and provide the user the ability to leap out of it.
 
-When the insertion of any of the trigger pairs are detected, the extension will begin to track its position in the document and provide the user the ability to leap out of it.
+Note that the editor's `editor.autoClosingBrackets` setting must be enabled for the extension to work.
 
 ## Extension Keybindings
 
@@ -62,27 +62,17 @@ To decorate all the pairs that are being tracked, set this contribution to `fals
 
 ![Decorate All Pairs](images/decorate-all-pairs.gif)
 
-### `leaper.languageRules`
+### `leaper.additionalDetectedPairs`
 
-Users can use this contribution to set the pairs that will trigger the extension. The default value for this contribution (which should cover most uses cases) is:
+Users can use this contribution to add additional pairs that will trigger the extension. Pairs are specified with the format: 
 
-    "leaper.languageRules": {
-        "*": ["()", "[]", "{}", "''", "\"\"", "``"]
-    },
+    { "open": "_open_character_", "close": "_close_character_" }
 
-`"*"` is the global rule that applies to all languages that don't have their own rules. We may modify it, or we may set rules for specific languages. For instance, we can apply a smaller set of rules for Typescript and turn off pair detection for C++ like so:
+For instance, say we want to add a pair that is `||`. All we need to do is to set the contribution to:
 
-    "leaper.languageRules": {
-        "*": ["()", "[]", "{}", "''", "\"\"", "``"]
-        "typescript": ["()", "[]", "{}"],
-        "cpp": [],
-    }
-
-The key of each entry needs to be a language ID. The language ID of a language can be found in the editor's `Change Language Mode` menu accessible via the command pallete.
-
-Notes:
-1. Leaving out the global language rule (`"*"`) does not disable it. If you wish to disable it you need to set its value to an empty array (`[]`).
-2. There currently is no support for pairs that have more than one character on each side.
+    "leaper.additionalDetectedPairs": [
+        { "open": "|", "close": "|" }
+    ],
 
 ## Feedback and Help
 
