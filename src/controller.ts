@@ -90,6 +90,9 @@ export class Controller {
     /** A command that allows users to leap out of the nearest pair. */
     private leapCommand: Disposable = commands.registerTextEditorCommand(
         `${EXT_IDENT}.leap`, (textEditor: TextEditor) => {
+            if (this.pairs.isEmpty) {
+                return;
+            }
             const pair: Pair | undefined = this.pairs.mostNested;
             if (pair) {
                 const posPastClose: Position = pair.close.translate({ characterDelta: 1 });
