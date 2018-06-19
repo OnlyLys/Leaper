@@ -5,8 +5,8 @@ import { Pair } from './pair';
 import { Settings } from '../settings';
 
 /** 
- * A list of containing `Pair`s, which are each representations of pairs that are currently being 
- * tracked in the text editor.
+ * A container of `Pair`s, which are each representations of pairs that are currently being tracked 
+ * in the active text editor.
  */
 export class Pairs {
     
@@ -59,8 +59,7 @@ export class Pairs {
 
     /** @return (If any) the most nested `Pair` in the list. */
     public get mostNested(): Pair | undefined {
-        // The most nested pair is also the most recently added pair. It is also the pair that is 
-        // nearest to the current cursor position.
+        // The most nested pair is also the most recently added pair
         return this.data[this.data.length -1];
     }
 
@@ -78,17 +77,17 @@ export class Pairs {
      */
     public updateGivenContentChanges(contentChanges: TextDocumentContentChangeEvent[], activeTextEditor: TextEditor): void {
         // Recover any erroneously removed pairs by applying the content changes and checking if the
-        // cursor is within them.
+        // cursor is within them
         const [pending] = applyContentChanges(this.recentlyRemovedDueToCursorMove, contentChanges);
-        const recovered = pending.filter((pair) => pair.enclosesPos(activeTextEditor.selection.active));
+        const [recovered] = removeEscapedPairs(pending, activeTextEditor.selection.active);
         this.recentlyRemovedDueToCursorMove = [];
         // Update the existing list then add the recovered ones back in
         const [updated, removed] = applyContentChanges(this.data, contentChanges);
         this.data = updated;
         this.data.push(...recovered);
-        // Add any new pairs into the list then redecorate
-        const newPair: Pair | undefined = getNewPair(contentChanges, this.settings);
-        if (newPair) {
+        // Add any new pair into the list
+        const newPair: Pair | undefined = checkForNewPair(contentChanges, this.settings);
+        if (newPair) { 
             this.data.push(newPair);
         }
         undecorate(removed);
@@ -97,12 +96,14 @@ export class Pairs {
 
     /** 
      * Update the pairs due to cursor changes in the text editor: when the cursor is moved out of a 
-     * pair, the pair is removed from tracking.
+     * pair, the pair is removed from tracking. This step implicitly removes any copy pasted pairs 
+     * from being tracked and leaves only autoclosing pairs (which is what we want), because copy 
+     * pasted pairs have a final cursor position that is outside the pair.
      * 
      * @param activeTextEditor The currently active text editor.
      */
     public updateGivenCursorChanges(activeTextEditor: TextEditor): void {
-        const [retained, removed] = removeEscapedPairs(this.data, activeTextEditor);
+        const [retained, removed] = removeEscapedPairs(this.data, activeTextEditor.selection.active);
         this.recentlyRemovedDueToCursorMove = removed;
         this.data = retained;
         if (removed.length > 0) {
@@ -135,9 +136,9 @@ function applyContentChanges(pairs: Pair[], contentChanges: TextDocumentContentC
     const removed: Pair[] = [];
     outer:
         for (const pair of pairs) {
-            for (const contentChange of contentChanges) {
-                const newOpen: Position | undefined = getNewPos(pair.open, contentChange);
-                const newClose: Position | undefined = getNewPos(pair.close, contentChange);
+            for (const {range: replacedRange, text: insertedText} of contentChanges) {
+                const newOpen: Position | undefined = shift(pair.open, replacedRange, insertedText);
+                const newClose: Position | undefined = shift(pair.close, replacedRange, insertedText);
                 // Remove if either side deleted or if multi-line text inserted in between                
                 if (!newOpen || !newClose || newOpen.line !== newClose.line) {
                     removed.push(pair);
@@ -149,88 +150,84 @@ function applyContentChanges(pairs: Pair[], contentChanges: TextDocumentContentC
             updated.push(pair);
         }
     return [updated, removed];
-
-    /** 
-     * Get a new position as a result of a text content change that occurred anywhere in the document.
-     * The position is considered deleted if the content change overwrites the position.
-     * 
-     * @param pos Initial position that is shifted/deleted by the content change.
-     * @param contentChange The relevant content change.
-     * @return The new shifted position. However `undefined` is returned if the content change deleted 
-     * the position.
-     */
-    function getNewPos(pos: Position, contentChange: TextDocumentContentChangeEvent): Position | undefined {
-        if (pos.isAfterOrEqual(contentChange.range.start) && pos.isBefore(contentChange.range.end)) {
-            return undefined;   // Position overwritten by content change
-        } else if (pos.isBefore(contentChange.range.start)) {
-            return pos;         // Content change occurred after the position: no change
-        }
-        // What's left is content change that occured before the position
-        //
-        // Define gap range as the range between the overwritten range and `pos`
-        const gapRange: Range = new Range(contentChange.range.end, pos); 
-        // Get end position of the newly inserted text
-        const textEndPos: Position = getEndPos(contentChange.range.start, contentChange.text);
-        // Append the gap range to the end of the newly inserted text and find the ending position
-        return getEndPos(textEndPos, gapRange);
-
-        /** Get the end position of a string or a range that is appended to the end of `startPos`. */
-        function getEndPos(startPos: Position, arg: string | Range): Position {
-            let deltaLines: number;
-            let argLastLineLength: number;
-            if (typeof arg === 'string') {
-                const splitText = arg.split('\n');
-                argLastLineLength = splitText[splitText.length - 1].length;
-                deltaLines = splitText.length - 1;
-            } else {
-                argLastLineLength = arg.end.character - (arg.isSingleLine ? arg.start.character : 0);
-                deltaLines = arg.end.line - arg.start.line;
-            }
-            return new Position(
-                startPos.line + deltaLines,
-                argLastLineLength + (deltaLines > 0 ? 0 : startPos.character),
-            );
-        }
-    }
-
 }
 
 /** 
- * Get any new pairs introduced by the content changes.
+ * Get a new position from an old one that is shifted or deleted due to a text replacement that
+ * occurred anywhere in the document. The position is considered deleted if the text replacement 
+ * overwrote the position.
  * 
- * @param contentChanges The content changes that may have introduced pairs.
- * @param settings The current settings of the extension.
- * @return (If any) a pair that was added by the content changes.
+ * @param pos Initial position.
+ * @param replacedRange The range of text that was overwritten.
+ * @param insertedText New text that was inserted at the start of the replaced region.
+ * @return The new shifted position. However `undefined` is returned if the content change deleted 
+ * the position.
  */
-function getNewPair(contentChanges: TextDocumentContentChangeEvent[], settings: Readonly<Settings>): Pair | undefined {
-    // languageRule - A list of 'trigger pairs' that will be compared against the text of the content 
-    // changes. If a content change's text matches any entry in the language rule, that means that
-    // the content change is a pair that we want to track, so we create a `Pair` object that points 
-    // to that actual pair in the document.
-    // 
-    // decorationOptions - The decoration options for the closing character of the pair. 
-    const { languageRule, decorationOptions } = settings;
-    const { range, text } = contentChanges[0];
-    // Return a new `Pair` on rule match
-    if (text.length === 2 && range.isEmpty && languageRule.some((rule) => text === rule)) {
-        return new Pair(
-            range.start,
-            range.start.translate({ characterDelta: 1 }),
-            decorationOptions
-        );
+function shift(pos: Position, replacedRange: Range, insertedText: string): Position | undefined {
+    if (pos.isAfterOrEqual(replacedRange.start) && pos.isBefore(replacedRange.end)) {
+        return undefined;   // Position overwritten by content change: position deleted
+    } else if (pos.isBefore(replacedRange.start)) {
+        return pos;         // Content change occurred after the position: no change
     }
-    return undefined;
+    // What's left is content change before the position, which shifts the position
+
+    // First get the end position of the inserted text
+    const insertedTextEnd: Position = getAppendEnd(replacedRange.start, insertedText);
+    // Then get range of the text between the end of the overwritten region and `pos`
+    const remainder: Range = new Range(replacedRange.end, pos); 
+    // Append the remainder to the end of the newly inserted text to get the final ending position
+    return getAppendEnd(insertedTextEnd, remainder);
+}
+
+/** 
+ * Get the end position of a range that is appended to the end of `pos`. 
+ * 
+ * @param pos The position from which the range of `arg` is added to.
+ * @param arg A range that is appended to `pos`. If `arg` is of type `string`, then the range of the 
+ * string will be used.
+ * @return The end position of the appended range. 
+*/
+function getAppendEnd(pos: Position, arg: string | Range): Position {
+    let deltaLines: number;
+    let lastLineLengthOfArg: number;
+    if (typeof arg === 'string') {
+        const splitByNewline = arg.split('\n');
+        deltaLines = splitByNewline.length - 1;
+        lastLineLengthOfArg = splitByNewline[splitByNewline.length - 1].length;
+    } else {
+        deltaLines = arg.end.line - arg.start.line;
+        lastLineLengthOfArg = arg.end.character - (arg.isSingleLine ? arg.start.character : 0);
+    }
+    return new Position(
+        pos.line + deltaLines,
+        lastLineLengthOfArg + (deltaLines === 0 ? pos.character : 0)
+    );
+}
+
+/** 
+ * Check if a new pair was inserted into the document.
+ * 
+ * @param contentChanges - The content changes that may have introduced a pair.
+ * @param settings - The extension's current settings.
+ * @return A `Pair` if the content changes introduced a pair. Otherwise `undefined`.
+ */
+function checkForNewPair(contentChanges: TextDocumentContentChangeEvent[], settings: Readonly<Settings>): Pair | undefined {
+    // We only consider the first element of content changes because when autoclosing pairs are 
+    // inserted they only manifest as a single content change that overwrites no text
+    const { range, text } = contentChanges[0];
+    const { triggerPairs, decorationOptions } = settings;
+    return range.isEmpty && triggerPairs.some(tp => text[0] === tp.open && text[1] === tp.close) ?
+        new Pair(range.start, range.start.translate({ characterDelta: 1 }), decorationOptions) : undefined;
 }
 
 /** 
  * Remove any `Pair`s that the cursor has moved out of.
  * 
  * @param pairs The list of `Pair`s to update.
- * @param activeTextEditor The currently active text editor.
+ * @param cursorPos The current cursor position.
  * @return A tuple containing a list of retained `Pair`s followed by a list of removed `Pair`s.
  */
-function removeEscapedPairs(pairs: Pair[], activeTextEditor: TextEditor): [Pair[], Pair[]] {
-    const cursorPos: Position = activeTextEditor.selection.active;
+function removeEscapedPairs(pairs: Pair[], cursorPos: Position): [Pair[], Pair[]] {
     const retained: Pair[] = [];
     const removed: Pair[] = [];
     for (const pair of pairs) {
@@ -248,12 +245,8 @@ function decorate(pairs: Pair[], decorateOnlyNearestPair: boolean): void {
     if (pairs.length < 1) {
         return;
     }
-    undecorate(pairs);
-    if (decorateOnlyNearestPair) {
-            pairs[pairs.length - 1].decorate();
-    } else {
-        pairs.forEach((pair) => pair.decorate());
-    }
+    undecorate(pairs);   // Remove old decorations before redecorating because it's easier to manage this way
+    decorateOnlyNearestPair ? pairs[pairs.length - 1].decorate() : pairs.forEach((pair) => pair.decorate());
 }
 
 /** @param pairs Undecorate all `Pair`s this list. */
