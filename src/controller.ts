@@ -39,6 +39,11 @@ export class Controller {
         return !this.pairs.isEmpty;
     }
 
+    /** @returns A list of the positions of the pairs that are currently being tracked. */
+    public get listPairs(): { open: Position, close: Position }[] {
+        return this.pairs.raw;
+    }
+
     /** Triggers when text is modified in the document. */
     private contentChangeWatcher: Disposable = workspace.onDidChangeTextDocument( (event) => {
         if (!window.activeTextEditor || event.document !== window.activeTextEditor.document) {

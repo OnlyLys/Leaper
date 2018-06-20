@@ -23,9 +23,9 @@ export class Pairs {
      * insertion has the content change come before the cursor movement, while snippet insertions 
      * have it the other way around, which removes pairs that shouldn't be removed.
      * 
-     * More specifically, when the cursor moves first, the `updateGivenCursorChanges()` method that triggers
-     * on a cursor move can erroneously remove pairs from tracking even though the cursor is actually
-     * within the pair after the entire text edit is complete.
+     * More specifically, when the cursor moves first, the `updateGivenCursorChanges()` method that 
+     * is triggered by a cursor move can erroneously remove pairs from tracking even though the cursor 
+     * is actually within the pair after the entire text edit is complete.
      * 
      * Therefore when `Pair`s are removed by the cursor updater, we should store them in a temporarily
      * list to then give the content change watcher one chance to rescue any erroneously removed ones.
@@ -35,6 +35,11 @@ export class Pairs {
     /** @return `true` only if no pairs are being tracked. */
     public get isEmpty(): boolean {
         return this.data.length < 1;
+    }
+
+    /** @return A list of `Pair`s which each represent a pair that is being tracked in the document. */
+    public get raw(): Pair[] {
+        return this.data;
     }
 
     /**
