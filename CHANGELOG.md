@@ -3,7 +3,7 @@
 ### 0.5.0
 - Remove `leaper.languageRules` contribution in favour of a global `leaper.additionalTriggerPairs` rule that is simpler to understand. Now pairs are detected globally instead of on a per language basis.
 - Code improvements.
-- Added a bunch of tests to verify proper behavior.
+- Added a bunch of tests to verify behavior.
 
 ### 0.4.2
 - Fix issues with README file.
