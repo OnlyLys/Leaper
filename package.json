@@ -43,10 +43,10 @@
                     "default": true,
                     "description": "[Leaper] If `false`, will decorate all pairs instead of just the nearest one."
                 },
-                "leaper.additionalDetectedPairs": {
+                "leaper.additionalTriggerPairs": {
                     "type": "array",
                     "default": [],
-                    "description": "[Leaper] Set additional pairs that the extension will detect. Currently there is no support for pairs that have more than 1 character on each side."
+                    "description": "[Leaper] Set additional pairs that the extension will detect. Currently there is no support for pairs that are more than 1 character wide on each side."
                 }
             }
         },

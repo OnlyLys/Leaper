@@ -62,15 +62,15 @@ To decorate all the pairs that are being tracked, set this contribution to `fals
 
 ![Decorate All Pairs](images/decorate-all-pairs.gif)
 
-### `leaper.additionalDetectedPairs`
+### `leaper.additionalTriggerPairs`
 
 Users can use this contribution to add additional pairs that will trigger the extension. Pairs are specified with the format: 
 
     { "open": "_open_character_", "close": "_close_character_" }
 
-For instance, say we want to add a pair that is `||`. All we need to do is to set the contribution to:
+For instance, say we want to add detection for a pair that is `||`. All we need to do is to set the contribution to:
 
-    "leaper.additionalDetectedPairs": [
+    "leaper.additionalTriggerPairs": [
         { "open": "|", "close": "|" }
     ],
 

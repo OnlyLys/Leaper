@@ -60,7 +60,7 @@ const DEFAULT_TRIGGER_PAIRS: { open: string, close: string }[] = [
 
 function getTriggerPairs(): { open: string, close: string }[] { 
     const extensionConfig: WorkspaceConfiguration = workspace.getConfiguration(`${EXT_IDENT}`);
-    const additionalPairs: any = extensionConfig.get('additionalDetectedPairs');
+    const additionalPairs: any = extensionConfig.get('additionalTriggerPairs');
     return checkFormat(additionalPairs) ? DEFAULT_TRIGGER_PAIRS.concat(additionalPairs) : DEFAULT_TRIGGER_PAIRS;
 
     function checkFormat(arr: any): arr is { open: string, close: string }[] {
