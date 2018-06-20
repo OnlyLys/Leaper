@@ -1,10 +1,9 @@
 'use strict';
 
-import { Position, Selection, TextDocumentSaveReason, commands } from 'vscode';
+import { Position, Selection, commands } from 'vscode';
 import { type, leap, openNewTextDocument, moveCursorRight, moveCursorDown } from './integration-tests-util';
 import * as assert from 'assert';
 import * as extension from '../extension';
-import { open } from 'fs';
 
 /** Array containing all the tests and descriptions. */
 export const allTests: { description: string, run: () => Promise<void> }[] = [];
