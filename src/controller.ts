@@ -33,15 +33,17 @@ export class Controller {
     /**
      * Query the controller to see if there are currently any pairs being tracked.
      * 
-     * @returns `true` only if there are pairs being tracked.
+     * @return `true` only if there are pairs being tracked.
      */
     public get hasPairs(): boolean {
         return !this.pairs.isEmpty;
     }
 
-    /** @returns A list of the positions of the pairs that are currently being tracked. */
-    public get listPairs(): { open: Position, close: Position }[] {
-        return this.pairs.raw;
+    /** @return A copy of the list of the positions of the pairs that are currently being tracked. */
+    public listPairs(): { open: Position, close: Position }[] {
+        const retVal: { open: Position, close: Position }[] = [];
+        this.pairs.raw.forEach((pair) => retVal.push({ open: pair.open, close: pair.close }));
+        return retVal;
     }
 
     /** Triggers when text is modified in the document. */
