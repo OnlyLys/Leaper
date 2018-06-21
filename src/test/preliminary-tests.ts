@@ -1,6 +1,6 @@
 'use strict';
 
-import { Range, commands } from 'vscode';
+import { Range, commands, Position } from 'vscode';
 import { type, openNewTextDocument } from './integration-tests-util';
 import * as assert from 'assert';
 import * as extension from '../extension';
@@ -21,15 +21,15 @@ allTests.push({
     }
 });
 
-/** Preliminary Test 2 - Check that `.hasPairs` method of controller returns `true` when there are pairs. */
+/** Preliminary Test 2 - Check that `.hasPairs` correctly reports whether there are pairs being tracked. */
 allTests.push({
-    description: '2 - Check that `.hasPairs` method of controller returns `true` when there are pairs',
+    description: '2 - Check that `.hasPairs` correctly reports whether there are pairs being tracked',
     run: async () => {
         await openNewTextDocument();
         // 2.1 - `hasPairs` should be false when there are initially no pairs being tracked
         assert.ok(!extension.controller.hasPairs, '2.1 Failed');
-        // 2.2 - Insert 30 pairs and check that `hasPairs` is true each time
-        for (let i = 0; i !== 30; ++i) {
+        // 2.2 - Insert 15 pairs and check that `hasPairs` is true each time
+        for (let i = 0; i !== 15; ++i) {
             await type('[');
             assert.ok(extension.controller.hasPairs, '2.2 Failed. Iteration: ' + i);
         }
@@ -37,5 +37,23 @@ allTests.push({
         await commands.executeCommand('editor.action.selectAll');
         await commands.executeCommand('deleteLeft');
         assert.ok(!extension.controller.hasPairs, '2.3 Failed');
+    }
+});
+
+/** Preliminary Test 3 - Check that `.listPairs()` reports correct pair positions. */
+allTests.push({
+    description: '3 - Check that `.listPairs()` reports correct pair positions',
+    run: async () => {
+        await openNewTextDocument();
+        const input = ['[', '{', '(', '[', '{', '(', '[', '{', '(', '[', '{', '(', '[', '{', '(' ];
+        await type(...input);
+        const trackedPairs = extension.controller.listPairs();
+        for (let i = 0; i !== trackedPairs.length; ++i) {
+            assert.deepStrictEqual(
+                trackedPairs[i], 
+                { open: new Position(0, i), close: new Position(0, 2 * trackedPairs.length - 1 - i) },
+                'Iteration: ' + i
+            );
+        }
     }
 });
