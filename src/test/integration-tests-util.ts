@@ -1,6 +1,6 @@
 'use strcit';
 
-import { window, workspace, TextDocument, TextEditor, Position, commands, Range } from 'vscode';
+import { window, workspace, TextDocument, TextEditor, Position, commands, Range, WorkspaceEdit } from 'vscode';
 import * as assert from 'assert';
 
 /** 
@@ -28,7 +28,9 @@ export async function type(...text: string[]): Promise<void> {
  * @param errMsg Error message to print to debug console on assertion fail.
  * @return The position after the leap.
  */
-export async function leap(arg?: {textEditor: TextEditor, expectMove: number, expectClosing?: string, errMsg?: string} ): Promise<void> {
+export async function leap(arg?: {textEditor: TextEditor, expectMove: number, expectClosing?: string, 
+    errMsg?: string} ): Promise<void> 
+{
     if (!arg) {
         await commands.executeCommand('leaper.leap');
         return;
@@ -73,22 +75,22 @@ export async function openNewTextDocument(content?: string): Promise<TextEditor>
  * @param end The ending position of the range to be replaced. If a `number` is given, the range will 
  * be single line and span that length. If a `Position` is given, then the range will end at that
  * position. If unspecified, the range will be empty.
+ * @param follow If `false`, the cursor will not move to the end of the inserted text after the edit.
  * @param insert Text to insert at the start of the range.
  */
-export async function insertText(arg: {textEditor: TextEditor, start?: Position, end?: number | Position, text: string}): Promise<void> {
-    const {
-        textEditor, 
-        start = arg.textEditor.selection.active, 
-        end = arg.textEditor.selection.active, 
-        text 
-    } = arg;
-    await textEditor.edit((editBuilder) => 
-        editBuilder.replace(
-            new Range(
-                start, 
-                typeof end === 'number' ? new Position(start.line, start.character + end) : end
-            ), 
-            text
-        )
-    );
+export async function insertText(arg: {textEditor: TextEditor, start?: Position, end?: number | Position, 
+    text: string, follow?: boolean}): Promise<void> 
+{
+    const {textEditor, start = arg.textEditor.selection.active, end = 0, text, follow = true } = arg;
+    const endPos = typeof end === 'number' ? start.translate({ characterDelta: end }) : end;
+
+    if (follow) {
+        // Text Editor edits have the cursor follow after the text edit
+        await textEditor.edit((editBuilder) => editBuilder.replace(new Range(start, endPos), text));
+    } else {
+        // Workspace edits do not have the cursor follow after the text edit.
+        const workspaceEditBuilder = new WorkspaceEdit();
+        workspaceEditBuilder.replace(textEditor.document.uri, new Range(start, endPos), text);
+        await workspace.applyEdit(workspaceEditBuilder);
+    }
 }
