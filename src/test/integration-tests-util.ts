@@ -4,8 +4,12 @@ import { window, workspace, TextDocument, TextEditor, Position, commands, Range 
 import * as assert from 'assert';
 
 /** 
- * Send commands that type text to the editor. Each string separated by a comma in the argument
- * list is sent as a separate command.
+ * Send commands that simulate typing text to the editor. Each string separated by a comma in the 
+ * argument list is sent as a separate command.
+ * 
+ * Because `default:type` is not a well documented feature, it's unclear whether or not `default:type`
+ * commands with argument text with length greater than 1 is allowed even though it currently works. 
+ * So, if possible, avoid providing arguments that are more than 1 character long.
  */
 export async function type(...text: string[]): Promise<void> {
     for (const t of text) {
@@ -40,21 +44,51 @@ export async function leap(arg?: {textEditor: TextEditor, expectMove: number, ex
     }
 }
 
-/** Specify negative to move leftwards. */
+/** @param by Move the cursor right by this amount of characters. Specify negative to move backwards. */
 export async function moveCursorRight(by: number): Promise<void> {
     await commands.executeCommand('cursorMove', { to: 'right', by: 'character', value: by });
 }
 
-/** Specify negative to move upwards. */
+/** @param by Move the cursor down by this amount of lines. Specify negative to move upwards. */
 export async function moveCursorDown(by: number): Promise<void> {
     await commands.executeCommand('cursorMove', { to: 'down', by: 'line', value: by });
 }
 
 /** 
- * Open a new text document in the current workspace. If `content` is supplied then the text
- * document will open with that in the document.
+ * Open a new text document in the current workspace. 
+ * 
+ * @param content Text context that the new document will start with.
  */
 export async function openNewTextDocument(content?: string): Promise<TextEditor> {
     const document: TextDocument = await workspace.openTextDocument({ content });
     return await window.showTextDocument(document);
+}
+
+/**
+ * Insert text into a text editor. If a range is given then the range will be replaced by the text.
+ * 
+ * @param textEditor The text editor that the replacement is to occur in.
+ * @param start The starting position of the range to be replaced. If unspecified, will use the current 
+ * cursor position.
+ * @param end The ending position of the range to be replaced. If a `number` is given, the range will 
+ * be single line and span that length. If a `Position` is given, then the range will end at that
+ * position. If unspecified, the range will be empty.
+ * @param insert Text to insert at the start of the range.
+ */
+export async function insertText(arg: {textEditor: TextEditor, start?: Position, end?: number | Position, text: string}): Promise<void> {
+    const {
+        textEditor, 
+        start = arg.textEditor.selection.active, 
+        end = arg.textEditor.selection.active, 
+        text 
+    } = arg;
+    await textEditor.edit((editBuilder) => 
+        editBuilder.replace(
+            new Range(
+                start, 
+                typeof end === 'number' ? new Position(start.line, start.character + end) : end
+            ), 
+            text
+        )
+    );
 }
