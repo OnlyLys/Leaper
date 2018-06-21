@@ -3,8 +3,10 @@
 import * as shiftFnTests from './shift-fn-tests';
 import * as integrationTests from './integration-tests';
 import * as preliminaryTests from './preliminary-tests';
+import { window } from 'vscode';
 
 suite('Preliminary Tests', () => {
+    window.showWarningMessage(`[Leaper] Tests are running, please do not close window.`);
     for (const preliminaryTest of preliminaryTests.allTests) {
         test(preliminaryTest.description, preliminaryTest.run);
     }
