@@ -16,6 +16,10 @@ Run Steps
 1. Open the directory in VS Code: via `Open Folder` in the editor or `code <directory>` in command line.
 2. Run the extension by executing the `Start Debugging` command. The default keybinding for `Start Debugging` is `F5`.
 
+## Testing the Extension
+
+Aside from testing the extension manually, the automatic testing suite should be run to make sure the code performs as expected. To do so, open the debug panel and run `Extension Tests`.
+
 ## Contributing to the Repository
 
 Fork the repository on GitHub and make any changes over there. After that, make a pull request.
