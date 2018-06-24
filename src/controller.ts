@@ -5,6 +5,7 @@ import { Pair } from './pairs/pair';
 import { Pairs } from './pairs/pairs'; 
 import { Settings } from './settings';
 
+export const EXT_NAME = "Leaper";      // Name of extension
 export const EXT_IDENT = "leaper";     // Identifier of extension
 
 /** 
