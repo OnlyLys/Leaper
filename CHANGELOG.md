@@ -1,5 +1,10 @@
 # CHANGELOG
 
+### 0.5.2
+- Make decorations more efficient by only updating when necessary.
+- Show warning message when incorrect trigger pairs specified in `leaper.additionalTriggerPairs`. 
+- Minor README fixes.
+
 ### 0.5.1
 - Code improvements.
 - Added more tests to verify behavior.
