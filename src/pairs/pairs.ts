@@ -13,6 +13,7 @@ export class Pairs {
     /** The actual data structure that contains the pairs. */
     private data: Pair[] = [];
 
+    /** A view of the extension's settings. The controller is responsible for keeping this updated. */
     private settings: Readonly<Settings>;
 
     /** 
