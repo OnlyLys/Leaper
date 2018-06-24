@@ -65,10 +65,15 @@ function getTriggerPairs(): { open: string, close: string }[] {
 
     function checkFormat(arr: any): arr is { open: string, close: string }[] {
         if (!Array.isArray(arr) || arr.some(p => typeof p.open !== 'string' || typeof p.close !== 'string')) {
-            window.showErrorMessage(`[${EXT_NAME}] Warning! Incorrect Trigger Pairs Format!`);
+            window.showWarningMessage(`
+                [${EXT_NAME}] Incorrect format specified for 'leaper.additionalTriggerPairs'!`
+            );
             return false;
         } else if (arr.some(p => p.open.length !== 1 || p.close.length !== 1)) {
-            window.showErrorMessage(`[${EXT_NAME}] Warning! Each Side of a Trigger Pair Can Only Be 1 Character Wide!`);
+            window.showWarningMessage(
+                `[${EXT_NAME}] There is no support pairs that are more than 1 character wide on each \
+                side! Please fix the 'leaper.additionalTriggerPairs' setting!`
+            );
             return false;
         } else {
             return true;
