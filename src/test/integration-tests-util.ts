@@ -28,9 +28,12 @@ export async function type(...text: string[]): Promise<void> {
  * @param errMsg Error message to print to debug console on assertion fail.
  * @return The position after the leap.
  */
-export async function leap(arg?: {textEditor: TextEditor, expectMove: number, expectClosing?: string, 
-    errMsg?: string} ): Promise<void> 
-{
+export async function leap(arg?: {
+    textEditor: TextEditor, 
+    expectMove: number, 
+    expectClosing?: string, 
+    errMsg?: string
+}): Promise<void> {
     if (!arg) {
         await commands.executeCommand('leaper.leap');
         return;
@@ -75,12 +78,16 @@ export async function openNewTextDocument(content?: string): Promise<TextEditor>
  * @param end The ending position of the range to be replaced. If a `number` is given, the range will 
  * be single line and span that length. If a `Position` is given, then the range will end at that
  * position. If unspecified, the range will be empty.
- * @param follow If `false`, the cursor will not move to the end of the inserted text after the edit.
  * @param insert Text to insert at the start of the range.
+ * @param follow If `false`, the cursor will not move to the end of the inserted text after the edit.
  */
-export async function insertText(arg: {textEditor: TextEditor, start?: Position, end?: number | Position, 
-    text: string, follow?: boolean}): Promise<void> 
-{
+export async function insertText(arg: {
+    textEditor: TextEditor, 
+    start?: Position, 
+    end?: number | Position, 
+    text: string, 
+    follow?: boolean
+}): Promise<void> {
     const {textEditor, start = arg.textEditor.selection.active, end = 0, text, follow = true } = arg;
     const endPos = typeof end === 'number' ? start.translate({ characterDelta: end }) : end;
 
