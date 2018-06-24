@@ -119,7 +119,7 @@ export class Pairs {
 
     /** Clears the list of `Pair`s and any decorations. */
     public clear(): void {
-        this.data.forEach((pair) => pair.undecorate());
+        this.data.forEach(pair => pair.undecorate());
         this.data = [];
         this.recentlyRemovedDueToCursorMove = [];
     }
@@ -251,10 +251,10 @@ function decorate(pairs: Pair[], decorateOnlyNearestPair: boolean): void {
         return;
     }
     undecorate(pairs);   // Remove old decorations before redecorating because it's easier to manage this way
-    decorateOnlyNearestPair ? pairs[pairs.length - 1].decorate() : pairs.forEach((pair) => pair.decorate());
+    decorateOnlyNearestPair ? pairs[pairs.length - 1].decorate() : pairs.forEach(pair => pair.decorate());
 }
 
 /** @param pairs Undecorate all `Pair`s this list. */
 function undecorate(pairs: Pair[]): void {
-    pairs.forEach((pair) => pair.undecorate());
+    pairs.forEach(pair => pair.undecorate());
 }

@@ -42,12 +42,12 @@ export class Controller {
     /** @return A copy of the list of the positions of the pairs that are currently being tracked. */
     public listPairs(): { open: Position, close: Position }[] {
         const retVal: { open: Position, close: Position }[] = [];
-        this.pairs.raw.forEach((pair) => retVal.push({ open: pair.open, close: pair.close }));
+        this.pairs.raw.forEach(pair => retVal.push({ open: pair.open, close: pair.close }));
         return retVal;
     }
 
     /** Triggers when text is modified in the document. */
-    private contentChangeWatcher: Disposable = workspace.onDidChangeTextDocument( (event) => {
+    private contentChangeWatcher: Disposable = workspace.onDidChangeTextDocument( event => {
         if (!window.activeTextEditor || event.document !== window.activeTextEditor.document) {
             return;
         }
@@ -60,7 +60,7 @@ export class Controller {
     });
 
     /** Triggers when the cursor is moved. */
-    private cursorChangeWatcher: Disposable = window.onDidChangeTextEditorSelection( (event) => {
+    private cursorChangeWatcher: Disposable = window.onDidChangeTextEditorSelection( event => {
         if (!window.activeTextEditor || event.textEditor !== window.activeTextEditor) {
             return;
         }
@@ -77,7 +77,7 @@ export class Controller {
     });
 
     /** Triggers when there is a settings change. */
-    private settingsChangeWatcher: Disposable = workspace.onDidChangeConfiguration( (event) => {
+    private settingsChangeWatcher: Disposable = workspace.onDidChangeConfiguration( event => {
         // When the settings is changed we immediately want to reload them 
         // Pairs that were previously being tracked are immediately discarded
         if (event.affectsConfiguration(`${EXT_IDENT}`)) {
@@ -87,7 +87,7 @@ export class Controller {
     });
 
     /** Triggers when there is a change in the currently active text editor. */
-    private activeTextEditorChangeWatcher: Disposable = window.onDidChangeActiveTextEditor( (_) => {
+    private activeTextEditorChangeWatcher: Disposable = window.onDidChangeActiveTextEditor( _ => {
         this.clearInternalState();
         // We update on every active text editor change because there is a chance that there has been
         // a switch to a different workspace with different settings that we need to load
@@ -110,7 +110,7 @@ export class Controller {
 
     /** A command that allows users to clear all pairs that are being tracked. */
     private escapeLeaperModeCommand: Disposable = commands.registerTextEditorCommand(
-        `${EXT_IDENT}.escapeLeaperMode`, (_) => this.clearInternalState()
+        `${EXT_IDENT}.escapeLeaperMode`, _ => this.clearInternalState()
     );
 
     private clearInternalState(): void {
@@ -130,7 +130,7 @@ export class Controller {
 
     public dispose(): void {
         this.clearInternalState();
-        this.disposables.forEach((disposable) => disposable.dispose());
+        this.disposables.forEach(disposable => disposable.dispose());
         this.disposables = [];
     }
 
