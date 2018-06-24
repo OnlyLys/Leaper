@@ -48,7 +48,7 @@ For instance, to have a black outline appear around the closing character of a p
         "outlineStyle": "solid"
     }
 
-For the entire list of available properties, please see [vscode namespace API - DecorationRenderOption](https://code.visualstudio.com/docs/extensionAPI/vscode-api#DecorationRenderOptions).
+For the entire list of available properties, please see [vscode namespace API - DecorationRenderOption](https://code.visualstudio.com/docs/extensionAPI/vscode-api#DecorationRenderOptions). Note that not all options available there can be used since there is no way to instantiate a `ThemeColor` type within the editor's settings file.
 
 To turn off the decoration, just set it to an empty brace:
 
