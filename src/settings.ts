@@ -1,7 +1,7 @@
 'use strict';
 
-import { workspace, DecorationRenderOptions, ThemeColor, WorkspaceConfiguration } from 'vscode';
-import { EXT_IDENT } from './controller';
+import { workspace, DecorationRenderOptions, ThemeColor, WorkspaceConfiguration, window, DecorationRangeBehavior } from 'vscode';
+import { EXT_NAME, EXT_IDENT } from './controller';
 
 /** 
  * Class containing settings obtained from the default/global/workspace configuration. 
@@ -64,8 +64,15 @@ function getTriggerPairs(): { open: string, close: string }[] {
     return checkFormat(additionalPairs) ? DEFAULT_TRIGGER_PAIRS.concat(additionalPairs) : DEFAULT_TRIGGER_PAIRS;
 
     function checkFormat(arr: any): arr is { open: string, close: string }[] {
-        return Array.isArray(arr) &&
-            arr.every(({open, close}) => typeof open === 'string' && typeof close === 'string');
+        if (!Array.isArray(arr) || arr.some(p => typeof p.open !== 'string' || typeof p.close !== 'string')) {
+            window.showErrorMessage(`[${EXT_NAME}] Warning! Incorrect Trigger Pairs Format!`);
+            return false;
+        } else if (arr.some(p => p.open.length !== 1 || p.close.length !== 1)) {
+            window.showErrorMessage(`[${EXT_NAME}] Warning! Each Side of a Trigger Pair Can Only Be 1 Character Wide!`);
+            return false;
+        } else {
+            return true;
+        }
     }
 }
 
@@ -73,12 +80,15 @@ const DEFAULT_DECORATION_OPTIONS: DecorationRenderOptions = {
     outlineColor: new ThemeColor('editorBracketMatch.border'),
     outlineWidth: '1px',
     outlineStyle: 'solid',
+    rangeBehavior: DecorationRangeBehavior.ClosedClosed
 };
 
 function getDecorationOptions(): DecorationRenderOptions { 
     const extensionConfig: WorkspaceConfiguration = workspace.getConfiguration(`${EXT_IDENT}`);
     const custom: DecorationRenderOptions | undefined = extensionConfig.get(`customDecorationOptions`);
     if (custom) {
+        // Range behavior closed so that decoration doesn't expand when inserting text to the left of it
+        custom['rangeBehavior'] = DecorationRangeBehavior.ClosedClosed;
         return custom;
     }
     return DEFAULT_DECORATION_OPTIONS;   
