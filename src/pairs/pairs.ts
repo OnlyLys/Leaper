@@ -1,6 +1,6 @@
 'use strict';
 
-import { Position, TextDocumentContentChangeEvent, window, Range, TextEditor } from 'vscode';
+import { Position, TextDocumentContentChangeEvent, window, Range, TextEditor, TextEditorDecorationType, DecorationRenderOptions } from 'vscode';
 import { Pair } from './pair';
 import { Settings } from '../settings';
 
@@ -12,6 +12,9 @@ export class Pairs {
     
     /** The actual data structure that contains the pairs. */
     private data: Pair[] = [];
+
+    /** The decorations for the closing characters of the pairs. */
+    private decorations: TextEditorDecorationType[] = [];
 
     /** A view of the extension's settings. The controller is responsible for keeping this updated. */
     private settings: Readonly<Settings>;
@@ -79,25 +82,25 @@ export class Pairs {
      * existing pairs.
      * 
      * @param contentChanges A list of content changes that have occurred in the text document.
-     * @param activeTextEditor The currently active text editor in which the changes occurred in.
+     * @param textEditor The text editor in which the changes occurred in.
      */
-    public updateGivenContentChanges(contentChanges: TextDocumentContentChangeEvent[], activeTextEditor: TextEditor): void {
+    public updateGivenContentChanges(contentChanges: TextDocumentContentChangeEvent[], textEditor: TextEditor): void {
         // Recover any erroneously removed pairs by applying the content changes and checking if the
         // cursor is within them
         const [pending] = applyContentChanges(this.recentlyRemovedDueToCursorMove, contentChanges);
-        const [recovered] = removeEscapedPairs(pending, activeTextEditor.selection.active);
-        this.recentlyRemovedDueToCursorMove = [];
+        const [recovered] = removeEscapedPairs(pending, textEditor.selection.active);
         // Update the existing list then add the recovered ones back in
         const [updated, removed] = applyContentChanges(this.data, contentChanges);
         this.data = updated;
         this.data.push(...recovered);
-        // Add any new pair into the list
-        const newPair: Pair | undefined = checkForNewPair(contentChanges, this.settings);
+        // Add any new pairs into the list
+        const newPair: Pair | undefined = checkForNewPair(contentChanges, this.settings.triggerPairs);
         if (newPair) { 
             this.data.push(newPair);
         }
-        undecorate(removed);
-        decorate(this.data, this.settings.decorateOnlyNearestPair);
+        if (removed.length > 0 || recovered.length > 0 || newPair) {
+            this.updateDecorations(textEditor);
+        }
     }
 
     /** 
@@ -106,21 +109,53 @@ export class Pairs {
      * from being tracked and leaves only autoclosing pairs (which is what we want), because copy 
      * pasted pairs have a final cursor position that is outside the pair.
      * 
-     * @param activeTextEditor The currently active text editor.
+     * @param textEditor The text editor that the cursor moved in.
      */
-    public updateGivenCursorChanges(activeTextEditor: TextEditor): void {
-        const [retained, removed] = removeEscapedPairs(this.data, activeTextEditor.selection.active);
+    public updateGivenCursorChanges(textEditor: TextEditor): void {
+        const [retained, removed] = removeEscapedPairs(this.data, textEditor.selection.active);
         this.recentlyRemovedDueToCursorMove = removed;
         this.data = retained;
         if (removed.length > 0) {
-            undecorate(removed);
-            decorate(this.data, this.settings.decorateOnlyNearestPair);
+            this.updateDecorations(textEditor);
+        }
+    }
+
+    /**
+     * Update decorations of the closing character of pairs. If `leaper.decorateOnlyNearestPair`
+     * contribution is `true` (which it is by default) then only the most nested pair in `this.data`
+     * will be decorated. Otherwise all pairs are decorated. 
+     * 
+     * Opening characters of pairs are not decorated.
+     * 
+     * For efficiency reasons we should only update decorations when pairs are removed or added. 
+     * There is no need to update decorations when there is only a positional change as the editor
+     * does that already.
+     * 
+     * @param textEditor The text editor to apply the decorations onto.
+     */
+    private updateDecorations(textEditor: TextEditor): void {
+        // Strip old decorations first because it's easier to manage this way
+        this.decorations.forEach(decoration => decoration.dispose());
+        const {decorateOnlyNearestPair, decorationOptions} = this.settings;
+        if (decorateOnlyNearestPair) {
+            this.decorations = [ applyDecoration(
+                this.data[this.data.length - 1], 
+                textEditor, 
+                decorationOptions
+            )];
+        } else {
+            this.decorations = this.data.map(pair => applyDecoration(
+                pair, 
+                textEditor, 
+                decorationOptions
+            ));
         }
     }
 
     /** Clears the list of `Pair`s and any decorations. */
     public clear(): void {
-        this.data.forEach(pair => pair.undecorate());
+        this.decorations.forEach(decoration => decoration.dispose());
+        this.decorations = [];
         this.data = [];
         this.recentlyRemovedDueToCursorMove = [];
     }
@@ -133,7 +168,7 @@ export class Pairs {
  * - Filter out `Pair`s that have had a multiline text inserted in between it.
  * - Update the remaining `Pair`s to reflect the new positions of the pairs in the document.
  * 
- * @param pairs The list of `Pair`s to update.
+ * @param pairs The list of `Pair`s to update. The input list is consumed.
  * @param contentChanges The content changes that deleted or move the pairs.
  * @return A tuple containing a list of updated `Pair`s followed by a list of removed `Pair`s.
  */
@@ -155,6 +190,7 @@ function applyContentChanges(pairs: Pair[], contentChanges: TextDocumentContentC
             }
             updated.push(pair);
         }
+    pairs.length = 0;
     return [updated, removed];
 }
 
@@ -211,25 +247,30 @@ export function shift(pos: Position, replacedRange: Range, insertedText: string)
 }
 
 /** 
- * Check if a new pair was inserted into the document.
+ * Check whether a new pair was inserted into the document.
  * 
  * @param contentChanges - The content changes that may have introduced a pair.
- * @param settings - The extension's current settings.
+ * @param triggerPairs - The rule set that determines what pairs will be tracked by the extension.
  * @return A `Pair` if the content changes introduced a pair. Otherwise `undefined`.
  */
-function checkForNewPair(contentChanges: TextDocumentContentChangeEvent[], settings: Readonly<Settings>): Pair | undefined {
-    // We only consider the first element of content changes because when autoclosing pairs are 
-    // inserted they only manifest as a single content change that overwrites no text
+function checkForNewPair(
+    contentChanges: TextDocumentContentChangeEvent[], 
+    triggerPairs: ReadonlyArray<{ open: string, close: string }>
+): Pair | undefined {
+    // We only consider the first element of content changes because autoclosing pairs are only
+    // inserted as a single content change that overwrites no text (so range is empty)
     const { range, text } = contentChanges[0];
-    const { triggerPairs, decorationOptions } = settings;
-    return range.isEmpty && triggerPairs.some(tp => text[0] === tp.open && text[1] === tp.close) ?
-        new Pair(range.start, range.start.translate({ characterDelta: 1 }), decorationOptions) : undefined;
+    if (range.isEmpty && triggerPairs.some(tp => text[0] === tp.open && text[1] === tp.close)) {
+        return new Pair(range.start, range.start.translate({ characterDelta: 1 }));
+    } else {
+        return undefined;
+    }
 }
 
 /** 
  * Remove any `Pair`s that the cursor has moved out of.
  * 
- * @param pairs The list of `Pair`s to update.
+ * @param pairs The list of `Pair`s to update. The input list is consumed.
  * @param cursorPos The current cursor position.
  * @return A tuple containing a list of retained `Pair`s followed by a list of removed `Pair`s.
  */
@@ -239,23 +280,30 @@ function removeEscapedPairs(pairs: Pair[], cursorPos: Position): [Pair[], Pair[]
     for (const pair of pairs) {
         pair.enclosesPos(cursorPos) ? retained.push(pair) : removed.push(pair);
     }
+    pairs.length = 0;
     return [retained, removed];
 }
 
-/**
- * @param pairs Decorate all `Pair`s this list.
- * @param decorateOnlyNearestPair If `true` will only decorate the most nested `Pair` in `pairs`. 
- * Otherwise decorates all `Pair`s.
- */
-function decorate(pairs: Pair[], decorateOnlyNearestPair: boolean): void {
-    if (pairs.length < 1) {
-        return;
-    }
-    undecorate(pairs);   // Remove old decorations before redecorating because it's easier to manage this way
-    decorateOnlyNearestPair ? pairs[pairs.length - 1].decorate() : pairs.forEach(pair => pair.decorate());
-}
 
-/** @param pairs Undecorate all `Pair`s this list. */
-function undecorate(pairs: Pair[]): void {
-    pairs.forEach(pair => pair.undecorate());
+/** 
+ * Apply the closing character decoration of a pair onto a text editor.
+ * 
+ * @param pair The pair to apply the decoration for.
+ * @param textEditor The text editor to apply the decoration onto.
+ * @param decorationOptions The options for the closing character's decoration.
+ * @return TextEditorDecorationType that when disposed will remove the decoration from the document. */
+function applyDecoration(
+    pair: Pair, 
+    textEditor: TextEditor, 
+    decorationOptions: DecorationRenderOptions
+): TextEditorDecorationType {
+    const decoration = window.createTextEditorDecorationType(decorationOptions);
+    textEditor.setDecorations(
+        decoration,
+        [ new Range(
+            pair.close, 
+            pair.close.translate({ characterDelta: 1 })
+        )]
+    );
+    return decoration;
 }
