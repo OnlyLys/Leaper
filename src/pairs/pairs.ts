@@ -291,7 +291,7 @@ function removeEscapedPairs(pairs: Pair[], cursorPos: Position): [Pair[], Pair[]
  * @param pair The pair to apply the decoration for.
  * @param textEditor The text editor to apply the decoration onto.
  * @param decorationOptions The options for the closing character's decoration.
- * @return TextEditorDecorationType that when disposed will remove the decoration from the document. */
+ * @return `TextEditorDecorationType` that when disposed will remove the decoration from the document. */
 function applyDecoration(
     pair: Pair, 
     textEditor: TextEditor, 
