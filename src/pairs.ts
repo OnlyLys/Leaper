@@ -84,10 +84,19 @@ export class Pairs {
         return textInBetween.trim().length === 0;
     }
 
-    /** @return (If any) the most nested `Pair` in the list. */
-    public get mostNested(): Pair | undefined {
-        // The most nested pair is also the most recently added pair
-        return this.data[this.data.length -1];
+    /** 
+     * Pop (if any) the most nested `Pair` from the list. The most nested pair is the nearest pair
+     * to the cursor position.
+     * 
+     * @param textEditor The text editor in which the pop occurred in.
+     * @return (If any) the last `Pair` in the list. 
+     */
+    public pop(textEditor: TextEditor): Pair | undefined {
+        const popped: Pair | undefined = this.data.pop();
+        if (popped) {
+            this.updateDecorations(textEditor);
+        }
+        return popped;
     }
 
     /** @param settings A reference to the current settings for the extension. */
@@ -154,19 +163,14 @@ export class Pairs {
     private updateDecorations(textEditor: TextEditor): void {
         // Strip old decorations first because it's easier to manage this way
         this.decorations.forEach(decoration => decoration.dispose());
+        if (this.data.length < 1) {
+            return;
+        }
         const {decorateOnlyNearestPair, decorationOptions} = this.settings;
         if (decorateOnlyNearestPair) {
-            this.decorations = [ applyDecoration(
-                this.data[this.data.length - 1], 
-                textEditor, 
-                decorationOptions
-            )];
+            this.decorations = [ applyDecoration(this.data[this.data.length - 1], textEditor, decorationOptions)];
         } else {
-            this.decorations = this.data.map(pair => applyDecoration(
-                pair, 
-                textEditor, 
-                decorationOptions
-            ));
+            this.decorations = this.data.map(pair => applyDecoration(pair, textEditor, decorationOptions));
         }
     }
 
@@ -308,20 +312,15 @@ function removeEscapedPairs(pairs: Pair[], cursorPos: Position): [Pair[], Pair[]
  * 
  * @param pair The pair to apply the decoration for.
  * @param textEditor The text editor to apply the decoration onto.
- * @param decorationOptions The options for the closing character's decoration.
+ * @param decorOpts The options for the closing character's decoration.
  * @return `TextEditorDecorationType` that when disposed will remove the decoration from the document. */
-function applyDecoration(
-    pair: Pair, 
-    textEditor: TextEditor, 
-    decorationOptions: DecorationRenderOptions
-): TextEditorDecorationType {
+function applyDecoration(pair: Pair, textEditor: TextEditor, decorationOptions: DecorationRenderOptions): 
+    TextEditorDecorationType
+{
     const decoration = window.createTextEditorDecorationType(decorationOptions);
     textEditor.setDecorations(
         decoration,
-        [ new Range(
-            pair.close, 
-            pair.close.translate({ characterDelta: 1 })
-        )]
+        [ new Range(pair.close, pair.close.translate({ characterDelta: 1 })) ]
     );
     return decoration;
 }
