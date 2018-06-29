@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### 0.5.3
+- Fix issue where extension is not relinquishing control of `Tab` key after jumping out of the last pair.
+
 ### 0.5.2
 - Make decorations more efficient by only updating when necessary.
 - Show warning message when incorrect trigger pairs specified in `leaper.additionalTriggerPairs`. 
