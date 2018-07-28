@@ -1,4 +1,4 @@
-'use strcit';
+'use strict';
 
 import { window, workspace, TextDocument, TextEditor, Position, commands, Range, WorkspaceEdit } from 'vscode';
 import * as assert from 'assert';
