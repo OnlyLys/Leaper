@@ -31,7 +31,7 @@
     "contributes": {
         "configuration": {
             "type": "object",
-            "title": "Leaper Configuration",
+            "title": "Leaper",
             "properties": {
                 "leaper.customDecorationOptions": {
                     "type": "object",
