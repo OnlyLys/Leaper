@@ -143,11 +143,11 @@
         "vscode": "^1.32.0"
     },
     "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
+        "vscode:prepublish": "npm run build",
+        "build": "tsc --build",
         "watch": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./scripts/launch-tests.js"
+        "test": "npm run build && node ./scripts/launch-tests.js"
     },
     "devDependencies": {
         "@types/mocha": "^2.2.42",
