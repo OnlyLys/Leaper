@@ -33,20 +33,72 @@
             "type": "object",
             "title": "Leaper",
             "properties": {
-                "leaper.customDecorationOptions": {
+                "leaper.decorateAll": {
+                    "type": "boolean",
+                    "default": false,
+                    "markdownDescription": "If `true`, will decorate all pairs that are being tracked instead of just the ones nearest to each cursor."
+                },
+                "leaper.detectedPairs": {
+                    "type": "array",
+                    "default": [
+                        "()",
+                        "[]",
+                        "{}",
+                        "<>",
+                        "``",
+                        "''",
+                        "\"\""
+                    ],
+                    "items": {
+                        "type": "string",
+                        "maxLength": 2,
+                        "minLength": 2
+                    },
+                    "uniqueItems": true,
+                    "markdownDescription": "Specify the pairs that the extension will detect. Note that there is no support for pairs that are more than 1 character wide on either side. Any pairs that are not specified in this array will not be tracked."
+                },
+                "leaper.decorationOptions": {
                     "type": "object",
-                    "default": null,
-                    "description": "[Leaper] Customize the decoration of the closing character of the pair."
+                    "default": {
+                        "outlineColor": {
+                            "id": "editorBracketMatch.border"
+                        },
+                        "outlineWidth": "1px",
+                        "outlineStyle": "solid",
+                        "fontWeight": "bold"
+                    },
+                    "not": {
+                        "required": [
+                            "rangeBehavior"
+                        ]
+                    },
+                    "uniqueItems": true,
+                    "markdownDescription": "Specify how the closing (i.e. right) side of each pair is decorated. Note: \n\n- With the exception of `rangeBehavior`, all of VS Code's [`DecorationRenderOptions`](https://code.visualstudio.com/docs/extensionAPI/vscode-api#DecorationRenderOptions) should be available. However, options aside from the `outline`, `border` and `font` ones have not been tested and use of them may severely affect editor performance. \n\n- Any options that require a non-`string` type can be specified with an object literal, for instance, see how a `ThemeColor` is used in the `outlineColor` property of the default value of this setting. Be be careful when specifying object literals as no type checking is done before the value is utilized. \n\n- Decorations can be disabled by setting this setting to `{}`."
+                },
+                "leaper.neverWarnDeprecated": {
+                    "type": "boolean",
+                    "default": false,
+                    "markdownDescription": "Set to `true` to disable warnings when deprecated configurations are used."
                 },
                 "leaper.decorateOnlyNearestPair": {
                     "type": "boolean",
                     "default": true,
-                    "description": "[Leaper] If `false`, will decorate all pairs instead of just the nearest one."
+                    "markdownDescription": "If `false`, will decorate all pairs instead of just the nearest one. **DEPRECATED in 0.7.0**",
+                    "deprecationMessage": "`leaper.decorateOnlyNearestPair` was deprecated in favour of `leaper.decorateAll`. Reason for deprecation: `leaper.decorateOnlyNearestPair` was renamed to `leaper.decorateAll` for clarity."
                 },
                 "leaper.additionalTriggerPairs": {
+                    "$comment": "This deprecated configuration has no default value in the package manifest. The default value was previously hardcoded in source code.",
                     "type": "array",
                     "default": [],
-                    "description": "[Leaper] Set additional pairs that the extension will detect. Currently there is no support for pairs that are more than 1 character wide on each side."
+                    "markdownDescription": "Set additional pairs that the extension will detect. Currently there is no support for pairs that are more than 1 character wide on each side. **DEPRECATED in 0.7.0**",
+                    "deprecationMessage": "`leaper.additionalTriggerPairs` was deprecated in favour of `leaper.detectedPairs`. Reason for deprecation: `leaper.detectedPairs` allows the user to more easily specify pairs that should be tracked. Furthermore, it allows users to disable pair detection for any of the previously hardcoded pairs."
+                },
+                "leaper.customDecorationOptions": {
+                    "$comment": "This deprecated configuration has no default value in the package manifest. The default value was previously hardcoded in source code.",
+                    "type": "object",
+                    "default": null,
+                    "markdownDescription": "Customize the decoration of the closing character of the pair. **DEPRECATED in 0.7.0**",
+                    "deprecationMessage": "`leaper.customDecorationOptions` was deprecated in favour of `leaper.decorationOptions`. Reason for deprecation: `leaper.customDecorationOptions` was renamed to `leaper.decorationOptions` for clarity. Furthermore, the default values that were previously hardcoded are now embedded in the package manifest, which means the user can now see the default value via autocompletion without needing to consult the README."
                 }
             }
         },
