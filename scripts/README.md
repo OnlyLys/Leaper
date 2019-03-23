@@ -1,0 +1,1 @@
+This `scripts` directory contains shelljs scripts that we run via `npm script`
