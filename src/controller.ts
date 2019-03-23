@@ -1,5 +1,3 @@
-'use strict';
-
 import { Disposable, workspace, window, commands, Selection, Range, Position, TextEditor } from 'vscode';
 import { Pair, Pairs } from './pairs'; 
 import { Settings } from './settings';

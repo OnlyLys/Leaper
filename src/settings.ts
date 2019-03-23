@@ -1,5 +1,3 @@
-'use strict';
-
 import { workspace, DecorationRenderOptions, ThemeColor, WorkspaceConfiguration, window, DecorationRangeBehavior } from 'vscode';
 import { EXT_NAME, EXT_IDENT } from './controller';
 

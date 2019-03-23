@@ -1,5 +1,3 @@
-'use strict';
-
 import * as shiftFnTests from './shift-fn-tests';
 import * as integrationTests from './integration-tests';
 import * as preliminaryTests from './preliminary-tests';

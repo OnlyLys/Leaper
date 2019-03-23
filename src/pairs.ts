@@ -1,5 +1,3 @@
-'use strict';
-
 import { Position, TextDocumentContentChangeEvent, window, Range, TextEditor, TextEditorDecorationType, DecorationRenderOptions } from 'vscode';
 import { Settings } from './settings';
 

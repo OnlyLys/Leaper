@@ -1,5 +1,3 @@
-'use strict';
-
 import { shift } from '../pairs';         // Function to test
 import { Position, Range } from 'vscode';
 import * as assert from 'assert';

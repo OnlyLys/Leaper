@@ -1,5 +1,3 @@
-'use strict';
-
 import { Position, Selection, commands, SnippetString } from 'vscode';
 import { type, leap, openNewTextDocument, moveCursorRight, moveCursorDown, insertText } from './integration-tests-util';
 import * as assert from 'assert';

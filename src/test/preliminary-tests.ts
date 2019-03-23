@@ -1,5 +1,3 @@
-'use strict';
-
 import { Range, commands, Position } from 'vscode';
 import { type, openNewTextDocument } from './integration-tests-util';
 import * as assert from 'assert';
