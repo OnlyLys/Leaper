@@ -156,5 +156,8 @@
         "typescript": "^3.3.1",
         "vscode": "^1.1.28",
         "shelljs": "^0.8.3"
+    },
+    "dependencies": {
+        "@onlylys/vscode-configuration-handler": "file:./onlylys-vscode-configuration-handler-0.0.3.tgz"
     }
 }
