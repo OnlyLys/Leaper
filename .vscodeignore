@@ -9,4 +9,5 @@ vsc-extension-quickstart.md
 tslint.json
 **/*.ts
 contributing.md
+scripts
 .test-environment
