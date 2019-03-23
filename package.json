@@ -145,7 +145,7 @@
     "scripts": {
         "vscode:prepublish": "npm run build",
         "build": "tsc --build",
-        "watch": "tsc -watch -p ./",
+        "watch": "tsc --watch",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run build && node ./scripts/launch-tests.js"
     },
