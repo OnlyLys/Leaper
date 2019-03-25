@@ -1,4 +1,4 @@
-import * as shiftFnTests from './shift-fn-tests';
+import * as shiftFnTests from './shift.test';
 import * as integrationTests from './integration-tests';
 import * as preliminaryTests from './preliminary-tests';
 import { window } from 'vscode';
