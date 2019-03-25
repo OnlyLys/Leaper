@@ -5,7 +5,7 @@ import * as assert from 'assert';
 /** Array containing all the tests and descriptions. */
 export const allTests: { description: string, run: () => void }[] = [];
 
-/** Position to use as the base of our testing. */
+/** Position to use as the reference point of the shifts. */
 const initial = new Position(5, 10);
 
 /**
