@@ -151,13 +151,13 @@
     },
     "devDependencies": {
         "@types/mocha": "^2.2.42",
-        "@types/node": "^10.12.21",
-        "tslint": "^5.12.1",
-        "typescript": "^3.3.1",
-        "vscode": "^1.1.28",
-        "shelljs": "^0.8.3"
+        "@types/node": "^10.14.4",
+        "shelljs": "^0.8.3",
+        "tslint": "^5.15.0",
+        "typescript": "^3.4.3",
+        "vscode": "^1.1.33"
     },
     "dependencies": {
-        "@onlylys/vscode-configuration-handler": "file:./onlylys-vscode-configuration-handler-0.0.3.tgz"
+        "@onlylys/vscode-configuration-handler": "file:./onlylys-vscode-configuration-handler-0.0.4.tgz"
     }
 }
