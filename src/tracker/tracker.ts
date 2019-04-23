@@ -256,17 +256,20 @@ export class Tracker {
      */
     public selectionChangeUpdate(): void {
         const cursor = this.editor.selections[this.cursorIndex];
-        // Iterate through pairs from most nested to least nested as optimization
-        for (let i = this.pairs.length - 1; i >= 0; --i) {
-            /* We use the cursor anchor to determine the cursor is enclosed because we don't want to 
-            untrack pairs if the user is just making a selection from inside the pair to outside. */
-            if (cursor && this.pairs[i].encloses(cursor.anchor)) {
-                /* Since we started iterating from the most nested to least nested pair, the moment 
-                we encounter an inner pair that encloses a cursor means we can skip checking the
-                outer pairs as they surely must also enclose the cursor. */
-                break;
-            } else {
-                (this.pairs.pop() as Pair).undecorate();
+        if (cursor) {
+            // Iterate through pairs from most nested to least nested as optimization
+            for (let i = this.pairs.length - 1; i >= 0; --i) {
+                /* We use the cursor's anchor to determine if the cursor is enclosed because we 
+                don't want to untrack pairs if the user is just making a selection from inside the 
+                pairs to outside. */
+                if (this.pairs[i].encloses(cursor.anchor)) {
+                    /* Since we started iterating from the most nested to least nested pair, the 
+                    moment we encounter an inner pair that encloses a cursor means we can skip 
+                    checking the outer pairs as they surely must also enclose the cursor. */
+                    break;
+                } else {
+                    (this.pairs.pop() as Pair).undecorate();
+                }
             }
         }
         /* If any pairs are removed in the step above then there might be a new nearest pair. Thus 
