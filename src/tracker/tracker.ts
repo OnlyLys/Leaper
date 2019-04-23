@@ -1,4 +1,4 @@
-import { TextEditor, TextDocumentContentChangeEvent, Range, Selection } from 'vscode';
+import { TextEditor, TextDocumentContentChangeEvent, Range, Position } from 'vscode';
 import { Pair } from './pair';
 import { Configuration } from '../configuration';
 
@@ -66,9 +66,11 @@ export class Tracker {
      */
     public get hasLineOfSight(): boolean {
         const innermostPair: Pair | undefined = this.pairs[this.pairs.length - 1];
-        const cursor = this.editor.selections[this.cursorIndex];
-        if (innermostPair && cursor) {
-            return !this.editor.document.getText(new Range(cursor.active, innermostPair.close)).trim();
+        const selection = this.editor.selections[this.cursorIndex];
+        if (innermostPair && selection) {
+            return !this.editor.document.getText(
+                new Range(selection.active, innermostPair.close)
+            ).trim();
         } else {
             return false;
         }
@@ -109,19 +111,20 @@ export class Tracker {
     }
 
     /** 
-     * Apply content changes from a text document change event that may move, delete or create pairs. 
+     * Apply content changes from `TextDocumentContentChangeEvent`s which may move, delete or create 
+     * pairs. 
      * 
      * Return value is `true` if there are still pairs being tracked by this `Tracker` after the
      * update. Otherwise return value is `false`.
      */
     public contentChangeUpdate(changes: TextDocumentContentChangeEvent[]): void {
-        const cursor = this.editor.selections[this.cursorIndex];
-        if (!cursor) {
+        const selection = this.editor.selections[this.cursorIndex];
+        if (!selection) {
             return;
         }
-        const prunedChanges = pruneChanges(cursor, changes);
+        const prunedChanges = pruneChanges(selection.active.line, changes);
         this.pairs          = applyChanges(this.pairs, prunedChanges);
-        const newPair       = getNewPair(this.configuration, this.editor, cursor, prunedChanges);
+        const newPair       = getNewPair(this.configuration, this.editor, selection.active, prunedChanges);
         if (newPair) {
             this.pairs.push(newPair);
             // If the new pair is the first pair inserted, we have to set the internal visibility flag
@@ -140,19 +143,18 @@ export class Tracker {
          * an optimization step.
          */
         function pruneChanges(
-            cursor: Selection,
+            cursorLine: number,
             changes: TextDocumentContentChangeEvent[]
         ): TextDocumentContentChangeEvent[] {
             const retVal: TextDocumentContentChangeEvent[] = [];
-            const cursorLine = cursor.active.line;
             /* Since the pairs that a `Tracker` tracks are on the same line as the cursor, by 
             comparing the line that the cursor is on to the line that the changes occur in, we can
             drop unnecessary changes. */
             for (const change of changes) {
                 const { range: { start, isSingleLine }, text } = change;
-                /* We can drop all changes that occur on a line below since they do not affect the 
-                pairs that this `Tracker` is tracking. For the same reason, we can drop all changes 
-                that occur on a line above, but only if they are single line. */
+                /* Drop all changes that occur on a line below since they do not affect the pairs 
+                that this `Tracker` is tracking. For the same reason, we can drop all changes that 
+                occur on a line above, but only if they are single line. */
                 if (start.line > cursorLine || (start.line < cursorLine && isSingleLine && !text.includes('\n'))) {
                     continue;
                 } else {
@@ -192,7 +194,7 @@ export class Tracker {
         function getNewPair(
             configuration: Configuration,
             editor: TextEditor,
-            cursor: Selection,
+            cursorPosition: Position,
             changes: TextDocumentContentChangeEvent[]
         ): Pair | undefined {
             let newPair: Pair | undefined = undefined;
@@ -214,11 +216,11 @@ export class Tracker {
                     }
                 } else if (
                     // Check if a new pair is inserted by the cursor paired to this `Tracker` 
-                    change.range.start.isEqual(cursor.active) 
+                    change.range.start.isEqual(cursorPosition) 
                     && configuration.detectedPairs.includes(change.text)
                     && !change.rangeLength
                 ) {
-                    newPair = new Pair(editor, configuration.decorationOptions, cursor.active);
+                    newPair = new Pair(editor, configuration.decorationOptions, cursorPosition);
                 }
             }
             return newPair;
@@ -246,26 +248,26 @@ export class Tracker {
     }
 
     /** 
-     * After any sort of selection changes (e.g. cursor movement), call this method to untrack any 
-     * pairs that the cursor has moved out of.
+     * Call this method after any sort of selection changes to untrack any pairs that the cursor has 
+     * moved out of.
      * 
      * This method should only be called at the end of the event loop because text insertion (for
      * instance) may move the cursor ahead of time before inserting the text. This may cause pairs 
      * to be erroneously removed, even though after the text is inserted the pairs will have been
-     * shifted to a position where they enclose the cursor
+     * shifted to a position where they enclose the cursor.
      */
     public selectionChangeUpdate(): void {
-        const cursor = this.editor.selections[this.cursorIndex];
-        if (cursor) {
+        const selection = this.editor.selections[this.cursorIndex];
+        if (selection) {
             // Iterate through pairs from most nested to least nested as optimization
             for (let i = this.pairs.length - 1; i >= 0; --i) {
-                /* We use the cursor's anchor to determine if the cursor is enclosed because we 
-                don't want to untrack pairs if the user is just making a selection from inside the 
-                pairs to outside. */
-                if (this.pairs[i].encloses(cursor.anchor)) {
+                /* Technically we use the selection's anchor to determine if the cursor is enclosed
+                because we don't want to untrack pairs if the user is just making a selection from
+                within the pairs to outside. */
+                if (this.pairs[i].encloses(selection.anchor)) {
                     /* Since we started iterating from the most nested to least nested pair, the 
-                    moment we encounter an inner pair that encloses a cursor means we can skip 
-                    checking the outer pairs as they surely must also enclose the cursor. */
+                    moment we encounter an inner pair that encloses the anchor means we can skip 
+                    checking the outer pairs as they surely must also enclose the anchor. */
                     break;
                 } else {
                     (this.pairs.pop() as Pair).undecorate();
@@ -287,8 +289,8 @@ export class Tracker {
         for (const pair of this.pairs) {
             pair.undecorate();
         }
-        this.pairs     = [];
-        this._visible  = false;
+        this.pairs       = [];
+        this._visible    = false;
         this.cursorIndex = -1;
     }
 
