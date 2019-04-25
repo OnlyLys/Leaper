@@ -70,11 +70,11 @@ export class Configuration {
 /** Handler to the `leaper.detectedPairs` configuration. */
 export const detectedPairsHandler = new ConfigurationHandlerCompat({
     name: `leaper.detectedPairs`,
-    typeCheck: (arr: any): arr is ReadonlyArray<string> => {
+    typecheck: (arr: any): arr is ReadonlyArray<string> => {
         return Array.isArray(arr) && arr.every(pair => typeof pair === 'string' && pair.length === 2);
     },
     deprName: `leaper.additionalTriggerPairs`,
-    deprTypeCheck: (arr: any): arr is ReadonlyArray<Readonly<{ open: string, close: string }>> => {
+    deprTypecheck: (arr: any): arr is ReadonlyArray<Readonly<{ open: string, close: string }>> => {
         return Array.isArray(arr) && arr.every((elem: any) => elemTypeGuard(elem));
         function elemTypeGuard(val: any): val is { open: string, close: string } {
             return typeof val === 'object'
@@ -91,9 +91,9 @@ export const detectedPairsHandler = new ConfigurationHandlerCompat({
 /** Handler to the `leaper.decorateAll` configuration. */
 export const decorateAllHandler = new ConfigurationHandlerCompat({
     name: `leaper.decorateAll`,
-    typeCheck: (value: any): value is boolean => typeof value === 'boolean',
+    typecheck: (value: any): value is boolean => typeof value === 'boolean',
     deprName: `leaper.decorateOnlyNearestPair`,
-    deprTypeCheck: (value: any): value is boolean => typeof value === 'boolean',
+    deprTypecheck: (value: any): value is boolean => typeof value === 'boolean',
     normalize: deprValue => !deprValue
 });
 
@@ -106,9 +106,9 @@ export const decorateAllHandler = new ConfigurationHandlerCompat({
  */
 export const decorationOptionsHandler = new ConfigurationHandlerCompat({
     name: `leaper.decorationOptions`,
-    typeCheck: (value: any): value is DecorationRenderOptions => typeof value === 'object',
+    typecheck: (value: any): value is DecorationRenderOptions => typeof value === 'object',
     deprName: `leaper.customDecorationOptions`,
-    deprTypeCheck: (value: any): value is DecorationRenderOptions => typeof value === 'object',
+    deprTypecheck: (value: any): value is DecorationRenderOptions => typeof value === 'object',
     normalize: value => value
 });
 
@@ -118,6 +118,6 @@ export const decorationOptionsHandler = new ConfigurationHandlerCompat({
  */
 export const neverWarnDeprecatedHandler = new ConfigurationHandler({
     name: `leaper.neverWarnDeprecated`,
-    typeCheck: (value: any): value is boolean => typeof value === 'boolean'
+    typecheck: (value: any): value is boolean => typeof value === 'boolean'
 });
     

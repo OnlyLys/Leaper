@@ -158,6 +158,6 @@
         "vscode": "^1.1.33"
     },
     "dependencies": {
-        "@onlylys/vscode-configuration-handler": "file:./onlylys-vscode-configuration-handler-0.0.4.tgz"
+        "@onlylys/vscode-configuration-handler": "file:./onlylys-vscode-configuration-handler-0.0.5.tgz"
     }
 }
