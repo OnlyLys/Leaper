@@ -1,5 +1,30 @@
 # CHANGELOG
 
+### 0.7.0
+- Add multicursor support.
+- Rewrite almost all the code to make it faster.
+- Tweak default decoration to make the decorated bracket bold.
+- Deprecate old configurations and replace with new counterparts:
+    * `leaper.additionalTriggerPairs` is superseded by `leaper.detectedPairs`. Instead of the default 
+      pairs being hardcoded into the source file, they are now specified in the default value for 
+      the configuration. This allows the user to see the default value of the configuration via
+      autocomplete. Furthermore, the user can now override the default value, compared to before where
+      the user can only define 'additional' pairs on top of the hardcoded defaults.
+    * `leaper.customDecorationOptions` is superseded by `leaper.decorationOptions`. In this change,
+      the default value was moved from source code to the package manifest. Thus just like for
+      `leaper.detectedPairs`, the user can now see the default value of this configuration via 
+      autocomplete.
+    * `leaper.decorateOnlyNearestPair` is superseded by `leaper.decorateAll`. This is simply a rename 
+      of the configuration with an inverted truth value. The rename was done to make clearer what the
+      configuration does.
+- Automatically detect when the user is using deprecated configurations and prompt them to click a 
+  button that will move values from the deprecated configuration to the new one.
+- Introduce a `leaper.neverWarnDeprecated` configuration to allow disabling automatic detection for 
+  deprecated configurations.
+- Overhaul README to reflect the above changes.
+- Significantly expand the testing suite to ensure correct behavior.
+- Use 'webpack' to condense the code into one file to speed up load times.
+
 ### 0.5.3
 - Fix issue where extension is not relinquishing control of `Tab` key after jumping out of the last pair.
 

@@ -1,25 +1,35 @@
-# How To Contribute
+# Guide for Contributors
 
 ## Building the Source Code
 
 You must have NPM installed to build the extension. You may obtain it here: https://nodejs.org/en/
 
-Build Steps
+Steps
 
-1. Clone this repository into any local directory.
-2. Run `npm install` in the directory to have it download and install the necessary modules.
+1. Clone the project repository.
+2. Run `npm install` in the project directory to have it download and install the necessary modules.
 
 ## Running the Extension
 
-Run Steps
+Steps
 
-1. Open the directory in VS Code: via `Open Folder` in the editor or `code <directory>` in command line.
-2. Run the extension by executing the `Start Debugging` command. The default keybinding for `Start Debugging` is `F5`.
+1. Open the project directory in VS Code.
+2. Run `Extension` via the debug menu.
 
 ## Testing the Extension
 
-Aside from testing the extension manually, the automatic testing suite should be run to make sure the code performs as expected. To do so, open the debug panel and run `Extension Tests`.
+Steps to run from an active VS Code instance:
+
+1. Open the project directory in VS Code.
+2. Run `Extension Tests` via the debug menu.
+
+Alternatively the tests can be run from the command line by calling `npm test`.
 
 ## Contributing to the Repository
 
-Fork the repository on GitHub and make any changes over there. After that, make a pull request.
+Fork the repository on GitHub and make any changes on the fork. After that, make a pull request.
+
+## Extension Architecture
+
+
+

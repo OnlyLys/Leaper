@@ -2,7 +2,7 @@
     "name": "leaper",
     "displayName": "Leaper",
     "description": "`Tab` to jump out of autoclosing pairs like braces and quotes.",
-    "version": "0.5.3",
+    "version": "0.7.0",
     "publisher": "OnlyLys",
     "license": "MIT",
     "icon": "images/icon.png",
@@ -151,11 +151,11 @@
     },
     "devDependencies": {
         "@types/mocha": "^2.2.42",
-        "@types/node": "^10.14.5",
+        "@types/node": "^10.14.16",
         "shelljs": "^0.8.3",
-        "tslint": "^5.16.0",
-        "typescript": "^3.4.5",
-        "vscode": "^1.1.33"
+        "tslint": "^5.19.0",
+        "typescript": "^3.6.2",
+        "vscode": "^1.1.36"
     },
     "dependencies": {
         "@onlylys/vscode-configuration-handler": "file:./onlylys-vscode-configuration-handler-0.0.5.tgz"
