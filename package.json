@@ -78,7 +78,7 @@
             {
                 "key": "tab",
                 "command": "leaper.leap",
-                "when": "leaper.inLeaperMode && leaper.hasLineOfSight && editorTextFocus && !editorHasSelection && !editorTabMovesFocus && !suggestWidgetVisible && !config.emmet.triggerExpansionOnTab"
+                "when": "leaper.inLeaperMode && leaper.hasLineOfSight && editorTextFocus && !editorHasSelection && !editorTabMovesFocus && !suggestWidgetVisible"
             },
             {
                 "key": "shift+escape",
