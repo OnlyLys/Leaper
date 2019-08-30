@@ -1,5 +1,9 @@
 # CHANGELOG
 
+### 0.6.0
+- Remove the unnecessary `!config.emmet.triggerExpansionOnTab` context for the default `leaper.leap` keybinding. For more information see: https://github.com/OnlyLys/Leaper/issues/4. 
+- Improved the README.
+
 ### 0.5.3
 - Fix issue where extension is not relinquishing control of `Tab` key after jumping out of the last pair.
 
@@ -38,4 +42,4 @@
 - Extension now works properly during text insertion and deletion.
 
 ### 0.1.0 
-- Initial release of the extension. 
+- Initial release of the extension.
