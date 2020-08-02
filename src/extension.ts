@@ -6,31 +6,28 @@ import { neverWarnDeprecatedHandler, Configuration } from './configuration';
  * Note that as of 1.32, `activate` is called each time a new workspace is opened - each workspace
  * as its own instance of the extension.
  */
-export function activate(context: ExtensionContext): LeaperAPI  {
+export function activate(context: ExtensionContext): LeaperAPI {
 
     const configuration = Configuration.get();
+    const controller    = new Controller(configuration);
 
-    // Start the controller which begins the tracking of pairs
-    const controller = new Controller(configuration);
-
-    // Register command to execute a leap
     const leapCommand = commands.registerTextEditorCommand(
         `leaper.leap`, 
         () => controller.leap()
     );
 
-    // Register command to untrack all the pairs and disable all keybinding contexts
+    // Keybinding to untrack all the pairs and disable all keybinding contexts.
     const escapeLeaperModeCommand = commands.registerTextEditorCommand(
         `leaper.escapeLeaperMode`, 
         () => controller.reset()
     );
 
-    // Register watcher to restart the controller on each editor focus change
+    // Watcher that restarts the controller on editor focus change.
     const activeTextEditorChangeWatcher = window.onDidChangeActiveTextEditor(() => {
         controller.reset();
     });
 
-    // Register watcher that resets the controller one each configuration change
+    // Watcher that resets the controller on configuration change.
     const configurationChangeWatcher = workspace.onDidChangeConfiguration(event => {
         if (event.affectsConfiguration(`leaper`)) {
             controller.reset(configuration);
@@ -88,7 +85,7 @@ export function activate(context: ExtensionContext): LeaperAPI  {
 } 
 
 export function deactivate() {
-    // Intentionally empty
+    // Intentionally empty.
 }
 
 export interface LeaperAPI {
