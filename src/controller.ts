@@ -180,16 +180,16 @@ export class Controller {
     }
 
     /**
-     * Clear all pairs and disable all keybinding contexts. 
+     * Clear all tracked pairs and disable all keybinding contexts. 
      * 
-     * @param configuration New configuration values to apply. If `undefined`, the previous values
-     *                      will continue to be used.
+     * If a new configuration value is provided, then it will replace the older one. The older one
+     * will continue to be used if `new_configuration` is `undefined`.
      */
-    public reset(configuration?: Configuration): void {
-        if (configuration) {
-            this.configuration = configuration;
+    public reset(new_configuration: Configuration | undefined): void {
+        if (new_configuration !== undefined) {
+            this.configuration = new_configuration;
         }
-        this.clearState();
+        this.clear();
         if (window.activeTextEditor) {
             initializeTrackers(this.trackers, window.activeTextEditor, this.configuration);
         }

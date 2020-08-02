@@ -1,123 +1,119 @@
 import { DecorationRenderOptions, DecorationRangeBehavior } from 'vscode';
-import { ConfigurationHandler, ConfigurationHandlerCompat } from '@onlylys/vscode-configuration-handler';
+import { VCDualReader, } from '@onlylys/vscode-validated-configuration-reader';
 
-/** Class containing a readonly snapshot of the configuration values of this extension. */
+/** A snapshot of this extension's configuration values. */
 export class Configuration { 
 
-    /** Flag for whether decoration should apply to all pairs instead of the most nested one only. */
+    /** 
+     * Whether decorations should apply to all pairs instead of only just the most nested one. 
+     * 
+     * This supercedes the old `decorateOnlyNearestPair` configuration.
+     */
     public readonly decorateAll: boolean;
 
-    /** What pairs we should detect and track. */
-    public readonly detectedPairs: ReadonlyArray<string>;
+    /** 
+     * What pairs should be detected and then tracked. 
+     * 
+     * This supercedes the old `decorateOnlyNearestPair` configuration.
+     */
+    public readonly detectedPairs: string[];
 
-    /** Decoration style for the closing character of each tracked pair. */
-    public readonly decorationOptions: Readonly<DecorationRenderOptions>;
+    /** 
+     * Decoration style for the closing side of pairs. 
+     * 
+     * This supercedes the old `customDecorationOptions` configuration.
+     */
+    public readonly decorationOptions: DecorationRenderOptions;
 
-    /** Flag for whether the user should be warned when deprecated configurations are being used. */
-    public readonly neverWarnDeprecated: boolean;
+    /** 
+     * Binding to the `decorateAll` configuration to read its value. 
+     * 
+     * This also reads the deprecated `decorateOnlyNearestPair` configuration.
+     */
+    public static readonly decorateAllReader = new VCDualReader({
+
+        name:     `leaper.decorateAll`,
+        validate: (value: any): value is boolean => typeof value === 'boolean',
+
+        deprName:     `leaper.decorateOnlyNearestPair`,
+        deprValidate: (value: any): value is boolean => typeof value === 'boolean',
+        normalize:    deprValue => !deprValue,
+
+    });
+    
+    /** 
+     * Binding to the `detectedPairs` configuration to read its value. 
+     * 
+     * This also reads the deprecated `additionalTriggerPairs` configuration.
+     */
+    public static readonly detectedPairsReader = new VCDualReader({
+
+        name:     `leaper.detectedPairs`,
+        validate: (arr: any): arr is string[] => {
+            return Array.isArray(arr) && arr.every(p => typeof p === 'string' && p.length === 2);
+        },
+
+        deprName:     `leaper.additionalTriggerPairs`,
+        deprValidate: (arr: any): arr is { open: string, close: string }[] => {
+            return Array.isArray(arr) && arr.every((elem: any) => elemTypeGuard(elem));
+            function elemTypeGuard(elem: any): elem is { open: string, close: string } {
+                return typeof elem === 'object'
+                    && Reflect.ownKeys(elem).length === 2
+                    && typeof elem.open  === 'string' 
+                    && typeof elem.close === 'string'
+                    && elem.open.length  === 1
+                    && elem.close.length === 1;
+            } 
+        },
+        normalize:   deprValue => deprValue.map(({ open, close }) => `${open}${close}`)
+
+    });
+    
+    /** 
+     * Binding to the `decorationOptions` configuration to read its value. 
+     * 
+     * This also reads the deprecated `customDecorationOptions` configuration.
+     */
+    public static readonly decorationOptionsReader = new VCDualReader({
+
+        // Note that the type validation for this configuration is just a check to see if it's an 
+        // `Object` type because the actual type has too many properties to manually typecheck, and 
+        // furthermore is always evolving, as it is part of the VS Code API.
+        // 
+        // Perhaps in the future I can create a script that will automatically generate the 
+        // typechecking code.
+        name:     `leaper.decorationOptions`,
+        validate: (v: any): v is DecorationRenderOptions => typeof v === 'object',
+
+        // The new configuration above is just a rename of this deprecated configuration.
+        deprName:     `leaper.customDecorationOptions`,
+        deprValidate: (v: any): v is DecorationRenderOptions => typeof v === 'object',
+        normalize:    value => value
+
+    });
 
     private constructor() {
-        // Each handler's `.get()` method call here may throw if default value is bad
-        this.decorateAll         = decorateAllHandler.get().effectiveValue;
-        this.detectedPairs       = detectedPairsHandler.get().effectiveValue;
-        const decorationOptions  = decorationOptionsHandler.get().effectiveValue;
-        /* The range behavior must be closed on both sides since we don't want the decoration to
-        expand when inserting text adjacent to it. */
-        decorationOptions.rangeBehavior = DecorationRangeBehavior.ClosedClosed;
-        this.decorationOptions   = decorationOptions;
-        this.neverWarnDeprecated = neverWarnDeprecatedHandler.get().effectiveValue;
+
+        // The `read()` calls here may throw if an effective value cannot be calculated. 
+        this.decorateAll        = Configuration.decorateAllReader.read().effectiveValue;
+        this.detectedPairs      = Configuration.detectedPairsReader.read().effectiveValue;
+        this.decorationOptions  = Configuration.decorationOptionsReader.read().effectiveValue; 
+
+        // Override the range behavior of the decoration such that it is closed on both sides.
+        //
+        // We have to do this because we don't want the decoration of the closing pair to expand
+        // when inserting text next to it.
+        this.decorationOptions.rangeBehavior = DecorationRangeBehavior.ClosedClosed;
+
     }
 
     /** 
-     * Get the latest configuration values. 
+     * Get the current configuration values. 
      * 
-     * @throws Will throw `ConfigurationBadDefaultError` if any of the configurations have a bad
-     *         default values.
+     * @throws Will throw if any of the configurations can't be read.
      */
-    public static get(): Configuration {
+    public static read(): Configuration {
         return new Configuration();
     }
 
-    /** 
-     * `true` if there are currently any deprecated configurations being used†. Otherwise `false`.
-     * 
-     * †By 'being used', we mean having non-default values for the configuration.
-     */
-    public get hasDeprUse(): boolean {
-        /* Even though the `.hasUserDefinedDeprValues()` callsd may throw, we are sure that since we
-        called the handlers's `.get()` methods in the constructor of this class that the default 
-        values of all the configurations are valid, and thus the `hasUserDefinedDeprValues()` calls 
-        here will not throw. */
-        return decorateAllHandler.hasUserDefinedDeprValues() 
-            || detectedPairsHandler.hasUserDefinedDeprValues()
-            || decorationOptionsHandler.hasUserDefinedDeprValues();
-    }
-
-    /**
-     * Migrate all configuration values. 
-     * 
-     * @return A promise that resolves to the latest configuration values upon migration completion.
-     */
-    public async migrate(): Promise<Configuration> {
-        await decorateAllHandler.migrate();
-        await detectedPairsHandler.migrate();
-        await decorationOptionsHandler.migrate();
-        return Configuration.get();
-    }
-    
 }
-
-/** Handler to the `leaper.detectedPairs` configuration. */
-export const detectedPairsHandler = new ConfigurationHandlerCompat({
-    name: `leaper.detectedPairs`,
-    typecheck: (arr: any): arr is ReadonlyArray<string> => {
-        return Array.isArray(arr) && arr.every(pair => typeof pair === 'string' && pair.length === 2);
-    },
-    deprName: `leaper.additionalTriggerPairs`,
-    deprTypecheck: (arr: any): arr is ReadonlyArray<Readonly<{ open: string, close: string }>> => {
-        return Array.isArray(arr) && arr.every((elem: any) => elemTypeGuard(elem));
-        function elemTypeGuard(val: any): val is { open: string, close: string } {
-            return typeof val === 'object'
-                && Reflect.ownKeys(val).length === 2
-                && typeof val.open  === 'string' 
-                && typeof val.close === 'string'
-                && val.open.length  === 1
-                && val.close.length === 1;
-        } 
-    },
-    normalize: deprValue => deprValue.map(({ open, close }) => `${open}${close}`)
-});
-
-/** Handler to the `leaper.decorateAll` configuration. */
-export const decorateAllHandler = new ConfigurationHandlerCompat({
-    name: `leaper.decorateAll`,
-    typecheck: (value: any): value is boolean => typeof value === 'boolean',
-    deprName: `leaper.decorateOnlyNearestPair`,
-    deprTypecheck: (value: any): value is boolean => typeof value === 'boolean',
-    normalize: deprValue => !deprValue
-});
-
-/** 
- * Handler to the `leaper.decorationOptions` configuration. 
- * 
- * Note that the typecheck for this configuration is just an object check because the actual type is
- * too always evolving (as it is part of the VS Code API) and is very complex due to having many 
- * properties.
- */
-export const decorationOptionsHandler = new ConfigurationHandlerCompat({
-    name: `leaper.decorationOptions`,
-    typecheck: (value: any): value is DecorationRenderOptions => typeof value === 'object',
-    deprName: `leaper.customDecorationOptions`,
-    deprTypecheck: (value: any): value is DecorationRenderOptions => typeof value === 'object',
-    normalize: value => value
-});
-
-/** 
- * Handler to the `leaper.neverWarnDeprecated` configuration which determines if we warn the user for
- * deprecated configuration use.
- */
-export const neverWarnDeprecatedHandler = new ConfigurationHandler({
-    name: `leaper.neverWarnDeprecated`,
-    typecheck: (value: any): value is boolean => typeof value === 'boolean'
-});
-    

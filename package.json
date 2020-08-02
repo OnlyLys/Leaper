@@ -75,11 +75,6 @@
                     "uniqueItems": true,
                     "markdownDescription": "Specify how the closing (i.e. right) side of each pair is decorated. Note: \n\n- With the exception of `rangeBehavior`, all of VS Code's [`DecorationRenderOptions`](https://code.visualstudio.com/docs/extensionAPI/vscode-api#DecorationRenderOptions) should be available. However, options aside from the `outline`, `border` and `font` ones have not been tested and use of them may severely affect editor performance. \n\n- Any options that require a non-`string` type can be specified with an object literal, for instance, see how a `ThemeColor` is used in the `outlineColor` property of the default value of this setting. Be be careful when specifying object literals as no type checking is done before the value is utilized. \n\n- Decorations can be disabled by setting this setting to `{}`."
                 },
-                "leaper.neverWarnDeprecated": {
-                    "type": "boolean",
-                    "default": false,
-                    "markdownDescription": "Set to `true` to disable warnings when deprecated configurations are used."
-                },
                 "leaper.decorateOnlyNearestPair": {
                     "type": "boolean",
                     "default": true,
@@ -158,6 +153,6 @@
         "vscode": "^1.1.36"
     },
     "dependencies": {
-        "@onlylys/vscode-configuration-handler": "file:./onlylys-vscode-configuration-handler-0.0.5.tgz"
+        "@onlylys/vscode-validated-configuration-reader": "file:./onlylys-vscode-validated-configuration-reader-0.2.0.tgz"
     }
 }

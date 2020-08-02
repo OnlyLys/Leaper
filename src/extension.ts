@@ -1,6 +1,6 @@
 import { ExtensionContext, commands, workspace, window } from 'vscode';
 import { Controller } from './controller';
-import { neverWarnDeprecatedHandler, Configuration } from './configuration';
+import { Configuration } from './configuration';
 
 /** 
  * Note that as of 1.32, `activate` is called each time a new workspace is opened - each workspace
@@ -8,8 +8,7 @@ import { neverWarnDeprecatedHandler, Configuration } from './configuration';
  */
 export function activate(context: ExtensionContext): LeaperAPI {
 
-    const configuration = Configuration.get();
-    const controller    = new Controller(configuration);
+    const controller = new Controller(Configuration.read());
 
     const leapCommand = commands.registerTextEditorCommand(
         `leaper.leap`, 
@@ -19,18 +18,18 @@ export function activate(context: ExtensionContext): LeaperAPI {
     // Keybinding to untrack all the pairs and disable all keybinding contexts.
     const escapeLeaperModeCommand = commands.registerTextEditorCommand(
         `leaper.escapeLeaperMode`, 
-        () => controller.reset()
+        () => controller.reset(undefined)
     );
 
     // Watcher that restarts the controller on editor focus change.
     const activeTextEditorChangeWatcher = window.onDidChangeActiveTextEditor(() => {
-        controller.reset();
+        controller.reset(undefined);
     });
 
     // Watcher that resets the controller on configuration change.
     const configurationChangeWatcher = workspace.onDidChangeConfiguration(event => {
         if (event.affectsConfiguration(`leaper`)) {
-            controller.reset(configuration);
+            controller.reset(Configuration.read());
         }
     });
 
@@ -41,29 +40,6 @@ export function activate(context: ExtensionContext): LeaperAPI {
         activeTextEditorChangeWatcher,
         configurationChangeWatcher
     );
-
-    // Check for use of deprecated configurations [0.5.3 -> 0.7.0]
-    if (!configuration.neverWarnDeprecated && configuration.hasDeprUse) {
-        /* If there are deprecated configurations being used, we prompt the user to migrate them.
-        This migration is necessary during the transition from 0.5.3 to 0.7.0. */
-        (async () => {
-            const msg = `[Leaper] You are currently using configurations which have been deprecated 
-            in a recent update. However, there exist equivalent replacements for all of them. Press 
-            'Yes' below to migrate all old configurations to the new counterparts. Press 'No' to 
-            ignore for the moment being. Otherwise press 'Never Remind Again' to disable all future 
-            reminders.`;
-            const reply = await window.showWarningMessage(msg, 'Yes', 'No', 'Never Remind Again'); 
-            if (reply === 'Yes') {
-                /* We don't need the return value from `configuration.migrate()` since we already
-                have a `configurationChangeWatcher` that automatically restarts the controller with 
-                the latest configuration values. */
-                await configuration.migrate();
-                window.showInformationMessage('Migration complete');
-            } else if (reply === 'Never Remind Again') {
-                await neverWarnDeprecatedHandler.setGlobalValue(true);
-            }
-        })();
-    }
 
     // Expose parts of the controller for testing
     return {
