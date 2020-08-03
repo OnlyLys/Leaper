@@ -1,4 +1,4 @@
-import { Disposable, workspace, window, commands, Selection, TextEditor } from 'vscode';
+import { Disposable, workspace, window, commands, Selection, TextEditor, TextDocumentContentChangeEvent } from 'vscode';
 import { Pair } from './tracker/pair';
 import { Tracker } from './tracker/tracker';
 import { Configuration } from './configuration';
@@ -105,7 +105,14 @@ export class Controller {
             return;
         }
         for (const tracker of this.trackers) {
-            tracker.contentChangeUpdate(event.contentChanges);
+
+            // FIXME: Fix `Tracker.contentChangeUpdate()` to accept a readonly array.
+            //
+            // This previously wasn't an issue but vscode changed its api to return `ReadonlyArray`
+            // for `event.contentChanges` so this method call no longer compiles. 
+            //
+            // We cast to a mutable array as a temporary fix for the problem.
+            tracker.contentChangeUpdate(event.contentChanges as TextDocumentContentChangeEvent[]);
         }
         updateContexts(this.trackers);
     });
