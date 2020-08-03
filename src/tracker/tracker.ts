@@ -24,19 +24,20 @@ export class Tracker {
         private cursorIndex: number,
     ) {}
 
-    /** `true` if no pairs are being tracked. Otherwise `false`. */
-    public get isEmpty(): boolean {
-        return !this.pairs.length;
+    public get length(): number {
+        return this.pairs.length;
     }
 
     /** 
      * Get a snapshot of all the pairs that are being tracked in this `Tracker`. 
      * 
      * The elements of the return array are quintuplets with the following values: 
-     * `[openLine, openCharacter, closeLine, closeCharacter, isDecorated]`. Each quintuplet describes
-     * a pair's opening and closing positions in addition to its current decoration state.
+     * `[openLine, openCharacter, closeLine, closeCharacter, isDecorated]`. 
+     * 
+     * Each quintuplet describes a pair's opening and closing positions in addition to its current 
+     * decoration state.
      */
-    public get snapshot(): [number, number, number, number, boolean][] {
+    public snapshot(): [number, number, number, number, boolean][] {
         const retVal: [ number, number, number, number, boolean ][] = [];
         for (const { open, close, isDecorated } of this.pairs) {
             retVal.push([ open.line, open.character, close.line, close.character, isDecorated ]);
@@ -51,17 +52,20 @@ export class Tracker {
      */
     public get line(): number {
 
-        // Since all pairs in each tracker are on the same line, we can just return the line number 
-        // of any pair.
+        // Since all pairs in each tracker are on the same line, returning the line number of any
+        // pair will do.
         return this.pairs[0] ? this.pairs[0].open.line : -1;
     }
 
     /** 
-     * Check if there is line of sight between cursor position and the `close` position of the
-     * nearest available pair. Having line of sight means having no non-whitespace text between 
-     * position and the `close` position.
+     * Check if there is an unobstructed path from the cursor to the closing side of the innermost 
+     * pair being tracked.
+     * 
+     * More specifically, the path is unobstructed if there is no non-whitespace text between the
+     * cursor and the closing side of the pair. In this case, we say the cursor has "line of sight" 
+     * to the nearest available pair.
      */
-    public get hasLineOfSight(): boolean {
+    public hasLineOfSight(): boolean {
         const innermostPair: Pair | undefined = this.pairs[this.pairs.length - 1];
         const selection = this.editor.selections[this.cursorIndex];
         if (innermostPair && selection) {
@@ -73,12 +77,13 @@ export class Tracker {
         }
     }
 
-    /** Pop the innermost pair being tracked. */
+    /** Remove then return the innermost pair that was being tracked. */
     public pop(): Pair | undefined {
         const popped = this.pairs.pop();
         if (popped) {
             popped.undecorate();
-            // Decorate the new nearest pair (if it exists)
+
+            // We decorate the new innermost pair (if any).
             if (this.pairs[this.pairs.length - 1] && !this.pairs[this.pairs.length - 1].isDecorated) {
                 this.pairs[this.pairs.length - 1].decorate();
             }
@@ -250,8 +255,9 @@ export class Tracker {
     }
 
     /** 
-     * Clears all pairs from being tracked and remove all decorations. This instance of `Tracker`
-     * cannot be used after it has been disposed of.
+     * Clears all pairs from being tracked and remove all decorations. 
+     * 
+     * This instance of `Tracker` cannot be used after this method is called.
      */
     public dispose(): void {
         for (const pair of this.pairs) {

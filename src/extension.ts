@@ -73,9 +73,7 @@ export interface TestAPI {
      */ 
     snapshot(): [number, number, number, number, boolean][][];
 
-    /** 
-     * Get a snapshot of all the pairs but without information about decorations. 
-     */
+    /** Get a snapshot of all the pairs but without information about decorations. */
     snapshotBare(): [number, number, number, number][][];
 
 }

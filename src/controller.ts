@@ -136,7 +136,7 @@ export class Controller {
     /** Execute a leap out of the nearest available pair for each cursor. */
     public leap(): void {
 
-        if (!this.trackers.some(tracker => tracker.hasLineOfSight) || !window.activeTextEditor) {
+        if (!this.trackers.some(tracker => tracker.hasLineOfSight()) || !window.activeTextEditor) {
             return;
         }
 
@@ -200,10 +200,10 @@ export class Controller {
      * Disable the controller.
      * 
      * All pairs that were being tracked are immediately untracked. All keybinding contexts are 
-     * also disabled.
+     * also disabled. No further tracking will be done.
      * 
-     * Then disable tracking. This controller cannot be restarted (by calling the `reset` method) 
-     * after calling this method. 
+     * This controller cannot be restarted (by calling the `reset` method) after this method is
+     * called.
      */
     public dispose(): void {
         this.clear();
@@ -212,8 +212,8 @@ export class Controller {
     }
 
     public get testAPI(): TestAPI {
-        const isEmpty      = () => this.trackers.every(tracker => tracker.isEmpty);
-        const snapshot     = () => this.trackers.map(tracker => tracker.snapshot);
+        const isEmpty      = () => this.trackers.every(tracker => tracker.length === 0);
+        const snapshot     = () => this.trackers.map(tracker => tracker.snapshot());
         const snapshotBare = () => snapshot().map(
                 subarray => subarray.map(
                     pair => [pair[0], pair[1], pair[2], pair[3]] as [number, number, number, number]
@@ -274,8 +274,8 @@ function initializeTrackers(
  *   captured by the `leap` command and instead continues to cascade down the keybinding heirarchy.
  */
 function updateContexts(trackers: ReadonlyArray<Tracker>): void {
-    setContext(`leaper.inLeaperMode`,   trackers.some(tracker => !tracker.isEmpty));
-    setContext(`leaper.hasLineOfSight`, trackers.some(tracker => tracker.hasLineOfSight));
+    setContext(`leaper.inLeaperMode`,   trackers.some(tracker => tracker.length !== 0));
+    setContext(`leaper.hasLineOfSight`, trackers.some(tracker => tracker.hasLineOfSight()));
     function setContext(name: string, value: boolean): void {
         commands.executeCommand('setContext', name, value);
     }
