@@ -5,18 +5,18 @@ import { Configuration } from './configuration';
 
 /** 
  * A controller that is responsible for:
- * - Detecting and track pairs
- * - Activating appropriate keybindings (such as 'leap' command)
- * - Executing the leap command that causes the cursor to jump out of the nearest available pair
+ * 
+ * - Detecting and tracking pairs.
+ * - Executing the `leap` command that moves the cursor to the nearest available pair.
  */
 export class Controller {
 
     /** 
-     * An array of trackers. Each cursor is assigned a tracker that is responsible for managing the 
-     * pairs belonging to the cursor.
+     * An array of trackers for each active cursor. 
      * 
-     * The trackers are in order of cursors, meaning the nth tracker tracks the pairs of the nth
-     * cursor.
+     * Each cursor is assigned a tracker that is responsible for managing the pairs belonging to it.
+     * The trackers in this array follow the order of the cursors. The first tracker tracks the 
+     * pairs of the first cursor, the second for the second cursor, and so on.
      */
     private trackers: Tracker[] = [];
 
@@ -27,39 +27,53 @@ export class Controller {
      * This is required because when inserting text, such as when using autocompletion, multiple 
      * transient cursor movements can occur during the text insertion sequence. 
      * 
-     * Typically when text is autocompleted, the cursor is first moved _before_ the text is inserted.
-     * This is in contrast to normal text insertion via typing or copy-paste where the cursor is moved 
-     * _after_ the text is inserted. So, consider when we autocomplete text between a pair. The 
-     * cursor will be temporarily moved outside the pair before the autocompleted text is inserted.
-     * So while the overall effect is that the cursor remains between the pairs after the whole 
-     * autocomplete sequence, had we called `selectionChangeUpdate()` after each cursor movement, 
-     * then the pair would have been untracked during the 'transient' phase where the cursor was 
-     * temporarily outside the pair.
+     * When text is autocompleted, the cursor is moved _before_ the autocompleted text is inserted. 
+     * This is in contrast to normal text insertion via typing or copy-paste where the cursor is 
+     * moved _after_ the text is inserted. 
+     * 
+     * The above is important, because when we autocomplete text between a pair, the cursor will be 
+     * moved outside the pair to its final position before the text is inserted. Only once the text 
+     * is inserted will it push the closing side of the pair past the cursor. Had we called 
+     * `selectionChangeUpdate()` after each cursor movement, the pair would have been untracked 
+     * during the transient phase where it was outside the pair. The user does not see the transient
+     * phase at all, so it would be incorrect to untrack pairs during it. 
      * 
      * The solution to the above problem was to recognize that text insertions are always completed
-     * within one event loop. So if we only apply `selectionChangeUpdate()`s at the end of every
-     * event loop, then we only capture the cursor movement at the end of every event loop, thus
-     * filtering out the transient movements that can occur in between.
+     * within one event loop. Thus only applying `selectionChangeUpdate()`s at the end of every 
+     * event loop allows us to filter out any transient movements that can occur in between.
      * 
      * For more information about `Immediate` timers and Node JS event loops, see:
      * - https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/
      * - https://nodejs.org/en/docs/guides/timers-in-node/ 
      */
-    private endOfEventLoopEvent: NodeJS.Immediate | undefined = undefined;
+    private endOfEventLoopTimer: NodeJS.Immediate | undefined = undefined;
 
     /** 
-     * Start an instance of a `Controller` which immediately begins tracking the pairs that are 
-     * inserted by the cursors in the editor. The instance of `Controller` created needs to be 
-     * `dispose()`d of when the extension is shut down.
+     * Current configuration of this extension. 
      * 
-     * Note that behavior of a `Controller` is undefined if there are multiple active instances. 
-     * 
-     * @param configuration The current configuration of the extension.
+     * The configuration can be updated by calling `reset()` with new configuration values.
      */
-    public constructor(private configuration: Configuration) {
+    private configuration: Configuration;
+
+    private constructor(configuration: Configuration) {
+        this.configuration = configuration;
         if (window.activeTextEditor) {
             initializeTrackers(this.trackers, window.activeTextEditor, configuration);
         }
+    }
+
+    /** 
+     * Start an instance of the controller, which immediately begins tracking pairs.
+     * 
+     * Only one instance should be active at a time. Behavior is undefined if there are multiple 
+     * active instances.
+     * 
+     * Each `Controller` instance created must be `dispose()`d of when the extension is shut down.
+     * 
+     * @param configuration The current configuration of the extension.
+     */
+    public static start(configuration: Configuration): Controller {
+        return new Controller(configuration);
     }
 
     /** `true` if there are no pairs being tracked. Otherwise `false`. */
@@ -112,20 +126,21 @@ export class Controller {
         if (this.trackers.length !== window.activeTextEditor.selections.length) {
             initializeTrackers(this.trackers, window.activeTextEditor, this.configuration);
         }
-        /* Once a cursor movement has been detected, we schedule a delayed event to apply
-        `selectionChangeUpdate()`s to each tracker at the end of the current event loop. For the 
-        rationale of the delay, see the comment for `this.endOfEventLoopEvent`. We have an `if` 
-        guard here to make sure that there is only a max of one immediate event schedueld per event
-        loop. */
-        if (this.endOfEventLoopEvent === undefined) {
-            this.endOfEventLoopEvent = setImmediate(() => {
+
+        // When a cursor movement has been detected, we schedule a delayed event to apply 
+        // `selectionChangeUpdate()`s on each tracker only at the end of the current event loop. 
+        //
+        // For the rationale of the delay, see the comment for `this.endOfEventLoopTimer`. 
+        //
+        // We have an `if` guard here to make sure that there is only at most one timer scheduled 
+        // per event loop.
+        if (this.endOfEventLoopTimer === undefined) {
+            this.endOfEventLoopTimer = setImmediate(() => {
                 for (const tracker of this.trackers) {
                     tracker.selectionChangeUpdate();
                 }
                 updateContexts(this.trackers);
-                this.endOfEventLoopEvent = undefined;
-            });
-        }
+                this.endOfEventLoopTimer = undefined;
     });
     
     /** 
@@ -151,12 +166,13 @@ export class Controller {
     
     /** Execute a leap out of the nearest available pair for each cursor. */
     public leap(): void {
+
         if (!this.trackers.some(tracker => tracker.hasLineOfSight) || !window.activeTextEditor) {
             return;
         }
-        /* For each cursor, if it has an available pair to jump out of, we move the cursor to just
-        past the closing side of the pair (i.e. jump out of the pair). We do nothing if there is no
-        available pair. */
+
+        // The actual 'leap' execution occurs here, where for each cursor we jump out of any 
+        // available pairs.
         window.activeTextEditor.selections = window.activeTextEditor.selections.map(
             (selection, i) => {
                 const nearestPair: Pair | undefined = this.trackers[i].pop();
@@ -168,15 +184,31 @@ export class Controller {
                 }
             }
         );
-        /* If there is only a single cursor, we then reveal the new selection so that the editor's
-        viewport follows the cursor after the leap. We do not reveal when there are multiple cursors 
-        as there is no intuitive way to approach it. */
+
+        // If there is only a single cursor, we then reveal the new selection so that the editor's
+        // viewport follows the cursor after the leap.
+        //
+        // We do not reveal when there are multiple cursors as there is no intuitive way to approach 
+        // it.
         if (window.activeTextEditor.selections.length === 1) {
             window.activeTextEditor.revealRange(window.activeTextEditor.selection.with());
         }
-        /* After leaping, we need to readjust the keybinding contexts because we may have just 
-        leaped out of the last available pair. */
+
+        // After leaping, we have to readjust the keybinding contexts, because we may have just
+        // leapt out of the last available pair, which then requires that `leaper.inLeaperMode` to
+        // be false.
         updateContexts(this.trackers);
+    }
+
+    /** Clear the trackers, keybinding contexts and the immediate timer. */
+    private clear(): void {
+        this.trackers.forEach(tracker => tracker.dispose());
+        this.trackers = [];
+        updateContexts(this.trackers);
+        if (this.endOfEventLoopTimer) {
+            clearImmediate(this.endOfEventLoopTimer);
+            this.endOfEventLoopTimer = undefined;
+        }
     }
 
     /**
@@ -196,25 +228,19 @@ export class Controller {
     }
 
     /**
-     * Clear all pairs and disable all keybinding contexts. Then disable tracking. This controller 
-     * cannot be restarted after calling this method. 
+     * Disable the controller.
+     * 
+     * All pairs that were being tracked are immediately untracked. All keybinding contexts are 
+     * also disabled.
+     * 
+     * Then disable tracking. This controller cannot be restarted (by calling the `reset` method) 
+     * after calling this method. 
      */
     public dispose(): void {
-        this.clearState();
+        this.clear();
         this.contentChangeWatcher.dispose();
         this.selectionChangeWatcher.dispose();
         this.visibleRangesChangeWatcher.dispose();
-    }
-
-    /** Clear the trackers, the keybindings and the immediate timer. */
-    private clearState(): void {
-        this.trackers.forEach(tracker => tracker.dispose());
-        this.trackers = [];
-        updateContexts(this.trackers);
-        if (this.endOfEventLoopEvent) {
-            clearImmediate(this.endOfEventLoopEvent);
-            this.endOfEventLoopEvent = undefined;
-        }
     }
 
 }
@@ -237,12 +263,14 @@ function initializeTrackers(
     const numOfCursors  = activeTextEditor.selections.length;
     const numOfTrackers = trackers.length;
     if (numOfTrackers < numOfCursors) {
-        // If the num of trackers < num of cursors, add new trackers until parity
+
+        // If the num of trackers < num of cursors, add new trackers until parity.
         for (let i = numOfTrackers; i < numOfCursors; ++i) {
             trackers.push(new Tracker(configuration, activeTextEditor, i));
         }
     } else if (numOfTrackers > numOfCursors) {
-        // If the num of trackers > num of cursors, drop excess trackers until parity
+
+        // If the num of trackers > num of cursors, drop excess trackers until parity.
         for (let i = numOfCursors; i < numOfTrackers; ++i) {
             trackers[i].dispose();
         }

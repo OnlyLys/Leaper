@@ -51,11 +51,14 @@ export class Tracker {
     }
 
     /** 
-     * Get the line that the pairs within this `Tracker` are on. Return value is `-1` if no pairs
-     * being tracked.
+     * Get the line that the pairs within this `Tracker` are on. 
+     * 
+     * Return value is `-1` if no pairs are being tracked.
      */
     public get line(): number {
-        // Since all pairs are on the same line, we just need to return the line num of the first pair
+
+        // Since all pairs in each tracker are on the same line, we can just return the line number 
+        // of any pair.
         return this.pairs[0] ? this.pairs[0].open.line : -1;
     }
 

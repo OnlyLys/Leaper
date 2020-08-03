@@ -8,7 +8,7 @@ import { Configuration } from './configuration';
  */
 export function activate(context: ExtensionContext): LeaperAPI {
 
-    const controller = new Controller(Configuration.read());
+    const controller = Controller.start(Configuration.read());
 
     const leapCommand = commands.registerTextEditorCommand(
         `leaper.leap`, 
@@ -41,7 +41,7 @@ export function activate(context: ExtensionContext): LeaperAPI {
         configurationChangeWatcher
     );
 
-    // Expose parts of the controller for testing
+    // Expose parts of the controller for tests.
     return {
         get isEmpty(): boolean {
             return controller.isEmpty;
