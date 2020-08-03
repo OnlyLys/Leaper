@@ -75,23 +75,24 @@ export class Pair {
     }
 
     /** 
-     * Decorate the closing side of this pair. Decoration will be reapplied if a previous decoration
-     * is present.
+     * Decorate the closing side of this pair. 
+     * 
+     * Any prior active decoration will be replaced. 
      */
     public decorate(): void {
-        if(this.decoration) {
-            this.decoration.dispose();
-        }
+        this.decoration?.dispose();
         this.decoration = window.createTextEditorDecorationType(this.decorationOptions);
         this.editor.setDecorations(this.decoration, [new Range(this._close, this._close.translate(0, 1))]);
     }
 
-    /* Undecorate the closing side of this pair. Nothing is done if it's already undecorated. */
+    /** 
+     * Remove the decoration for the closing side of this pair. 
+     * 
+     * Nothing is done if it was already undecorated. 
+     */
     public undecorate(): void {
-        if (this.decoration) {
-            this.decoration.dispose();
-            this.decoration = undefined;
-        }
+        this.decoration?.dispose();
+        this.decoration = undefined;
     }
 
 }
