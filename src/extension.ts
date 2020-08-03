@@ -23,7 +23,10 @@ export function activate(context: ExtensionContext): LeaperAPI {
 
     // Watcher that restarts the controller on editor focus change.
     const activeTextEditorChangeWatcher = window.onDidChangeActiveTextEditor(() => {
-        controller.reset(undefined);
+
+        // We have to reload the configuration when the active text editor changes as there could be
+        // workspace folder specific configurations within a multi-root workspace.
+        controller.reset(Configuration.read());
     });
 
     // Watcher that resets the controller on configuration change.
