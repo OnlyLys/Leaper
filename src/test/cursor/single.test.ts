@@ -1,6 +1,6 @@
 import { commands, SnippetString, TextEditor, Range } from 'vscode';
-import { type, leap, moveCursorRight, moveCursorDown, insertText, jumpToNextTabstop, jumpToPrevTabstop, clearDocument, backspace, verifyCursor, verifyPairs, openNewTextEditor, getLeaperAPI, aliceText1, aliceText2, verifyEmpty } from './utilities';
-import { LeaperAPI } from '../../extension';
+import { type, leap, moveCursorRight, moveCursorDown, insertText, jumpToNextTabstop, jumpToPrevTabstop, clearDocument, backspace, verifyCursor, verifyPairs, openNewTextEditor, getTestAPI, aliceText1, aliceText2, verifyEmpty } from './utilities';
+import { TestAPI } from '../../extension';
 import * as assert from 'assert';
 
 /** 
@@ -13,7 +13,7 @@ const testGroups: {
     groupDescription: string,
     generate: () => {
         description: string,
-        action: (editor: TextEditor, leaperAPI: LeaperAPI) => Promise<void>
+        action: (editor: TextEditor, testAPI: TestAPI) => Promise<void>
     }[]
 }[] = [
     {
@@ -21,11 +21,11 @@ const testGroups: {
         generate: () => [
             {
                 description: 'No pairs tracked when the editor is empty',
-                action: async (_: TextEditor, leaperAPI: LeaperAPI) => verifyEmpty(leaperAPI)
+                action: async (_: TextEditor, testAPI: TestAPI) => verifyEmpty(testAPI)
             },
             {
                 description: 'Autoclosing pairs feature enabled - A',
-                action: async (editor: TextEditor, _: LeaperAPI) => {
+                action: async (editor: TextEditor, _: TestAPI) => {
                     // Insert 10 pairs 
                     const input = ['{', '[', '(', '{', '[', '(', '{', '[', '(', '{'];
                     await type(...input);
@@ -41,9 +41,9 @@ const testGroups: {
             },
             {
                 description: 'Can track pairs - A',
-                action: async (_: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (_: TextEditor, testAPI: TestAPI) => {
                     // Verify that 10 pairs are being tracked
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [0, 0, 0, 19],
                         [0, 1, 0, 18],
                         [0, 2, 0, 17],
@@ -59,7 +59,7 @@ const testGroups: {
             },
             {
                 description: 'Autoclosing pairs feature enabled - B',
-                action: async (editor: TextEditor, _: LeaperAPI) => {
+                action: async (editor: TextEditor, _: TestAPI) => {
                     // Clear the document to make way for this test
                     await clearDocument();
                     // Insert some text before the pairs to create a realistic scenario
@@ -84,8 +84,8 @@ const testGroups: {
             },
             {
                 description: 'Can track pairs - B', 
-                action: async (_: TextEditor, leaperAPI: LeaperAPI) => {
-                    verifyPairs(leaperAPI, [[
+                action: async (_: TextEditor, testAPI: TestAPI) => {
+                    verifyPairs(testAPI, [[
                         [1, 0 + 13, 1, 19 + 13],
                         [1, 1 + 13, 1, 18 + 13],
                         [1, 2 + 13, 1, 17 + 13],
@@ -106,9 +106,9 @@ const testGroups: {
         generate: () => [
             {
                 description: 'Insert single pair',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     await type('{');
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [0, 0, 0, 1]
                     ]]);
                     verifyCursor(editor, [0, 1]);
@@ -116,9 +116,9 @@ const testGroups: {
             },
             {
                 description: 'Leap',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     await leap(editor, [0, 1], '}');
-                    verifyEmpty(leaperAPI);
+                    verifyEmpty(testAPI);
                 }
             }
         ]
@@ -130,9 +130,9 @@ const testGroups: {
             return [
                 {
                     description: 'Insert multiple pairs',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         await type(...pairs.map(([open]) => open));
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0, 0, 19],
                             [0, 1, 0, 18],
                             [0, 2, 0, 17],
@@ -149,11 +149,11 @@ const testGroups: {
                 },
                 {
                     description: 'Leap',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         for (const [, close] of pairs.reverse()) {
                             await leap(editor, [0, 1], close);
                         }
-                        verifyEmpty(leaperAPI);
+                        verifyEmpty(testAPI);
                     }
                 }
             ];
@@ -164,10 +164,10 @@ const testGroups: {
         generate: () => [
             {
                 description: 'Insert single pair with whitespace between',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     await type('{', ' ', ' ', ' ', ' ', ' ');
                     await moveCursorRight(-5);  // Move cursor to the start of spaces
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [0, 0, 0, 6]
                     ]]);
                     verifyCursor(editor, [0, 1]);
@@ -175,9 +175,9 @@ const testGroups: {
             },
             {
                 description: 'Leap',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     await leap(editor, [0, 6], '}');
-                    verifyEmpty(leaperAPI);
+                    verifyEmpty(testAPI);
                 }
             }
         ]
@@ -189,12 +189,12 @@ const testGroups: {
             return [
                 {
                     description: 'Insert multiple pairs with whitespace between',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         for (const [open] of pairs) {
                             await type(open, ' ', ' ', ' ', ' ', ' ');
                             await moveCursorRight(-5);      // Move cursor to start of spaces
                         }
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0, 0, 41],
                             [0, 1, 0, 35],
                             [0, 2, 0, 29],
@@ -207,11 +207,11 @@ const testGroups: {
                 },
                 {
                     description: 'Leap',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         for (const [, close] of pairs.reverse()) {
                             await leap(editor, [0, 6], close);
                         }
-                        verifyEmpty(leaperAPI);
+                        verifyEmpty(testAPI);
                     }
                 }
             ];
@@ -224,9 +224,9 @@ const testGroups: {
             return [
                 {
                     description: 'Insert multiple pairs',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         await type(...input);
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0, 0, 19],
                             [0, 1, 0, 18],
                             [0, 2, 0, 17],
@@ -243,12 +243,12 @@ const testGroups: {
                 },
                 {
                     description: 'Incrementally moving right invalidates pairs',
-                    action: async (_: TextEditor, leaperAPI: LeaperAPI) => {
-                        const initialSnapshotBare = leaperAPI.snapshotBare;
+                    action: async (_: TextEditor, testAPI: TestAPI) => {
+                        const initialSnapshotBare = testAPI.snapshotBare();
                         for (const _ of input) {
                             await moveCursorRight(1);
                             initialSnapshotBare[0].pop();
-                            verifyPairs(leaperAPI, initialSnapshotBare);
+                            verifyPairs(testAPI, initialSnapshotBare);
                         }
                     }
                 }
@@ -262,9 +262,9 @@ const testGroups: {
             return [
                 {
                     description: 'Insert multiple pairs',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         await type(...input);
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0, 0, 19],
                             [0, 1, 0, 18],
                             [0, 2, 0, 17],
@@ -281,9 +281,9 @@ const testGroups: {
                 },
                 {
                     description: 'Moving right in one go invalidates all pairs',
-                    action: async (_: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (_: TextEditor, testAPI: TestAPI) => {
                         await moveCursorRight(input.length);
-                        verifyEmpty(leaperAPI);
+                        verifyEmpty(testAPI);
                     }
                 }
             ];
@@ -296,9 +296,9 @@ const testGroups: {
             return [
                 {
                     description: 'Insert multiple pairs',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         await type(...input);
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0, 0, 19],
                             [0, 1, 0, 18],
                             [0, 2, 0, 17],
@@ -315,12 +315,12 @@ const testGroups: {
                 },
                 {
                     description: 'Incrementally moving left invalidates pairs',
-                    action: async (_: TextEditor, leaperAPI: LeaperAPI) => {
-                        const initialSnapshotBare = leaperAPI.snapshotBare;
+                    action: async (_: TextEditor, testAPI: TestAPI) => {
+                        const initialSnapshotBare = testAPI.snapshotBare();
                         for (const _ of input) {
                             await moveCursorRight(-1);
                             initialSnapshotBare[0].pop();
-                            verifyPairs(leaperAPI, initialSnapshotBare);
+                            verifyPairs(testAPI, initialSnapshotBare);
                         }
                     }
                 }
@@ -334,9 +334,9 @@ const testGroups: {
             return [
                 {
                     description: 'Insert multiple pairs',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         await type(...input);
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0, 0, 19],
                             [0, 1, 0, 18],
                             [0, 2, 0, 17],
@@ -353,9 +353,9 @@ const testGroups: {
                 },
                 {
                     description: 'Moving left in one go invalidates all pairs',
-                    action: async (_: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (_: TextEditor, testAPI: TestAPI) => {
                         await moveCursorRight(-input.length);
-                        verifyEmpty(leaperAPI);
+                        verifyEmpty(testAPI);
                     }
                 }
             ];
@@ -366,7 +366,7 @@ const testGroups: {
         generate: () => [
             {
                 description: 'Insert multiple pairs',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     // Insert some text at the start of document so cursor has room to move up
                     await insertText(editor, [0, 0, 0, 0], 'Hello World\nHello World\nHello World\nHello World');
                     // Move cursor to middle of second line
@@ -376,7 +376,7 @@ const testGroups: {
                     // Insert 10 pairs
                     const input = ['{', '[', '(', '{', '[', '(', '{', '[', '(', '{'];
                     await type(...input);
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [2,  5, 2, 24],
                         [2,  6, 2, 23],
                         [2,  7, 2, 22],
@@ -393,9 +393,9 @@ const testGroups: {
             {
 
                 description: 'Moving up in one go invalidates all pairs',
-                action: async (_: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (_: TextEditor, testAPI: TestAPI) => {
                     await moveCursorDown(-1);
-                    verifyEmpty(leaperAPI);
+                    verifyEmpty(testAPI);
                 }
             }
         ]
@@ -405,7 +405,7 @@ const testGroups: {
         generate: () => [
             {
                 description: 'Insert multiple pairs',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     // Insert some newlines at the start of document so cursor has room to move down
                     await insertText(editor, [0, 0, 0, 0], '\n\n');
                     // Move cursor to start of document
@@ -413,7 +413,7 @@ const testGroups: {
                     // Insert 10 pairs
                     const input = ['{', '[', '(', '{', '[', '(', '{', '[', '(', '{'];
                     await type(...input);
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [0, 0, 0, 19],
                         [0, 1, 0, 18],
                         [0, 2, 0, 17],
@@ -430,9 +430,9 @@ const testGroups: {
             },
             {
                 description: 'Moving down in one go invalidates all pairs',
-                action: async (_: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (_: TextEditor, testAPI: TestAPI) => {
                     await moveCursorDown(1);
-                    verifyEmpty(leaperAPI);
+                    verifyEmpty(testAPI);
                 }
             }
         ]
@@ -442,10 +442,10 @@ const testGroups: {
         generate: () => [
             {
                 description: 'Insert multiple pairs',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     // Insert 10 pairs
                     await type('{', '[', '(', '{', '[', '(', '{', '[', '(', '{');
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [0, 0, 0, 19],
                         [0, 1, 0, 18],
                         [0, 2, 0, 17],
@@ -462,9 +462,9 @@ const testGroups: {
             },
             {
                 description: '`leaper.escapeLeaperMode` resets controller',
-                action: async (_: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (_: TextEditor, testAPI: TestAPI) => {
                     await commands.executeCommand('leaper.escapeLeaperMode');
-                    verifyEmpty(leaperAPI);
+                    verifyEmpty(testAPI);
                 }
             }
         ]
@@ -474,7 +474,7 @@ const testGroups: {
         generate: () => [
             {
                 description: 'Scenario A',
-                action: async (editor: TextEditor, _: LeaperAPI) => {
+                action: async (editor: TextEditor, _: TestAPI) => {
                     // Insert some random text then move the cursor to in between it 
                     await insertText(editor, [0, 0, 0, 0], 'Some random text');
                     await moveCursorRight(-12);
@@ -487,7 +487,7 @@ const testGroups: {
             },
             {
                 description: 'Scenario B',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     // Clear document to make way for this test
                     await clearDocument();
                     // Insert some random text to this document
@@ -498,7 +498,7 @@ const testGroups: {
                     // Insert 10 pairs
                     const pairs = ['[]', '()', '{}', '[]', '()', '{}', '[]', '()', '{}', '[]'];
                     await type(...pairs.map(([open]) => open));
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [4, 86, 4, 105],
                         [4, 87, 4, 104],
                         [4, 88, 4, 103],
@@ -528,9 +528,9 @@ const testGroups: {
         generate: () => [
             {
                 description: 'Scenario A',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     await type('[', '(', '{');
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [0, 0, 0, 5],
                         [0, 1, 0, 4],
                         [0, 2, 0, 3],
@@ -546,12 +546,12 @@ const testGroups: {
             },
             {
                 description: 'Scenario B',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     // Clear document to make way for this test
                     await clearDocument();
                     // Insert 3 pairs
                     await type('[', '(', '{');
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [0, 0, 0, 5],
                         [0, 1, 0, 4],
                         [0, 2, 0, 3],
@@ -577,9 +577,9 @@ const testGroups: {
             return [
                 {
                     description: 'Insert multiple pairs then insert single line text between each',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         await type(...input);
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0, 0, 19],
                             [0, 1, 0, 18],
                             [0, 2, 0, 17],
@@ -600,8 +600,8 @@ const testGroups: {
                 },
                 {
                     description: 'Pairs still valid',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
-                        verifyPairs(leaperAPI, [[
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
+                        verifyPairs(testAPI, [[
                             [0, 0 + 0 * text.length, 0, 19 + 19 * text.length],
                             [0, 1 + 1 * text.length, 0, 18 + 18 * text.length],
                             [0, 2 + 2 * text.length, 0, 17 + 17 * text.length],
@@ -624,26 +624,26 @@ const testGroups: {
         generate: () => [
             {
                 description: 'Between single pair',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     await type('{');
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [0, 0, 0, 1]
                     ]]);
                     verifyCursor(editor, [0, 1]);
                     // Insert whitespace
                     await type('\n');
-                    verifyEmpty(leaperAPI);
+                    verifyEmpty(testAPI);
                 }
             },
             {
                 description: 'Between multiple pairs',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     // Require clean document for this test
                     await clearDocument();
                     // Insert 6 pairs
                     const input = ['{', '{', '{', '{', '{', '{'];
                     await type(...input);
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [0, 0, 0, 11],
                         [0, 1, 0, 10],
                         [0, 2, 0, 9],
@@ -654,17 +654,17 @@ const testGroups: {
                     verifyCursor(editor, [0, 6]);
                     // Insert whitespace that should invalidate all enclosing pairs
                     await type('\n');
-                    verifyEmpty(leaperAPI);
+                    verifyEmpty(testAPI);
                 }
             },
             {
                 description: 'Between pair openers and closers',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     // Require clean document for this test
                     await clearDocument();
                     // Insert 5 pairs
                     await type('{', '{', '{', '{', '{');
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [0, 0, 0, 9],
                         [0, 1, 0, 8],
                         [0, 2, 0, 7],
@@ -676,7 +676,7 @@ const testGroups: {
                     - this moves the second pair and beyond to the next line. */
                     await insertText(editor, [0, 1, 0, 1], '\n');
                     // The first pair should be untracked
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [1, 0, 1, 7],
                         [1, 1, 1, 6],
                         [1, 2, 1, 5],
@@ -687,7 +687,7 @@ const testGroups: {
                     (when counting from out to in)*/
                     await insertText(editor, [1, 6, 1, 6], `\n`);
                     // Ths first and second pairs should be untracked
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [1, 2, 1, 5],
                         [1, 3, 1, 4]
                     ]]);
@@ -703,25 +703,25 @@ const testGroups: {
             return [
                 {
                     description: 'Between single pair',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         await type('{');
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0, 0, 1]
                         ]]);
                         verifyCursor(editor, [0, 1]);
                         // Insert text in between the pair
                         await insertText(editor, [0, 1, 0, 1], text);
-                        verifyEmpty(leaperAPI);
+                        verifyEmpty(testAPI);
                     }
                 },
                 {
                     description: 'Between multiple pairs',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         // Require clean document for this test
                         await clearDocument();
                         // Insert 10 pairs
                         await type('{', '{', '{', '{', '{', '{', '{', '{', '{', '{');
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0, 0, 19],
                             [0, 1, 0, 18],
                             [0, 2, 0, 17],
@@ -736,17 +736,17 @@ const testGroups: {
                         verifyCursor(editor, [0, 10]);
                         // Insert text in between pairs
                         await insertText(editor, [0, 10, 0, 10], text);
-                        verifyEmpty(leaperAPI);
+                        verifyEmpty(testAPI);
                     }
                 },
                 {
                     description: 'Between pair openers and closers',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         // Require clean document for this test
                         await clearDocument();
                         // Insert 5 pairs
                         await type('{', '{', '{', '{', '{');
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0, 0, 9],
                             [0, 1, 0, 8],
                             [0, 2, 0, 7],
@@ -757,7 +757,7 @@ const testGroups: {
                         /* Insert between openers of the first and second pairs (when counting from out to in)
                         - this moves the second pair and beyond down to by 2 lines. */
                         await insertText(editor, [0, 1, 0, 1], text);
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [2, 0, 2, 7],
                             [2, 1, 2, 6],
                             [2, 2, 2, 5],
@@ -767,7 +767,7 @@ const testGroups: {
                         /* Of the four pairs remaining, insert between closers of the second and third pairs
                         (when counting from out to in) - this should untrack the first and second pairs. */
                         await insertText(editor, [2, 6, 2, 6], text);
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [2, 2, 2, 5],
                             [2, 3, 2, 4]
                         ]]);
@@ -784,9 +784,9 @@ const testGroups: {
             return [
                 {
                     description: 'Insert multiple pairs then a snippet in the middle',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         await type(...input);
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0, 0, 19],
                             [0, 1, 0, 18],
                             [0, 2, 0, 17],
@@ -806,7 +806,7 @@ const testGroups: {
                 },
                 {
                     description: 'Snippet works',
-                    action: async (editor: TextEditor, _: LeaperAPI) => {
+                    action: async (editor: TextEditor, _: TestAPI) => {
                         // Jump from tabstop from $1 to $2 (cursor defaults to $1 initially)
                         await jumpToNextTabstop();
                         verifyCursor(editor, [0, input.length + 'assert_eq!(, '.length]);
@@ -824,10 +824,10 @@ const testGroups: {
                 },
                 {
                     description: 'Enclosing pairs still valid',
-                    action: async (_: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (_: TextEditor, testAPI: TestAPI) => {
                         // Check that that enclosing pairs still work
                         const snippetLength = 'assert_eq!(Hello, )'.length;
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0, 0, 19 + snippetLength],
                             [0, 1, 0, 18 + snippetLength],
                             [0, 2, 0, 17 + snippetLength],
@@ -851,19 +851,19 @@ const testGroups: {
             return [
                 {
                     description: 'Insert multiple pairs',
-                    action: async (_: TextEditor, __: LeaperAPI) => {
+                    action: async (_: TextEditor, __: TestAPI) => {
                         // Insert 10 pairs
                         await type('{', '[', '(', '{', '[', '(', '{', '[', '(', '{'); 
                     }
                 },
                 {
                     description: 'Overwriting closing side of pairs removes them',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         /* Overwrite the closing side of the 5th and 6th pairs (counted from out to in)
                         {[({[({[({})]})]})]} -> {[({[({[({})]}cheesecake})]}
                         12345678900987654321 -> 1234xx56788765xxxxxxxxxx4321 */
                         await insertText(editor, [0, 14, 0, 16], text);
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0, 0, 17 + text.length],
                             [0, 1, 0, 16 + text.length],
                             [0, 2, 0, 15 + text.length],
@@ -878,13 +878,13 @@ const testGroups: {
                 },
                 {
                     description: 'Deleting closing side of pairs removes them',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         /* Of the remaining pairs, delete the closing side of the first and last pairs 
                         {[({[({[({})]}cheesecake})]} -> {[({[({[({)]}cheesecake})] 
                         1234xx56788765xxxxxxxxxx4321 -> x123xx456x654xxxxxxxxxx321 */
                         await insertText(editor, [0, 17 + text.length, 0, 18 + text.length], '');
                         await insertText(editor, [0, 10, 0, 11], '');
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 1, 0, 15 + text.length],
                             [0, 2, 0, 14 + text.length],
                             [0, 3, 0, 13 + text.length],
@@ -897,14 +897,14 @@ const testGroups: {
                 },
                 {
                     description: 'Overwriting closing side of pairs removes them - Again',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         /* Of the remaining pairs, overwrite the closing side of the first and last pairs 
                         {[({[({[({)]}cheesecake})] -> {[({[({[({cheesecake]}cheesecake})cheesescake 
                         x123xx456x654xxxxxxxxxx321 -> xx12xx34xxxxxxxxxxxx43xxxxxxxxxx21xxxxxxxxxxx */
                         await insertText(editor, [0, 15 + text.length, 0, 16 + text.length], text);
                         // This step also pushes the cursor forward by `text.length`
                         await insertText(editor, [0, 10, 0, 11], text);
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 2, 0, 13 + 2 * text.length],
                             [0, 3, 0, 12 + 2 * text.length],
                             [0, 6, 0, 11 +     text.length],
@@ -915,13 +915,13 @@ const testGroups: {
                 },
                 {
                     description: 'Deleting closing side of pairs removes them - Again',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         /* Of the remaining pairs, delete the closing side of the second and third pairs
                         {[({[({[({cheesecake]}cheesecake})cheesescake -> {[({[({[({cheesecake]cheesecake)cheesescake
                         xx12xx34xxxxxxxxxxxx43xxxxxxxxxx21xxxxxxxxxxx -> xx1xxxx4xxxxxxxxxxxx4xxxxxxxxxx1xxxxxxxxxxx */
                         await insertText(editor, [0, 12 + 2 * text.length, 0, 13 + 2 * text.length], '');
                         await insertText(editor, [0, 11 +     text.length, 0, 12 +     text.length], '');
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 2, 0, 11 + 2 * text.length],
                             [0, 7, 0, 10 +     text.length],
                         ]]);
@@ -938,19 +938,19 @@ const testGroups: {
             return [
                 {
                     description: 'Insert multiple pairs',
-                    action: async (_: TextEditor, __: LeaperAPI) => {
+                    action: async (_: TextEditor, __: TestAPI) => {
                         // 10 pairs
                         await type('{', '[', '(', '{', '[', '(', '{', '[', '(', '{');
                     }
                 },
                 {
                     description: 'Overwriting opening side of pairs removes them',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         /* Overwrite the closing side of the 5th and 6th pairs (counted from out to in)
                         {[({[({[({})]})]})]} -> {[({cheesecake{[({})]})]})]} 
                         12345678900987654321 -> 1234xxxxxxxxxx56788765xx4321 */
                         await insertText(editor, [0, 4, 0, 6], text);
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0,               0, 17 + text.length],
                             [0, 1,               0, 16 + text.length],
                             [0, 2,               0, 15 + text.length],
@@ -965,7 +965,7 @@ const testGroups: {
                 },
                 {
                     description: 'Deleting opening side of pairs removes them',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         /* Of the remaining pairs, delete the opening side of the first and last pairs. Note
                         that the most nested pair (i.e. the last pair) is deleted with `backspace()` command, 
                         which automatically removes the closing side as well (this is the default editor 
@@ -974,7 +974,7 @@ const testGroups: {
                         1234xxxxxxxxxx56788765xx4321 -> 123xxxxxxxxxx456654xx321x */
                         await backspace();
                         await insertText(editor, [0, 0, 0, 1], '');
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0, 0,               0, 13 + text.length],
                             [0, 1,               0, 12 + text.length],
                             [0, 2,               0, 11 + text.length],
@@ -987,13 +987,13 @@ const testGroups: {
                 },
                 {
                     description: 'Overwriting opening side of pairs removes them - Again',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         /* Of the remaining pairs, overwrite the opening side of the first and fourth pairs
                         [({cheesecake{[()]})]})]} -> cheesecake({cheesecakecheesecake[()]})]})]}
                         123xxxxxxxxxx456654xx321x -> xxxxxxxxxx12xxxxxxxxxxxxxxxxxxxx3443xxx21xx */
                         await insertText(editor, [0, 3 + text.length, 0, 4 + text.length], text);
                         await insertText(editor, [0, 0, 0, 1], text);
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0,         text.length, 0, 10 + 3 * text.length],
                             [0,     1 + text.length, 0, 9  + 3 * text.length],
                             [0, 2 + 3 * text.length, 0, 5  + 3 * text.length],
@@ -1004,12 +1004,12 @@ const testGroups: {
                 },
                 {
                     description: 'Deleting opening side of pairs removes them - Again',
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         /* Of the remaining pairs, delete the first two pairs
                         cheesecake({cheesecakecheesecake[()]})]})]} -> cheesecakecheesecakecheesecake[()]})]})]}
                         xxxxxxxxxx12xxxxxxxxxxxxxxxxxxxx3443xxx21xx -> xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1221xxxxxxx */
                         await insertText(editor, [0, text.length, 0, 2 + text.length], '');
-                        verifyPairs(leaperAPI, [[
+                        verifyPairs(testAPI, [[
                             [0,     3 * text.length, 0, 3 + 3 * text.length],
                             [0, 1 + 3 * text.length, 0, 2 + 3 * text.length],
                         ]]);
@@ -1029,15 +1029,15 @@ const testGroups: {
         generate: () => {
             const retVal: {
                 description: string,
-                action: ((editor: TextEditor, leaperAPI: LeaperAPI) => Promise<void>)
+                action: ((editor: TextEditor, testAPI: TestAPI) => Promise<void>)
             }[] = [];
             // Insert pairs as the first action
             retVal.push({
                 description: 'Insert multiple pairs',
-                action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (editor: TextEditor, testAPI: TestAPI) => {
                     // Insert 10 pairs
                     await type('{', '[', '(', '{', '[', '(', '{', '[', '(', '{');
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [0, 0, 0, 19],
                         [0, 1, 0, 18],
                         [0, 2, 0, 17],
@@ -1189,7 +1189,7 @@ const testGroups: {
             for (const [i, { replace, insert, expectedShift }] of textEdits.entries()) {
                 retVal.push({
                     description: `Arbitrary text edit ${i + 1}`,
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         await insertText(editor, replace, insert);
                         /* Shift the `expectedState` variable by the amount we expect then compare to
                         the actual state. */
@@ -1209,7 +1209,7 @@ const testGroups: {
                             expectedCursorPos[0] + expectedShift[0],
                             expectedCursorPos[1] + expectedShift[1]
                         ];
-                        verifyPairs(leaperAPI, expectedState);
+                        verifyPairs(testAPI, expectedState);
                         verifyCursor(editor, expectedCursorPos);
                     }
                 });
@@ -1227,15 +1227,15 @@ const testGroups: {
         generate: () => {
             const retVal: {
                 description: string,
-                action: ((editor: TextEditor, leaperAPI: LeaperAPI) => Promise<void>)
+                action: ((editor: TextEditor, testAPI: TestAPI) => Promise<void>)
             }[] = [];
             // Insert pairs as the first action
             retVal.push({
                 description: 'Insert multiple pairs',
-                action: async (_: TextEditor, leaperAPI: LeaperAPI) => {
+                action: async (_: TextEditor, testAPI: TestAPI) => {
                     // Insert 10 pairs
                     await type('{', '[', '(', '{', '[', '(', '{', '[', '(', '{');
-                    verifyPairs(leaperAPI, [[
+                    verifyPairs(testAPI, [[
                         [0, 0, 0, 19],
                         [0, 1, 0, 18],
                         [0, 2, 0, 17],
@@ -1357,10 +1357,10 @@ const testGroups: {
             for (const [i, { replace, insert }] of textEdits.entries()) {
                 retVal.push({
                     description: `Arbitrary text edit ${i + 1}`,
-                    action: async (editor: TextEditor, leaperAPI: LeaperAPI) => {
+                    action: async (editor: TextEditor, testAPI: TestAPI) => {
                         await insertText(editor, replace, insert);
                         // No changes expected
-                        verifyPairs(leaperAPI, constExpectedState);
+                        verifyPairs(testAPI, constExpectedState);
                         verifyCursor(editor, constExpectedCursorPos);
                     }
                 });
@@ -1373,7 +1373,7 @@ const testGroups: {
 // Execute the tests
 describe('Single Cursor Tracking Tests', function () {
     // Allow the tests access to the instance's API
-    const leaperAPI = getLeaperAPI();
+    const testAPI = getTestAPI();
     // Execute the test groups
     for (const { groupDescription, generate } of testGroups) {
         context(groupDescription, function () {
@@ -1385,7 +1385,7 @@ describe('Single Cursor Tracking Tests', function () {
             // Run the tests for this group
             for (const { description, action } of generate()) {
                 it(description, async function () {
-                    await action(editor, leaperAPI);
+                    await action(editor, testAPI);
                 });
             }      
         });

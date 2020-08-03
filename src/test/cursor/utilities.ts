@@ -1,6 +1,6 @@
 import { workspace, TextEditor, commands, Range, WorkspaceEdit, window, extensions } from 'vscode';
 import * as assert from 'assert';
-import { LeaperAPI } from '../../extension';
+import { TestAPI } from '../../extension';
 
 /** 
  * Type text into the text editor. Each string in the input array is sent as a separate command.
@@ -135,16 +135,16 @@ export function verifyCursor(editor: TextEditor, expectedPos: [number, number]):
  * 
  * For more information, see `LeaperAPI.snapshotBare`.
  */
-export function verifyPairs(leaperAPI: LeaperAPI, expected: [number, number, number, number][][]): void {
+export function verifyPairs(testAPI: TestAPI, expected: [number, number, number, number][][]): void {
     assert.deepStrictEqual(
-        leaperAPI.snapshotBare, 
+        testAPI.snapshotBare(), 
         expected
     );
 }
 
 /** Verify that there are no pairs being tracked by the controller. */
-export function verifyEmpty(leaperAPI: LeaperAPI): void {
-    assert.ok(leaperAPI.isEmpty);
+export function verifyEmpty(testAPI: TestAPI): void {
+    assert.ok(testAPI.isEmpty());
 }
 
 /** Open a new text editor in the current workspace which will immediately take focus. */
@@ -152,9 +152,9 @@ export async function openNewTextEditor(): Promise<TextEditor> {
     return window.showTextDocument(await workspace.openTextDocument());
 }
 
-/** Get the API to the active extension instance. */
-export function getLeaperAPI(): LeaperAPI {
-    const extension = extensions.getExtension<LeaperAPI>(`OnlyLys.leaper`);
+/** Access testing methods to the active extension instance. */
+export function getTestAPI(): TestAPI {
+    const extension = extensions.getExtension<TestAPI>(`OnlyLys.leaper`);
     if(!extension) {
         throw new Error('Cannot access extension API');
     }

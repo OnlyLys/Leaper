@@ -2,6 +2,7 @@ import { Disposable, workspace, window, commands, Selection, TextEditor, TextDoc
 import { Pair } from './tracker/pair';
 import { Tracker } from './tracker/tracker';
 import { Configuration } from './configuration';
+import { TestAPI } from './extension';
 
 /** 
  * A controller that is responsible for:
@@ -76,26 +77,6 @@ export class Controller {
         return new Controller(configuration);
     }
 
-    /** `true` if there are no pairs being tracked. Otherwise `false`. */
-    public get isEmpty(): boolean {
-        return this.trackers.every(tracker => tracker.isEmpty);
-    }
-
-    /** 
-     * Get a snapshot of all the pairs that are being tracked. That means getting information about:
-     * - The positions of each pair.
-     * - Whether each pair is currently decorated.
-     * 
-     * The snapshot returned is a 2D array. The first dimension is enumerated based on the trackers: 
-     * i.e. `snapshot[0]` gives us the sub-snapshot of the first tracker, `snapshot[1]` for the 
-     * second tracker and so on.
-     * 
-     * For information about the format of the elements in the subarrays, see `Tracker.snapshot`.
-     */
-    public get snapshot(): [number, number, number, number, boolean][][] {
-        return this.trackers.map(tracker => tracker.snapshot);
-    }
-
     /** 
      * Watcher to update pairs that are being tracked after content change (i.e. textual change) in 
      * the active editor. 
@@ -148,10 +129,10 @@ export class Controller {
                 }
                 updateContexts(this.trackers);
                 this.endOfEventLoopTimer = undefined;
-    });
+            });
         }
     });
-    
+
     /** Execute a leap out of the nearest available pair for each cursor. */
     public leap(): void {
 
@@ -229,6 +210,21 @@ export class Controller {
         this.contentChangeWatcher.dispose();
         this.selectionChangeWatcher.dispose();
     }
+
+    public get testAPI(): TestAPI {
+        const isEmpty      = () => this.trackers.every(tracker => tracker.isEmpty);
+        const snapshot     = () => this.trackers.map(tracker => tracker.snapshot);
+        const snapshotBare = () => snapshot().map(
+                subarray => subarray.map(
+                    pair => [pair[0], pair[1], pair[2], pair[3]] as [number, number, number, number]
+                )
+            );
+        return { 
+            isEmpty, 
+            snapshot, 
+            snapshotBare 
+        };
+    };
 
 }
 

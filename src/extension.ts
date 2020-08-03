@@ -6,7 +6,7 @@ import { Configuration } from './configuration';
  * Note that as of 1.32, `activate` is called each time a new workspace is opened - each workspace
  * as its own instance of the extension.
  */
-export function activate(context: ExtensionContext): LeaperAPI {
+export function activate(context: ExtensionContext): TestAPI {
 
     const controller = Controller.start(Configuration.read());
 
@@ -44,33 +44,19 @@ export function activate(context: ExtensionContext): LeaperAPI {
         configurationChangeWatcher
     );
 
-    // Expose parts of the controller for tests.
-    return {
-        get isEmpty(): boolean {
-            return controller.isEmpty;
-        },
-        get snapshot(): [number, number, number, number, boolean][][] {
-            return controller.snapshot;
-        },
-        get snapshotBare(): [number, number, number, number][][] {
-            return controller.snapshot.map(
-                subarray => subarray.map(
-                    pair => [pair[0], pair[1], pair[2], pair[3]] as [number, number, number, number]
-                )
-            );
-        }
-    };
+    // Expose the controller for tests.
+    return controller.testAPI;
 
 } 
 
-export function deactivate() {
-    // Intentionally empty.
-}
+export interface TestAPI {
 
-export interface LeaperAPI {
-
-    /** `true` if there are currently no pairs being tracked by the extension. Otherwise `false`. */
-    readonly isEmpty: boolean;
+    /**
+     * Return `true` if there are currently no pairs being tracked by the extension. 
+     * 
+     * Otherwise `false`. 
+     */
+    isEmpty(): boolean;
 
     /** 
      * Get a snapshot of all the pairs that are being tracked. That means getting information about:
@@ -82,12 +68,18 @@ export interface LeaperAPI {
      * second tracker and so on.
      * 
      * The elements within each subarray are quintuplets with the following values:
-     * `[openLine, openCharacter, closeLine, closeCharacter, isDecorated]`. Each quintuplet describes
-     * a pair's opening and closing positions in addition to its current decoration state.
+     * `[openLine, openCharacter, closeLine, closeCharacter, isDecorated]`. Each quintuplet 
+     * describes a pair's opening and closing positions in addition to its current decoration state.
      */ 
-    readonly snapshot: [number, number, number, number, boolean][][];
+    snapshot(): [number, number, number, number, boolean][][];
 
-    /** Get a snapshot of all the pairs but without information about decorations. */
-    readonly snapshotBare: [number, number, number, number][][];
+    /** 
+     * Get a snapshot of all the pairs but without information about decorations. 
+     */
+    snapshotBare(): [number, number, number, number][][];
 
+}
+
+export function deactivate() {
+    // Intentionally empty.
 }
