@@ -1,58 +1,67 @@
 import { Position, Range } from 'vscode';
 
 /** 
- * Calculate a new position after a shift / deletion due to text replacement in a document. 
+ * Calculate a new position after text replacement in a document.
  * 
  * @param pos Initial position.
- * @param replaced The range of text that was overwritten.
+ * @param replaced The range of text that was replaced.
  * @param inserted New text that was inserted at the start of the replaced region.
- * @return The new shifted position. `undefined` if `pos` is deleted by the replacement
+ * @return The new shifted position. This is `undefined` if `pos` was deleted by the replacement. 
+ *         `pos` is considered deleted if `replaced` encloses it.
  */
 export function shift(pos: Position, replaced: Range, inserted: string): Position | undefined {
-    if (replaced.end.line === pos.line) {
-        if (replaced.end.character <= pos.character) {
-            // Replacement that ends to the left of `pos`: `pos` will be shifted by the changes
-            const remainder = pos.character - replaced.end.character;
-            const { newLines: insertedNewLines, lastLineLength: insertedLastLineLength } = info(inserted);
-            return new Position(
-                pos.line + insertedNewLines - (replaced.end.line - replaced.start.line),
-                insertedLastLineLength + remainder + (insertedNewLines === 0 ? replaced.start.character : 0)
-            );
-        } else if (replaced.start.character <= pos.character) {
-            // Replacement overwrites `pos`: `pos` will be deleted
-            return undefined;
-        } else {
-            // Replacement that comes after `pos`: `pos` is unaffected
-            return pos;
-        }
+    if (replaced.start.isBeforeOrEqual(pos) && replaced.end.isAfter(pos)) {
+
+        // The text replacement encloses `pos`. 
+        //
+        // In other words, `pos` was deleted from the text.
+        return undefined;
+    } else if (replaced.start.isAfter(pos)) {
+        
+        // The text replacement begins after `pos`. 
+        //
+        // Thus `pos` is not affected at all.
+        return pos;
     } else if (replaced.end.line < pos.line) {
-        // Replacement completely on lines above: `pos` is only shifted vertically
-        return pos.translate(info(inserted).newLines - (replaced.end.line - replaced.start.line), 0);
+
+        // The text replacement ends on a line above `pos`. 
+        //
+        // Only the vertical position of `pos` could be shifted. There is no possible way for the 
+        // text replacement to affect the horizontal position of `pos`, since none of the text 
+        // before `pos` on the line that `pos` is on is affected. 
+        const newLinesRemoved = replaced.end.line - replaced.start.line;
+        const newLinesAdded   = count(inserted).newLines;
+        return pos.translate(newLinesAdded - newLinesRemoved, 0);
     } else {
-        if (replaced.start.line < pos.line)  {
-            // Replacement that overwrites `pos`: `pos` is deleted
-            return undefined;     
-        } else if (replaced.start.line === pos.line && replaced.start.character <= pos.character) {
-            // Replacement that overwrites `pos`: `pos` is deleted
-            return undefined;
-        } else {
-            // Replacement that comes after `pos`: `pos` is unaffected
-            return pos;
-        }
+
+        // The text replacement ends to the left of `pos`. 
+        //
+        // `pos` could be shifted both horizontally and vertically.
+        const newLinesRemoved = replaced.end.line - replaced.start.line;
+        const remainder       = pos.character - replaced.end.character;
+        const { newLines: newLinesAdded, lastLineLen: insertedLastLineLen } = count(inserted);
+        return new Position(
+            pos.line + newLinesAdded - newLinesRemoved,
+            insertedLastLineLen + remainder + (newLinesAdded > 0 ? 0 : replaced.start.character)
+        );
     }
 }
 
-/** Get the number of the new lines as well as the length of the last line of a string. */
-function info(str: string): { newLines: number, lastLineLength: number } {
-    let newLines       = 0;
-    let lastLineLength = 0;
-    for (const char of str) {
-        if (char === '\n') {
+/** Count the number of newlines of a string, as well as the length of its last line. */
+function count(str: string): { newLines: number, lastLineLen: number } {
+    let newLines    = 0;
+    let lastLineLen = 0;
+
+    // We have to count the length like this instead of using `for (const char of str) { ... } ` 
+    // because that way of iterating iterates through code points while this way iterates through
+    // 16-bit code units, which is the correct units for string length. 
+    for (let i = 0; i < str.length; ++i) {
+        if (str[i] === '\n') {
             ++newLines;
-            lastLineLength = 0;
+            lastLineLen = 0;
         } else {
-            ++lastLineLength;
+            ++lastLineLen;
         }
     }
-    return { newLines, lastLineLength };
+    return { newLines, lastLineLen };
 }
