@@ -12,12 +12,6 @@ export class Tracker {
     private pairs: Pair[] = [];
 
     /** 
-     * Flag for whether the pairs tracked by this `Tracker` is visible. If `false`, decoration of 
-     * pairs will be disabled.
-     */
-    private _visible: boolean = false;
-
-    /** 
      * Create a new container to track pairs created by a cursor in a text editor. 
      * 
      * @param configuration The extension's current configuration. 
@@ -92,27 +86,6 @@ export class Tracker {
         return popped;
     }
 
-    /** Toggle decorations for the pairs being tracked by this `Tracker`.  */
-    public set visible(v: boolean) {
-        if (this._visible !== v) {
-            this._visible = v;
-            if (this._visible) {
-                if (this.pairs[this.pairs.length - 1]) {
-                    this.pairs[this.pairs.length - 1].decorate();
-                }
-                if (this.configuration.decorateAll) {
-                    for (let i = 0; i < this.pairs.length - 1; ++i) {
-                        this.pairs[i].decorate();
-                    }
-                }
-            } else {
-                for (const pair of this.pairs) {
-                    pair.undecorate();
-                }
-            }
-        }
-    }
-
     /** 
      * Apply content changes from `TextDocumentContentChangeEvent`s which may move, delete or create 
      * pairs. 
@@ -130,16 +103,8 @@ export class Tracker {
         const newPair       = getNewPair(this.configuration, this.editor, selection.active, prunedChanges);
         if (newPair) {
             this.pairs.push(newPair);
-            // If the new pair is the first pair inserted, we have to set the internal visibility flag
-            if (this.pairs.length === 1) {
-                // The usual rule of only decorating if visible within the viewport applies
-                const { start, end } = this.editor.visibleRanges[0];
-                this._visible = newPair.open.line >= start.line && newPair.open.line <= end.line;
-            }
         }
-        if (this._visible) {
-            updateDecorations(this.configuration, this.pairs, newPair);
-        }
+        updateDecorations(this.configuration, this.pairs, newPair);
 
         /** 
          * Drop `TextDocumentContentChangeEvent`s that occur on lines outside our interest. This is
@@ -293,7 +258,6 @@ export class Tracker {
             pair.undecorate();
         }
         this.pairs       = [];
-        this._visible    = false;
         this.cursorIndex = -1;
     }
 

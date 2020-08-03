@@ -142,25 +142,6 @@ export class Controller {
                 updateContexts(this.trackers);
                 this.endOfEventLoopTimer = undefined;
     });
-    
-    /** 
-     * Watcher to update the decorations when there is a change in visible ranges. We need this 
-     * because we only keep the decorations for pairs that are within the viewport. 
-     * 
-     * Each time the viewport changes, we:
-     * - Undecorate pairs that are outside the viewport.
-     * - Decorate pairs that are within the viewport.
-     */
-    private visibleRangesChangeWatcher: Disposable = window.onDidChangeTextEditorVisibleRanges(event => {
-        /* Note that at present `TextEditor.visibleRanges` only reports the vertical range of the
-        of the viewport visible, even though a change in horizontal range triggers this watcher. */
-        if (!window.activeTextEditor || window.activeTextEditor !== event.textEditor) {
-            return;
-        }
-        const visible = event.visibleRanges[0];
-        // Undecorate any trackers that are on a line that is not currently visible
-        for (const tracker of this.trackers) {
-            tracker.visible = tracker.line >= visible.start.line && tracker.line <= visible.end.line;
         }
     });
     
@@ -240,7 +221,6 @@ export class Controller {
         this.clear();
         this.contentChangeWatcher.dispose();
         this.selectionChangeWatcher.dispose();
-        this.visibleRangesChangeWatcher.dispose();
     }
 
 }
