@@ -183,13 +183,11 @@ export class Controller {
     /**
      * Clear all tracked pairs and disable all keybinding contexts. 
      * 
-     * If a new configuration value is provided, then it will replace the older one. The older one
-     * will continue to be used if `new_configuration` is `undefined`.
+     * If a new configuration value is provided, then it will replace the previous one. The previous
+     * one will continue to be used if `new_configuration` is `undefined`.
      */
     public reset(new_configuration: Configuration | undefined): void {
-        if (new_configuration !== undefined) {
-            this.configuration = new_configuration;
-        }
+        this.configuration = new_configuration ?? this.configuration;
         this.clear();
         if (window.activeTextEditor) {
             initializeTrackers(this.trackers, window.activeTextEditor, this.configuration);
