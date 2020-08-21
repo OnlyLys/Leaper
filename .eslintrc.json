@@ -2,18 +2,17 @@
     "root": true,
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
-        "ecmaVersion": 6,
+        "ecmaVersion": 2019,
         "sourceType": "module"
     },
     "plugins": [
         "@typescript-eslint"
     ],
     "rules": {
-        "@typescript-eslint/class-name-casing": "warn",
-        "@typescript-eslint/semi": "error",
         "curly": "warn",
         "eqeqeq": "error",
         "no-throw-literal": "warn",
-        "semi": "error"
+        "semi": "error",
+        "no-restricted-syntax": [ "error", "ForInStatement" ]
     }
 }
