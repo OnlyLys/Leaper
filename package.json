@@ -139,10 +139,10 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
+        "compile": "npm run lint && tsc -p ./",
         "lint": "eslint src --ext ts",
-        "watch": "tsc -watch -p ./",
-        "pretest": "npm run compile && npm run lint",
+        "watch": "npm run lint && tsc -watch -p ./",
+        "pretest": "npm run compile",
         "test": "node ./out/test/runFromCmdLine.js"
     },
     "devDependencies": {
