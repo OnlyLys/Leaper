@@ -1,22 +1,28 @@
 import { DecorationRenderOptions, DecorationRangeBehavior } from 'vscode';
 import { VCDualReader, } from '@onlylys/vscode-validated-configuration-reader';
 
-/** A snapshot of this extension's configuration values. */
+/** 
+ * A snapshot of this extension's configuration values. 
+ * 
+ * This value is not live, meaning any changes to the configuration values by the user will not be
+ * reflected in each instance of this class. To get the latest values, call the `read()` factory 
+ * function.
+ */
 export class Configuration { 
 
     /** 
-     * Whether decorations should apply to all pairs instead of only just the most nested one. 
+     * Whether decorations should be applied to all pairs or just the ones nearest to each cursor.
      * 
      * This supercedes the old `decorateOnlyNearestPair` configuration.
      */
     public readonly decorateAll: boolean;
 
     /** 
-     * What pairs should be detected and then tracked. 
+     * Which pairs should be detected and tracked. 
      * 
      * This supercedes the old `decorateOnlyNearestPair` configuration.
      */
-    public readonly detectedPairs: string[];
+    public readonly detectedPairs: ReadonlyArray<string>;
 
     /** 
      * Decoration style for the closing side of pairs. 
