@@ -11,3 +11,5 @@ tslint.json
 contributing.md
 scripts
 .test-environment
+.eslintrc.json
+ignore
