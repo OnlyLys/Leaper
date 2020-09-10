@@ -13,3 +13,4 @@ scripts
 .test-environment
 .eslintrc.json
 ignore
+DESIGN-NOTES.md
