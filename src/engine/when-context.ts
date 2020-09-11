@@ -7,20 +7,23 @@ import { commands } from 'vscode';
  * 
  * Context values are lazily calculated via the `calc` callback provided in the constructor. 
  * 
- * Calculated context values are cached and will only be recalculated if either `get` or `broadcast`
- * are called when the `isStale` flag is `true`. 
+ * Calculated values are cached and will only be recalculated if either `get` or `syncExternal` are 
+ * called when the `isStale` flag is `true`. 
  * 
  * # Internal and External Values
  * 
  * From the persepective of this extension, there are two values for a `when` keybinding context: 
  * 
- *  - An internal value that is only known within this extension.
+ *  - An internal value that is only known within this extension. 
  *  - An external value that is known to vscode.
  * 
- * There are two kinds of values becase context values broadcasted to vscode could take multiple 
- * event loop cycles before they are acknowledged. Furthermore, the context values in vscode cannot 
- * be retrieved by us. Therefore, the code in this extension can only rely on the internal value. 
- * The external value is only used to toggle keybindings.  
+ * External values have to be broadcasted to vscode using the `'setContext'` command, and could take 
+ * multiple event loop cycles before they are acknowledged. Furthermore, external values cannot be 
+ * directly retrieved, and are only implicitly known based on side effects like whether certain 
+ * keybindings were able to be triggered by the user. 
+ * 
+ * For the aforementioned reasons, the code path in this extension relies entirely on the internal
+ * value. The external value is only used to toggle keybindings.
  * 
  * [`when` keybinding context]: https://code.visualstudio.com/docs/getstarted/keybindings#_when-clause-contexts
  */
@@ -29,50 +32,67 @@ export class WhenContext {
     /**
      * Cached value of this context.
      */
-    private value: boolean;
+    private value: boolean = false;
 
     /** 
-     * Flag to mark the current context value as stale.
+     * Flag to mark the cached context value as stale.
      */
-    public isStale: boolean;
+    public isStale: boolean = false;
+
+    /**
+     * The most recent value broadcasted to vscode in `syncExternal`.
+     * 
+     * This is used to cut down on the number of broadcasts we have to do in `syncExternal`.
+     */
+    private mostRecentlyBroadcasted: boolean = false;
 
     /**
      * @param name Full name of this `when` keybinding context.
      * @param calc Callback used to calculate the latest context value. 
-     * @param init Initial value of the context. This value will also be broadcastest to vscode.
+     * 
+     * The context value is initialised to `false`, and this value is immediately broadcasted.
      */
     public constructor(
         private readonly name: string, 
         private readonly calc: () => boolean,
-        init: boolean
     ) {
-        this.value   = init;
-        this.isStale = false;
-        commands.executeCommand('setContext', this.name, init);
+        commands.executeCommand('setContext', this.name, false);
     }
 
     /**
-     * Get the latest value of this `when` keybinding context.
+     * Get the latest value of this keybinding context.
      * 
-     * If `isStale` is `true`, then calling this method recalculates the keybinding context with the 
-     * `calc` callback specified in the constructor. 
+     * # Laziness
+     * 
+     * This method only recalculates a new value for the keybinding context if the `isStale` flag 
+     * is `true`. Otherwise the previously cached value is used.
      */
     public get(): boolean {
         if (this.isStale) {
-            this.value   = this.calc();
-            this.isStale = false;
+            const newValue = this.calc();
+            this.value     = newValue;
+            this.isStale   = false;
         }
         return this.value;
     }
 
     /**
-     * Broadcast the latest value of this `when` keybinding context to vscode.
+     * Synchronize the latest value of this keybinding context to vscode.
      * 
-     * If `isStale` is `true`, then calling this method recalculates the keybinding context with the 
-     * `calc` callback specified in the constructor. 
+     * # Laziness
+     * 
+     * This method only recalculates a new value for the keybinding context if the `isStale` flag 
+     * is `true`.
+     * 
+     * Furthermore, this method only broadcasts a value if it is different from the most recently 
+     * broadcasted value. 
      */
-    public broadcast(): void {
-        commands.executeCommand('setContext', this.name, this.get());
+    public syncExternal(): void {
+        const value = this.get();
+        if (value !== this.mostRecentlyBroadcasted) {
+            this.mostRecentlyBroadcasted = value;
+            commands.executeCommand('setContext', this.name, value);
+        }
     }
 
     /** 
@@ -81,8 +101,9 @@ export class WhenContext {
      * This falsy value is immediately broadcasted.
      */
     public clear(): void {
-        this.value   = false;
-        this.isStale = false;
+        this.value                   = false;
+        this.isStale                 = false;
+        this.mostRecentlyBroadcasted = false;
         commands.executeCommand('setContext', this.name, false);
     }
 
