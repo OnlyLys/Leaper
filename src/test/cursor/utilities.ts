@@ -130,29 +130,41 @@ export function verifyCursor(editor: TextEditor, expectedPos: [number, number]):
 }
 
 /** 
- * Get a bare snapshot of the controller and check that the pairs have the expected positions. The 
- * decoration state of the pairs are not checked.
+ * Get a bare snapshot of all the pairs being tracked and check that they have the expected 
+ * positions. 
  * 
- * For more information, see `LeaperAPI.snapshotBare`.
+ * The decoration state of pairs are not checked.
  */
 export function verifyPairs(testAPI: TestAPI, expected: [number, number, number, number][][]): void {
     assert.deepStrictEqual(
-        testAPI.snapshotBare(), 
+        (testAPI.snapshot() ?? []).map(
+            (cluster) => cluster.map(
+                (pair): [number, number, number, number] => 
+                    [pair.open.line, pair.open.character, pair.close.line, pair.close.character]
+                        
+            )
+        ), 
         expected
     );
 }
 
-/** Verify that there are no pairs being tracked by the controller. */
+/** 
+ * Verify that there are no pairs being tracked by the engine. 
+ */
 export function verifyEmpty(testAPI: TestAPI): void {
-    assert.ok(testAPI.isEmpty());
+    assert.ok(testAPI.snapshot()?.every(cluster => cluster.length === 0));
 }
 
-/** Open a new text editor in the current workspace which will immediately take focus. */
+/** 
+ * Open a new text editor in the current workspace which will immediately take focus. 
+ */
 export async function openNewTextEditor(): Promise<TextEditor> {
     return window.showTextDocument(await workspace.openTextDocument());
 }
 
-/** Access testing methods to the active extension instance. */
+/** 
+ * Access testing methods to the active extension instance. 
+ */
 export function getTestAPI(): TestAPI {
     const extension = extensions.getExtension<TestAPI>(`OnlyLys.leaper`);
     if(!extension) {

@@ -244,7 +244,12 @@ const testGroups: {
                 {
                     description: 'Incrementally moving right invalidates pairs',
                     action: async (_: TextEditor, testAPI: TestAPI) => {
-                        const initialSnapshotBare = testAPI.snapshotBare();
+                        const initialSnapshotBare = (testAPI.snapshot() ?? []).map(
+                            (cluster) => cluster.map(
+                                (pair): [number, number, number, number] => 
+                                    [pair.open.line, pair.open.character, pair.close.line, pair.close.character]
+                            )
+                        );
                         for (const _ of input) {
                             await moveCursorRight(1);
                             initialSnapshotBare[0].pop();
@@ -316,7 +321,12 @@ const testGroups: {
                 {
                     description: 'Incrementally moving left invalidates pairs',
                     action: async (_: TextEditor, testAPI: TestAPI) => {
-                        const initialSnapshotBare = testAPI.snapshotBare();
+                        const initialSnapshotBare = (testAPI.snapshot() ?? []).map(
+                            (cluster) => cluster.map(
+                                (pair): [number, number, number, number] => 
+                                    [pair.open.line, pair.open.character, pair.close.line, pair.close.character]
+                            )
+                        );
                         for (const _ of input) {
                             await moveCursorRight(-1);
                             initialSnapshotBare[0].pop();
