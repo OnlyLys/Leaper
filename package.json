@@ -143,7 +143,7 @@
         "lint": "eslint src --ext ts",
         "watch": "npm run lint && tsc -watch -p ./",
         "pretest": "npm run compile",
-        "test": "node ./out/test/runFromCmdLine.js"
+        "test": "node ./out/test/run-tests.js"
     },
     "dependencies": {
         "@onlylys/vscode-validated-configuration-reader": "git://github.com/OnlyLys/vscode-validated-configuration-reader.git#semver:^0.3.0"
