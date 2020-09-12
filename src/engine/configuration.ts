@@ -1,5 +1,5 @@
 import { DecorationRenderOptions, DecorationRangeBehavior } from 'vscode';
-import { VCDualReader, } from '@onlylys/vscode-validated-configuration-reader';
+import { VCDualReader } from '@onlylys/vscode-validated-configuration-reader';
 
 /** 
  * A snapshot of this extension's configuration values. 
