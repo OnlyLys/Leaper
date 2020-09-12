@@ -55,6 +55,7 @@ export async function leap(
     ): Promise<void> {
     const preLeapPos = editor.selection.active;    
     await commands.executeCommand(`leaper.leap`);
+    await wait(20);
     const postLeapPos = editor.selection.active;
     assert.deepStrictEqual(
         [postLeapPos.line - preLeapPos.line, postLeapPos.character - preLeapPos.character],
