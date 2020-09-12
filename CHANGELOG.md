@@ -23,6 +23,11 @@
 - Significantly expand the testing suite to ensure correct behavior.
 - Use 'webpack' to condense the code into one file to speed up load times.
 
+### 0.6.0
+- Remove the unnecessary `!config.emmet.triggerExpansionOnTab` when context for 
+  the `leaper.leap` keybinding (https://github.com/OnlyLys/Leaper/issues/4).
+- Improved the README.
+
 ### 0.5.3
 - Fix issue where extension is not relinquishing control of `Tab` key after 
   jumping out of the last pair.
