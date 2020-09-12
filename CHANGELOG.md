@@ -1,6 +1,6 @@
 # CHANGELOG
 
-### 0.7.0
+### 0.8.0
 - Add multicursor support.
 - Rewrite almost all the code to make it faster.
 - Tweak default decoration to make the decorated bracket bold.
