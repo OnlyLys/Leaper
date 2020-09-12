@@ -108,8 +108,8 @@ export class Engine {
             return;
         }
         this.tracker.syncToContentChanges(event.contentChanges);
-        this.inLeaperModeContext.isStale   = true;
-        this.hasLineOfSightContext.isStale = true;
+        this.inLeaperModeContext.markStale();
+        this.hasLineOfSightContext.markStale();
         this.endOfLoopSync.set();
     });
     
@@ -121,8 +121,8 @@ export class Engine {
             return;
         }
         this.tracker.syncToCursors(event.selections);
-        this.inLeaperModeContext.isStale   = true;
-        this.hasLineOfSightContext.isStale = true;
+        this.inLeaperModeContext.markStale();
+        this.hasLineOfSightContext.markStale();
         this.endOfLoopSync.set();
     });
 
@@ -189,8 +189,8 @@ export class Engine {
             this.editor.revealRange(newCursors[0].with());
         }
 
-        this.inLeaperModeContext.isStale   = true;
-        this.hasLineOfSightContext.isStale = true;
+        this.inLeaperModeContext.markStale();
+        this.hasLineOfSightContext.markStale();
         this.endOfLoopSync.set();
     }
 

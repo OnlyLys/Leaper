@@ -36,8 +36,10 @@ export class WhenContext {
 
     /** 
      * Flag to mark the cached context value as stale.
+     * 
+     * This is used to cut down on the number of recalculations we have to do in `get`.
      */
-    public isStale: boolean = false;
+    private isStale: boolean = false;
 
     /**
      * The most recent value broadcasted to vscode in `syncExternal`.
@@ -57,6 +59,14 @@ export class WhenContext {
         private readonly calc: () => boolean,
     ) {
         commands.executeCommand('setContext', this.name, false);
+    }
+
+    /**
+     * Mark the context value as stale so that its value will be recalculated when `get` or 
+     * `syncExternal` is next called.
+     */
+    public markStale(): void {
+        this.isStale = true;
     }
 
     /**
