@@ -26,7 +26,8 @@
             "args": [
                 "${workspaceFolder}/.test-environment/multi.code-workspace",
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test/index"
+				"--extensionTestsPath=${workspaceFolder}/out/test/index",
+				"--disable-extensions"
             ],
 			"outFiles": [
 				"${workspaceFolder}/out/test/**/*.js"
