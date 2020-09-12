@@ -445,28 +445,21 @@ export class Tracker {
     }
 
     /** 
-     * Pop the innermost pair for each cursor. 
+     * Get the innermost pair for each cursor. 
      * 
      * The value for a cursor can be `undefined` if there were previously no pairs for it.
-     * 
-     * **Note that `syncDecorations` must be called at the end of the event loop cycle in which this 
-     * method was called.**
      * 
      * # Ordering
      * 
      * The returned array is parallel to the cursors in the most recent `syncToCursors` call.
      */
-    public popInnermost(): ({ open: Position, close: Position } | undefined)[] {
-        const result = Array(this.clusters.length).fill(undefined);
+    public getInnermostPairs(): ({ open: Position, close: Position } | undefined)[] {
+        const innermostPairs = Array(this.clusters.length).fill(undefined);
         for (const [i, cluster] of this.clusters.entries()) {
-            const popped = cluster.pop();
-            if (popped) {
-                result[this.prevSortedCursors[i].unsortedIndex] = popped;
-                this.toUndecorate.push(popped);
-            }
+            const unsortedIndex           = this.prevSortedCursors[i].unsortedIndex;
+            innermostPairs[unsortedIndex] = cluster[cluster.length - 1];
         }
-        this.decorationsStale = this.decorationsStale || this.toUndecorate.length > 0;
-        return result;
+        return innermostPairs;
     }
 
     /**

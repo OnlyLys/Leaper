@@ -167,31 +167,30 @@ export class Engine {
         }
 
         // Perform the leap. 
-        const innermostPairs = this.tracker.popInnermost();
-        const newCursors     = [];
-        for (const [i, cursor] of this.editor.selections.entries()) {
+        //
+        // Note that we do not call `syncToCursor` after moving the cursors here. Instead we rely on 
+        // the selection change event that is fired due to cursors being modified to subsequently 
+        // call `syncToCursor`.
+        const innermostPairs   = this.tracker.getInnermostPairs();
+        this.editor.selections = this.editor.selections.map((cursor, i) => {
             const innermostPair = innermostPairs[i];
             if (innermostPair) {
                 const leapTo = innermostPair.close.translate(0, 1);
-                newCursors.push(new Selection(leapTo, leapTo));
+                return new Selection(leapTo, leapTo);
             } else {
-                newCursors.push(cursor);
+                return cursor;
             }
-        }
-        this.editor.selections = newCursors;
+        });
 
-        // If there is only a single cursor, we reveal it so that the editor's viewport follows the 
-        // cursor after the leap.
+        // If there is only a single cursor after the leap, we reveal it so that the editor's 
+        // viewport follows the cursor afterwards.
         //
         // We do not reveal when there are multiple cursors as there is no intuitive way to approach 
         // such a reveal.
-        if (newCursors.length === 1) {
-            this.editor.revealRange(newCursors[0].with());
+        if (this.editor.selections.length === 1) {
+            this.editor.revealRange(this.editor.selection.with());
         }
 
-        this.inLeaperModeContext.markStale();
-        this.hasLineOfSightContext.markStale();
-        this.endOfLoopSync.set();
     }
 
     /** 
