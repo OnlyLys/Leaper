@@ -395,9 +395,21 @@ export class Tracker {
                     && stack.peek()?.range.isEmpty
                     && this.detectedPairs.includes(stack.peek()?.text ?? "")
                 ) {
+                    
+                    // The finalized position of the opening side of the newly inserted pair.
+                    //
+                    // Even though this pair was inserted at the cursor, the cursor's position is 
+                    // one where content changes before it have yet to be applied. Therefore we have 
+                    // to apply the carry values to the cursor's position to get the position where
+                    // the pair would ultimately be inserted. 
+                    const newPairOpen = cursor.anchor.translate(
+                        stack.vertCarry,
+                        cursor.anchor.line === stack.horzCarry.affectsLine ? stack.horzCarry.value : 0
+                    );
+
                     newPair = { 
-                        open:       cursor.anchor, 
-                        close:      cursor.anchor.translate(0, 1),
+                        open:       newPairOpen, 
+                        close:      newPairOpen.translate(0, 1),
                         decoration: undefined
                     };
                 }
