@@ -296,7 +296,7 @@ export class Tracker {
             // on `position` by the content changes.
             return position.translate(
                 stack.vertCarry,
-                position.line === stack.horzCarry.affectsLine ? stack.horzCarry.value : undefined
+                position.line === stack.horzCarry.affectsLine ? stack.horzCarry.value : 0
             );
         }
 
