@@ -1,7 +1,6 @@
-import { commands, SnippetString, TextEditor, Range } from 'vscode';
+import { commands, SnippetString, TextEditor } from 'vscode';
 import { type, leap, moveCursorRight, moveCursorDown, insertText, jumpToNextTabstop, jumpToPrevTabstop, clearDocument, backspace, verifyCursor, verifyPairs, openNewTextEditor, getTestAPI, aliceText1, aliceText2, verifyEmpty } from './utilities';
 import { TestAPI } from '../../extension';
-import * as assert from 'assert';
 
 /** 
  * The following array contains test groups which each contain a `generate()` callback. The callback
@@ -16,91 +15,6 @@ const testGroups: {
         action: (editor: TextEditor, testAPI: TestAPI) => Promise<void>
     }[]
 }[] = [
-    {
-        groupDescription: 'I - Preliminary checks',
-        generate: () => [
-            {
-                description: 'No pairs tracked when the editor is empty',
-                action: async (_: TextEditor, testAPI: TestAPI) => verifyEmpty(testAPI)
-            },
-            {
-                description: 'Autoclosing pairs feature enabled - A',
-                action: async (editor: TextEditor, _: TestAPI) => {
-                    // Insert 10 pairs 
-                    const input = ['{', '[', '(', '{', '[', '(', '{', '[', '(', '{'];
-                    await type(...input);
-                    /* If autoclosing pairs feature is enabled, the editor would have filled in 10 
-                    closing brackets. */
-                    assert.deepStrictEqual(
-                        editor.document.getText(new Range(0, 0, 0, 20)),
-                        '{[({[({[({})]})]})]}'
-                    );
-                    // Furthermore, the cursor would be enclosed between the brackets
-                    verifyCursor(editor, [0, 10]);
-                }
-            },
-            {
-                description: 'Can track pairs - A',
-                action: async (_: TextEditor, testAPI: TestAPI) => {
-                    // Verify that 10 pairs are being tracked
-                    verifyPairs(testAPI, [[
-                        [0, 0, 0, 19],
-                        [0, 1, 0, 18],
-                        [0, 2, 0, 17],
-                        [0, 3, 0, 16],
-                        [0, 4, 0, 15],
-                        [0, 5, 0, 14],
-                        [0, 6, 0, 13],
-                        [0, 7, 0, 12],
-                        [0, 8, 0, 11],
-                        [0, 9, 0, 10],
-                    ]]);
-                }
-            },
-            {
-                description: 'Autoclosing pairs feature enabled - B',
-                action: async (editor: TextEditor, _: TestAPI) => {
-                    // Clear the document to make way for this test
-                    await clearDocument();
-                    // Insert some text before the pairs to create a realistic scenario
-                    await type(...'Hello World\nGoodbye World');
-                    /* Insert 10 pairs one at a time and check that the editor completes the other
-                    side and that the cursor is in between the pairs at all times. */
-                    const pairs = ['{}', '[]', '()', '{}', '[]', '()', '{}', '[]', '()', '{}'];
-                    for (const [i, [opener]] of pairs.entries()) {
-                        await type(opener);
-                        // Check that series of pairs inserted so far is accurate
-                        const inserted = pairs.slice(0, i + 1).reduce((acc: string, curr: string) => {
-                            return `${acc.substring(0, acc.length / 2)}${curr}${acc.substring(acc.length / 2)}`;
-                        });
-                        assert.deepStrictEqual(
-                            editor.document.getText(new Range(1, 13, 1, inserted.length + 13)),
-                            inserted
-                        );
-                        // Verify that the cursor is enclosed between the pairs 
-                        verifyCursor(editor, [1, 13 + inserted.length / 2]);
-                    }
-                }
-            },
-            {
-                description: 'Can track pairs - B', 
-                action: async (_: TextEditor, testAPI: TestAPI) => {
-                    verifyPairs(testAPI, [[
-                        [1, 0 + 13, 1, 19 + 13],
-                        [1, 1 + 13, 1, 18 + 13],
-                        [1, 2 + 13, 1, 17 + 13],
-                        [1, 3 + 13, 1, 16 + 13],
-                        [1, 4 + 13, 1, 15 + 13],
-                        [1, 5 + 13, 1, 14 + 13],
-                        [1, 6 + 13, 1, 13 + 13],
-                        [1, 7 + 13, 1, 12 + 13],
-                        [1, 8 + 13, 1, 11 + 13],
-                        [1, 9 + 13, 1, 10 + 13],
-                    ]]);
-                }
-            }
-        ]
-    },
     {
         groupDescription: 'II - Single leap',
         generate: () => [
