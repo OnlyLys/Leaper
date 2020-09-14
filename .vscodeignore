@@ -14,3 +14,4 @@ scripts
 .eslintrc.json
 ignore
 DESIGN-NOTES.md
+.mypy_cache
