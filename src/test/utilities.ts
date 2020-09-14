@@ -1,6 +1,6 @@
 import { workspace, TextEditor, commands, Range, WorkspaceEdit, window, extensions } from 'vscode';
 import * as assert from 'assert';
-import { TestAPI } from '../../extension';
+import { TestAPI } from '../extension';
 
 /** 
  * Type text into the text editor. Each string in the input array is sent as a separate command.

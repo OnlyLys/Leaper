@@ -1,5 +1,5 @@
 import { commands, SnippetString, TextEditor } from 'vscode';
-import { type, leap, moveCursorRight, moveCursorDown, insertText, jumpToNextTabstop, jumpToPrevTabstop, clearDocument, backspace, verifyCursor, verifyPairs, openNewTextEditor, getTestAPI, aliceText1, aliceText2, verifyEmpty } from './utilities';
+import { type, leap, moveCursorRight, moveCursorDown, insertText, jumpToNextTabstop, jumpToPrevTabstop, clearDocument, backspace, verifyCursor, verifyPairs, openNewTextEditor, getTestAPI, aliceText1, aliceText2, verifyEmpty } from '../utilities';
 import { TestAPI } from '../../extension';
 
 /** 
@@ -60,7 +60,7 @@ const testGroups: {
                         ]]);
                         verifyCursor(editor, [0, 10]);
                     }
-                },
+                }, // Can be prelude 
                 {
                     description: 'Leap',
                     action: async (editor: TextEditor, testAPI: TestAPI) => {
