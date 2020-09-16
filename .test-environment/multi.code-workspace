@@ -21,6 +21,7 @@
 			"\"\""
 		],
 		"editor.autoClosingBrackets": "beforeWhitespace",
-		"editor.autoClosingQuotes": "beforeWhitespace"
+		"editor.autoClosingQuotes": "beforeWhitespace",
+		"editor.autoIndent": "full",
 	}
 }
