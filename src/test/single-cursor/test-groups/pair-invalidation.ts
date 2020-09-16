@@ -73,7 +73,7 @@ function genIncrementalCursorMoveActions(
 
 const TEST_CASES: TestCase[] = [
     {
-        name: 'Cursor Moves Out Rightwards (Incremental)',
+        name: 'Rightwards Exit of Cursor (Incremental)',
         prelude: SHARED_PRELUDE,
         actions: genIncrementalCursorMoveActions(
             [
@@ -91,7 +91,7 @@ const TEST_CASES: TestCase[] = [
         )
     },
     {
-        name: 'Cursor Moves Out Rightwards (in One Go)',
+        name: 'Rightwards Exit of Cursor (in One Go)',
         prelude: SHARED_PRELUDE,
         actions: [
             { kind: 'setCursors',    cursors: [ [1, 62] ] },
@@ -100,7 +100,7 @@ const TEST_CASES: TestCase[] = [
         ]
     },
     {
-        name: 'Cursor Moves Out Leftwards (Incremental)',
+        name: 'Leftwards Exit of Cursor (Incremental)',
         prelude: SHARED_PRELUDE,
         actions: genIncrementalCursorMoveActions(
             [
@@ -118,7 +118,7 @@ const TEST_CASES: TestCase[] = [
         )
     },
     {
-        name: 'Cursor Moves Out Leftwards (in One Go)',
+        name: 'Leftwards Exit of Cursor (in One Go)',
         prelude: SHARED_PRELUDE,
         actions: [
             { kind: 'setCursors',    cursors: [ [1, 16] ] },
@@ -127,7 +127,7 @@ const TEST_CASES: TestCase[] = [
         ]
     },
     {
-        name: 'Cursor Moves Out Upwards',
+        name: 'Upwards Exit of Cursor',
         prelude: SHARED_PRELUDE,
         actions: [
             { kind: 'moveCursors',   direction: 'up'        },
@@ -136,7 +136,7 @@ const TEST_CASES: TestCase[] = [
         ]
     },
     {
-        name: 'Cursor Moves Out Downwards',
+        name: 'Downwards Exit of Cursor',
         prelude: SHARED_PRELUDE,
         actions: [
             { kind: 'moveCursors',   direction: 'down'     },
@@ -446,15 +446,15 @@ const TEST_CASES: TestCase[] = [
             { kind: 'assertPairs',   pairs:   [ [] ]      },
             { kind: 'assertCursors', cursors: [ [8, 12] ] }
         ]
-    },
+    }
 ];
 
 /**
  * This test group tests pair invalidation due to:
  * 
- *  1. Deletion of either the opening or closing side.
- *  2. Cursor being moved out of them.
- *  3. Multi-line text being inserted between them.
+ *  1. Cursor being moved out of them (also known as 'cursor escape' or 'cursor exit').
+ *  2. Multiline text being inserted between them.
+ *  3. Their opening or closing sides being deleted.
  */
 export const SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP: TestGroup = {
     name: 'Pair Invalidation (Single Cursor)',
