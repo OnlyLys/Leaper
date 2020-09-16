@@ -1,5 +1,5 @@
 import { commands, SnippetString, TextEditor } from 'vscode';
-import { type, leap, moveCursorRight, moveCursorDown, insertText, jumpToNextTabstop, jumpToPrevTabstop, clearDocument, backspace, verifyCursor, verifyPairs, openNewTextEditor, getTestAPI, aliceText1, aliceText2, verifyEmpty } from '../utilities';
+import { type, leap, moveCursorRight, moveCursorDown, insertText, jumpToNextTabstop, jumpToPrevTabstop, clearDocument, backspace, verifyCursor, verifyPairs, openNewTextEditor, getTestAPI, ALICE_TEXT_1, ALICE_TEXT_2, verifyEmpty } from '../utilities';
 import { TestAPI } from '../../extension';
 
 /** 
@@ -415,7 +415,7 @@ const testGroups: {
                     // Clear document to make way for this test
                     await clearDocument();
                     // Insert some random text to this document
-                    await insertText(editor, [0, 0, 0, 0], aliceText1);
+                    await insertText(editor, [0, 0, 0, 0], ALICE_TEXT_1);
                     // Move cursor to in between some text to simulate typical usage scenario
                     await moveCursorDown(-2);
                     await moveCursorRight(-3);
@@ -994,7 +994,7 @@ const testGroups: {
                     characters on the last line. */
                     {
                         replace: [0, 0, 0, 0],
-                        insert: aliceText1,
+                        insert: ALICE_TEXT_1,
                         expectedShift: [6, 89]
                     },
                     // 3 - Left of pairs: single line text delete
@@ -1014,7 +1014,7 @@ const testGroups: {
                     has 7 lines with 89 characters on the last line. */
                     {
                         replace: [6, 0, 6, 20],
-                        insert: aliceText1,
+                        insert: ALICE_TEXT_1,
                         expectedShift: [6, -20 + 89],
                     },
                     // 6 - From above pairs to left of pairs: multi line text deleted
@@ -1034,7 +1034,7 @@ const testGroups: {
                     text. Text inserted has 8 lines with 16 characters on the last line. */
                     {
                         replace: [0, 10, 4, 6],
-                        insert: aliceText2,
+                        insert: ALICE_TEXT_2,
                         expectedShift: [-4 + 7, -6 + 16]
                     },
                     // 9 - Above pairs: Single line text inserted. Text inserted has 12 characters
@@ -1047,7 +1047,7 @@ const testGroups: {
                     characters on the last line. */
                     {
                         replace: [0, 0, 0, 0],
-                        insert: aliceText2,
+                        insert: ALICE_TEXT_2,
                         expectedShift: [7, 0]
                     },
                     // 11 - Above pairs: single line text deleted
@@ -1067,7 +1067,7 @@ const testGroups: {
                     has 7 lines with 89 characters on the last line. */
                     {
                         replace: [0, 0, 0, 10],
-                        insert: aliceText1,
+                        insert: ALICE_TEXT_1,
                         expectedShift: [6, 0]
                     },
                     // 14 - Above pairs: multi line text deleted
@@ -1087,7 +1087,7 @@ const testGroups: {
                     has 7 lines with 89 characters on the last line. */
                     {
                         replace: [1, 10, 4, 6],
-                        insert: aliceText1,
+                        insert: ALICE_TEXT_1,
                         expectedShift: [-3 + 6, 0]
                     }
                 ];
@@ -1187,7 +1187,7 @@ const testGroups: {
                     // 2 - Right of pairs: multi line text insertion
                     {
                         replace: [0, 30, 0, 30],
-                        insert: aliceText1
+                        insert: ALICE_TEXT_1
                     },
                     // 3 - Right of pairs: single line text deleted
                     {
@@ -1202,7 +1202,7 @@ const testGroups: {
                     // 5 - Right of pairs: single line text replaced with multi line text 
                     {
                         replace: [0, 40, 0, 50],
-                        insert: aliceText1
+                        insert: ALICE_TEXT_1
                     },
                     // 6 - From right of pairs to below pairs: multi line text deleted
                     {
@@ -1217,7 +1217,7 @@ const testGroups: {
                     // 8 - From right of pairs to below pairs: multi line text replaced with multi line text 
                     {
                         replace: [0, 20, 1, 100],
-                        insert: aliceText2
+                        insert: ALICE_TEXT_2
                     },
                     // 9 - Below pairs: single line text insertion
                     {
@@ -1227,7 +1227,7 @@ const testGroups: {
                     // 10 - Below pairs: multi line text insertion
                     {
                         replace: [4, 50, 4, 50],
-                        insert: aliceText2
+                        insert: ALICE_TEXT_2
                     },
                     // 11 - Below pairs: single line text deleted
                     {
@@ -1242,7 +1242,7 @@ const testGroups: {
                     // 13 - Below pairs: single line text replaced with multi line text
                     {
                         replace: [1, 0, 1, 50],
-                        insert: aliceText1
+                        insert: ALICE_TEXT_1
                     },
                     // 14 - Below pairs: multi line text deleted
                     {
@@ -1257,7 +1257,7 @@ const testGroups: {
                     // 16 - Below pairs: multi line text replaced with multi line text 
                     {
                         replace: [1, 0, 10, 0],
-                        insert: aliceText1
+                        insert: ALICE_TEXT_1
                     },
                 ];
             /* The state of the controller after the pairs were inserted. The state is not expected

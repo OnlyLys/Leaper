@@ -180,7 +180,7 @@ export function getTestAPI(): TestAPI {
  * Line count: 7
  * Last line length: 89
  */
-export const aliceText1 = 
+export const ALICE_TEXT_1 = 
 `Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to 
 do: once or twice she had peeped into the book her sister was reading, but it had no pictures or 
 conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'
@@ -195,7 +195,7 @@ up and picking the daisies, when suddenly a White Rabbit with pink eyes ran clos
  * Line count: 8
  * Last line length: 16
  */
-export const aliceText2 = 
+export const ALICE_TEXT_2 = 
 `There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
 hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
 it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); 
