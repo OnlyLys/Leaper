@@ -46,6 +46,7 @@ export type Action = InsertPairAction
                     | InsertSnippetAction
                     | JumpToNextTabstopAction
                     | JumpToPrevTabstopAction
+                    | TriggerAndAcceptSuggestionAction
                     | AssertPairsAction
                     | AssertCursorsAction
                     | CompositeAction;
@@ -126,6 +127,12 @@ interface JumpToPrevTabstopAction extends Repeat, Delay {
 
     /** Jump to the previous tabstop in the current snippet. */
     kind: 'jumpToPrevTabstop';
+}
+
+interface TriggerAndAcceptSuggestionAction extends Repeat, Delay {
+
+    /** Trigger autocomplete suggestions then accept the first suggestion. */
+    kind: 'triggerAndAcceptSuggestion',
 }
 
 interface AssertPairsAction extends Repeat {
