@@ -23,5 +23,8 @@
 		"editor.autoClosingBrackets": "beforeWhitespace",
 		"editor.autoClosingQuotes": "beforeWhitespace",
 		"editor.autoIndent": "full",
+		// Snippet suggestions are disabled because we will be testing autocompletions, and we do 
+		// not want user defined snippets to affect it. 
+		"editor.snippetSuggestions": "none"
 	}
 }
