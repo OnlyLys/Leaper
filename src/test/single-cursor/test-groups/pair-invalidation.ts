@@ -264,7 +264,7 @@ const TEST_CASES: TestCase[] = [
             //
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20 } ] } }); // Log object to console.
             //                                                     ^(cursor position)
-            { kind: 'delete' },
+            { kind: 'deleteRight' },
             { 
                 kind: 'assertPairs', 
                 pairs: [
@@ -323,7 +323,7 @@ const TEST_CASES: TestCase[] = [
                 ]
             },
             { kind: 'assertCursors', cursors: [ [1, 52] ] },
-            // Delete until the second of the remaining pairs is deleted.
+            // Delete right until the second of the remaining pairs is deleted.
             //
             // Line before:
             //
@@ -334,7 +334,7 @@ const TEST_CASES: TestCase[] = [
             //
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20 cheesecake}
             //                                                     ^(cursor position)
-            { kind: 'delete',        repeat:  2                                         },
+            { kind: 'deleteRight',   repeat:  2                                         },
             { kind: 'assertPairs',   pairs:   [ [ { open: [1, 16], close: [1, 63] } ] ] },
             { kind: 'assertCursors', cursors: [ [1, 52] ]                               },
             // Overwrite text including the final pair.

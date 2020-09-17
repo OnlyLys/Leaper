@@ -41,7 +41,7 @@ export type Action = InsertPairAction
                     | LeapAction 
                     | EscapeLeaperMode
                     | BackspaceAction 
-                    | DeleteAction
+                    | DeleteRightAction
                     | TextEditAction 
                     | InsertSnippetAction
                     | JumpToNextTabstopAction
@@ -96,10 +96,10 @@ interface BackspaceAction extends Repeat, Delay {
     kind: 'backspace';
 } 
 
-interface DeleteAction extends Repeat, Delay {
+interface DeleteRightAction extends Repeat, Delay {
 
     /** Press the `delete` key. */
-    kind: 'delete';
+    kind: 'deleteRight';
 }
 
 interface TextEditAction extends Repeat, Delay {
