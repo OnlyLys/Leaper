@@ -151,12 +151,12 @@ interface CompositeAction extends Repeat {
 
 interface Repeat {
 
-    /** How many times to repeat this action. Defaults to `1`. */
+    /** How many times to execute this action. Default is `1`. */
     repeat?: number
 }
 
 interface Delay {
 
-    /** Milliseconds of delay to apply after each action call. Defaults to `20`. */
+    /** Milliseconds of delay to apply after each action call. Default is `20`. */
     delay?: number
 }
