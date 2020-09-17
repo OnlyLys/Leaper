@@ -431,7 +431,7 @@ const TEST_CASES: TestCase[] = [
             //             lamb [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             //                                        ^(cursor position)//
             //
-            // Lines after (with markdown auto-indentation applied):
+            // Lines after (with Typescript auto-indentation applied):
             //
             //     console.log(
             //         { obj: { 
@@ -440,11 +440,11 @@ const TEST_CASES: TestCase[] = [
             //             a
             //             little
             //             lamb [ { prop: someFn(1, 20
-            //             ) } ] } }); // Log object to console.
-            //             ^(cursor position)
+            //                 ) } ] } }); // Log object to console.
+            //                 ^(cursor position)
             { kind: 'typeText',      text:    '\n'        },
             { kind: 'assertPairs',   pairs:   [ [] ]      },
-            { kind: 'assertCursors', cursors: [ [8, 12] ] }
+            { kind: 'assertCursors', cursors: [ [8, 16] ] }
         ]
     }
 ];
