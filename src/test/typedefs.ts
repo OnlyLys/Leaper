@@ -40,7 +40,8 @@ export type Action = InsertPairAction
                     | SetCursorsAction
                     | LeapAction 
                     | EscapeLeaperMode
-                    | BackspaceAction 
+                    | BackspaceAction
+                    | BackspaceWordAction
                     | DeleteRightAction
                     | TextEditAction 
                     | InsertSnippetAction
@@ -95,6 +96,12 @@ interface BackspaceAction extends Repeat, Delay {
     /** Press the `backspace` key. */
     kind: 'backspace';
 } 
+
+interface BackspaceWordAction extends Repeat, Delay {
+    
+    /** Press 'ctrl + backspace'. */
+    kind: 'backspaceWord';
+}
 
 interface DeleteRightAction extends Repeat, Delay {
 
