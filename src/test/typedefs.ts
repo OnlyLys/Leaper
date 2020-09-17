@@ -92,7 +92,7 @@ interface EscapeLeaperMode extends Repeat, Delay {
 
 interface BackspaceAction extends Repeat, Delay {
 
-    /** Press the 'backspace' key. */
+    /** Press the `backspace` key. */
     kind: 'backspace';
 } 
 
