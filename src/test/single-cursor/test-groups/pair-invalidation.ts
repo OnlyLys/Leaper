@@ -159,8 +159,8 @@ const TEST_CASES: TestCase[] = [
             //
             //     console.log({ obj: { arr: [ { prop: someFn1, 20) } ] } }); // Log object to console.
             //                                               ^(cursor position)
-            { kind: 'moveCursors', direction: 'left', repeat: 5 },
-            { kind: 'backspace'                                 },
+            { kind: 'moveCursors', direction: 'left', repetitions: 5 },
+            { kind: 'backspace'                                      },
             { 
                 kind: 'assertPairs', 
                 pairs: [
@@ -230,7 +230,7 @@ const TEST_CASES: TestCase[] = [
             //     
             //     { obj: cheesecake1, 20) } ] } }); // Log object to console.
             //                      ^(cursor position)
-            { kind: 'backspace',     repeat:  14                                        },
+            { kind: 'backspace',     repetitions:  14                                   },
             { kind: 'assertPairs',   pairs:   [ [ { open: [1, 4],  close: [1, 34] } ] ] },
             { kind: 'assertCursors', cursors: [ [1, 21] ]                               },
             // Overwrite first pair.
@@ -334,7 +334,7 @@ const TEST_CASES: TestCase[] = [
             //
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20 cheesecake}
             //                                                     ^(cursor position)
-            { kind: 'deleteRight',   repeat:  2                                         },
+            { kind: 'deleteRight',   repetitions:  2                                    },
             { kind: 'assertPairs',   pairs:   [ [ { open: [1, 16], close: [1, 63] } ] ] },
             { kind: 'assertCursors', cursors: [ [1, 52] ]                               },
             // Overwrite text including the final pair.

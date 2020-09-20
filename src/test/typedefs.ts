@@ -52,64 +52,64 @@ export type Action = InsertPairAction
                     | AssertCursorsAction
                     | CompositeAction;
 
-interface InsertPairAction extends Repeat, Delay {
+interface InsertPairAction extends Repetitions, Delay {
 
     /** Insert a randomly picked autoclosing pair into the document. */
     kind: 'insertPair';
 }
 
-interface TypeTextAction extends Repeat, Delay {
+interface TypeTextAction extends Repetitions, Delay {
 
     /** Type text into the document. Text is typed in codepoint by codepoint. */
     kind: 'typeText';
     text: string;
 }
 
-interface MoveCursorsAction extends Repeat, Delay {
+interface MoveCursorsAction extends Repetitions, Delay {
 
     /** Move all the cursors one unit in a specific `direction`. */
     kind: 'moveCursors';
     direction: 'right' | 'left' | 'up' | 'down';
 } 
 
-interface SetCursorsAction extends Repeat, Delay {
+interface SetCursorsAction extends Repetitions, Delay {
 
     /** Set the cursors to specific positions in the document. */
     kind: 'setCursors';
     cursors: CompactPosition[]  
 }
 
-interface LeapAction extends Repeat, Delay {
+interface LeapAction extends Repetitions, Delay {
 
     /** Call the `leaper.leap` command. */
     kind: 'leap';
 } 
 
-interface EscapeLeaperMode extends Repeat, Delay {
+interface EscapeLeaperMode extends Repetitions, Delay {
 
     /** Call the `leaper.escapeLeaperMode` command. */
     kind: 'escapeLeaperMode';
 }
 
-interface BackspaceAction extends Repeat, Delay {
+interface BackspaceAction extends Repetitions, Delay {
 
     /** Press the `backspace` key. */
     kind: 'backspace';
 } 
 
-interface BackspaceWordAction extends Repeat, Delay {
+interface BackspaceWordAction extends Repetitions, Delay {
     
     /** Press 'ctrl + backspace'. */
     kind: 'backspaceWord';
 }
 
-interface DeleteRightAction extends Repeat, Delay {
+interface DeleteRightAction extends Repetitions, Delay {
 
     /** Press the `delete` key. */
     kind: 'deleteRight';
 }
 
-interface TextEditAction extends Repeat, Delay {
+interface TextEditAction extends Repetitions, Delay {
 
     /** Edit a region of text in the document. */
     kind: 'textEdit';
@@ -117,56 +117,56 @@ interface TextEditAction extends Repeat, Delay {
     insert:  string;
 }
 
-interface InsertSnippetAction extends Repeat, Delay {
+interface InsertSnippetAction extends Repetitions, Delay {
 
     /** Insert a snippet to where the cursors are at. */
     kind: 'insertSnippet';
     snippet: SnippetString;
 }
 
-interface JumpToNextTabstopAction extends Repeat, Delay {
+interface JumpToNextTabstopAction extends Repetitions, Delay {
 
     /** Jump to the next tabstop in the current snippet. */
     kind: 'jumpToNextTabstop';
 } 
 
-interface JumpToPrevTabstopAction extends Repeat, Delay {
+interface JumpToPrevTabstopAction extends Repetitions, Delay {
 
     /** Jump to the previous tabstop in the current snippet. */
     kind: 'jumpToPrevTabstop';
 }
 
-interface TriggerAndAcceptSuggestionAction extends Repeat, Delay {
+interface TriggerAndAcceptSuggestionAction extends Repetitions, Delay {
 
     /** Trigger autocomplete suggestions then accept the first suggestion. */
     kind: 'triggerAndAcceptSuggestion',
 }
 
-interface AssertPairsAction extends Repeat {
+interface AssertPairsAction extends Repetitions {
 
     /** Verify the pairs that the engine is tracking. */
     kind: 'assertPairs',
     pairs: CompactPair[][];
 }
 
-interface AssertCursorsAction extends Repeat {
+interface AssertCursorsAction extends Repetitions {
 
     /** Verify the current cursors in the editor. */
     kind: 'assertCursors',
     cursors: CompactPosition[];
 }
 
-interface CompositeAction extends Repeat {
+interface CompositeAction extends Repetitions {
 
     /** Create a new action that is a sequence of other actions. */
     kind: 'composite',
     actions: Action[]
 }
 
-interface Repeat {
+interface Repetitions {
 
     /** How many times to execute this action. Default is `1`. */
-    repeat?: number
+    repetitions?: number
 }
 
 interface Delay {

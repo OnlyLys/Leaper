@@ -15,10 +15,10 @@ export const SINGLE_CURSOR_ESCAPE_LEAPER_MODE_TEST_GROUP: TestGroup = {
                 description: 'Insert 10 pairs',
                 actions: [
                     // Insert pairs between some text to simulate a typical usage scenario.
-                    { kind: 'typeText',    text: ALICE_TEXT_1            },
-                    { kind: 'moveCursors', direction: 'up'               },
-                    { kind: 'moveCursors', direction: 'left', repeat: 10 },
-                    { kind: 'insertPair',  repeat: 10                    },
+                    { kind: 'typeText',    text: ALICE_TEXT_1                 },
+                    { kind: 'moveCursors', direction: 'up'                    },
+                    { kind: 'moveCursors', direction: 'left', repetitions: 10 },
+                    { kind: 'insertPair',  repetitions: 10                    },
                     { 
                         kind: 'assertPairs', 
                         pairs: [[

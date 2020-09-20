@@ -27,7 +27,7 @@ const TEST_CASES: TestCase[] = [
             actions: [
                 { kind: 'insertPair'                                                      },
                 { kind: 'typeText',      text:      '     '                               },
-                { kind: 'moveCursors',   direction: 'left', repeat: 5                     },
+                { kind: 'moveCursors',   direction: 'left', repetitions: 5                },
                 { kind: 'assertPairs',   pairs:   [ [ { open: [0, 1], close: [0, 6] } ] ] },
                 { kind: 'assertCursors', cursors: [ [0, 1] ]                              }
             ]
@@ -50,7 +50,7 @@ const TEST_CASES: TestCase[] = [
                     insert:  ALICE_TEXT_1 + '\n\n' + ALICE_TEXT_2  
                 },
                 { kind: 'setCursors',  cursors: [ [6, 71] ] },
-                { kind: 'insertPair',  repeat:  10          },
+                { kind: 'insertPair',  repetitions:  10     },
                 { 
                     kind: 'assertPairs', 
                     pairs: [
@@ -101,11 +101,11 @@ const TEST_CASES: TestCase[] = [
                 { 
                     kind: 'composite',
                     actions: [
-                        { kind: 'insertPair'                                },
-                        { kind: 'typeText',    text:      '     '           },
-                        { kind: 'moveCursors', direction: 'left', repeat: 5 }
+                        { kind: 'insertPair'                                     },
+                        { kind: 'typeText',    text:      '     '                },
+                        { kind: 'moveCursors', direction: 'left', repetitions: 5 }
                     ],
-                    repeat: 6
+                    repetitions: 6
                 },
                 { 
                     kind: 'assertPairs', 
@@ -159,10 +159,10 @@ const TEST_CASES: TestCase[] = [
                     { kind: 'assertPairs',   pairs:   [ [] ]      },
                     { kind: 'assertCursors', cursors: [ [2, 11] ] }
                 ], 
-                repeat: 10
+                repetitions: 10
             },
             // Then insert 5 pairs and leap out of all of them.
-            { kind: 'insertPair',  repeat: 5 },
+            { kind: 'insertPair',  repetitions: 5 },
             { 
                 kind: 'assertPairs', 
                 pairs: [
@@ -175,14 +175,14 @@ const TEST_CASES: TestCase[] = [
                     ]
                 ]
             },
-            { kind: 'assertCursors', cursors: [ [2, 16] ] },
-            { kind: 'leap',          repeat:  5           },
-            { kind: 'assertPairs',   pairs:   [ [] ]      },
-            { kind: 'assertCursors', cursors: [ [2, 21] ] },
+            { kind: 'assertCursors', cursors: [ [2, 16] ]  },
+            { kind: 'leap',          repetitions:  5       },
+            { kind: 'assertPairs',   pairs:   [ [] ]       },
+            { kind: 'assertCursors', cursors: [ [2, 21] ]  },
             // Check that future leap calls do not move the cursor at all.
-            { kind: 'leap',          repeat:  10          },
-            { kind: 'assertPairs',   pairs:   [ [] ]      },
-            { kind: 'assertCursors', cursors: [ [2, 21] ] }
+            { kind: 'leap',          repetitions:  10      },
+            { kind: 'assertPairs',   pairs:   [ [] ]       },
+            { kind: 'assertCursors', cursors: [ [2, 21] ]  }
         ]
     },
     {
@@ -194,15 +194,15 @@ const TEST_CASES: TestCase[] = [
                 { kind: 'typeText',    text:      ALICE_TEXT_2  },
                 { kind: 'setCursors',  cursors:   [ [ 2, 11 ] ] },
                 // Insert `{ {Hello {Typescript} is} Awesome }` into the text.
-                { kind: 'insertPair'                                 },
-                { kind: 'typeText',    text:      '  Awesome '       },
-                { kind: 'moveCursors', direction: 'left', repeat: 9  },
-                { kind: 'insertPair'                                 },
-                { kind: 'typeText',    text:      'Hello  is'        },
-                { kind: 'moveCursors', direction: 'left', repeat: 3  },
-                { kind: 'insertPair'                                 },
-                { kind: 'typeText',    text:      'Typescript'       },
-                { kind: 'moveCursors', direction: 'left', repeat: 10 },
+                { kind: 'insertPair'                                      },
+                { kind: 'typeText',    text:      '  Awesome '            },
+                { kind: 'moveCursors', direction: 'left', repetitions: 9  },
+                { kind: 'insertPair'                                      },
+                { kind: 'typeText',    text:      'Hello  is'             },
+                { kind: 'moveCursors', direction: 'left', repetitions: 3  },
+                { kind: 'insertPair'                                      },
+                { kind: 'typeText',    text:      'Typescript'            },
+                { kind: 'moveCursors', direction: 'left', repetitions: 10 },
                 { 
                     kind: 'assertPairs',
                     pairs: [
@@ -234,11 +234,11 @@ const TEST_CASES: TestCase[] = [
                     },
                     { kind: 'assertCursors', cursors: [ [2, 22] ] }
                 ],
-                repeat: 5
+                repetitions: 5
             },
             // Move past the 'Typescript' obstacle and check that leap is still possible.
-            { kind: 'moveCursors', direction: 'right', repeat: 10 },
-            { kind: 'leap'                                        },
+            { kind: 'moveCursors', direction: 'right', repetitions: 10 },
+            { kind: 'leap'                                             },
             { 
                 kind: 'assertPairs',
                 pairs: [
@@ -265,10 +265,10 @@ const TEST_CASES: TestCase[] = [
                     },
                     { kind: 'assertCursors', cursors: [ [2, 33] ] }
                 ],
-                repeat: 5
+                repetitions: 5
             },
             // Move past the ' is' obstacle and check that leap is still possible.
-            { kind: 'moveCursors',   direction: 'right', repeat: 3                        },
+            { kind: 'moveCursors',   direction: 'right', repetitions: 3                   },
             { kind: 'leap'                                                                },
             { kind: 'assertPairs',   pairs:     [ [ { open: [2, 12], close: [2, 46] } ] ] },
             { kind: 'assertCursors', cursors:   [ [2, 37] ]                               },
@@ -280,13 +280,13 @@ const TEST_CASES: TestCase[] = [
                     { kind: 'assertPairs',   pairs:   [ [ { open: [2, 12], close: [2, 46] } ] ] },
                     { kind: 'assertCursors', cursors: [ [2, 37] ]                               },
                 ],
-                repeat: 5
+                repetitions: 5
             },
             // Move to the end of ' Awesome' and make the final leap.
-            { kind: 'moveCursors',   direction: 'right', repeat: 8 },
-            { kind: 'leap'                                         },
-            { kind: 'assertPairs',   pairs:      [ [] ]            },
-            { kind: 'assertCursors', cursors:    [ [2, 47] ]       },
+            { kind: 'moveCursors',   direction: 'right', repetitions: 8 },
+            { kind: 'leap'                                              },
+            { kind: 'assertPairs',   pairs:      [ [] ]                 },
+            { kind: 'assertCursors', cursors:    [ [2, 47] ]            },
         ]
     },
 ];
