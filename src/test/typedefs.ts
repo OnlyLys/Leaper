@@ -48,6 +48,7 @@ export type Action = InsertPairAction
                     | JumpToNextTabstopAction
                     | JumpToPrevTabstopAction
                     | TriggerAndAcceptSuggestionAction
+                    | UndoAction
                     | AssertPairsAction
                     | AssertCursorsAction
                     | CompositeAction;
@@ -140,6 +141,12 @@ interface TriggerAndAcceptSuggestionAction extends Repetitions, Delay {
 
     /** Trigger autocomplete suggestions then accept the first suggestion. */
     kind: 'triggerAndAcceptSuggestion',
+}
+
+interface UndoAction extends Repetitions, Delay {
+
+    /** Calls the `Undo` (`Ctrl+Z`) command. */
+    kind: 'undo'
 }
 
 interface AssertPairsAction extends Repetitions {
