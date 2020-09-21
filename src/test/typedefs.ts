@@ -31,8 +31,9 @@ export interface TestCase {
  * The first number of the tuple is the line-index while the second is the column-index.
  */
 export type CompactPosition = [number, number];
-export type CompactRange    = { start: CompactPosition, end:   CompactPosition };
-export type CompactPair     = { open:  CompactPosition, close: CompactPosition };
+
+/** Compact way to represent a range in the document. */
+export type CompactRange = { start: CompactPosition, end: CompactPosition };
 
 export type Action = InsertPairAction 
                     | TypeTextAction
