@@ -35,8 +35,28 @@ export type CompactPosition = [number, number];
 /** Compact way to represent a range in the document. */
 export type CompactRange = { start: CompactPosition, end: CompactPosition };
 
+/**
+ * Compact way to represent the pairs for a cursor.
+ * 
+ * Since all the pairs for a cursor must be on the same line, we can represent them in a 'flatter' 
+ * form, allowing for a more compact representation.
+ * 
+ * For example, say we have:
+ *  
+ *  1. Pair at line 1, opening side at column 10 and closing side column 20.
+ *  2. Pair at line 1, opening side at column 14 and closing side column 17.
+ *  3. Pair at line 1, opening side at column 15 and closing side column 16.
+ * 
+ * Then we can represent the above in a more compact way:
+ * 
+ *     { line: 1, sides: [ 10, 14, 15, 16, 17, 20 ] }
+ */
+export type CompactPairs = { line: number, sides: number[] };
+
 export type Action = InsertPairAction 
                     | TypeTextAction
+                    | ReplaceTextAction
+                    | InsertTextAction
                     | MoveCursorsAction 
                     | SetCursorsAction
                     | LeapAction 
@@ -44,7 +64,6 @@ export type Action = InsertPairAction
                     | BackspaceAction
                     | BackspaceWordAction
                     | DeleteRightAction
-                    | TextEditAction 
                     | InsertSnippetAction
                     | JumpToNextTabstopAction
                     | JumpToPrevTabstopAction
@@ -56,7 +75,11 @@ export type Action = InsertPairAction
 
 interface InsertPairAction extends Repetitions, Delay {
 
-    /** Insert a randomly picked autoclosing pair into the document. */
+    /** 
+     * Insert an autoclosing pair into the document. 
+     * 
+     * The kind of autoclosing pair inserted is randomly determined.
+     */
     kind: 'insertPair';
 }
 
@@ -64,6 +87,30 @@ interface TypeTextAction extends Repetitions, Delay {
 
     /** Type text into the document. Text is typed in codepoint by codepoint. */
     kind: 'typeText';
+    text: string;
+}
+
+interface ReplaceTextAction extends Repetitions, Delay {
+
+    /** Replace a region of text in the document. */
+    kind: 'replaceText';
+
+    /** The range to replace with a string. */
+    replace: CompactRange;
+
+    /** String to insert in place of the replaced range. */
+    insert: string;
+}
+
+interface InsertTextAction extends Repetitions, Delay {
+
+    /** Insert text at a position in the document. */
+    kind: 'insertText';
+
+    /** Position to insert the text at. */
+    position: [number, number];
+
+    /** String to insert at the position. */
     text: string;
 }
 
@@ -111,14 +158,6 @@ interface DeleteRightAction extends Repetitions, Delay {
     kind: 'deleteRight';
 }
 
-interface TextEditAction extends Repetitions, Delay {
-
-    /** Edit a region of text in the document. */
-    kind: 'textEdit';
-    replace: CompactRange;
-    insert:  string;
-}
-
 interface InsertSnippetAction extends Repetitions, Delay {
 
     /** Insert a snippet to where the cursors are at. */
@@ -154,7 +193,9 @@ interface AssertPairsAction extends Repetitions {
 
     /** Verify the pairs that the engine is tracking. */
     kind: 'assertPairs',
-    pairs: CompactPair[][];
+
+    /** The pairs for a cursor can be `undefined` if there are no pairs being tracked for it. */
+    pairs: (CompactPairs | undefined)[];
 }
 
 interface AssertCursorsAction extends Repetitions {

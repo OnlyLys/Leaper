@@ -204,3 +204,14 @@ hurried on, Alice started to her feet, for it flashed across her mind that she h
 a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she 
 ran across the field after it, and fortunately was just in time to see it pop down a large rabbit-hole 
 under the hedge.`;
+
+/**
+ * Generate an array of sequential integers.
+ */
+export function range(start: number, endNotInclusive: number): number[] {
+    const result = [];
+    for (let i = start; i < endNotInclusive; ++i) {
+        result.push(i);
+    }
+    return result;
+}
