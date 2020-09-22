@@ -32,15 +32,25 @@ import { TextDocumentContentChangeEvent } from 'vscode';
  * If we used the search-and-replace feature of the editor to replace the words "dog" with "frog",
  * it will produce content changes in the following order:
  * 
- *     replace (line 0, column 22) to (line 0, column 25) with "frog",
- *     replace (line 0, column 13) to (line 0, column 16) with "frog",
- *     replace (line 0, column  4) to (line 0, column  7) with "frog" 
+ *     replace (line 0, character 22) to (line 0, character 25) with "frog",
+ *     replace (line 0, character 13) to (line 0, character 16) with "frog",
+ *     replace (line 0, character  4) to (line 0, character  7) with "frog" 
+ * 
+ * where 'line' is line index and 'character' is character index. 
  * 
  * Notice that if the content changes were applied in the order specified above, then it is fine. 
  * But if the content changes were applied the other way around, then the coordinates specified by 
  * the top two content changes would be incorrect, since applying the third content change would 
- * shift the text to the right of line 0, column 7 by 1 unit, leaving the remaining content changes 
- * referencing stale positions.
+ * shift the text to the right of (line 0, character 7) by 1 unit, leaving the remaining content 
+ * changes referencing stale positions.
+ * 
+ * # Character Indices
+ * 
+ * Character indices are in units of UTF-16 code units. 
+ * 
+ * Character indices do not have the same units as the column number shown in the bottom right of 
+ * vscode, as the latter corresponds to physical width of characters in the editor, while the former
+ * corresponds to the byte length of the characters in memory.
  */
 export class ContentChangeStack {
 
@@ -72,8 +82,8 @@ export class ContentChangeStack {
     /** 
      * Horizontal shift due to the most recent content change that was popped from the stack.
      * 
-     * Aside from vertical shifts, content changes also contribute a change in column index to any 
-     * item that comes after them on the last line that was replaced by the content change. 
+     * Aside from vertical shifts, content changes also contribute a change in character index to 
+     * any item that comes after them on the last line that was replaced by the content change. 
      *
      * For example, consider the document (where the numbers on the left denote line indices):
      *
@@ -92,8 +102,8 @@ export class ContentChangeStack {
      *
      * As expected, the text to the right of the replaced range ("cat!") and the two lines below it 
      * are shifted upwards (line index decreases). But notice that "cat" is shifted rightwards 
-     * (column index increases). The column index change is what we are recording as the horizontal 
-     * carry.
+     * (character index increases). The character index change is what we are recording as the 
+     * horizontal carry.
      */
     public get horzCarry(): { 
         
@@ -141,8 +151,8 @@ export class ContentChangeStack {
         // This content change contributes to a change in line index to any item after it.
         this._vertCarry += insertedLineCount - replacedLineCount;
 
-        // This content change also contributes to a change in column index to any item to the right 
-        // of the replaced range's end position.
+        // This content change also contributes to a change in character index to any item to the 
+        // right of the replaced range's end position.
         //
         // For each content change there are four possibilities:
         //
@@ -154,8 +164,8 @@ export class ContentChangeStack {
         //        1 |
         //        2 | Meow!
         //
-        //    where line 0 from column 6 to column 11 is replaced with the text "Universe". This 
-        //    results in the document:
+        //    where line 0 from character 6 to character 11 is replaced with the text "Universe". 
+        //    This results in the document:
         //
         //        0 | Hello Universe, I am a cat!
         //        1 |
@@ -173,8 +183,8 @@ export class ContentChangeStack {
         //        1 |
         //        2 | Meow!
         //
-        //    where line 0 from column 5 to column 13 is replaced with the text "\n\nLook! ". This 
-        //    results in the document: 
+        //    where line 0 from character 5 to character 13 is replaced with the text "\n\nLook! ". 
+        //    This results in the document: 
         //
         //        0 | Hello
         //        1 | 
@@ -197,7 +207,7 @@ export class ContentChangeStack {
         //        3 | 
         //        4 | Meow!
         //  
-        //    where the range spanning the ending newline of line 0 up to (line 2, column 7) is
+        //    where the range spanning the ending newline of line 0 up to (line 2, character 7) is
         //    replaced with the text " ". This results in the document:
         //
         //        0 | Hello cat!
@@ -219,8 +229,8 @@ export class ContentChangeStack {
         //        3 | 
         //        4 | Meow!
         //  
-        //    where the range spanning (line 0, column 6) to (line 2, column 6) is replaced with the 
-        //    text "white rabbit!\nHello black". This results in the document:
+        //    where the range spanning (line 0, character 6) to (line 2, character 6) is replaced 
+        //    with the text "white rabbit!\nHello black". This results in the document:
         //    
         //        0 | Hello white rabbit!
         //        1 | Hello black cat!
@@ -250,8 +260,8 @@ export class ContentChangeStack {
         //        4 | Meow!
         // 
         // Let's say there are two content changes, the first of which replaces the range from 
-        // (line 0, column 0) to (line 2, column 6) with the text "Look! A " and the second of which 
-        // inserts the text "blue" at (line 2, column 6). This results in the document:
+        // (line 0, character 0) to (line 2, character 6) with the text "Look! A " and the second of 
+        // which inserts the text "blue" at (line 2, character 6). This results in the document:
         //
         //        0 | Look! A blue cat!
         //        1 | 

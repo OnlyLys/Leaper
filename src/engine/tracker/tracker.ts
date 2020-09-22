@@ -498,10 +498,10 @@ export class Tracker {
      * 
      * The aforementioned behavior causes problems when we have a single event loop cycle consisting 
      * of multiple content changes. Let's take for example a loop cycle consisting of two content 
-     * changes, the first of which inserts a pair at line 10, column 10 and the second of which 
+     * changes, the first of which inserts a pair at line 10, character 10 and the second of which 
      * inserts the text "hello" in between the pair. Had we decorated the first pair as it was 
      * created, we would have asked vscode to decorate the closing side of the pair at line 10,
-     * column 11. However, when vscode finally does decorate the pair, it would end up decorating
+     * character 11. However, when vscode finally does decorate the pair, it would end up decorating
      * the letter 'h' since that is what is at position after the second content change is applied. 
      * 
      * Therefore we separate out the decoration updates to this dedicated method, so that we can 

@@ -28,7 +28,9 @@ export interface TestCase {
 /**
  * For the sake of compactness, we use a tuple to represent positions in the tests. 
  * 
- * The first number of the tuple is the line-index while the second is the column-index.
+ * The first number of the tuple is the line index while the second is the character index.
+ * 
+ * Character indices are in units of UTF-16 code units.
  */
 export type CompactPosition = [number, number];
 
@@ -43,9 +45,9 @@ export type CompactRange = { start: CompactPosition, end: CompactPosition };
  * 
  * For example, say we have:
  *  
- *  1. Pair at line 1, opening side at column 10 and closing side column 20.
- *  2. Pair at line 1, opening side at column 14 and closing side column 17.
- *  3. Pair at line 1, opening side at column 15 and closing side column 16.
+ *  1. Pair at line 1, opening side at character 10 and closing side at character 20.
+ *  2. Pair at line 1, opening side at character 14 and closing side at character 17.
+ *  3. Pair at line 1, opening side at character 15 and closing side at character 16.
  * 
  * Then we can represent the above in a more compact way:
  * 
