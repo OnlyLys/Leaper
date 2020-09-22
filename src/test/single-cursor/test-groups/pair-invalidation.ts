@@ -1,4 +1,4 @@
-import { Action, TestCase, TestGroup, CompactPosition, CompactPairs } from '../../typedefs';
+import { Action, TestCase, TestGroup, CompactPosition, CompactPairsSingle } from '../../typedefs';
 
 // In this prelude that is shared across all the test cases in this module, we insert pairs in a way 
 // that simulates a typical usage scenario.
@@ -43,7 +43,7 @@ const SHARED_PRELUDE: { description: string, actions: Action[] } = {
  * cursor move.
  */ 
 function genIncrementalCursorMoveActions(
-    pairs:     ReadonlyArray<CompactPairs>,
+    pairs:     ReadonlyArray<CompactPairsSingle>,
     cursors:   ReadonlyArray<CompactPosition>,
     direction: 'left' | 'right'
 ): Action[] {
