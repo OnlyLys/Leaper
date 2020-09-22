@@ -53,6 +53,13 @@ export type CompactRange = { start: CompactPosition, end: CompactPosition };
  */
 export type CompactPairsSingle = { line: number, sides: number[] };
 
+/** 
+ * Compact way to represent pairs for all cursors.
+ * 
+ * The pairs for a cursor is `undefined` if there are no pairs being tracked for it. 
+ */
+export type CompactPairs = (CompactPairsSingle | undefined)[];
+
 export type Action = InsertPairAction 
                     | TypeTextAction
                     | ReplaceTextAction
@@ -193,9 +200,7 @@ interface AssertPairsAction extends Repetitions {
 
     /** Verify the pairs that the engine is tracking. */
     kind: 'assertPairs',
-
-    /** The pairs for a cursor can be `undefined` if there are no pairs being tracked for it. */
-    pairs: (CompactPairsSingle | undefined)[];
+    pairs: CompactPairs;
 }
 
 interface AssertCursorsAction extends Repetitions {
