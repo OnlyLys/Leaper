@@ -29,9 +29,9 @@ export const SINGLE_CURSOR_ESCAPE_LEAPER_MODE_TEST_GROUP: TestGroup = {
                 { kind: 'leap' },
 
                 // This should remove all pairs from being tracked.
-                { kind: 'escapeLeaperMode'                     },
-                { kind: 'assertPairs',    pairs:   []          },
-                { kind: 'assertCursors',  cursors: [ [5, 90] ] }
+                { kind: 'escapeLeaperMode'                                     },
+                { kind: 'assertPairs',    pairs:   [ { line: -1, sides: [] } ] },
+                { kind: 'assertCursors',  cursors: [ [5, 90] ]                 }
             ]
         },
     ]

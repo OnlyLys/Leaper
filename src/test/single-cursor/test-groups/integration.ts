@@ -53,9 +53,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         // function main()
         //                ^(cursor position)
         // ```
-        { kind: 'leap'                                },
-        { kind: 'assertPairs',   pairs:   [ ]         },
-        { kind: 'assertCursors', cursors: [ [0, 16] ] },
+        { kind: 'leap'                                                },
+        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+        { kind: 'assertCursors', cursors: [ [0, 16] ]                 },
 
             // Mistake simulation: wrong bracket inserted.
             //
@@ -78,9 +78,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //
             // ]   ^(cursor position)
             // ```
-            { kind: 'typeText',      text:    '\n'       }, 
-            { kind: 'assertPairs',   pairs:   []         },
-            { kind: 'assertCursors', cursors: [ [1, 4] ] },
+            { kind: 'typeText',      text:    '\n'                        }, 
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors: [ [1, 4] ]                  },
 
             // Mistake simulation: wrong bracket inserted.
             //
@@ -90,9 +90,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             // function main()
             //                ^(cursor position)
             // ```
-            { kind: 'undo',          repetitions: 3           },
-            { kind: 'assertPairs',   pairs:       []          },
-            { kind: 'assertCursors', cursors:     [ [0, 16] ] },
+            { kind: 'undo',          repetitions: 3                           },
+            { kind: 'assertPairs',   pairs:       [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors:     [ [0, 16] ]                 },
 
         // Document state after:
         // 
@@ -111,9 +111,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //
         // }   ^(cursor position)
         // ```
-        { kind: 'typeText',      text:    '\n'       }, 
-        { kind: 'assertPairs',   pairs:   []         },
-        { kind: 'assertCursors', cursors: [ [1, 4] ] },
+        { kind: 'typeText',      text:    '\n'                        },
+        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 4] ]                  },
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -124,9 +124,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     let arr: 
             // }            ^(cursor position)
             // ```
-            { kind: 'typeText',      text:    'let arr: ' },
-            { kind: 'assertPairs',   pairs:   []          },
-            { kind: 'assertCursors', cursors: [ [1, 13] ] },
+            { kind: 'typeText',      text:    'let arr: '                 },
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors: [ [1, 13] ]                 },
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -137,9 +137,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     let arr: 
             // }      ^(cursor position)
             // ```
-            { kind: 'setCursors',    cursors: [ [1, 7] ] },
-            { kind: 'assertPairs',   pairs:   []         },
-            { kind: 'assertCursors', cursors: [ [1, 7] ] },
+            { kind: 'setCursors',    cursors: [ [1, 7] ]                  },
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors: [ [1, 7] ]                  },
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -150,9 +150,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //      arr: 
             // }   ^(cursor position)
             // ```
-            { kind: 'backspaceWord',                     },
-            { kind: 'assertPairs',   pairs:   []         },
-            { kind: 'assertCursors', cursors: [ [1, 4] ] },
+            { kind: 'backspaceWord',                                      },
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors: [ [1, 4] ]                  },
 
             // Mistake simulation: `let` instead of `const` specifier.
             // 
@@ -163,9 +163,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: 
             // }        ^(cursor position)
             // ```
-            { kind: 'typeText',      text:    'const'    },
-            { kind: 'assertPairs',   pairs:   []         },
-            { kind: 'assertCursors', cursors: [ [1, 9] ] },
+            { kind: 'typeText',      text:    'const'                     },
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors: [ [1, 9] ]                  },
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -176,9 +176,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: 
             // }              ^(cursor position)
             // ```
-            { kind: 'moveCursors',   direction: 'right', repetitions: 6 },
-            { kind: 'assertPairs',   pairs:   []                        },
-            { kind: 'assertCursors', cursors: [ [1, 15] ]               },
+            { kind: 'moveCursors',   direction: 'right', repetitions: 6     },
+            { kind: 'assertPairs',   pairs:     [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors:   [ [1, 15] ]                 },
 
         // Document state after:
         // 
@@ -422,9 +422,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }
         // }                                                                            ^(cursor position)
         // ``` 
-        { kind: 'leap'                                },
-        { kind: 'assertPairs',   pairs:   []          },
-        { kind: 'assertCursors', cursors: [ [1, 77] ] },
+        { kind: 'leap'                                                },
+        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 77] ]                 },
 
         // Document state after:
         // 
@@ -470,9 +470,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }[]
         // }                                                                              ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    ']'         },
-        { kind: 'assertPairs',   pairs:   []          },
-        { kind: 'assertCursors', cursors: [ [1, 79] ] },
+        { kind: 'typeText',      text:    ']'                         },
+        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 79] ]                 },
 
         // Document state after:
         // 
@@ -492,9 +492,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }[][]
         // }                                                                                ^(cursor position)
         // ``` 
-        { kind: 'leap'                                },
-        { kind: 'assertPairs',   pairs:   []          },
-        { kind: 'assertCursors', cursors: [ [1, 81] ] },
+        { kind: 'leap'                                                },
+        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 81] ]                 },
 
         // Document state after:
         // 
@@ -514,9 +514,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }[][] = getArr()
         // }                                                                                           ^(cursor position)
         // ``` 
-        { kind: 'leap'                                },
-        { kind: 'assertPairs',   pairs:   []          },
-        { kind: 'assertCursors', cursors: [ [1, 92] ] },
+        { kind: 'leap'                                                },
+        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 92] ]                 },
 
         // Document state after:
         // 
@@ -538,9 +538,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat()
         // }             ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    ')'         },
-        { kind: 'assertPairs',   pairs:   []          },
-        { kind: 'assertCursors', cursors: [ [2, 14] ] },
+        { kind: 'typeText',      text:    ')'                         },
+        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+        { kind: 'assertCursors', cursors: [ [2, 14] ]                 },
 
         // Document state after:
         // 
@@ -820,9 +820,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem) => console.log(`{ t: ${elem.t}, n: ${elem.n} }`))
         // }                                                                              ^(cursor position)
         // ``` 
-        { kind: 'leap'                                },
-        { kind: 'assertPairs',   pairs:   []          },
-        { kind: 'assertCursors', cursors: [ [2, 79] ] },
+        { kind: 'leap'                                                },
+        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+        { kind: 'assertCursors', cursors: [ [2, 79] ]                 },
 
         // Document state after:
         // 
@@ -832,9 +832,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem) => console.log(`{ t: ${elem.t}, n: ${elem.n} }`));
         // }                                                                               ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    ';'         },
-        { kind: 'assertPairs',   pairs:   []          },
-        { kind: 'assertCursors', cursors: [ [2, 80] ] },
+        { kind: 'typeText',      text:    ';'                         },
+        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+        { kind: 'assertCursors', cursors: [ [2, 80] ]                 },
     ]
 };
 

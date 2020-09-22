@@ -15,9 +15,9 @@ const TEST_CASES: TestCase[] = [
             ]
         },
         actions: [
-            { kind: 'leap'                                }, 
-            { kind: 'assertPairs',    pairs:   []         }, 
-            { kind: 'assertCursors' , cursors: [ [0, 2] ] }
+            { kind: 'leap'                                                 }, 
+            { kind: 'assertPairs',    pairs:   [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors' , cursors: [ [0, 2] ]                  },
         ]
     },
     {
@@ -33,9 +33,9 @@ const TEST_CASES: TestCase[] = [
             ]
         },
         actions: [
-            { kind: 'leap'                               },
-            { kind: 'assertPairs',   pairs:   []         },
-            { kind: 'assertCursors', cursors: [ [0, 7] ] }
+            { kind: 'leap'                                                },
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors: [ [0, 7] ]                  },
         ]
     },
     {
@@ -143,10 +143,10 @@ const TEST_CASES: TestCase[] = [
         prelude: {
             description: 'Insert some text without pairs',
             actions: [
-                { kind: 'typeText',      text:    ALICE_TEXT_2 },
-                { kind: 'setCursors',    cursors: [ [2, 11] ]  },
-                { kind: 'assertPairs',   pairs:   []           },
-                { kind: 'assertCursors', cursors: [ [2, 11] ]  }
+                { kind: 'typeText',      text:    ALICE_TEXT_2                },
+                { kind: 'setCursors',    cursors: [ [2, 11] ]                 },
+                { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+                { kind: 'assertCursors', cursors: [ [2, 11] ]                 },
             ]
         },
         actions: [
@@ -155,9 +155,9 @@ const TEST_CASES: TestCase[] = [
             {
                 kind: 'composite',
                 actions: [
-                    { kind: 'leap'                                },
-                    { kind: 'assertPairs',   pairs:   []          },
-                    { kind: 'assertCursors', cursors: [ [2, 11] ] },
+                    { kind: 'leap'                                                },
+                    { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+                    { kind: 'assertCursors', cursors: [ [2, 11] ]                 },
                 ], 
                 repetitions: 10
             },
@@ -168,14 +168,14 @@ const TEST_CASES: TestCase[] = [
             { kind: 'assertCursors', cursors:    [ [2, 16] ]                           },
 
             // Leap out of all of the inserted pairs.
-            { kind: 'leap',          repetitions:  5           },
-            { kind: 'assertPairs',   pairs:        []          },
-            { kind: 'assertCursors', cursors:      [ [2, 21] ] },
+            { kind: 'leap',          repetitions:  5                           },
+            { kind: 'assertPairs',   pairs:        [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors:      [ [2, 21] ]                 },
 
             // After leaping, check that future leap calls do not move the cursor at all.
-            { kind: 'leap',          repetitions:  10          },
-            { kind: 'assertPairs',   pairs:        []          },
-            { kind: 'assertCursors', cursors:      [ [2, 21] ] },
+            { kind: 'leap',          repetitions:  10                          },
+            { kind: 'assertPairs',   pairs:        [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors:      [ [2, 21] ]                 },
         ]
     },
     {
@@ -250,10 +250,10 @@ const TEST_CASES: TestCase[] = [
             },
 
             // Move to the end of ' Awesome' and make the final leap.
-            { kind: 'moveCursors',   direction: 'right', repetitions: 8 },
-            { kind: 'leap'                                              },
-            { kind: 'assertPairs',   pairs:      []                     },
-            { kind: 'assertCursors', cursors:    [ [2, 47] ]            },
+            { kind: 'moveCursors',   direction: 'right', repetitions: 8     },
+            { kind: 'leap'                                                  },
+            { kind: 'assertPairs',   pairs:     [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors:   [ [2, 47] ]                 },
         ]
     },
 ];

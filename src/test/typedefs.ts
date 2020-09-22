@@ -50,6 +50,8 @@ export type CompactRange = { start: CompactPosition, end: CompactPosition };
  * Then we can represent the above in a more compact way:
  * 
  *     { line: 1, sides: [ 10, 14, 15, 16, 17, 20 ] }
+ * 
+ * Note that `line` is `-1` if a cursor has no pairs being tracked for it.
  */
 export type CompactPairsSingle = { line: number, sides: number[] };
 
@@ -58,7 +60,7 @@ export type CompactPairsSingle = { line: number, sides: number[] };
  * 
  * The pairs for a cursor is `undefined` if there are no pairs being tracked for it. 
  */
-export type CompactPairs = (CompactPairsSingle | undefined)[];
+export type CompactPairs = CompactPairsSingle[];
 
 /**
  * Compact way to represent a cursor in the editor.

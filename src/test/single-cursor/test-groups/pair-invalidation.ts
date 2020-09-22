@@ -85,9 +85,9 @@ const TEST_CASES: TestCase[] = [
         name: 'Rightwards Exit of Cursor (in One Go)',
         prelude: SHARED_PRELUDE,
         actions: [
-            { kind: 'setCursors',    cursors: [ [1, 62] ] },
-            { kind: 'assertPairs',   pairs:   []          },
-            { kind: 'assertCursors', cursors: [ [1, 62] ] }
+            { kind: 'setCursors',    cursors: [ [1, 62] ]                 },
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors: [ [1, 62] ]                 },
         ]
     },
     {
@@ -103,27 +103,27 @@ const TEST_CASES: TestCase[] = [
         name: 'Leftwards Exit of Cursor (in One Go)',
         prelude: SHARED_PRELUDE,
         actions: [
-            { kind: 'setCursors',    cursors: [ [1, 16] ] },
-            { kind: 'assertPairs',   pairs:   []          },
-            { kind: 'assertCursors', cursors: [ [1, 16] ] }
+            { kind: 'setCursors',    cursors: [ [1, 16] ]                 },
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors: [ [1, 16] ]                 },
         ]
     },
     {
         name: 'Upwards Exit of Cursor',
         prelude: SHARED_PRELUDE,
         actions: [
-            { kind: 'moveCursors',   direction: 'up'        },
-            { kind: 'assertPairs',   pairs:     []          },
-            { kind: 'assertCursors', cursors:   [ [0, 13] ] }
+            { kind: 'moveCursors',   direction: 'up'                        },
+            { kind: 'assertPairs',   pairs:     [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors:   [ [0, 13] ]                 },
         ]
     },
     {
         name: 'Downwards Exit of Cursor',
         prelude: SHARED_PRELUDE,
         actions: [
-            { kind: 'moveCursors',   direction: 'down'     },
-            { kind: 'assertPairs',   pairs:     []         },
-            { kind: 'assertCursors', cursors:   [ [2, 1] ] }
+            { kind: 'moveCursors',   direction: 'down'                      },
+            { kind: 'assertPairs',   pairs:     [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors:   [ [2, 1] ]                  },
         ]
     },
     {
@@ -204,8 +204,8 @@ const TEST_CASES: TestCase[] = [
             //     rabbit obj: cheesecake1, 20) } ] } }); // Log object to console.
             //                           ^(cursor position)
             { kind: 'replaceText',   replace: { start: [1, 4], end: [1, 5] }, insert: 'rabbit' },
-            { kind: 'assertPairs',   pairs:   []                                               },
-            { kind: 'assertCursors', cursors: [ [1, 26] ]                                      }
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ]                      },
+            { kind: 'assertCursors', cursors: [ [1, 26] ]                                      },
         ]
     },
     {
@@ -285,8 +285,8 @@ const TEST_CASES: TestCase[] = [
             //    console.log({rabbit
             //                ^(cursor position)
             { kind: 'replaceText',   replace: { start: [1, 17], end: [1, 64] }, insert: 'rabbit' },
-            { kind: 'assertPairs',   pairs:   []                                                 },
-            { kind: 'assertCursors', cursors: [ [1, 23] ]                                        }
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ]                        },
+            { kind: 'assertCursors', cursors: [ [1, 23] ]                                        },
         ]
     },
     {
@@ -360,9 +360,9 @@ const TEST_CASES: TestCase[] = [
             //             lamb [ { prop: someFn(1, 20
             //                 ) } ] } }); // Log object to console.
             //                 ^(cursor position)
-            { kind: 'typeText',      text:    '\n'        },
-            { kind: 'assertPairs',   pairs:   []          },
-            { kind: 'assertCursors', cursors: [ [8, 16] ] },
+            { kind: 'typeText',      text:    '\n'                        },
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors: [ [8, 16] ]                 },
         ]
     }
 ];
