@@ -60,6 +60,19 @@ export type CompactPairsSingle = { line: number, sides: number[] };
  */
 export type CompactPairs = (CompactPairsSingle | undefined)[];
 
+/**
+ * Compact way to represent a cursor in the editor.
+ * 
+ * If a `CompactPosition` type is specified, then the cursor is assumed to have the same `anchor`
+ * and `active` positions.
+ */
+export type CompactCursor = CompactPosition | { anchor: CompactPosition, active: CompactPosition };
+
+/**
+ * Compact way to represent all the cursors in the editor.
+ */
+export type CompactCursors = CompactCursor[];
+
 export type Action = InsertPairAction 
                     | TypeTextAction
                     | ReplaceTextAction
@@ -132,7 +145,7 @@ interface SetCursorsAction extends Repetitions, Delay {
 
     /** Set the cursors to specific positions in the document. */
     kind: 'setCursors';
-    cursors: CompactPosition[]  
+    cursors: CompactCursors;
 }
 
 interface LeapAction extends Repetitions, Delay {
@@ -207,7 +220,7 @@ interface AssertCursorsAction extends Repetitions {
 
     /** Verify the current cursors in the editor. */
     kind: 'assertCursors',
-    cursors: CompactPosition[];
+    cursors: CompactCursors;
 }
 
 interface CompositeAction extends Repetitions {
