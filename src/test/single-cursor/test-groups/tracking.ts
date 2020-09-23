@@ -240,8 +240,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE: TestCase = (() => 
 /**
  * Test case to check whether this extension can handle autocompleted text insertions between pairs.
  */
-const AUTOCOMPLETION_INTERACTION_TEST_CASE: TestCase = (() => {
-    const name    = 'Autocompletion Interaction';
+const AUTOCOMPLETIONS_OK_TEST_CASE: TestCase = (() => {
+    const name    = 'Autocompletions OK';
     const prelude = {
         description: 'Insert multiple pairs and a variable name that we can use to autocomplete',
         actions: [
@@ -287,6 +287,6 @@ export const SINGLE_CURSOR_TRACKING_TEST_GROUP: TestGroup = {
     name: 'Tracking (Single Cursor)',
     testCases: [
         SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE,
-        AUTOCOMPLETION_INTERACTION_TEST_CASE
+        AUTOCOMPLETIONS_OK_TEST_CASE
     ]
 };
