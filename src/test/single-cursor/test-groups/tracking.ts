@@ -3,31 +3,28 @@
 //! text was involved.
 
 import { Action, CompactCursors, CompactPairs, TestCase, TestGroup } from '../../typedefs';
-import { cloneCursors, clonePairs, range, sliceAdd, sliceSub } from '../../utilities';
+import { clonePairs, range, sliceAdd, sliceSub } from '../../utilities';
 
 /**
- * Generate a test case for text insertions and deletions between pairs.
+ * Test case to check whether this extension can handle single line text modifications between pairs.
  * 
- * The text modifications (whether it be text insertion or text deletion) being made here are always 
- * single line modifications.
+ * Note that because multi line text insertions between pairs cause the pairs to be untracked, such
+ * text insertions are tested in the `pair-invalidation.ts` module.
  */
-function genBetweenPairsTestCase(): TestCase {
-    const pairs   = [ { line: 1, sides: range(9, 29) } ] as CompactPairs;
-    const cursors = [ [1, 19] ] as CompactCursors; 
-    const name    = 'Single Line Text Insertions or Deletions Between Pairs';
+const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE: TestCase = (() => {
+    const name    = 'Single Line Text Modifications Between Pairs';
     const prelude = {
         description: 'Insert multiple pairs',
         actions: [
-            { kind: 'typeText',      text:        '\nblah-blah\n'       },
-            { kind: 'moveCursors',   direction:   'up'                  },
-            { kind: 'insertPair',    repetitions: 10                    },
-            { kind: 'assertPairs',   pairs:       clonePairs(pairs)     },
-            { kind: 'assertCursors', cursors:     cloneCursors(cursors) },
+            { kind: 'typeText',      text:        '\nblah-blah\n'                      },
+            { kind: 'moveCursors',   direction:   'up'                                 },
+            { kind: 'insertPair',    repetitions: 10                                   },
+            { kind: 'assertPairs',   pairs:       [ { line: 1, sides: range(9, 29) } ] },
+            { kind: 'assertCursors', cursors:     [ [1, 19] ]                          },
         ] as Action[]
     };
-
-    // Array to contain a sequence of 20 text modification actions.
-    const actions: Action[] = [];
+    const actions: Action[]   = [];
+    const pairs: CompactPairs = [ { line: 1, sides: range(9, 29) } ];
 
     // 1. Insert 17 code units between the opening sides of the first and second pairs.
     //
@@ -238,12 +235,13 @@ function genBetweenPairsTestCase(): TestCase {
         prelude,
         actions
     };
+})();
 }
 
 export const SINGLE_CURSOR_TRACKING_TEST_GROUP: TestGroup = {
     name: 'Tracking (Single Cursor)',
     testCases: [
-        genBetweenPairsTestCase(),
+        SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE,
 
     ]
 };
