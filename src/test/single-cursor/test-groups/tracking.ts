@@ -236,12 +236,57 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE: TestCase = (() => 
         actions
     };
 })();
-}
+
+/**
+ * Test case to check whether this extension can handle autocompleted text insertions between pairs.
+ */
+const AUTOCOMPLETION_INTERACTION_TEST_CASE: TestCase = (() => {
+    const name    = 'Autocompletion Interaction';
+    const prelude = {
+        description: 'Insert multiple pairs and a variable name that we can use to autocomplete',
+        actions: [
+            { 
+                kind:     'insertText', 
+                position: [0, 0], 
+                text:     'function main(){\n    const reallyLongVariableName = 10;\n    \n}'
+            },
+            { kind: 'setCursors',    cursors:     [ [2, 4] ]                            },
+            { kind: 'insertPair',    repetitions: 10                                    },
+            { kind: 'assertPairs',   pairs:       [ { line: 2, sides: range(11, 31) } ] },
+            { kind: 'assertCursors', cursors:     [ [2, 21] ]                           },
+        ] as Action[]
+    };
+    const actions: Action[]   = [];
+    const pairs: CompactPairs = [ { line: 2, sides: range(11, 31) } ];
+
+    // 1. Autocomplete the variable name and check that all pairs are correctly tracked.
+    actions.push({ kind: 'typeText', text: 'really' });
+    actions.push({ kind: 'triggerAndAcceptSuggestion' });
+    sliceAdd(pairs[0].sides, 10, 21, 22);
+    actions.push({ kind: 'assertPairs',   pairs: clonePairs(pairs) }); 
+    actions.push({ kind: 'assertCursors', cursors: [ [2, 43] ]     });
+
+    // 2. As an additional check, perform another autocompletion.
+    actions.push({ kind: 'setCursors',  cursors:   [ [2, 21] ] });
+    actions.push({ kind: 'typeText',    text:      ' '         });
+    actions.push({ kind: 'moveCursors', direction: 'left'      });
+    actions.push({ kind: 'typeText',    text:      'really'    });
+    actions.push({ kind: 'triggerAndAcceptSuggestion'          });
+    sliceAdd(pairs[0].sides, 10, 21, 23);
+    actions.push({ kind: 'assertPairs',   pairs: clonePairs(pairs) }); 
+    actions.push({ kind: 'assertCursors', cursors: [ [2, 66] ]     });
+
+    return {
+        name,
+        prelude,
+        actions
+    };
+})();
 
 export const SINGLE_CURSOR_TRACKING_TEST_GROUP: TestGroup = {
     name: 'Tracking (Single Cursor)',
     testCases: [
         SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE,
-
+        AUTOCOMPLETION_INTERACTION_TEST_CASE
     ]
 };
