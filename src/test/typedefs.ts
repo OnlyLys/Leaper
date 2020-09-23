@@ -5,16 +5,19 @@ import { SnippetString } from 'vscode';
 export interface TestGroup {
 
     name: string,
-
-    /** Each test case is given a fresh empty document. */
     testCases: TestCase[] 
 }
 
+/**
+ * Each test case is given its own empty editor.
+ */
 export interface TestCase {
 
     name: string,
 
-    /** Actions to setup the document for the test. */
+    /** 
+     * Actions to setup the document for the test. 
+     */
     prelude?: {
         description: string,
         actions:     Action[],
@@ -34,7 +37,9 @@ export interface TestCase {
  */
 export type CompactPosition = [number, number];
 
-/** Compact way to represent a range in the document. */
+/** 
+ * Compact way to represent a range in the document. 
+ */
 export type CompactRange = { start: CompactPosition, end: CompactPosition };
 
 /**
@@ -109,139 +114,191 @@ interface InsertPairAction extends Repetitions, Delay {
 
 interface TypeTextAction extends Repetitions, Delay {
 
-    /** Type text into the document. Text is typed in codepoint by codepoint. */
+    /** 
+     * Type text into the document. Text is typed in codepoint by codepoint. 
+     */
     kind: 'typeText';
     text: string;
 }
 
 interface ReplaceTextAction extends Repetitions, Delay {
 
-    /** Replace a region of text in the document. */
+    /** 
+     * Replace a region of text in the document. 
+     */
     kind: 'replaceText';
 
-    /** The range to replace with a string. */
+    /** 
+     * The range to replace with a string. 
+     */
     replace: CompactRange;
 
-    /** String to insert in place of the replaced range. */
+    /** 
+     * String to insert in place of the replaced range. 
+     */
     insert: string;
 }
 
 interface InsertTextAction extends Repetitions, Delay {
 
-    /** Insert text at a position in the document. */
+    /** 
+     * Insert text at a position in the document. 
+     */
     kind: 'insertText';
 
-    /** Position to insert the text at. */
+    /** 
+     * Position to insert the text at. 
+     */
     position: [number, number];
 
-    /** String to insert at the position. */
+    /** 
+     * String to insert at the position. 
+     */
     text: string;
 }
 
 interface MoveCursorsAction extends Repetitions, Delay {
 
-    /** Move all the cursors one unit in a specific `direction`. */
+    /** 
+     * Move all the cursors one unit in a specific `direction`. 
+     */
     kind: 'moveCursors';
     direction: 'right' | 'left' | 'up' | 'down';
 } 
 
 interface SetCursorsAction extends Repetitions, Delay {
 
-    /** Set the cursors to specific positions in the document. */
+    /** 
+     * Set the cursors to specific positions in the document. 
+     */
     kind: 'setCursors';
     cursors: CompactCursors;
 }
 
 interface LeapAction extends Repetitions, Delay {
 
-    /** Call the `leaper.leap` command. */
+    /** 
+     * Call the `leaper.leap` command. 
+     */
     kind: 'leap';
 } 
 
 interface EscapeLeaperMode extends Repetitions, Delay {
 
-    /** Call the `leaper.escapeLeaperMode` command. */
+    /** 
+     * Call the `leaper.escapeLeaperMode` command. 
+     */
     kind: 'escapeLeaperMode';
 }
 
 interface BackspaceAction extends Repetitions, Delay {
 
-    /** Press the `backspace` key. */
+    /** 
+     * Press the `backspace` key. 
+     */
     kind: 'backspace';
 } 
 
 interface BackspaceWordAction extends Repetitions, Delay {
     
-    /** Press 'ctrl + backspace'. */
+    /** 
+     * Press 'ctrl + backspace'. 
+     */
     kind: 'backspaceWord';
 }
 
 interface DeleteRightAction extends Repetitions, Delay {
 
-    /** Press the `delete` key. */
+    /** 
+     * Press the `delete` key. 
+     */
     kind: 'deleteRight';
 }
 
 interface InsertSnippetAction extends Repetitions, Delay {
 
-    /** Insert a snippet to where the cursors are at. */
+    /** 
+     * Insert a snippet to where the cursors are at. 
+     */
     kind: 'insertSnippet';
     snippet: SnippetString;
 }
 
 interface JumpToNextTabstopAction extends Repetitions, Delay {
 
-    /** Jump to the next tabstop in the current snippet. */
+    /** 
+     * Jump to the next tabstop in the current snippet. 
+     */
     kind: 'jumpToNextTabstop';
 } 
 
 interface JumpToPrevTabstopAction extends Repetitions, Delay {
 
-    /** Jump to the previous tabstop in the current snippet. */
+    /** 
+     * Jump to the previous tabstop in the current snippet. 
+     */
     kind: 'jumpToPrevTabstop';
 }
 
 interface TriggerAndAcceptSuggestionAction extends Repetitions, Delay {
 
-    /** Trigger autocomplete suggestions then accept the first suggestion. */
+    /** 
+     * Trigger autocomplete suggestions then accept the first suggestion. 
+     */
     kind: 'triggerAndAcceptSuggestion',
 }
 
 interface UndoAction extends Repetitions, Delay {
 
-    /** Calls the `Undo` (`Ctrl+Z`) command. */
+    /** 
+     * Calls the `Undo` (`Ctrl+Z`) command. 
+     */
     kind: 'undo'
 }
 
 interface AssertPairsAction extends Repetitions {
 
-    /** Verify the pairs that the engine is tracking. */
+    /** 
+     * Verify the pairs that the engine is tracking. 
+     */
     kind: 'assertPairs',
     pairs: CompactPairs;
 }
 
 interface AssertCursorsAction extends Repetitions {
 
-    /** Verify the current cursors in the editor. */
+    /** 
+     * Verify the current cursors in the editor. 
+     */
     kind: 'assertCursors',
     cursors: CompactCursors;
 }
 
 interface CompositeAction extends Repetitions {
 
-    /** Create a new action that is a sequence of other actions. */
+    /** 
+     * Create a new action that is a sequence of other actions. 
+     */
     kind: 'composite',
     actions: Action[]
 }
 
 interface Repetitions {
 
-    /** How many times to execute this action. Default is `1`. */
+    /** 
+     * How many times to execute this action. 
+     * 
+     * Default is `1`. 
+     */
     repetitions?: number
 }
 
 interface Delay {
 
-    /** Milliseconds of delay to apply after each action call. Default is `20`. */
+    /** 
+     * Milliseconds of delay to apply after each action call. 
+     * 
+     * Default is `20`. 
+     */
     delay?: number
 }
