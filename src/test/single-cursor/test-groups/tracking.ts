@@ -6,13 +6,13 @@ import { Action, CompactCursors, CompactPairs, TestCase, TestGroup } from '../..
 import { clonePairs, range, sliceAdd, sliceSub } from '../../utilities';
 
 /**
- * Test case to check whether this extension can handle single line text modifications between pairs.
+ * Test case to check whether this extension can handle single-line text modifications between pairs.
  * 
- * Note that because multi line text insertions between pairs cause the pairs to be untracked, such
- * text insertions are tested in the `pair-invalidation.ts` module.
+ * Note that because multi-line text insertions between pairs cause pairs to be untracked, such text 
+ * insertions are tested in the `pair-invalidation.ts` module.
  */
 const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE: TestCase = (() => {
-    const name    = 'Single Line Text Modifications Between Pairs';
+    const name    = 'Single-Line Text Modifications Between Pairs';
     const prelude = {
         description: 'Insert multiple pairs',
         actions: [
