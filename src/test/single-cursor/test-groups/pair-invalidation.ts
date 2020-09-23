@@ -11,7 +11,7 @@ import { Action, TestCase, TestGroup, CompactPosition, CompactPairsSingle } from
 // }
 // ```
 const SHARED_PRELUDE: { description: string, actions: Action[] } = {
-    description: 'Insert multiple pairs',
+    description: 'Insert mock code with multiple pairs',
     actions: [
         { 
             kind:    'insertText',   
@@ -290,7 +290,7 @@ const TEST_CASES: TestCase[] = [
         ]
     },
     {
-        name: 'Multiline Text Inserted Between Pair',
+        name: 'Multi-line Text Inserted Between Pairs',
         prelude: SHARED_PRELUDE,
         actions: [
 
@@ -371,7 +371,7 @@ const TEST_CASES: TestCase[] = [
  * This test group tests pair invalidation due to:
  * 
  *  1. Cursor being moved out of them (also known as 'cursor escape' or 'cursor exit').
- *  2. Multiline text being inserted between them.
+ *  2. Multi-line text being inserted between them.
  *  3. Their opening or closing sides being deleted.
  */
 export const SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP: TestGroup = {
