@@ -250,31 +250,31 @@ const AUTOCOMPLETIONS_OK_TEST_CASE: TestCase = (() => {
                 position: [0, 0], 
                 text:     'function main(){\n    const reallyLongVariableName = 10;\n    \n}'
             },
-            { kind: 'setCursors',    cursors:     [ [2, 4] ]                            },
-            { kind: 'insertPair',    repetitions: 10                                    },
-            { kind: 'assertPairs',   pairs:       [ { line: 2, sides: range(11, 31) } ] },
-            { kind: 'assertCursors', cursors:     [ [2, 21] ]                           },
+            { kind: 'setCursors',    cursors:     [ [2, 4] ]                           },
+            { kind: 'insertPair',    repetitions: 10                                   },
+            { kind: 'assertPairs',   pairs:       [ { line: 2, sides: range(4, 24) } ] },
+            { kind: 'assertCursors', cursors:     [ [2, 14] ]                          },
         ] as Action[]
     };
     const actions: Action[]   = [];
-    const pairs: CompactPairs = [ { line: 2, sides: range(11, 31) } ];
+    const pairs: CompactPairs = [ { line: 2, sides: range(4, 24) } ];
 
     // 1. Autocomplete the variable name and check that all pairs are correctly tracked.
     actions.push({ kind: 'typeText', text: 'really' });
     actions.push({ kind: 'triggerAndAcceptSuggestion' });
     sliceAdd(pairs[0].sides, 10, 21, 22);
-    actions.push({ kind: 'assertPairs',   pairs: clonePairs(pairs) }); 
-    actions.push({ kind: 'assertCursors', cursors: [ [2, 43] ]     });
+    actions.push({ kind: 'assertPairs',   pairs: clonePairs(pairs)  }); 
+    actions.push({ kind: 'assertCursors', cursors: [ [2, 14 + 22] ] });
 
     // 2. As an additional check, perform another autocompletion.
-    actions.push({ kind: 'setCursors',  cursors:   [ [2, 21] ] });
+    actions.push({ kind: 'setCursors',  cursors:   [ [2, 14] ] });
     actions.push({ kind: 'typeText',    text:      ' '         });
     actions.push({ kind: 'moveCursors', direction: 'left'      });
     actions.push({ kind: 'typeText',    text:      'really'    });
     actions.push({ kind: 'triggerAndAcceptSuggestion'          });
     sliceAdd(pairs[0].sides, 10, 21, 23);
-    actions.push({ kind: 'assertPairs',   pairs: clonePairs(pairs) }); 
-    actions.push({ kind: 'assertCursors', cursors: [ [2, 66] ]     });
+    actions.push({ kind: 'assertPairs',   pairs: clonePairs(pairs)  }); 
+    actions.push({ kind: 'assertCursors', cursors: [ [2, 14 + 23] ] });
 
     return {
         name,
