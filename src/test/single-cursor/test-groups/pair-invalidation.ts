@@ -573,7 +573,7 @@ const TEST_CASES: TestCase[] = [
     },
 
     // ----------------------------------------------------
-    // INVALIDATION DUE TO SIDES OF PAIR BEING ON DIFFERENT LINES
+    // INVALIDATION DUE TO SIDES OF PAIR ENDING UP ON DIFFERENT LINES
 
     {
         name: 'Multi-line Text Inserted Between Pairs',
