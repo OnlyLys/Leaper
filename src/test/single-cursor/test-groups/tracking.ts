@@ -263,7 +263,7 @@ const AUTOCOMPLETIONS_OK_TEST_CASE: TestCase = (() => {
     // 1. Autocomplete the variable name and check that all pairs are correctly tracked.
     actions.push({ kind: 'typeText', text: 'really' });
     actions.push({ kind: 'triggerAndAcceptSuggestion' });
-    sliceAdd(pairs[0].sides, 10, 21, 22);
+    sliceAdd(pairs[0].sides, 10, 20, 22);
     actions.push({ kind: 'assertPairs',   pairs: clonePairs(pairs)  }); 
     actions.push({ kind: 'assertCursors', cursors: [ [2, 14 + 22] ] });
 
@@ -273,7 +273,7 @@ const AUTOCOMPLETIONS_OK_TEST_CASE: TestCase = (() => {
     actions.push({ kind: 'moveCursors', direction: 'left'      });
     actions.push({ kind: 'typeText',    text:      'really'    });
     actions.push({ kind: 'triggerAndAcceptSuggestion'          });
-    sliceAdd(pairs[0].sides, 10, 21, 23);
+    sliceAdd(pairs[0].sides, 10, 20, 23);
     actions.push({ kind: 'assertPairs',   pairs: clonePairs(pairs)  }); 
     actions.push({ kind: 'assertCursors', cursors: [ [2, 14 + 23] ] });
 
