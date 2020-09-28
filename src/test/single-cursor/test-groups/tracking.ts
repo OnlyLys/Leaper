@@ -525,6 +525,14 @@ const AUTOCOMPLETIONS_OK_TEST_CASE: TestCase = (() => {
  */
 const SNIPPETS_OK_TEST_CASE: TestCase = {
     name: 'Snippets OK',
+
+    // This sets up the initial document as:
+    //
+    // ```
+    // function main() {
+    //     const x = someFn({ outer: { inner: }})
+    // }                                      ^(cursor position)
+    // ```
     prelude: {
         description: 'Insert three pairs',
         actions: [
@@ -539,7 +547,13 @@ const SNIPPETS_OK_TEST_CASE: TestCase = {
 
         // Insert the snippet.
         //
-        // This will cause the cursor to be moved to the $1 position.
+        // Document state after:
+        //  
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: ``, arg2: fn2(float, binary), arg3:  })}})
+        // }                                                                |----^(cursor selection)
+        // ```
         { 
             kind: 'insertSnippet', 
             snippet: new SnippetString('fn1({ arg1: `$3`, arg2: fn2(${1:float}, ${2:binary}), arg3: $4 })$0')
@@ -548,81 +562,161 @@ const SNIPPETS_OK_TEST_CASE: TestCase = {
         { kind: 'assertCursors', cursors: [ { anchor: [1, 65], active: [1, 70] } ]         },
 
         // Insert a floating point number at the first tabstop.
+        //
+        // Document state after:
+        //  
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: ``, arg2: fn2(3.14159265359, binary), arg3:  })}})
+        // }                                                                             ^(cursor position)
+        // ```
         { kind: 'typeText',      text:    '3.14159265359'                                   },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 98, 99, 100] } ] },
         { kind: 'assertCursors', cursors: [ [1, 78] ]                                       },
 
-        // (User Pressed Tab)
+        // (User presses Tab)
         //
         // Jump to the second tabstop.
         //
         // Note that 'jumpToNextTabstop' executes when Tab is pressed here because there is no line 
         // of sight to the nearest pair.
+        //
+        // Document state after:
+        //  
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: ``, arg2: fn2(3.14159265359, binary), arg3:  })}})
+        // }                                                                               |-----^(cursor position)
+        // ```
         { kind: 'jumpToNextTabstop'                                                         },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 98, 99, 100] } ] },
         { kind: 'assertCursors', cursors: [ { anchor: [1, 80], active: [1, 86]} ]           },
 
         // Insert a binary number at the second tabstop.
+        //
+        // Document state after:
+        //  
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: ``, arg2: fn2(3.14159265359, 0b101010), arg3:  })}})
+        // }                                                                                       ^(cursor position)
+        // ```
         { kind: 'typeText',      text:    '0b101010'                                          },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 100, 101, 102] } ] },
         { kind: 'assertCursors', cursors: [ [1, 88] ]                                         },
 
-        // (User Presses Tab) 
+        // (User presses Tab) 
         //
         // Jump to the third tabstop without inserting anything there yet.
         //
         // Note that 'jumpToNextTabstop' executes when Tab is pressed here because there is no line 
         // of sight to the nearest pair.
+        //
+        // Document state after:
+        //  
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: ``, arg2: fn2(3.14159265359, 0b101010), arg3:  })}})
+        // }                                                   ^(cursor position)
+        // ```
         { kind: 'jumpToNextTabstop'                                                           },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 100, 101, 102] } ] },
         { kind: 'assertCursors', cursors: [ [1, 52] ]                                         },
 
-        // (User Presses Tab) 
+        // (User presses Tab) 
         //
         // Jump to to the fourth tabstop.
         //
         // Note that 'jumpToNextTabstop' executes when Tab is pressed here because there is no line 
         // of sight to the nearest pair.
+        //
+        // Document state after:
+        //  
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: ``, arg2: fn2(3.14159265359, 0b101010), arg3:  })}})
+        // }                                                                                                ^(cursor position)
+        // ```
         { kind: 'jumpToNextTabstop'                                                           },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 100, 101, 102] } ] },
         { kind: 'assertCursors', cursors: [ [1, 97] ]                                         },
 
         // Insert a single-element array at the fourth tabstop.
+        //
+        // Document state after:
+        //  
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: ``, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello'] })}})
+        // }                                                                                                       ^(cursor position)
+        // ```
         { kind: 'typeText',      text:    "['hello"                                                             },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 97, 98, 104, 105, 109, 110, 111] } ] },
         { kind: 'assertCursors', cursors: [ [1, 104] ]                                                          },
 
-        // (User Presses Tab) 
+        // (User presses Tab) 
         //
         // Leap out of the array element's autoclosed quotes.
         //
-        // Note that Leap executes when Tab is pressed here because:
+        // Note that 'Leap' executes when Tab is pressed here because:
         //
         //  1. There is line of sight to the nearst pair.
         //  2. By default the `leaper.leap` command has higher keybinding priority than the 
         //     `jumpToNextTabstop` command.
+        //
+        // Document state after:
+        //  
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: ``, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello'] })}})
+        // }                                                                                                        ^(cursor position)
+        // ```
         { kind: 'leap'                                                                                 },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 97, 105, 109, 110, 111] } ] },
         { kind: 'assertCursors', cursors: [ [1, 105] ]                                                 },
 
         // Insert another array element.
+        //
+        // Document state after:
+        //  
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: ``, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello', 'world'] })}})
+        // }                                                                                                                ^(cursor position)
+        // ```
         { kind: 'typeText',      text:    ", 'world"                                                             },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 97, 107, 113, 114, 118, 119, 120] } ] },
         { kind: 'assertCursors', cursors: [ [1, 113] ]                                                           },
 
-        // (User Presses Shift-Tab) 
+        // (User presses Shift+Tab) 
         //
         // Jump back to the third tabstop.
+        //
+        // Document state after:
+        //  
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: ``, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello', 'world'] })}})
+        // }                                                   ^(cursor position)
+        // ```
         { kind: 'jumpToPrevTabstop'                                                           },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 118, 119, 120] } ] },
         { kind: 'assertCursors', cursors: [ [1, 52] ]                                         },        
 
         // Fill in the template string at the third tabstop.
+        //
+        // Document state after:
+        //  
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: `${168 / 4}`, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello', 'world'] })}})
+        // }                                                            ^(cursor position)
+        // ```
         { kind: 'typeText',      text:    '${168 / 4'                                                 },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 53, 61, 118, 119, 120] } ] },
         { kind: 'assertCursors', cursors: [ [1, 61] ]                                                 },        
 
-        // (User Presses Tab) 
+        // (User presses Tab) 
         //
         // Leap out of the curly braces within the template string.
         //
@@ -631,50 +725,106 @@ const SNIPPETS_OK_TEST_CASE: TestCase = {
         //  1. There is line of sight to the nearst pair.
         //  2. By default the `leaper.leap` command has higher keybinding priority than the 
         //     `jumpToNextTabstop` command.
+        //
+        // Document state after:
+        // 
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: `${168 / 4}`, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello', 'world'] })}})
+        // }                                                             ^(cursor position)
+        // ```
         { kind: 'leap'                                                                        },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 128, 129, 130] } ] },
         { kind: 'assertCursors', cursors: [ [1, 62] ]                                         },        
 
-        // (User Presses Tab) 
+        // (User presses Tab) 
         //
         // Jump to the fourth tabstop.
         //
         // Note that 'jumpToNextTabstop' executes when Tab is pressed here because there is no line 
         // of sight to the nearest pair.
+        //
+        // Document state after:
+        // 
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: `${168 / 4}`, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello', 'world'] })}})
+        // }                                                                                                          |-----------------^(cursor selection)
+        // ```
         { kind: 'jumpToNextTabstop'                                                           },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 128, 129, 130] } ] },
         { kind: 'assertCursors', cursors: [ { anchor: [1, 107], active: [1, 125] } ]          },
 
-        // (User Presses Tab) 
+        // (User presses Tab) 
         //
-        // Jump out of the snippet.
+        // Jump to the final tabstop.
         //
         // Note that 'jumpToNextTabstop' executes when Tab is pressed here because there is no line 
         // of sight to the nearest pair.
+        //
+        // Document state after:
+        // 
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: `${168 / 4}`, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello', 'world'] })}})
+        // }                                                                                                                               ^(cursor position)
+        // ```
         { kind: 'jumpToNextTabstop'                                                           },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 128, 129, 130] } ] },
         { kind: 'assertCursors', cursors: [ [1, 128] ]                                        },
 
         // Add spacing.
+        //
+        // Document state after:
+        // 
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: `${168 / 4}`, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello', 'world'] }) }})
+        // }                                                                                                                                ^(cursor position)
+        // ```
         { kind: 'typeText',      text:    ' '                                                 },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 129, 130, 131] } ] },
         { kind: 'assertCursors', cursors: [ [1, 129] ]                                        },
 
-        // (User Presses Tab)
+        // (User presses Tab)
         // 
         // Jump out of the third remaining pair.
+        //
+        // Document state after:
+        // 
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: `${168 / 4}`, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello', 'world'] }) }})
+        // }                                                                                                                                 ^(cursor position)
+        // ```
         { kind: 'leap'                                                               },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 130, 131] } ] },
         { kind: 'assertCursors', cursors: [ [1, 130] ]                               },
 
-        // Add more spacing
+        // Add more spacing.
+        //
+        // Document state after:
+        // 
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: `${168 / 4}`, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello', 'world'] }) } })
+        // }                                                                                                                                  ^(cursor position)
+        // ```
         { kind: 'typeText',      text:    ' '                                        },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 131, 132] } ] },
         { kind: 'assertCursors', cursors: [ [1, 131] ]                               },
 
-        // (User Presses Tab)
+        // (User presses Tab)
         // 
         // Jump out of the second remaining pair.
+        //
+        // Document state after:
+        // 
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: `${168 / 4}`, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello', 'world'] }) } })
+        // }                                                                                                                                   ^(cursor position)
+        // ```
         { kind: 'leap'                                                      },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 132] } ] },
         { kind: 'assertCursors', cursors: [ [1, 132] ]                      },
@@ -682,11 +832,27 @@ const SNIPPETS_OK_TEST_CASE: TestCase = {
         // (User Presses Tab)
         // 
         // Jump out of the final pair.
+        //
+        // Document state after:
+        // 
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: `${168 / 4}`, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello', 'world'] }) } })
+        // }                                                                                                                                    ^(cursor position)
+        // ```
         { kind: 'leap'                                                },
         { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
         { kind: 'assertCursors', cursors: [ [1, 133] ]                },
 
         // Complete the line with a semicolon at the end.
+        //
+        // Document state after:
+        // 
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: `${168 / 4}`, arg2: fn2(3.14159265359, 0b101010), arg3: ['hello', 'world'] }) } });
+        // }                                                                                                                                     ^(cursor position)
+        // ```
         { kind: 'typeText',      text:    ';'                         },
         { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
         { kind: 'assertCursors', cursors: [ [1, 134] ]                },
