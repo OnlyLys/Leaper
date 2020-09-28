@@ -445,6 +445,18 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE: TestCase = (() => 
  */
 const AUTOCOMPLETIONS_OK_TEST_CASE: TestCase = (() => {
     const name = 'Autocompletions OK';
+
+    // This sets up the document:
+    //
+    // ```
+    // function main(){
+    //     const reallyLongVariableName = 10;
+    //     [[[[[[[[[[]]]]]]]]]]
+    // }
+    // ```
+    //
+    // Note that in reality when we insert pairs with the 'insertPair' action, the pairs are 
+    // randomly selected. However for notational convenience, we use `[]` to represent pairs.
     const prelude = {
         description: 'Insert multiple pairs and a variable name that we can use to autocomplete',
         actions: [
@@ -462,22 +474,40 @@ const AUTOCOMPLETIONS_OK_TEST_CASE: TestCase = (() => {
     const actions: Action[]   = [];
     const pairs: CompactPairs = [ { line: 2, sides: range(4, 24) } ];
 
-    // 1. Autocomplete the variable name and check that all pairs are correctly tracked.
-    actions.push({ kind: 'typeText', text: 'really' });
+    // Autocomplete the variable name and check that all pairs are correctly tracked.
+    //
+    // Document state after:
+    // 
+    // ```
+    // function main(){
+    //     const reallyLongVariableName = 10;
+    //     [[[[[[[[[[reallyLongVariableName]]]]]]]]]]
+    // }
+    // ```
+    actions.push({ kind: 'typeText', text: 'really'   });
     actions.push({ kind: 'triggerAndAcceptSuggestion' });
     sliceAdd(pairs[0].sides, 10, 20, 22);
-    actions.push({ kind: 'assertPairs',   pairs: clonePairs(pairs)  }); 
-    actions.push({ kind: 'assertCursors', cursors: [ [2, 14 + 22] ] });
+    actions.push({ kind: 'assertPairs',   pairs:   clonePairs(pairs) }); 
+    actions.push({ kind: 'assertCursors', cursors: [ [2, 36] ]  });
 
-    // 2. As an additional check, perform another autocompletion.
+    // As an additional check, perform another autocompletion.
+    //
+    // Document state after:
+    // 
+    // ```
+    // function main(){
+    //     const reallyLongVariableName = 10;
+    //     [[[[[[[[[[reallyLongVariableName reallyLongVariableName]]]]]]]]]]
+    // }
+    // ```
     actions.push({ kind: 'setCursors',  cursors:   [ [2, 14] ] });
     actions.push({ kind: 'typeText',    text:      ' '         });
     actions.push({ kind: 'moveCursors', direction: 'left'      });
     actions.push({ kind: 'typeText',    text:      'really'    });
     actions.push({ kind: 'triggerAndAcceptSuggestion'          });
     sliceAdd(pairs[0].sides, 10, 20, 23);
-    actions.push({ kind: 'assertPairs',   pairs: clonePairs(pairs)  }); 
-    actions.push({ kind: 'assertCursors', cursors: [ [2, 14 + 23] ] });
+    actions.push({ kind: 'assertPairs',   pairs:   clonePairs(pairs) }); 
+    actions.push({ kind: 'assertCursors', cursors: [ [2, 36] ]  });
 
     return {
         name,
