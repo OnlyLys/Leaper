@@ -1,14 +1,15 @@
-import { Action, TestCase, TestGroup, CompactPosition, CompactPairsSingle } from '../../typedefs';
+import { SnippetString } from 'vscode';
+import { Action, TestCase, TestGroup } from '../../typedefs';
 
 // In this prelude that is shared across all the test cases in this module, we insert pairs in a way 
 // that simulates a typical usage scenario.
 //
-// The following initial text is created:
+// The following initial document is created:
 //
 // ```
 // function () {
 //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
-// }
+// }                                                   ^(cursor position)
 // ```
 const SHARED_PRELUDE: { description: string, actions: Action[] } = {
     description: 'Insert mock code with multiple pairs',
@@ -36,73 +37,352 @@ const SHARED_PRELUDE: { description: string, actions: Action[] } = {
     ]
 };
 
-/**
- * Generate actions to move the cursor out of pairs, one pair at a time, in a specific direction.
- * 
- * Assertions are generated along the way to check the state of the pairs and cursors after each 
- * cursor move.
- */ 
-function genIncrementalCursorMoveActions(
-    pairs:     ReadonlyArray<CompactPairsSingle>,
-    cursors:   ReadonlyArray<CompactPosition>,
-    direction: 'left' | 'right'
-): Action[] {
-    let cursor        = cursors[0];
-    const openings    = pairs[0].sides.slice(0, pairs[0].sides.length / 2);
-    const closingsRev = pairs[0].sides.slice(pairs[0].sides.length / 2).reverse();
-    const actions: Action[] = [];
-    while (openings.length > 0) {
-        actions.push({ kind: 'moveCursors', direction });
-
-        // Assume there are equal amounts of opening sides of pairs as there are closing sides.
-        const lastIndex = openings.length - 1;
-        if (cursors[0][1] === (direction === 'left' ? openings[lastIndex] : closingsRev[lastIndex])) {
-            openings.pop();
-            closingsRev.pop();
-        }
-        actions.push({ 
-            kind:  'assertPairs',   
-            pairs: [ { line: pairs[0].line, sides: [ ...openings, ...closingsRev.reverse() ] } ] 
-        });
-
-        cursor = [cursor[0], cursor[1] + direction === 'left' ? -1 : 1];
-        actions.push({ kind: 'assertCursors', cursors: [ cursor ] });
-    }
-    return actions;
-}
-
 const TEST_CASES: TestCase[] = [
+
+    // ----------------------------------------------------
+    // INVALIDATION DUE TO CURSOR MOVING OUT OF PAIR
+
     {
         name: 'Rightwards Exit of Cursor (Incremental)',
         prelude: SHARED_PRELUDE,
-        actions: genIncrementalCursorMoveActions(
-            [ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ],
-            [ [1, 52] ],
-            'right'
-        )
+        actions: [
+
+            // Move out of the nearest pair.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                                    ^(cursor position)
+            // ```
+            { kind: 'moveCursors', direction: 'right' }, 
+            { 
+                kind:  'assertPairs', 
+                pairs: [ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ] 
+            },
+            { kind: 'assertCursors', cursors: [ [1, 53] ] },
+
+            // Move to the boundary of the next nearest pair.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                                     ^(cursor position)
+            // ```
+            { kind: 'moveCursors', direction: 'right' }, 
+            { 
+                kind:  'assertPairs', 
+                pairs: [ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ] 
+            },
+            { kind: 'assertCursors', cursors: [ [1, 54] ] },
+
+            // Move out of the nearest pair.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                                      ^(cursor position)
+            // ```
+            { kind: 'moveCursors', direction: 'right' }, 
+            { 
+                kind:  'assertPairs',   
+                pairs: [ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ] 
+            },
+            { kind: 'assertCursors', cursors: [ [1, 55] ] },
+
+            // Move to the boundary of the next nearest pair.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                                       ^(cursor position)
+            // ```
+            { kind: 'moveCursors', direction: 'right' }, 
+            { 
+                kind:  'assertPairs',   
+                pairs: [ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ] 
+            },
+            { kind: 'assertCursors', cursors: [ [1, 56] ] },
+
+            // Move out of the nearest pair.
+            //
+            // Document state after:
+            //
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                                        ^(cursor position)
+            // ```
+            { kind: 'moveCursors',   direction: 'right'                                          }, 
+            { kind: 'assertPairs',   pairs:     [ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ] },
+            { kind: 'assertCursors', cursors:   [ [1, 57] ]                                      },
+
+            // Move to the boundary of the next nearest pair.
+            //
+            // Document state after:
+            //
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                                         ^(cursor position)
+            // ```
+            { kind: 'moveCursors',   direction: 'right'                                          }, 
+            { kind: 'assertPairs',   pairs:     [ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ] },
+            { kind: 'assertCursors', cursors:   [ [1, 58] ]                                      },
+
+            // Move out of the nearest pair.
+            //
+            // Document state after:
+            //
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                                          ^(cursor position)
+            // ```
+            { kind: 'moveCursors',   direction: 'right'                                  }, 
+            { kind: 'assertPairs',   pairs:     [ { line: 1, sides: [15, 16, 60, 61] } ] },
+            { kind: 'assertCursors', cursors:   [ [1, 59] ]                              },
+
+            // Move to the boundary of the next nearest pair.
+            //
+            // Document state after:
+            //
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                                           ^(cursor position)
+            // ```
+            { kind: 'moveCursors',   direction: 'right'                                  }, 
+            { kind: 'assertPairs',   pairs:     [ { line: 1, sides: [15, 16, 60, 61] } ] },
+            { kind: 'assertCursors', cursors:   [ [1, 60] ]                              },
+         
+            // Move out of the nearest pair.
+            //
+            // Document state after:
+            //
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                                            ^(cursor position)
+            // ```
+            { kind: 'moveCursors',   direction: 'right'                          }, 
+            { kind: 'assertPairs',   pairs:     [ { line: 1, sides: [15, 61] } ] },
+            { kind: 'assertCursors', cursors:   [ [1, 61] ]                      },
+
+            // Move out of the last pair.
+            //
+            // Document state after:
+            //
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                                             ^(cursor position)
+            // ```
+            { kind: 'moveCursors',   direction: 'right'                     }, 
+            { kind: 'assertPairs',   pairs:     [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors:   [ [1, 62] ]                 },
+        ]
+    },
+    {
+        name: 'Leftwards Exit of Cursor (Incremental)',
+        prelude: SHARED_PRELUDE,
+        actions: [
+
+            // Move to the boundary of the nearest pair.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                              ^(cursor position)
+            // ```
+            { kind: 'moveCursors', direction: 'left', repetitions: 5 }, 
+            { 
+                kind:  'assertPairs', 
+                pairs: [ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ] 
+            },
+            { kind: 'assertCursors', cursors: [ [1, 47] ] },
+
+            // Move out of the nearest pair.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                             ^(cursor position)
+            // ```
+            { kind: 'moveCursors', direction: 'left' },
+            { 
+                kind:  'assertPairs', 
+                pairs: [ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ] 
+            },
+            { kind: 'assertCursors', cursors: [ [1, 46] ] },
+
+            // Move to the boundary of the next nearest pair.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                ^(cursor position)
+            // ```
+            { kind: 'moveCursors', direction: 'left', repetitions: 13 },
+            { 
+                kind:  'assertPairs', 
+                pairs: [ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ] 
+            },
+            { kind: 'assertCursors', cursors: [ [1, 33] ] },
+
+            // Move out of the nearest pair.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                               ^(cursor position)
+            // ```
+            { kind: 'moveCursors', direction: 'left' },
+            { 
+                kind:  'assertPairs', 
+                pairs: [ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ] 
+            },
+            { kind: 'assertCursors', cursors: [ [1, 32] ] },
+
+            // Move to the boundary of the next nearest pair.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                              ^(cursor position)
+            // ```
+            { kind: 'moveCursors', direction: 'left' },
+            { 
+                kind:  'assertPairs', 
+                pairs: [ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ] 
+            },
+            { kind: 'assertCursors', cursors: [ [1, 31] ] },
+
+            // Move out of the nearest pair.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                             ^(cursor position)
+            // ```
+            { kind: 'moveCursors',   direction: 'left'                                           },
+            { kind: 'assertPairs',   pairs:     [ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ] },
+            { kind: 'assertCursors', cursors:   [ [1, 30] ]                                      },
+
+            // Move to the boundary of the next nearest pair.
+            //
+            // Document state after:
+            //
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                       ^(cursor position)
+            // ```
+            { kind: 'moveCursors',   direction: 'left', repetitions: 6                           },
+            { kind: 'assertPairs',   pairs:     [ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ] },
+            { kind: 'assertCursors', cursors:   [ [1, 24] ]                                      },
+                
+            // Move out of the nearest pair.
+            //
+            // Document state after:
+            //
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                      ^(cursor position)
+            // ```
+            { kind: 'moveCursors',   direction: 'left'                                   },
+            { kind: 'assertPairs',   pairs:     [ { line: 1, sides: [15, 16, 60, 61] } ] },
+            { kind: 'assertCursors', cursors:   [ [1, 23] ]                              },
+
+            // Move to the boundary of the next nearest pair.
+            //
+            // Document state after:
+            //
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                ^(cursor position)
+            // ```
+            { kind: 'moveCursors',   direction: 'left', repetitions: 6                   },
+            { kind: 'assertPairs',   pairs:     [ { line: 1, sides: [15, 16, 60, 61] } ] },
+            { kind: 'assertCursors', cursors:   [ [1, 17] ]                              },
+ 
+            // Move out of the nearest pair.
+            //
+            // Document state after:
+            //
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }               ^(cursor position)
+            // ```
+            { kind: 'moveCursors',   direction: 'left'                           },
+            { kind: 'assertPairs',   pairs:     [ { line: 1, sides: [15, 61] } ] },
+            { kind: 'assertCursors', cursors:   [ [1, 16] ]                      },
+
+            // Move out of the last pair.
+            //
+            // Document state after:
+            //
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }              ^(cursor position)
+            // ```
+            { kind: 'moveCursors',   direction: 'left'                      },
+            { kind: 'assertPairs',   pairs:     [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors:   [ [1, 15] ]                 },
+        ]
     },
     {
         name: 'Rightwards Exit of Cursor (in One Go)',
         prelude: SHARED_PRELUDE,
         actions: [
+
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }                                                             ^(cursor position)
+            // ```
             { kind: 'setCursors',    cursors: [ [1, 62] ]                 },
             { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
             { kind: 'assertCursors', cursors: [ [1, 62] ]                 },
         ]
     },
     {
-        name: 'Leftwards Exit of Cursor (Incremental)',
-        prelude: SHARED_PRELUDE,
-        actions: genIncrementalCursorMoveActions(
-            [ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ],
-            [ [1, 52] ],
-            'left'
-        )
-    },
-    {
         name: 'Leftwards Exit of Cursor (in One Go)',
         prelude: SHARED_PRELUDE,
         actions: [
+
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }              ^(cursor position)
+            // ```
             { kind: 'setCursors',    cursors: [ [1, 16] ]                 },
             { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
             { kind: 'assertCursors', cursors: [ [1, 16] ]                 },
@@ -112,6 +392,15 @@ const TEST_CASES: TestCase[] = [
         name: 'Upwards Exit of Cursor',
         prelude: SHARED_PRELUDE,
         actions: [
+
+            // Document state after:
+            // 
+            // ```          
+            // function () {
+            //              ^(cursor position)
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }
+            // ```
             { kind: 'moveCursors',   direction: 'up'                        },
             { kind: 'assertPairs',   pairs:     [ { line: -1, sides: [] } ] },
             { kind: 'assertCursors', cursors:   [ [0, 13] ]                 },
@@ -121,11 +410,24 @@ const TEST_CASES: TestCase[] = [
         name: 'Downwards Exit of Cursor',
         prelude: SHARED_PRELUDE,
         actions: [
+
+            // Document state after:
+            // 
+            // ```          
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+            // }
+            //  ^(cursor position)
+            // ```
             { kind: 'moveCursors',   direction: 'down'                      },
             { kind: 'assertPairs',   pairs:     [ { line: -1, sides: [] } ] },
             { kind: 'assertCursors', cursors:   [ [2, 1] ]                  },
         ]
     },
+
+    // ----------------------------------------------------
+    // INVALIDATION DUE TO EITHER SIDE OF PAIR BEING DELETED
+
     {
         name: 'Deletion of Opening Side',
         prelude: SHARED_PRELUDE,
@@ -133,15 +435,13 @@ const TEST_CASES: TestCase[] = [
 
             // Move to the opening side of the first pair and then backspace it.
             //
-            // Line before:
+            // Document state after: 
             //
-            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
-            //                                                     ^(cursor position)
-            //
-            // Line after: 
-            //
+            // ```
+            // function () {
             //     console.log({ obj: { arr: [ { prop: someFn1, 20) } ] } }); // Log object to console.
-            //                                               ^(cursor position)
+            // }                                             ^(cursor position)
+            // ```
             { kind: 'moveCursors',   direction: 'left', repetitions: 5                                       },
             { kind: 'backspace'                                                                              },
             { kind: 'assertPairs',   pairs: [ { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } ] },
@@ -149,60 +449,52 @@ const TEST_CASES: TestCase[] = [
 
             // Overwrite text including the third and fourth of the remaining pairs.
             //
-            // Line before: 
+            // Document state after:
             //
-            //     console.log({ obj: { arr: [ { prop: someFn1, 20) } ] } }); // Log object to console.
-            //                                               ^(cursor position)
-            //
-            // Line after: 
-            //
+            // ```
+            // function () {
             //     console.log({ obj: cheesecake{ prop: someFn1, 20) } ] } }); // Log object to console.
-            //                                                ^(cursor position)
+            // }                                              ^(cursor position)
+            // ```
             { kind: 'replaceText',   replace: { start: [1, 23], end: [1, 32] }, insert: 'cheesecake' },
             { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 16, 33, 54, 60, 61] } ]       },
             { kind: 'assertCursors', cursors: [ [1, 47] ]                                            },
 
             // Overwrite some text including the first of the remaining pairs. 
             //
-            // Line before: 
+            // Document state after:
             //
-            //     console.log({ obj: cheesecake{ prop: someFn1, 20) } ] } }); // Log object to console.
-            //                                                ^(cursor position)
-            //
-            // Line after: 
-            // 
+            // ```
+            // function () {
             //     { obj: cheesecake{ prop: someFn1, 20) } ] } }); // Log object to console.
-            //                                    ^(cursor position)
+            // }                                  ^(cursor position)
+            // ```
             { kind: 'replaceText',   replace: { start: [1, 4], end: [1, 16] }, insert: '' },
             { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [4, 21, 42, 48] } ]     },
             { kind: 'assertCursors', cursors: [ [1, 35] ]                                 },
 
             // Backspace until the second of the remaining pairs is deleted.
             //
-            // Line before:
+            // Document state after:
             //
-            //     { obj: cheesecake{ prop: someFn1, 20) } ] } }); // Log object to console.
-            //                                    ^(cursor position)
-            //
-            // Line after:
-            //     
+            // ```
+            // function () {
             //     { obj: cheesecake1, 20) } ] } }); // Log object to console.
-            //                      ^(cursor position)
+            // }                    ^(cursor position)
+            // ```
             { kind: 'backspace',     repetitions: 14                              },
             { kind: 'assertPairs',   pairs:       [ { line: 1, sides: [4, 34] } ] },
             { kind: 'assertCursors', cursors:     [ [1, 21] ]                     },
 
             // Overwrite first pair.
             //
-            // Line before:
+            // Document state after:
             //
-            //     { obj: cheesecake1, 20) } ] } }); // Log object to console.
-            //                      ^(cursor position)
-            //
-            // Line after:
-            //
+            // ```
+            // function () {
             //     rabbit obj: cheesecake1, 20) } ] } }); // Log object to console.
-            //                           ^(cursor position)
+            // }                         ^(cursor position)
+            // ```
             { kind: 'replaceText',   replace: { start: [1, 4], end: [1, 5] }, insert: 'rabbit' },
             { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ]                      },
             { kind: 'assertCursors', cursors: [ [1, 26] ]                                      },
@@ -215,80 +507,74 @@ const TEST_CASES: TestCase[] = [
 
             // Delete right the closing character of the first pair. 
             //
-            // Line before:
+            // Document state after:
             //
-            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
-            //                                                     ^(cursor position)
-            //
-            // Line after: 
-            //
+            // ```
+            // function () {
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20 } ] } }); // Log object to console.
-            //                                                     ^(cursor position)
+            // }                                                   ^(cursor position)
+            // ```
             { kind: 'deleteRight'                                                                            },
             { kind: 'assertPairs',   pairs: [ { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } ] },
             { kind: 'assertCursors', cursors: [ [1, 52] ]                                                    },
 
             // Overwrite text including the third and fourth of the remaining pairs.
             //
-            // Line before:
+            // Document state after:
             //
-            //     console.log({ obj: { arr: [ { prop: someFn(1, 20 } ] } }); // Log object to console.
-            //                                                     ^(cursor position)
-            //
-            // Line after:
-            //
+            // ```
+            // function () {
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20 } cheesecake}); // Log object to console.
-            //                                                     ^(cursor position)
+            // }                                                   ^(cursor position)
+            // ```
             { kind: 'replaceText',   replace: { start: [1, 55], end: [1, 59] }, insert: 'cheesecake' },
             { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 16, 32, 53, 65, 66] } ]       },
             { kind: 'assertCursors', cursors: [ [1, 52] ]                                            },
 
             // Overwrite some text including the first of the remaining pairs.
             //
-            // Line before:
+            // Document state after:
             //
-            //     console.log({ obj: { arr: [ { prop: someFn(1, 20 } cheesecake}); // Log object to console.
-            //                                                     ^(cursor position)
-            //
-            // Line after:
-            //
+            // ```
+            // function () {
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20 } cheesecake}
-            //                                                     ^(cursor position)
+            // }                                                   ^(cursor position)
+            // ```
             { kind: 'replaceText',   replace: { start: [1, 66], end: [1, 94] }, insert: '' },
             { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [16, 32, 53, 65] } ]     },
             { kind: 'assertCursors', cursors: [ [1, 52] ]                                  },
             
             // Delete right until the second of the remaining pairs is deleted.
             //
-            // Line before:
+            // Document state after:
             //
-            //     console.log({ obj: { arr: [ { prop: someFn(1, 20 } cheesecake}
-            //                                                     ^(cursor position)
-            // 
-            // Line after:
-            //
+            // ```
+            // function () {
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20 cheesecake}
-            //                                                     ^(cursor position)
+            // }                                                   ^(cursor position)
+            // ```
             { kind: 'deleteRight',   repetitions: 2                                },
             { kind: 'assertPairs',   pairs:       [ { line: 1, sides: [16, 63] } ] },
             { kind: 'assertCursors', cursors:     [ [1, 52] ]                      },
             
             // Overwrite text including the final pair.
             //
-            // Line before:
+            // Document state after:
             //
-            //     console.log({ obj: { arr: [ { prop: someFn(1, 20 cheesecake}
-            //                                                     ^(cursor position)
-            //
-            // Line after:
-            //
+            // ```
+            // function () {
             //    console.log({rabbit
-            //                ^(cursor position)
+            // }              ^(cursor position)
+            // ```
             { kind: 'replaceText',   replace: { start: [1, 17], end: [1, 64] }, insert: 'rabbit' },
             { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ]                        },
             { kind: 'assertCursors', cursors: [ [1, 23] ]                                        },
         ]
     },
+
+    // ----------------------------------------------------
+    // INVALIDATION DUE TO SIDES OF PAIR BEING ON DIFFERENT LINES
+
     {
         name: 'Multi-line Text Inserted Between Pairs',
         prelude: SHARED_PRELUDE,
@@ -296,30 +582,24 @@ const TEST_CASES: TestCase[] = [
 
             // Indent the text after the first pair.
             //
-            // Line before:
+            // Document state after:
             //
-            //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
-            //                                                     ^(cursor position) 
-            //
-            // Lines after:
-            // 
+            // ```
+            // function () {
             //    console.log(
             //        { obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
-            //                                            ^(cursor position)
+            // }                                          ^(cursor position)
+            // ```
             { kind: 'insertText',    position: [1, 16], text: '\n\t\t'                                         },
             { kind: 'assertPairs',   pairs:    [ { line: 2, sides: [8, 15, 22, 24, 38, 44, 46, 48, 50, 52] } ] },
             { kind: 'assertCursors', cursors:  [ [2, 44] ]                                                     },
 
             // Replace the text between the second and third remaining pairs with multiline text.
             //
-            // Lines before:
+            // Document state after:
             //
-            //    console.log(
-            //        { obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
-            //                                            ^(cursor position)
-            //
-            // Lines after:
-            //
+            // ```
+            // function () {
             //     console.log(
             //         { obj: { 
             //             Mary
@@ -327,7 +607,8 @@ const TEST_CASES: TestCase[] = [
             //             a
             //             little
             //             lamb [ { prop: someFn(1, 20) } ] } }); // Log object to console.
-            //                                        ^(cursor position)
+            // }                                      ^(cursor position)
+            // ```
             { 
                 kind:    'replaceText', 
                 replace: { start: [2, 17], end: [2, 21] }, 
@@ -338,19 +619,10 @@ const TEST_CASES: TestCase[] = [
 
             // Type in a newline at the cursor position.
             //
-            // Lines before:
+            // Document state after:
             //
-            //     console.log(
-            //         { obj: { 
-            //             Mary
-            //             had
-            //             a
-            //             little
-            //             lamb [ { prop: someFn(1, 20) } ] } }); // Log object to console.
-            //                                        ^(cursor position)
-            //
-            // Lines after (with Typescript auto-indentation applied):
-            //
+            // ```
+            // function () {
             //     console.log(
             //         { obj: { 
             //             Mary
@@ -359,10 +631,130 @@ const TEST_CASES: TestCase[] = [
             //             little
             //             lamb [ { prop: someFn(1, 20
             //                 ) } ] } }); // Log object to console.
-            //                 ^(cursor position)
+            // }                ^(cursor position)
+            // ```
+            //
+            // (Note that auto-indentation of Typescript applies).
             { kind: 'typeText',      text:    '\n'                        },
             { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
             { kind: 'assertCursors', cursors: [ [8, 16] ]                 },
+        ]
+    },
+    {
+        name: 'Multi-line Snippet Inserted Between Pairs',
+        prelude: SHARED_PRELUDE,
+        actions: [
+
+            // Delete the `20` from the second argument of `someFn`.
+            //
+            // Document state after:
+            //
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, ) } ] } }); // Log object to console.
+            // }                                                 ^(cursor position)
+            // ```
+            { kind: 'backspace', repetitions: 2 },
+            { 
+                kind:  'assertPairs', 
+                pairs: [ { line: 1, sides: [15, 16, 23, 30, 32, 46, 50, 52, 54, 56, 58, 59] } ] 
+            },
+            { kind: 'assertCursors', cursors: [ [1, 50] ] },
+
+            // Type in an array of numbers.
+            //
+            // Document state after:
+            //
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3]) } ] } }); // Log object to console.
+            // }                                                             ^(cursor position)
+            // ```
+            { kind: 'typeText', text: '[-1, -2, -3]' },
+            { 
+                kind:  'assertPairs', 
+                pairs: [ { line: 1, sides: [15, 16, 23, 30, 32, 46, 62, 64, 66, 68, 70, 71] } ] 
+            },
+            { kind: 'assertCursors', cursors: [ [1, 61] ] },
+
+            // Insert a multi-line snippet.
+            // 
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, prev) => {
+            //                                                                        |--^(cursor selection)  
+            //     }, init)) } ] } }); // Log object to console.
+            // }                                                            
+            // ```
+            { 
+                kind:    'insertSnippet', 
+                snippet: new SnippetString('.reduce((${1:acc}, ${2:prev}) => {\n    $3\n}, ${4:init})$0') 
+            },
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ]              },
+            { kind: 'assertCursors', cursors: [ { anchor: [1, 71], active: [1, 74] } ] },
+
+            // Make sure that the snippet still works by jumping to the second tabstop.
+            // 
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, prev) => {
+            //                                                                             |---^(cursor selection)
+            //     }, init)) } ] } }); // Log object to console.
+            // }                                                            
+            // ```
+            { kind: 'jumpToNextTabstop'                                                },
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ]              },
+            { kind: 'assertCursors', cursors: [ { anchor: [1, 76], active: [1, 80] } ] },
+
+            // Make sure that the snippet still works by jumping to the third tabstop.
+            // 
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, prev) => {
+            //                                                                              
+            //         ^(cursor position)
+            //     }, init)) } ] } }); // Log object to console.
+            // }                                                            
+            // ```
+            { kind: 'jumpToNextTabstop'                                   },
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors: [ [2, 8] ]                  },
+
+            // Make sure that the snippet still works by jumping to the fourth tabstop.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, prev) => {
+            //         
+            //     }, init)) } ] } }); // Log object to console.
+            // }      |---^(cursor selection)
+            // ```
+            { kind: 'jumpToNextTabstop'                                               },
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ]             },
+            { kind: 'assertCursors', cursors: [ { anchor: [3, 7], active: [3, 11] } ] },
+
+            // Make sure that the snippet still works by jumping to the final tabstop.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function () {
+            //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, prev) => {
+            //         
+            //     }, init)) } ] } }); // Log object to console.
+            // }           ^(cursor position)
+            // ```
+            { kind: 'jumpToNextTabstop'                                   },
+            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+            { kind: 'assertCursors', cursors: [ [3, 12] ]                 },
         ]
     }
 ];
