@@ -13,7 +13,7 @@ import { SnippetString } from 'vscode';
  * kind of text insertions are tested in the `pair-invalidation.ts` module.
  */
 const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE: TestCase = (() => {
-    const name    = 'Single-Line Text Modifications Between Pairs';
+    const name = 'Single-Line Text Modifications Between Pairs';
 
     // This sets up the initial document as:
     //
@@ -444,7 +444,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE: TestCase = (() => 
  * Test case to check whether this extension can handle autocompleted text insertions between pairs.
  */
 const AUTOCOMPLETIONS_OK_TEST_CASE: TestCase = (() => {
-    const name    = 'Autocompletions OK';
+    const name = 'Autocompletions OK';
     const prelude = {
         description: 'Insert multiple pairs and a variable name that we can use to autocomplete',
         actions: [
