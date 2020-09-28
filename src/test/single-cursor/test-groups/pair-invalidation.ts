@@ -18,7 +18,7 @@ const SHARED_PRELUDE: { description: string, actions: Action[] } = {
             position: [0, 0],
             text:     'function () {\n    ; // Log object to console.\n}'
         },
-        { kind: 'setCursors',  cursors:   [ [2, 4] ]           }, 
+        { kind: 'setCursors',  cursors:   [ [1, 4] ]           }, 
         { kind: 'typeText',    text:      'console.log({  '    },
         { kind: 'moveCursors', direction: 'left',              },
         { kind: 'typeText',    text:      'obj: {  '           },
