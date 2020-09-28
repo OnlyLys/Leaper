@@ -347,7 +347,7 @@ const TEST_CASES: TestCase[] = [
             //             a
             //             little
             //             lamb [ { prop: someFn(1, 20) } ] } }); // Log object to console.
-            //                                        ^(cursor position)//
+            //                                        ^(cursor position)
             //
             // Lines after (with Typescript auto-indentation applied):
             //
