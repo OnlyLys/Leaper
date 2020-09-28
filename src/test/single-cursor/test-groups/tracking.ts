@@ -2,8 +2,9 @@
 //! against regressions since at one point this extension was not able track pairs once non-ASCII
 //! text was involved.
 
-import { Action, CompactCursors, CompactPairs, TestCase, TestGroup } from '../../typedefs';
+import { Action, CompactPairs, TestCase, TestGroup } from '../../typedefs';
 import { clonePairs, range, sliceAdd, sliceSub } from '../../utilities';
+import { SnippetString } from 'vscode';
 
 /**
  * Test case to check whether this extension can handle single-line text modifications between pairs.
@@ -283,10 +284,187 @@ const AUTOCOMPLETIONS_OK_TEST_CASE: TestCase = (() => {
     };
 })();
 
+/**
+ * Test case to check whether this extension can handle snippet text insertions between pairs.
+ * 
+ * Note that because multi-line text insertions between pairs cause pairs to be untracked, 
+ * multi-line snippets also cause pairs to be untracked, and are therefore tested in the 
+ * `pair-invalidation.ts` module.
+ */
+const SNIPPETS_OK_TEST_CASE: TestCase = {
+    name: 'Snippets OK',
+    prelude: {
+        description: 'Insert three pairs',
+        actions: [
+            { kind: 'typeText',      text:    'function main() {\n    const x = \n}'           },
+            { kind: 'setCursors',    cursors: [ [1, 14] ]                                      },
+            { kind: 'typeText',      text:    'someFn({ outer: { inner: '                      },
+            { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 39, 40, 41] } ] },
+            { kind: 'assertCursors', cursors: [ [1, 39] ]                                      },
+        ]
+    },
+    actions: [
+
+        // Insert the snippet.
+        //
+        // This will cause the cursor to be moved to the $1 position.
+        { 
+            kind: 'insertSnippet', 
+            snippet: new SnippetString('fn1({ arg1: `$3`, arg2: fn2(${1:float}, ${2:binary}), arg3: $4 })$0')
+        },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 90, 91, 92] } ] },
+        { kind: 'assertCursors', cursors: [ { anchor: [1, 65], active: [1, 70] } ]         },
+
+        // Insert a floating point number at the first tabstop.
+        { kind: 'typeText',      text:    '3.14159265359'                                   },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 98, 99, 100] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 78] ]                                       },
+
+        // (User Pressed Tab)
+        //
+        // Jump to the second tabstop.
+        //
+        // Note that 'jumpToNextTabstop' executes when Tab is pressed here because there is no line 
+        // of sight to the nearest pair.
+        { kind: 'jumpToNextTabstop'                                                         },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 98, 99, 100] } ] },
+        { kind: 'assertCursors', cursors: [ { anchor: [1, 80], active: [1, 86]} ]           },
+
+        // Insert a binary number at the second tabstop.
+        { kind: 'typeText',      text:    '0b101010'                                          },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 100, 101, 102] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 88] ]                                         },
+
+        // (User Presses Tab) 
+        //
+        // Jump to the third tabstop without inserting anything there yet.
+        //
+        // Note that 'jumpToNextTabstop' executes when Tab is pressed here because there is no line 
+        // of sight to the nearest pair.
+        { kind: 'jumpToNextTabstop'                                                           },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 100, 101, 102] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 52] ]                                         },
+
+        // (User Presses Tab) 
+        //
+        // Jump to to the fourth tabstop.
+        //
+        // Note that 'jumpToNextTabstop' executes when Tab is pressed here because there is no line 
+        // of sight to the nearest pair.
+        { kind: 'jumpToNextTabstop'                                                           },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 100, 101, 102] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 97] ]                                         },
+
+        // Insert a single-element array at the fourth tabstop.
+        { kind: 'typeText',      text:    "['hello"                                                             },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 97, 98, 104, 105, 109, 110, 111] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 104] ]                                                          },
+
+        // (User Presses Tab) 
+        //
+        // Leap out of the array element's autoclosed quotes.
+        //
+        // Note that Leap executes when Tab is pressed here because:
+        //
+        //  1. There is line of sight to the nearst pair.
+        //  2. By default the `leaper.leap` command has higher keybinding priority than the 
+        //     `jumpToNextTabstop` command.
+        { kind: 'leap'                                                                                 },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 97, 105, 109, 110, 111] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 105] ]                                                 },
+
+        // Insert another array element.
+        { kind: 'typeText',      text:    ", 'world"                                                             },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 97, 107, 113, 114, 118, 119, 120] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 113] ]                                                           },
+
+        // (User Presses Shift-Tab) 
+        //
+        // Jump back to the third tabstop.
+        { kind: 'jumpToPrevTabstop'                                                           },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 118, 119, 120] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 52] ]                                         },        
+
+        // Fill in the template string at the third tabstop.
+        { kind: 'typeText',      text:    '${168 / 4'                                                 },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 53, 61, 118, 119, 120] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 61] ]                                                 },        
+
+        // (User Presses Tab) 
+        //
+        // Leap out of the curly braces within the template string.
+        //
+        // Note that Leap executes when Tab is pressed here because:
+        //
+        //  1. There is line of sight to the nearst pair.
+        //  2. By default the `leaper.leap` command has higher keybinding priority than the 
+        //     `jumpToNextTabstop` command.
+        { kind: 'leap'                                                                        },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 128, 129, 130] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 62] ]                                         },        
+
+        // (User Presses Tab) 
+        //
+        // Jump to the fourth tabstop.
+        //
+        // Note that 'jumpToNextTabstop' executes when Tab is pressed here because there is no line 
+        // of sight to the nearest pair.
+        { kind: 'jumpToNextTabstop'                                                           },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 128, 129, 130] } ] },
+        { kind: 'assertCursors', cursors: [ { anchor: [1, 107], active: [1, 125] } ]          },
+
+        // (User Presses Tab) 
+        //
+        // Jump out of the snippet.
+        //
+        // Note that 'jumpToNextTabstop' executes when Tab is pressed here because there is no line 
+        // of sight to the nearest pair.
+        { kind: 'jumpToNextTabstop'                                                           },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 128, 129, 130] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 128] ]                                        },
+
+        // Add spacing.
+        { kind: 'typeText',      text:    ' '                                                 },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 129, 130, 131] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 129] ]                                        },
+
+        // (User Presses Tab)
+        // 
+        // Jump out of the third remaining pair.
+        { kind: 'leap'                                                               },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 130, 131] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 130] ]                               },
+
+        // Add more spacing
+        { kind: 'typeText',      text:    ' '                                        },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 131, 132] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 131] ]                               },
+
+        // (User Presses Tab)
+        // 
+        // Jump out of the second remaining pair.
+        { kind: 'leap'                                                      },
+        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 132] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 132] ]                      },
+
+        // (User Presses Tab)
+        // 
+        // Jump out of the final pair.
+        { kind: 'leap'                                                },
+        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 133] ]                },
+
+        // Complete the line with a semicolon at the end.
+        { kind: 'typeText',      text:    ';'                         },
+        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
+        { kind: 'assertCursors', cursors: [ [1, 134] ]                },
+    ]
+};
 export const SINGLE_CURSOR_TRACKING_TEST_GROUP: TestGroup = {
     name: 'Tracking (Single Cursor)',
     testCases: [
         SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE,
-        AUTOCOMPLETIONS_OK_TEST_CASE
+        AUTOCOMPLETIONS_OK_TEST_CASE,
+        SNIPPETS_OK_TEST_CASE,
     ]
 };
