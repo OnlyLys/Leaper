@@ -207,6 +207,22 @@ ran across the field after it, and fortunately was just in time to see it pop do
 under the hedge.`;
 
 /**
+ * Long arbitrary text 3 used for tests.
+ * 
+ * Line count: 7
+ * Last line length: 81
+ * 
+ */
+export const LOREM_IPSUM_1 = 
+`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam facilisis, libero at viverra 
+egestas, ipsum nunc venenatis felis, at ultrices nulla ex vitae quam. Etiam convallis purus eget 
+nibh commodo, a molestie sapien rhoncus. Vestibulum ante ipsum primis in faucibus orci luctus et 
+ultrices posuere cubilia curae; Aenean at sodales elit, ut ornare arcu. Donec vulputate auctor 
+libero eu sollicitudin. Phasellus lacinia lectus sed metus consequat fringilla. Maecenas lobortis 
+mauris sed sagittis vestibulum. Aliquam et tortor nunc. Integer in sapien quis tellus dignissim 
+sodales non et mi. In egestas ac orci vitae viverra. Suspendisse non purus lacus.`;
+
+/**
  * Generate an array of sequential integers.
  */
 export function range(start: number, endNotInclusive: number): number[] {
