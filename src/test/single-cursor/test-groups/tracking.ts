@@ -3,7 +3,7 @@
 //! text was involved.
 
 import { Action, CompactPairs, TestCase, TestGroup } from '../../typedefs';
-import { clonePairs, range, sliceAdd, sliceSub } from '../../utilities';
+import { ALICE_TEXT_1, ALICE_TEXT_2, clonePairs, LOREM_IPSUM_1, range, sliceAdd, sliceSub } from '../../utilities';
 import { SnippetString } from 'vscode';
 
 /**
@@ -560,7 +560,7 @@ const SNIPPETS_OK_TEST_CASE: TestCase = {
         },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 90, 91, 92] } ] },
         { kind: 'assertCursors', cursors: [ { anchor: [1, 65], active: [1, 70] } ]         },
-
+    
         // Insert a floating point number at the first tabstop.
         //
         // Document state after:
@@ -735,7 +735,7 @@ const SNIPPETS_OK_TEST_CASE: TestCase = {
         // ```
         { kind: 'leap'                                                                        },
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 21, 30, 128, 129, 130] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 62] ]                                         },        
+        { kind: 'assertCursors', cursors: [ [1, 62] ]                                         },
 
         // (User presses Tab) 
         //
@@ -858,11 +858,375 @@ const SNIPPETS_OK_TEST_CASE: TestCase = {
         { kind: 'assertCursors', cursors: [ [1, 134] ]                },
     ]
 };
+
+/**
+ * Test case to check whether this extension can handle text modifications after pairs.
+ * 
+ * Within this test case we will be trying all possible variants of text modifications after pairs.
+ * 
+ * Text modifications after pairs are not expected to affect the pairs being tracked at all. 
+ */
+const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE: TestCase = (() => {
+    const testCase: TestCase = {
+        name: 'Text Modifications After Pairs',
+
+        // This sets up the initial document as:
+        //
+        // ```
+        // function main() {
+        //     [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        //
+        // Note that in reality when we insert pairs with the 'insertPair' action, the pairs are 
+        // randomly selected. However for notational convenience, we use `[]` to represent pairs.
+        prelude: {
+            description: 'Insert multiple pairs',
+            actions: [
+                { kind: 'typeText',      text:        'function main() {\n'                },
+                { kind: 'insertPair',    repetitions: 10                                   },
+                { kind: 'assertPairs',   pairs:       [ { line: 1, sides: range(4, 24) } ] },
+                { kind: 'assertCursors', cursors:     [ [1, 14] ]                          },
+            ]
+        },
+        actions: []
+    };
+
+    // Push an action to the `actions` array, then push assertion actions to check that the pairs
+    // and cursors have not changed at all.
+    //
+    // Because the pairs and cursors are not expected to change at all, this convenience method 
+    // allows us to cut down on boilerplate, since we will be repeatedly calling assertion actions
+    // on the same `pairs` and `cursors` array.
+    const pushAction = (action: Action) => {
+        testCase.actions.push(action);
+        testCase.actions.push({ kind: 'assertPairs',   pairs:   [ { line: 1, sides: range(4, 24) } ] });
+        testCase.actions.push({ kind: 'assertCursors', cursors: [ [1, 14] ]                          });
+    };
+
+    // 1. Insert single-line text on the same line after the pairs. 
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Goodbye World 🌍! 
+    // }
+    // ```
+    pushAction({ kind: 'insertText', position: [1, 24], text: ' Goodbye World 🌍! ' });
+
+    // 2. Insert multi-line text on the same line after the pairs.
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Goodbye World 🌍! Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to 
+    // do: once or twice she had peeped into the book her sister was reading, but it had no pictures or 
+    // conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'
+    // 
+    // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
+    // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+    // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+    // }
+    // ```
+    pushAction({ kind: 'insertText', position: [1, 43], text: ALICE_TEXT_1 });
+    
+    // 3. Delete single-line text on the same line after the pairs.
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Goodbye World 🌍! Alice was tired of sitting by her sister on the bank, and of having nothing to 
+    // do: once or twice she had peeped into the book her sister was reading, but it had no pictures or 
+    // conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'
+    // 
+    // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
+    // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+    // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+    // }
+    // ```
+    pushAction({ kind: 'replaceText', replace: { start: [1, 53], end: [1, 75] }, insert: '' });
+
+    // 4. Delete multi-line text starting on the same line after the pairs and ending on line below.
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Goodbye World 🌍! Alice
+    //
+    // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
+    // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+    // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+    // }
+    // ``` 
+    pushAction({ kind: 'replaceText', replace: { start: [1, 48], end: [3, 104] }, insert: '' });
+
+    // 5. Replace single-line text on the same line after the pairs with single-line text.
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! Alice
+    //        
+    // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
+    // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+    // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+    // }
+    // ```
+    pushAction({ kind: 'replaceText', replace: { start: [1, 25], end: [1, 32] }, insert: 'Hello' });
+
+    // 6. Replace single-line text on the same line after the pairs with multi-line text.
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam facilisis, libero at viverra 
+    // egestas, ipsum nunc venenatis felis, at ultrices nulla ex vitae quam. Etiam convallis purus eget 
+    // nibh commodo, a molestie sapien rhoncus. Vestibulum ante ipsum primis in faucibus orci luctus et 
+    // ultrices posuere cubilia curae; Aenean at sodales elit, ut ornare arcu. Donec vulputate auctor 
+    // libero eu sollicitudin. Phasellus lacinia lectus sed metus consequat fringilla. Maecenas lobortis 
+    // mauris sed sagittis vestibulum. Aliquam et tortor nunc. Integer in sapien quis tellus dignissim 
+    // sodales non et mi. In egestas ac orci vitae viverra. Suspendisse non purus lacus.
+    //
+    // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
+    // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+    // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+    // }
+    // ``` 
+    pushAction({ kind: 'replaceText', replace: { start: [1, 41], end: [1, 46] }, insert: LOREM_IPSUM_1 });
+
+    // 7. Replace multi-line text starting on the same line after the pairs and ending on a line 
+    //    below with single-line text.
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! Cat 😺!
+    //
+    // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
+    // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+    // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+    // }
+    // ``` 
+    pushAction({ kind: 'replaceText', replace: { start: [1, 41], end: [7, 81] }, insert: 'Cat 😺!' });
+
+    // 8. Replace multi-line text starting on the same line after the pairs and ending on a line 
+    //    below with multi-line text.
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+    // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
+    // it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); 
+    // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
+    // hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen 
+    // a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she 
+    // ran across the field after it, and fortunately was just in time to see it pop down a large rabbit-hole 
+    // under the hedge.
+    // }
+    // ```
+    pushAction({ kind: 'replaceText', replace: { start: [1, 41], end: [5, 89] }, insert: ALICE_TEXT_2 });
+
+    // 9. Insert single-line text on a line below the pairs.
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+    // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
+    // it occurred to her that she ought to 😤 hmph 😤 have wondered at this, but at the time it all seemed quite natural); 
+    // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
+    // hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen 
+    // a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she 
+    // ran across the field after it, and fortunately was just in time to see it pop down a large rabbit-hole 
+    // under the hedge.
+    // }
+    // ```
+    pushAction({ kind: 'insertText', position: [3, 37], text: '😤 hmph 😤 ' });
+
+    // 10. Insert multi-line text on a line below the pairs.
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+    // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
+    // it occurred to her that she ought to 😤 hmph 😤 have wondered at this, but at the time it all seemed quite natural); 
+    // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
+    // hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen 
+    // a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she 
+    // ran across the field after it, and fortunately was just in time to see it pop down a large rabbit-hole 
+    // under the hedge.
+    // 
+    // Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to 
+    // do: once or twice she had peeped into the book her sister was reading, but it had no pictures or 
+    // conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'
+    // 
+    // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
+    // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+    // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+    // }
+    // ```
+    pushAction({ kind: 'insertText', position: [8, 16], text: '\n\n' + ALICE_TEXT_1 });
+
+    // 11. Delete single-line text on a line below the pairs. 
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+    // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
+    // it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); 
+    // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
+    // hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen 
+    // a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she 
+    // ran across the field after it, and fortunately was just in time to see it pop down a large rabbit-hole 
+    // under the hedge.
+    // 
+    // Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to 
+    // do: once or twice she had peeped into the book her sister was reading, but it had no pictures or 
+    // conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'
+    // 
+    // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
+    // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+    // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+    // }
+    // ```
+    pushAction({ kind: 'replaceText', replace: { start: [3, 37], end: [3, 48] }, insert: '' });
+
+    // 12. Delete multi-line text on a line below the pairs.
+    //
+    // Document text after: 
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+    // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
+    // it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); 
+    // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
+    // hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen 
+    // a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she 
+    // ran across the field after it, and fortunately was just in time to see it pop down a large rabbit-hole 
+    // under the hedge.
+    // 
+    // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
+    // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+    // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+    // }
+    // ```
+    pushAction({ kind: 'replaceText', replace: { start: [10, 0], end: [13, 0] }, insert: '' });
+
+    // 13. Replace single-line text on a line below the pairs with single-line text.
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+    // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
+    // it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); 
+    // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
+    // hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen 
+    // a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she 
+    // ran across the field after it, and fortunately was just in time to see it pop down a large rabbit-hole 
+    // under the hedge.
+    // 
+    // So she was considering 🥳🥳🥳🥳🥳🥳🥳🥳🥳🥳 for the hot day made her feel very 
+    // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+    // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+    // } 
+    // ```
+    pushAction({ kind: 'replaceText', replace: { start: [10, 23], end: [10, 61] }, insert: '🥳🥳🥳🥳🥳🥳🥳🥳🥳🥳' });
+
+    // 14. Replace single-line text on a line below the pairs with multi-line text.
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+    // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
+    // it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); 
+    // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
+    // hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen 
+    // a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she 
+    // ran across the field after it, and Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam facilisis, libero at viverra 
+    // egestas, ipsum nunc venenatis felis, at ultrices nulla ex vitae quam. Etiam convallis purus eget 
+    // nibh commodo, a molestie sapien rhoncus. Vestibulum ante ipsum primis in faucibus orci luctus et 
+    // ultrices posuere cubilia curae; Aenean at sodales elit, ut ornare arcu. Donec vulputate auctor 
+    // libero eu sollicitudin. Phasellus lacinia lectus sed metus consequat fringilla. Maecenas lobortis 
+    // mauris sed sagittis vestibulum. Aliquam et tortor nunc. Integer in sapien quis tellus dignissim 
+    // sodales non et mi. In egestas ac orci vitae viverra. Suspendisse non purus lacus.
+    // to see it pop down a large rabbit-hole 
+    // under the hedge.
+    //
+    // So she was considering 🥳🥳🥳🥳🥳🥳🥳🥳🥳🥳 for the hot day made her feel very 
+    // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+    // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+    // }
+    // ```
+    pushAction({ kind: 'replaceText', replace: { start: [7, 35], end: [7, 64] }, insert: LOREM_IPSUM_1 + '\n' });
+
+    // 15. Replace multi-line text on lines below the pairs with single-line text.
+    //
+    // Document text after:
+    // 
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+    // hear the Rabbit say to itself, 'Hey now, you're an all star!'
+    //
+    // So she was considering 🥳🥳🥳🥳🥳🥳🥳🥳🥳🥳 for the hot day made her feel very 
+    // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+    // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+    // }
+    // ```
+    pushAction({ 
+        kind:    'replaceText', 
+        replace: { start: [2, 32], end: [15, 16] }, 
+        insert:  `Hey now, you're an all star!'` 
+    });
+
+    // 16. Replace multi-line text on lines below the pairs with multi-line text.
+    //
+    // Document text after:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+    // hear the Rabbit say to There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+    // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
+    // it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); 
+    // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
+    // hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen 
+    // a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she 
+    // ran across the field after it, and fortunately was just in time to see it pop down a large rabbit-hole 
+    // under the hedge. the pleasure of making a daisy-chain would be worth the trouble of getting 
+    // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+    // }
+    // ```
+    pushAction({ kind: 'replaceText', replace: { start: [2, 23], end: [5, 27] }, insert: ALICE_TEXT_2 });
+
+    return testCase;
+})();
+
 export const SINGLE_CURSOR_TRACKING_TEST_GROUP: TestGroup = {
     name: 'Tracking (Single Cursor)',
     testCases: [
         SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE,
         AUTOCOMPLETIONS_OK_TEST_CASE,
         SNIPPETS_OK_TEST_CASE,
+        TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE,
     ]
 };
