@@ -829,7 +829,7 @@ const SNIPPETS_OK_TEST_CASE: TestCase = {
         { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [20, 132] } ] },
         { kind: 'assertCursors', cursors: [ [1, 132] ]                      },
 
-        // (User Presses Tab)
+        // (User presses Tab)
         // 
         // Jump out of the final pair.
         //
