@@ -864,7 +864,7 @@ const SNIPPETS_OK_TEST_CASE: TestCase = {
  * 
  * Within this test case we will be trying all possible variants of text modifications after pairs.
  * 
- * Text modifications after pairs are not expected to affect the pairs being tracked at all. 
+ * Text modifications after pairs are not expected to affect the cursor and the pairs being tracked.
  */
 const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE: TestCase = (() => {
     const testCase: TestCase = {
@@ -949,7 +949,8 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE: TestCase = (() => {
     // ```
     pushAction({ kind: 'replaceText', replace: { start: [1, 53], end: [1, 75] }, insert: '' });
 
-    // 4. Delete multi-line text starting on the same line after the pairs and ending on line below.
+    // 4. Delete multi-line text starting from the same line after the pairs and ending on a line 
+    //    below.
     //
     // Document text after:
     //
@@ -1000,7 +1001,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE: TestCase = (() => {
     // ``` 
     pushAction({ kind: 'replaceText', replace: { start: [1, 41], end: [1, 46] }, insert: LOREM_IPSUM_1 });
 
-    // 7. Replace multi-line text starting on the same line after the pairs and ending on a line 
+    // 7. Replace multi-line text starting from the same line after the pairs and ending on a line 
     //    below with single-line text.
     //
     // Document text after:
@@ -1016,7 +1017,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE: TestCase = (() => {
     // ``` 
     pushAction({ kind: 'replaceText', replace: { start: [1, 41], end: [7, 81] }, insert: 'Cat 😺!' });
 
-    // 8. Replace multi-line text starting on the same line after the pairs and ending on a line 
+    // 8. Replace multi-line text starting from the same line after the pairs and ending on a line 
     //    below with multi-line text.
     //
     // Document text after:
