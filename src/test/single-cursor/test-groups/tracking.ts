@@ -7,6 +7,381 @@ import { ALICE_TEXT_1, ALICE_TEXT_2, clonePairs, LOREM_IPSUM_1, range, sliceAdd,
 import { SnippetString } from 'vscode';
 
 /**
+ * Test case to check whether this extension can handle text modifications before pairs.
+ * 
+ * Within this test case we will be trying all possible variants of text modifications before pairs.
+ * 
+ * Text modifications before pairs are expected to shift the position of the cursor and the pairs.
+ */
+const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE: TestCase = {
+    name: 'Text Modifications Before Pairs',
+
+    // This sets up the initial document as:
+    //
+    // ```
+    // function main() {
+    //     [[[[[[[[[[]]]]]]]]]]
+    // }
+    // ```
+    //
+    // Note that in reality when we insert pairs with the 'insertPair' action, the pairs are 
+    // randomly selected. However for notational convenience, we use `[]` to represent pairs.
+    prelude: {
+        description: 'Insert multiple pairs',
+        actions: [
+            { kind: 'typeText',      text:        'function main() {\n'                },
+            { kind: 'insertPair',    repetitions: 10                                   },
+            { kind: 'assertPairs',   pairs:       [ { line: 1, sides: range(4, 24) } ] },
+            { kind: 'assertCursors', cursors:     [ [1, 14] ]                          },
+        ] as Action[]
+    },
+
+    actions: [
+
+        // 1. Insert single-line text on the same line before the pairs.
+        //
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const x = [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { kind: 'insertText',    position: [1, 4], text:  'const x = '           },
+        { kind: 'assertPairs',   pairs:    [ { line: 1, sides: range(14, 34) } ] },
+        { kind: 'assertCursors', cursors:  [ [1, 24] ]                           },
+
+        // 2. Insert multi-line text on the same line before the pairs.
+        //
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const x = 'Hello 😃';
+        //     let y = 10.1;
+        //     const variable = [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { 
+            kind:     'insertText', 
+            position: [1, 14], 
+            text:     `'Hello 😃';\n    let y = 10.1;\n    const variable = ` 
+        },
+        { kind: 'assertPairs',   pairs:   [ { line: 3, sides: range(21, 41) } ] },
+        { kind: 'assertCursors', cursors: [ [3, 31] ]                           },
+
+        // 3. Delete single-line text on the same line before the pairs.
+        //
+        // Document state after:
+        //
+        // ``` 
+        // function main() {
+        //     const x = 'Hello 😃';
+        //     let y = 10.1;
+        //     const var = [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { kind: 'replaceText',   replace:  { start: [3, 13], end: [3, 18] }, insert: '' },
+        { kind: 'assertPairs',   pairs:    [ { line: 3, sides: range(16, 36) } ]        },              
+        { kind: 'assertCursors', cursors:  [ [3, 26] ]                                  },              
+
+        // 4. Delete multi-line text starting from a line above and ending on the same line before 
+        //    the pairs.
+        //
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const x = 'Hello 😃';
+        //     let y = [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { kind: 'replaceText',   replace:  { start: [2, 10], end: [3, 14] }, insert: '' },
+        { kind: 'assertPairs',   pairs:    [ { line: 2, sides: range(12, 32) } ]        },
+        { kind: 'assertCursors', cursors:  [ [2, 22] ]                                  },              
+
+        // 5. Replace single-line text on the same line before the pairs with single-line text.
+        //
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const x = 'Hello 😃';
+        //     let reallyLongVariableName = [[[[[[[[[[]]]]]]]]]]
+        // } 
+        // ```
+        { 
+            kind:    'replaceText',   
+            replace: { start: [2, 8], end: [2, 9] }, 
+            insert:  'reallyLongVariableName' 
+        },
+        { kind: 'assertPairs',   pairs:   [ { line: 2, sides: range(33, 53) } ] },
+        { kind: 'assertCursors', cursors: [ [2, 43] ]                           },              
+
+        // 6. Replace single-line text on the same line before the pairs with multi-line text.
+        //
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const x = 'Hello 😃';
+        //     const s = `Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to 
+        // do: once or twice she had peeped into the book her sister was reading, but it had no pictures or 
+        // conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'
+        // 
+        // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
+        // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+        // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.`;
+        //     const a = [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { 
+            kind:    'replaceText',   
+            replace: { start: [2, 4], end: [2, 33] }, 
+            insert:  'const s = `' + ALICE_TEXT_1 + '`;\n    const a = '
+        },
+        { kind: 'assertPairs',   pairs:   [ { line: 9, sides: range(14, 34) } ] },
+        { kind: 'assertCursors', cursors: [ [9, 24] ]                           },
+
+        // 7. Replace multi-line text starting from a line above and ending on the same line before 
+        //    the pairs with single-line text.
+        //
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const x = 'Hello 😃';
+        //     const s = { first: 'Typescript 😎', second: [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { 
+            kind:    'replaceText',   
+            replace: { start: [2, 14], end: [9, 13] }, 
+            insert:  `{ first: 'Typescript 😎', second:`
+        },
+        { kind: 'assertPairs',   pairs:   [ { line: 2, sides: range(48, 68) } ] },
+        { kind: 'assertCursors', cursors: [ [2, 58] ]                           },
+
+        // 8. Replace multi-line text starting from a line above and ending on the same line before 
+        //    the pairs with multi-line text.
+        //
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const x = [
+        //         'woah',
+        //         'dude'
+        //     ]; 
+        //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { 
+            kind:    'replaceText',   
+            replace: { start: [1, 14], end: [2, 48] }, 
+            insert:  `[\n        'woah',\n        'dude'\n    ];\n    const fn = () => ['🐸', `
+        },
+        { kind: 'assertPairs',   pairs:   [ { line: 5, sides: range(28, 48) } ] },
+        { kind: 'assertCursors', cursors: [ [5, 38] ]                           },
+
+        // 9. Insert single-line text on a line above the pairs.
+        //
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const x = [
+        //         'woah',
+        //         'dude 🤯🤯🤯🤯🤯🤯🤯🤯🤯🤯'
+        //     ];
+        //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { kind: 'insertText',    position: [3, 13], text: ' 🤯🤯🤯🤯🤯🤯🤯🤯🤯🤯' },
+        { kind: 'assertPairs',   pairs:    [ { line: 5, sides: range(28, 48) } ]   },
+        { kind: 'assertCursors', cursors:  [ [5, 38] ]                             },
+
+        // 10. Insert multi-line text on a line above the pairs.
+        //
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const x = [
+        //         'woah',
+        //         'dude 🤯🤯🤯🤯🤯🤯🤯🤯🤯🤯',
+        //         'In those days',
+        //         'in those far remote days',
+        //         'in those nights',
+        //         'in those faraway nights',
+        //         'in those years',
+        //         'in those far remote years',
+        //         'at that time the wise one who knew how to speak in elaborate words lived in the Land'
+        //     ];
+        //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { 
+            kind:     'insertText', 
+            position: [3, 35], 
+            text: ',\n'
+            + `        'In those days',\n`
+            + `        'in those far remote days',\n`
+            + `        'in those nights',\n`
+            + `        'in those faraway nights',\n`
+            + `        'in those years',\n`
+            + `        'in those far remote years',\n`
+            + `        'at that time the wise one who knew how to speak in elaborate words lived in the Land'`
+        },
+        { kind: 'insertText',    position: [3, 13], text: ' 🤯🤯🤯🤯🤯🤯🤯🤯🤯🤯'  },
+        { kind: 'assertPairs',   pairs:    [ { line: 12, sides: range(28, 48) } ]   },
+        { kind: 'assertCursors', cursors:  [ [12, 38] ]                             },
+
+        // 11. Delete single-line text on a line above the pairs.
+        //
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const x = [
+        //         'woah',
+        //         'dude 🤯🤯🤯🤯🤯🤯🤯🤯🤯🤯',
+        //         'In those days',
+        //         'in those far remote days',
+        //         'in those nights',
+        //         'in those faraway nights',
+        //         'in those years',
+        //         'in those far remote years',
+        //     
+        //     ];
+        //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { kind: 'replaceText',   replace: { start: [10, 8], end: [10, 94] }, insert: '' },
+        { kind: 'assertPairs',   pairs:   [ { line: 12, sides: range(28, 48) } ]        },
+        { kind: 'assertCursors', cursors: [ [12, 38] ]                                  },
+
+        // 12. Delete multi-line text on lines above the pairs.
+        //
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const x = [
+        //         'In those days',
+        //         'in those far remote days',
+        //         'in those nights',
+        //         'in those faraway nights',
+        //         'in those years',
+        //         'in those far remote years',
+        //  
+        //     ];
+        //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { kind: 'replaceText',   replace: { start: [1, 15], end: [3, 36] }, insert: ''  },
+        { kind: 'assertPairs',   pairs:   [ { line: 10, sides: range(28, 48) } ]        },
+        { kind: 'assertCursors', cursors: [ [10, 38] ]                                  },
+
+        // 13. Replace single-line text on a line above the pairs with single-line text.
+        //
+        // Document state after:
+        //
+        // ```
+        // function primary() {
+        //     const x = [
+        //         'In those days',
+        //         'in those far remote days',
+        //         'in those nights',
+        //         'in those faraway nights',
+        //         'in those years',
+        //         'in those far remote years',
+        //  
+        //     ];
+        //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { kind: 'replaceText',   replace: { start: [0, 9], end: [0, 13] }, insert: 'primary' },
+        { kind: 'assertPairs',   pairs:   [ { line: 10, sides: range(28, 48) } ]             },
+        { kind: 'assertCursors', cursors: [ [10, 38] ]                                       },
+
+        // 14. Replace single-line text on a line above the pairs with multi-line text.
+        //
+        // Document state after:
+        //
+        // ```
+        // function primary() {
+        //     const num = 1.4561;
+        //     
+        //     const instructionsOfShuruppak = [
+        //         'In those days',
+        //         'in those far remote days',
+        //         'in those nights',
+        //         'in those faraway nights',
+        //         'in those years',
+        //         'in those far remote years',
+        //  
+        //     ];
+        //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { 
+            kind:    'replaceText', 
+            replace: { start: [1, 10], end: [1, 11] }, 
+            insert:  'num = 1.4561;\n    \n    const instructionsOfShuruppak'
+        },
+        { kind: 'assertPairs',   pairs:   [ { line: 12, sides: range(28, 48) } ] },
+        { kind: 'assertCursors', cursors: [ [12, 38] ]                           },
+
+        // 15. Replace multi-line text on lines above the pairs with single-line text.
+        //  
+        // Document state after:
+        //
+        // ```
+        // function primary() {
+        //     const num = 1.4561;
+        //      
+        //     const instructionsOfShuruppak = ['Fate is a wet bank; it can make one slip'];
+        //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        { 
+            kind:    'replaceText', 
+            replace: { start: [3, 37], end: [11, 4] }, 
+            insert:  `'Fate is a wet bank; it can make one slip'`
+        },
+        { kind: 'assertPairs',   pairs:   [ { line: 4, sides: range(28, 48) } ] },
+        { kind: 'assertCursors', cursors: [ [4, 38] ]                           },
+
+        // 16. Replace multi-line text on lines above the pairs with multi-line text.
+        //
+        // Document state after: 
+        //
+        // ```
+        // () => {
+        //     function hey() {
+        //         console.log('🙂 + 🕶 = 😎');
+        //     }
+        //     hey();
+        //     const instructionsOfShuruppak = ['Fate is a wet bank; it can make one slip'];
+        //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        {
+            kind:    'replaceText',
+            replace: { start: [0, 0], end: [2, 4] },
+            insert:  '() => {\n'
+                + '    function hey() {\n'
+                + `        console.log('🙂 + 🕶 = 😎');\n`
+                + '    }\n'
+                + '    hey();'
+        },
+        { kind: 'assertPairs',   pairs:   [ { line: 6, sides: range(28, 48) } ] },
+        { kind: 'assertCursors', cursors: [ [6, 38] ]                           },
+    ]
+};
+
+/**
  * Test case to check whether this extension can handle single-line text modifications between pairs.
  * 
  * Note that because multi-line text insertions between pairs cause pairs to be untracked, those 
@@ -1225,6 +1600,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE: TestCase = (() => {
 export const SINGLE_CURSOR_TRACKING_TEST_GROUP: TestGroup = {
     name: 'Tracking (Single Cursor)',
     testCases: [
+        TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE,
         SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE,
         AUTOCOMPLETIONS_OK_TEST_CASE,
         SNIPPETS_OK_TEST_CASE,
