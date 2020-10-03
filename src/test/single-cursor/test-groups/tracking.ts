@@ -27,13 +27,13 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE: TestCase = {
     // }
     // ```
     //
-    // Note that in reality when we insert pairs with the 'insertPair' action, the pairs are 
-    // randomly selected. However for notational convenience, we use `[]` to represent pairs.
+    // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the pairs 
+    // are randomly selected. However for notational convenience, we use `[]` to represent pairs.
     prelude: {
         description: 'Insert multiple pairs',
         actions: [
             { kind: 'typeText',      text:        'function main() {\n'                },
-            { kind: 'insertPair',    repetitions: 10                                   },
+            { kind: 'typePair',      repetitions: 10                                   },
             { kind: 'assertPairs',   pairs:       [ { line: 1, sides: range(4, 24) } ] },
             { kind: 'assertCursors', cursors:     [ [1, 14] ]                          },
         ] as Action[]
@@ -401,14 +401,14 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE: TestCase = (() => 
     //                    ^(cursor position)
     // ```
     //
-    // Note that in reality when we insert pairs with the 'insertPair' action, the pairs are 
-    // randomly selected. However for notational convenience, we use `[]` to represent pairs.
+    // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the pairs 
+    // are randomly selected. However for notational convenience, we use `[]` to represent pairs.
     const prelude = {
         description: 'Insert multiple pairs',
         actions: [
             { kind: 'typeText',      text:        '\nblah-blah\n'                      },
             { kind: 'moveCursors',   direction:   'up'                                 },
-            { kind: 'insertPair',    repetitions: 10                                   },
+            { kind: 'typePair',      repetitions: 10                                   },
             { kind: 'assertPairs',   pairs:       [ { line: 1, sides: range(9, 29) } ] },
             { kind: 'assertCursors', cursors:     [ [1, 19] ]                          },
         ] as Action[]
@@ -833,8 +833,8 @@ const AUTOCOMPLETIONS_OK_TEST_CASE: TestCase = (() => {
     // }
     // ```
     //
-    // Note that in reality when we insert pairs with the 'insertPair' action, the pairs are 
-    // randomly selected. However for notational convenience, we use `[]` to represent pairs.
+    // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the pairs 
+    // are randomly selected. However for notational convenience, we use `[]` to represent pairs.
     const prelude = {
         description: 'Insert multiple pairs and a variable name that we can use to autocomplete',
         actions: [
@@ -844,7 +844,7 @@ const AUTOCOMPLETIONS_OK_TEST_CASE: TestCase = (() => {
                 text:     'function main(){\n    const reallyLongVariableName = 10;\n    \n}'
             },
             { kind: 'setCursors',    cursors:     [ [2, 4] ]                           },
-            { kind: 'insertPair',    repetitions: 10                                   },
+            { kind: 'typePair',      repetitions: 10                                   },
             { kind: 'assertPairs',   pairs:       [ { line: 2, sides: range(4, 24) } ] },
             { kind: 'assertCursors', cursors:     [ [2, 14] ]                          },
         ] as Action[]
@@ -1256,13 +1256,14 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE: TestCase = (() => {
         // }
         // ```
         //
-        // Note that in reality when we insert pairs with the 'insertPair' action, the pairs are 
-        // randomly selected. However for notational convenience, we use `[]` to represent pairs.
+        // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
+        // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
+        // pairs.
         prelude: {
             description: 'Insert multiple pairs',
             actions: [
                 { kind: 'typeText',      text:        'function main() {\n'                },
-                { kind: 'insertPair',    repetitions: 10                                   },
+                { kind: 'typePair',      repetitions: 10                                   },
                 { kind: 'assertPairs',   pairs:       [ { line: 1, sides: range(4, 24) } ] },
                 { kind: 'assertCursors', cursors:     [ [1, 14] ]                          },
             ]

@@ -11,7 +11,7 @@ const TEST_CASES: TestCase[] = [
         prelude: {
             description: 'Insert single pair',
             actions: [
-                { kind: 'insertPair'                                             },
+                { kind: 'typePair'                                               },
                 { kind: 'assertPairs',   pairs:   [ { line: 0, sides: [0, 1] } ] },
                 { kind: 'assertCursors', cursors: [ [0, 1] ]                     },
             ]
@@ -27,7 +27,7 @@ const TEST_CASES: TestCase[] = [
         prelude: {
             description: 'Insert single pair with whitespace in between',
             actions: [
-                { kind: 'insertPair'                                               },
+                { kind: 'typePair'                                                 },
                 { kind: 'typeText',      text:      '     '                        },
                 { kind: 'moveCursors',   direction: 'left', repetitions: 5         },
                 { kind: 'assertPairs',   pairs:     [ { line: 0, sides: [0, 6] } ] },
@@ -53,7 +53,7 @@ const TEST_CASES: TestCase[] = [
 
                 // Insert pairs between some text to simulate a typical usage scenario.
                 { kind: 'setCursors',    cursors:     [ [6, 71] ]                           },
-                { kind: 'insertPair',    repetitions: 10                                    },
+                { kind: 'typePair',      repetitions: 10                                    },
                 { kind: 'assertPairs',   pairs:       [ { line: 6, sides: range(71, 91) } ] },
                 { kind: 'assertCursors', cursors:     [ [6, 81] ]                           },
             ]
@@ -98,7 +98,7 @@ const TEST_CASES: TestCase[] = [
 
                 // Insert pairs after some text to simulate a typical usage scenario.
                 ...repeatArr([
-                    { kind: 'insertPair'                                     },
+                    { kind: 'typePair'                                       },
                     { kind: 'typeText',    text:      '     '                },
                     { kind: 'moveCursors', direction: 'left', repetitions: 5 },
                 ], 6),
@@ -157,7 +157,7 @@ const TEST_CASES: TestCase[] = [
             ], 10),
 
             // Now insert 5 pairs.
-            { kind: 'insertPair',    repetitions: 5                                    },
+            { kind: 'typePair',      repetitions: 5                                    },
             { kind: 'assertPairs',   pairs:      [ { line: 2, sides: range(11, 21) } ] },
             { kind: 'assertCursors', cursors:    [ [2, 16] ]                           },
 
@@ -183,13 +183,13 @@ const TEST_CASES: TestCase[] = [
                 { kind: 'setCursors',  cursors: [ [ 2, 11 ] ] },
 
                 // Insert `{ {Hello {Typescript} is} Awesome }` into the text.
-                { kind: 'insertPair'                                                                 },
+                { kind: 'typePair'                                                                   },
                 { kind: 'typeText',      text:      '  Awesome '                                     },
                 { kind: 'moveCursors',   direction: 'left', repetitions: 9                           },
-                { kind: 'insertPair'                                                                 },
+                { kind: 'typePair'                                                                   },
                 { kind: 'typeText',      text:      'Hello  is'                                      },
                 { kind: 'moveCursors',   direction: 'left', repetitions: 3                           },
-                { kind: 'insertPair'                                                                 },
+                { kind: 'typePair'                                                                   },
                 { kind: 'typeText',      text:      'Typescript'                                     },
                 { kind: 'moveCursors',   direction: 'left', repetitions: 10                          },
                 { kind: 'assertPairs',   pairs:     [ { line: 2, sides: [12, 14, 21, 32, 36, 46] } ] },

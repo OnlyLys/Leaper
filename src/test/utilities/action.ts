@@ -6,7 +6,7 @@ import { CompactCursors, CompactPairs, CompactRange } from './compact';
  */
 export type Action = EditAction | AssertAction;
 
-export type EditAction = InsertPairAction 
+export type EditAction = TypePairAction 
                             | TypeTextAction
                             | ReplaceTextAction
                             | InsertTextAction
@@ -47,14 +47,14 @@ interface EditActionBase {
     delay?: number
 }
 
-interface InsertPairAction extends EditActionBase {
+interface TypePairAction extends EditActionBase {
 
     /** 
-     * Insert an autoclosing pair into the document. 
+     * Type an autoclosing pair into the document. 
      * 
      * The kind of autoclosing pair inserted is randomly determined.
      */
-    kind: 'insertPair';
+    kind: 'typePair';
 }
 
 interface TypeTextAction extends EditActionBase {

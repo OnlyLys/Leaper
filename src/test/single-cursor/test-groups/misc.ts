@@ -16,7 +16,7 @@ const TEST_CASES: TestCase[] = [
                 { kind: 'typeText',      text:        ALICE_TEXT_1                          },
                 { kind: 'moveCursors',   direction:   'up'                                  },
                 { kind: 'moveCursors',   direction:   'left', repetitions: 10               },
-                { kind: 'insertPair',    repetitions: 10                                    },
+                { kind: 'typePair',      repetitions: 10                                    },
                 { kind: 'assertPairs',   pairs:       [ { line: 5, sides: range(79, 90) } ] },
                 { kind: 'assertCursors', cursors:     [ [5, 89] ]                           },
             ]
