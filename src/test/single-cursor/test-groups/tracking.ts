@@ -2,9 +2,10 @@
 //! against regressions since at one point this extension was not able track pairs once non-ASCII
 //! text was involved.
 
-import { Action, CompactPairs, TestCase, TestGroup } from '../../typedefs';
-import { ALICE_TEXT_1, ALICE_TEXT_2, clonePairs, LOREM_IPSUM_1, range, sliceAdd, sliceSub } from '../../utilities';
+import { Action, CompactPairs, TestCase, TestGroup } from '../../utilities/typedefs';
+import { clonePairs, range, sliceAdd, sliceSub } from '../../utilities/other';
 import { SnippetString } from 'vscode';
+import { ALICE_TEXT_1, ALICE_TEXT_2, LOREM_IPSUM_1 } from '../../utilities/placeholder-texts';
 
 /**
  * Test case to check whether this extension can handle text modifications before pairs.

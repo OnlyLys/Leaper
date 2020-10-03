@@ -1,5 +1,6 @@
-import { TestCase, TestGroup } from '../../typedefs';
-import { ALICE_TEXT_1, range } from '../../utilities';
+import { TestCase, TestGroup } from '../../utilities/typedefs';
+import { range } from '../../utilities/other';
+import { ALICE_TEXT_1 } from '../../utilities/placeholder-texts';
 
 const TEST_CASES: TestCase[] = [
 
@@ -38,7 +39,7 @@ const TEST_CASES: TestCase[] = [
  * This test group contains an assortment of test cases that are not big enough to require their own 
  * module. 
  */
-export const MISC_TEST_GROUP: TestGroup = {
+export const SINGLE_CURSOR_MISC_TEST_GROUP: TestGroup = {
     name: 'Miscellaneous Tests (Single Cursor)',
     testCases: TEST_CASES
 };

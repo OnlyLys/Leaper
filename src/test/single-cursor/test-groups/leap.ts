@@ -1,5 +1,6 @@
-import { TestCase, TestGroup, Action, } from '../../typedefs';
-import { ALICE_TEXT_1, ALICE_TEXT_2, range } from '../../utilities';
+import { TestCase, TestGroup, Action, } from '../../utilities/typedefs';
+import { range } from '../../utilities/other';
+import { ALICE_TEXT_1, ALICE_TEXT_2, } from '../../utilities/placeholder-texts';
 
 // TODO: Test Case: Holding `Tab` down OK (Multiple content changes per loop)
 
@@ -238,7 +239,7 @@ const TEST_CASES: TestCase[] = [
             { kind: 'assertPairs',   pairs:     [ { line: 2, sides: [12, 46] } ] },
             { kind: 'assertCursors', cursors:   [ [2, 37] ]                      },
 
-            // Check that leaping is now not possible due to the ' Awesome ' obstacle.
+            // Check that leaping is now not possible due to the ' Awesome ' obstacle.zz
             {
                 kind: 'composite',
                 actions: [

@@ -1,5 +1,5 @@
 import { SnippetString } from 'vscode';
-import { Action, TestCase, TestGroup } from '../../typedefs';
+import { Action, TestCase, TestGroup } from '../../utilities/typedefs';
 
 // In this prelude that is shared across all the test cases in this module, we insert pairs in a way 
 // that simulates a typical usage scenario.
