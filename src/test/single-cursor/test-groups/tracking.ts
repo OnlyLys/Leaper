@@ -2,8 +2,10 @@
 //! against regressions since at one point this extension was not able track pairs once non-ASCII
 //! text was involved.
 
-import { Action, CompactPairs, TestCase, TestGroup } from '../../utilities/typedefs';
+import { Action } from '../../utilities/action';
+import { CompactPairs } from '../../utilities/compact';
 import { clonePairs, range, sliceAdd, sliceSub } from '../../utilities/other';
+import { TestCase, TestGroup } from '../../utilities/executor';
 import { SnippetString } from 'vscode';
 import { ALICE_TEXT_1, ALICE_TEXT_2, LOREM_IPSUM_1 } from '../../utilities/placeholder-texts';
 

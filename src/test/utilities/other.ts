@@ -1,4 +1,4 @@
-import { CompactCursors, CompactPairs } from './typedefs';
+import { CompactCursors, CompactPairs } from './compact';
 
 /**
  * Generate an array of sequential integers.
@@ -49,3 +49,9 @@ export function cloneCursors(cursors: CompactCursors): CompactCursors {
     });
 }
 
+/**
+ * Multiply an array (by repeating `arr`) `n` times.
+ */
+export function repeatArr(arr: ReadonlyArray<any>, n: number): any[] {
+    return (new Array(n)).fill(arr).flat();
+}

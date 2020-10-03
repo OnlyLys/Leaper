@@ -1,4 +1,4 @@
-import { TestCase, TestGroup } from '../../utilities/typedefs';
+import { TestCase, TestGroup } from '../../utilities/executor';
 import { range } from '../../utilities/other';
 import { ALICE_TEXT_1 } from '../../utilities/placeholder-texts';
 
