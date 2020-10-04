@@ -190,7 +190,7 @@ interface JumpToPrevTabstopAction extends EditActionBase {
 interface TriggerAndAcceptSuggestionAction extends EditActionBase {
 
     /** 
-     * Trigger autocomplete suggestions then accept the first suggestion. 
+     * Trigger an autocomplete suggestion then accept the first suggestion. 
      */
     kind: 'triggerAndAcceptSuggestion',
 }
