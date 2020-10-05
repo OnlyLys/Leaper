@@ -57,7 +57,7 @@ export function activate(context: ExtensionContext): TestAPI {
 
     // Expose the engine for tests.
     return { 
-        snapshot: () => engine?.snapshot() 
+        snapshot: () => engine?.snapshot() ?? [] 
     };
 
 } 
@@ -73,7 +73,7 @@ export interface TestAPI {
      * 
      * The returned array can be mutated without affecting the extension's state.
      */
-    snapshot(): { open: Position, close: Position, isDecorated: boolean }[][] | undefined;
+    snapshot(): { open: Position, close: Position, isDecorated: boolean }[][];
 
 }
 
