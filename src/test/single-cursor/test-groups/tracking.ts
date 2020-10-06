@@ -3,7 +3,7 @@
 //! text was involved.
 
 import { Action } from '../../utilities/action';
-import { CompactPairs } from '../../utilities/compact';
+import { CompactClusters } from '../../utilities/compact';
 import { clonePairs, range, sliceAdd, sliceSub } from '../../utilities/other';
 import { TestCase, TestGroup } from '../../utilities/executor';
 import { SnippetString } from 'vscode';
@@ -413,8 +413,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE: TestCase = (() => 
             { kind: 'assertCursors', cursors:     [ [1, 19] ]                          },
         ] as Action[]
     };
-    const actions: Action[]   = [];
-    const pairs: CompactPairs = [ { line: 1, sides: range(9, 29) } ];
+    const actions: Action[]        = [];
+    const pairs:   CompactClusters = [ { line: 1, sides: range(9, 29) } ];
 
     // 1. Insert 17 code units between the opening sides of the first and second pairs.
     //
@@ -849,8 +849,8 @@ const AUTOCOMPLETIONS_OK_TEST_CASE: TestCase = (() => {
             { kind: 'assertCursors', cursors:     [ [2, 14] ]                          },
         ] as Action[]
     };
-    const actions: Action[]   = [];
-    const pairs: CompactPairs = [ { line: 2, sides: range(4, 24) } ];
+    const actions: Action[]        = [];
+    const pairs:   CompactClusters = [ { line: 2, sides: range(4, 24) } ];
 
     // Autocomplete the variable name and check that all pairs are correctly tracked.
     //

@@ -1,4 +1,4 @@
-import { CompactCursors, CompactPairs } from './compact';
+import { CompactCursors, CompactClusters } from './compact';
 
 /**
  * Generate an array of sequential integers.
@@ -30,9 +30,9 @@ export function sliceSub(arr: number[], start: number, endNotInclusive: number, 
 }
 
 /** 
- * Create an independent copy of a compact pairs array.
+ * Create an copy of a compact clusters representation of pairs.
  */
-export function clonePairs(pairs: CompactPairs): CompactPairs {
+export function clonePairs(pairs: CompactClusters): CompactClusters {
     return pairs.map(({ line, sides }) => ({ line, sides: [...sides] }));
 }
 

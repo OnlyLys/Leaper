@@ -34,14 +34,14 @@ export type CompactRange = { start: CompactPosition, end: CompactPosition };
  * 
  * Note that `line` is `-1` if a cursor has no pairs being tracked for it.
  */
-export type CompactPairsSingle = { line: number, sides: number[] };
+export type CompactCluster = { line: number, sides: number[] };
 
 /** 
  * Compact way to represent pairs for all cursors.
  * 
  * The pairs for a cursor is `undefined` if there are no pairs being tracked for it. 
  */
-export type CompactPairs = CompactPairsSingle[];
+export type CompactClusters = CompactCluster[];
 
 /**
  * Compact way to represent a cursor in the editor.

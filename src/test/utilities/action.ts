@@ -1,5 +1,5 @@
 import { SnippetString } from 'vscode';
-import { CompactCursors, CompactPairs, CompactRange } from './compact';
+import { CompactCursors, CompactClusters, CompactRange } from './compact';
 
 /**
  * An action that should be taken be a test case.
@@ -209,7 +209,7 @@ interface AssertPairsAction {
      * Verify the pairs that the engine is tracking. 
      */
     kind: 'assertPairs',
-    pairs: CompactPairs;
+    pairs: CompactClusters;
 }
 
 interface AssertCursorsAction {
