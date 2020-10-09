@@ -1,37 +1,37 @@
-import { TestCase, TestGroup } from '../../utilities/executor';
-import { range } from '../../utilities/other';
-import { ALICE_TEXT_1 } from '../../utilities/placeholder-texts';
+import { TestCase, TestGroup } from '../../framework/framework';
+import { range } from '../../framework/utilities';
+import { ALICE_TEXT_1 } from '../../framework/placeholder-texts';
 
 const TEST_CASES: TestCase[] = [
 
     // Test the 'Escape Leaper Mode' command.
     //
-    // Note that the command is directly called instead of being triggered by a keypress. 
-    {
+    // Note that the command is directly called instead of being triggered by a keypress. In other
+    // words, the keybinding (and its 'when' context) are not being tested here.
+    new TestCase({
         name: 'Escape Leaper Mode',
-        prelude: {
-            description: 'Insert 10 pairs',
-            actions: [
-                // Insert pairs between some text to simulate a typical usage scenario.
-                { kind: 'typeText',      text:        ALICE_TEXT_1                          },
-                { kind: 'moveCursors',   direction:   'up'                                  },
-                { kind: 'moveCursors',   direction:   'left', repetitions: 10               },
-                { kind: 'typePair',      repetitions: 10                                    },
-                { kind: 'assertPairs',   pairs:       [ { line: 5, sides: range(79, 90) } ] },
-                { kind: 'assertCursors', cursors:     [ [5, 89] ]                           },
-            ]
+        editorLanguageId: 'markdown',
+        prelude: async (context) => {
+            
+            // Insert pairs between some text to simulate a typical usage scenario.
+            await context.typeText({ text: ALICE_TEXT_1 });
+            await context.moveCursors({ direction: 'up' });
+            await context.moveCursors({ direction: 'left', repetitions: 10 });
+            await context.typePair({ repetitions: 10 });
+            context.assertPairsPrelude([ { line: 5, sides: range(79, 99) } ]);
+            context.assertCursorsPrelude([ [5, 89] ]);
         },
-        actions: [
+        action: async (context) => {
 
-            // Jump out of one pair first, just to simulate a more 'random' scenario.
-            { kind: 'leap' },
+            // Jump out of one pair first, just to simulate a more 'realistic' scenario.
+            await context.leap();
 
             // This should remove all pairs from being tracked.
-            { kind: 'escapeLeaperMode'                                     },
-            { kind: 'assertPairs',    pairs:   [ { line: -1, sides: [] } ] },
-            { kind: 'assertCursors',  cursors: [ [5, 90] ]                 }
-        ]
-    },
+            await context.escapeLeaperMode();
+            context.assertPairs([ { line: -1, sides: [] } ]);
+            context.assertCursors([ [5, 90] ]);
+        }
+    }),
     
 ];
 
@@ -39,7 +39,7 @@ const TEST_CASES: TestCase[] = [
  * This test group contains an assortment of test cases that are not big enough to require their own 
  * module. 
  */
-export const SINGLE_CURSOR_MISC_TEST_GROUP: TestGroup = {
-    name: 'Miscellaneous Tests (Single Cursor)',
+export const SINGLE_CURSOR_MISC_TEST_GROUP = new TestGroup({
+    name: 'Miscellaneous',
     testCases: TEST_CASES
-};
+});

@@ -1,5 +1,5 @@
 import { SnippetString } from 'vscode';
-import { TestCase, TestGroup } from '../../utilities/executor';
+import { TestCase, TestGroup } from '../../framework/framework';
 
 /** 
  * Here we simulate a typical usage scenario by typing code into a document as a user would.
@@ -33,9 +33,9 @@ import { TestCase, TestGroup } from '../../utilities/executor';
  * 
  * Of note is that `<>` is not auto-bracketed in Typescript.
  */
-const REAL_USER_SIMULATION_1: TestCase = {
+const REAL_USER_SIMULATION_1 = new TestCase({
     name: 'Real User Simulation 1',
-    actions: [
+    action: async (context) => {
 
         // Document state after:
         // 
@@ -43,9 +43,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         // function main()
         //               ^(cursor position)
         // ```
-        { kind: 'typeText',      text:    'function main('                 },
-        { kind: 'assertPairs',   pairs:   [ { line: 0, sides: [14, 15] } ] },
-        { kind: 'assertCursors', cursors: [ [0, 15] ]                      },
+        await context.typeText({ text: 'function main(' } );
+        context.assertPairs([ { line: 0, sides: [13, 14] } ]);
+        context.assertCursors([ [0, 14] ]);
 
         // Document state after:
         // 
@@ -53,9 +53,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         // function main()
         //                ^(cursor position)
         // ```
-        { kind: 'leap'                                                },
-        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-        { kind: 'assertCursors', cursors: [ [0, 16] ]                 },
+        await context.leap();
+        context.assertPairs([ { line: -1, sides: [] } ]);
+        context.assertCursors([ [0, 15] ]);
 
             // Mistake simulation: wrong bracket inserted.
             //
@@ -65,9 +65,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             // function main() []
             //                  ^(cursor position)
             // ```
-            { kind: 'typeText',      text:    ' ['                             },
-            { kind: 'assertPairs',   pairs:   [ { line: 0, sides: [16, 17] } ] },
-            { kind: 'assertCursors', cursors: [ [0, 17] ]                      },
+            await context.typeText({ text: ' [' });
+            context.assertPairs([ { line: 0, sides: [16, 17] } ]);
+            context.assertCursors([ [0, 17] ]);
 
             // Mistake simulation: wrong bracket inserted.
             //
@@ -78,21 +78,32 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //
             // ]   ^(cursor position)
             // ```
-            { kind: 'typeText',      text:    '\n'                        }, 
-            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 4] ]                  },
+            await context.typeText({ text: '\n' });
+            context.assertPairs([ { line: -1, sides: [] } ]);
+            context.assertCursors([ [1, 4] ]);
 
             // Mistake simulation: wrong bracket inserted.
             //
             // Document state after:
             // 
             // ```
-            // function main()
+            // function main() []
+            // ```              ^(cursor position)
+            await context.undo();
+            context.assertPairs([ { line: -1, sides: [] } ]);
+            context.assertCursors([ [0, 17] ]);
+
+            // Mistake simulation: wrong bracket inserted.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function main() 
             //                ^(cursor position)
             // ```
-            { kind: 'undo',          repetitions: 3                           },
-            { kind: 'assertPairs',   pairs:       [ { line: -1, sides: [] } ] },
-            { kind: 'assertCursors', cursors:     [ [0, 16] ]                 },
+            await context.backspace({ repetitions: 2 });
+            context.assertPairs([ { line: -1, sides: [] } ]);
+            context.assertCursors([ [0, 15] ]);
 
         // Document state after:
         // 
@@ -100,9 +111,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         // function main() {}
         //                  ^(cursor position)
         // ```
-        { kind: 'typeText',      text:    ' {'                             },
-        { kind: 'assertPairs',   pairs:   [ { line: 0, sides: [16, 17] } ] },
-        { kind: 'assertCursors', cursors: [ [0, 17] ]                      },
+        await context.typeText({ text: ' {' });
+        context.assertPairs([ { line: 0, sides: [16, 17] } ]);
+        context.assertCursors([ [0, 17] ]);
 
         // Document state after:
         // 
@@ -111,9 +122,10 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //
         // }   ^(cursor position)
         // ```
-        { kind: 'typeText',      text:    '\n'                        },
-        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 4] ]                  },
+        await context.typeText({ text: '\n' });
+        context.assertPairs([ { line: -1, sides: [] } ]);
+        context.assertCursors([ [1, 4] ]);
+
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -124,9 +136,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     let arr: 
             // }            ^(cursor position)
             // ```
-            { kind: 'typeText',      text:    'let arr: '                 },
-            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 13] ]                 },
+            await context.typeText({ text: 'let arr: ' });
+            context.assertPairs([ { line: -1, sides: [] } ]);
+            context.assertCursors([ [1, 13] ]);
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -137,9 +149,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     let arr: 
             // }      ^(cursor position)
             // ```
-            { kind: 'setCursors',    cursors: [ [1, 7] ]                  },
-            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 7] ]                  },
+            await context.setCursors({ cursors: [ [1, 7] ] });
+            context.assertPairs([ { line: -1, sides: [] } ]);
+            context.assertCursors([ [1, 7] ]);
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -150,9 +162,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //      arr: 
             // }   ^(cursor position)
             // ```
-            { kind: 'backspaceWord',                                      },
-            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 4] ]                  },
+            await context.backspaceWord();
+            context.assertPairs([ { line: -1, sides: [] } ]);
+            context.assertCursors([ [1, 4] ]);
 
             // Mistake simulation: `let` instead of `const` specifier.
             // 
@@ -163,9 +175,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: 
             // }        ^(cursor position)
             // ```
-            { kind: 'typeText',      text:    'const'                     },
-            { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 9] ]                  },
+            await context.typeText({ text: 'const' });
+            context.assertPairs([ { line: -1, sides: [] } ]);
+            context.assertCursors([ [1, 9] ]);
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -176,9 +188,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: 
             // }              ^(cursor position)
             // ```
-            { kind: 'moveCursors',   direction: 'right', repetitions: 6     },
-            { kind: 'assertPairs',   pairs:     [ { line: -1, sides: [] } ] },
-            { kind: 'assertCursors', cursors:   [ [1, 15] ]                 },
+            await context.moveCursors({ direction: 'right', repetitions: 6 });
+            context.assertPairs([ { line: -1, sides: [] } ]);
+            context.assertCursors([ [1, 15] ]);
 
         // Document state after:
         // 
@@ -187,9 +199,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: }}
         // }                              ^(cursor position)
         // ```
-        { kind: 'typeText',      text:    '{ t: TypeT<{ u: '                       },
-        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 26, 31, 32] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 31] ]                              },
+        await context.typeText({ text: '{ t: TypeT<{ u: ' });
+        context.assertPairs([ { line: 1, sides: [15, 26, 31, 32] } ]);
+        context.assertCursors([ [1, 31] ]);
           
             // Mistake simulation: wrong bracket inserted.
             //
@@ -200,9 +212,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: { t: TypeT<{ u: ()}}
             // }                               ^(cursor position)
             // ```
-            { kind: 'typeText',      text:    '('                                              },
-            { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 26, 31, 32, 33, 34] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 32] ]                                      },
+            await context.typeText({ text: '(' });
+            context.assertPairs([ { line: 1, sides: [15, 26, 31, 32, 33, 34] } ]);
+            context.assertCursors([ [1, 32] ]);
 
             // Mistake simulation: wrong bracket inserted.
             //
@@ -213,9 +225,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: { t: TypeT<{ u: }}
             // }                              ^(cursor position)
             // ```
-            { kind: 'backspace'                                                        },
-            { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 26, 31, 32] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 31] ]                              },
+            await context.backspace();
+            context.assertPairs([ { line: 1, sides: [15, 26, 31, 32] } ]);
+            context.assertCursors([ [1, 31] ]);
 
         // Document state after:
         // 
@@ -224,9 +236,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, ]}}
         // }                                                   ^(cursor position)
         // ```
-        { kind: 'typeText',      text:    '[TypeU, TypeV<TypeW, '                          },
-        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 26, 31, 52, 53, 54] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 52] ]                                      },
+        await context.typeText({ text: '[TypeU, TypeV<TypeW, ' });
+        context.assertPairs([ { line: 1, sides: [15, 26, 31, 52, 53, 54] } ]);
+        context.assertCursors([ [1, 52] ]);
 
             // Mistake simulation: wrong type argument.
             //
@@ -237,9 +249,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeK[]]}}
             // }                                                         ^(cursor position)
             // ```
-            { kind: 'typeText',      text:    'TypeK['                                                 },
-            { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 26, 31, 57, 58, 59, 60, 61] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 58] ]                                              },
+            await context.typeText({ text: 'TypeK[' });
+            context.assertPairs([ { line: 1, sides: [15, 26, 31, 57, 58, 59, 60, 61] } ]);
+            context.assertCursors([ [1, 58] ]);
 
             // Mistake simulation: wrong type argument.
             //
@@ -250,9 +262,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, ]}}
             // }                                                   ^(cursor position)
             // ```
-            { kind: 'backspaceWord', repetitions: 2                                            },
-            { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 26, 31, 52, 53, 54] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 52] ]                                      },
+            await context.backspace({ repetitions: 6 });
+            context.assertPairs([ { line: 1, sides: [15, 26, 31, 52, 53, 54] } ]);
+            context.assertCursors([ [1, 52] ]);
 
         // Document state after:
         //
@@ -261,9 +273,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]]}}
         // }                                                         ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    'TypeZ['                                                 },
-        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 26, 31, 57, 58, 59, 60, 61] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 58] ]                                              },
+        await context.typeText({ text: 'TypeZ[' });
+        context.assertPairs([ { line: 1, sides: [15, 26, 31, 57, 58, 59, 60, 61] } ]);
+        context.assertCursors([ [1, 58] ]);
 
         // Document state after:
         // 
@@ -272,9 +284,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]]}}
         // }                                                          ^(cursor position)
         // ``` 
-        { kind: 'leap'                                                                     },
-        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 26, 31, 59, 60, 61] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 59] ]                                      },
+        await context.leap();
+        context.assertPairs([ { line: 1, sides: [15, 26, 31, 59, 60, 61] } ]);
+        context.assertCursors([ [1, 59] ]);
 
         // Document state after:
         // 
@@ -283,9 +295,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>]}}
         // }                                                           ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    '>'                                              },
-        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 26, 31, 60, 61, 62] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 60] ]                                      },
+        await context.typeText({ text: '>' });
+        context.assertPairs([ { line: 1, sides: [15, 26, 31, 60, 61, 62] } ]);
+        context.assertCursors([ [1, 60] ]);
 
         // Document state after:
         // 
@@ -294,9 +306,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>]}}
         // }                                                            ^(cursor position)
         // ``` 
-        { kind: 'leap'                                                             },
-        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 26, 61, 62] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 61] ]                              },
+        await context.leap();
+        context.assertPairs([ { line: 1, sides: [15, 26, 61, 62] } ]);
+        context.assertCursors([ [1, 61] ]);
 
         // Document state after:
         // 
@@ -305,9 +317,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }}
         // }                                                             ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    ' '                                      },
-        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 26, 62, 63] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 62] ]                              },
+        await context.typeText({ text: ' ' });
+        context.assertPairs([ { line: 1, sides: [15, 26, 62, 63] } ]);
+        context.assertCursors([ [1, 62] ]);
 
         // Document state after:
         // 
@@ -316,9 +328,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }}
         // }                                                              ^(cursor position)
         // ``` 
-        { kind: 'leap'                                                     },
-        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 63] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 63] ]                      },
+        await context.leap();
+        context.assertPairs([ { line: 1, sides: [15, 63] } ]);
+        context.assertCursors([ [1, 63] ]);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -326,12 +338,25 @@ const REAL_USER_SIMULATION_1: TestCase = {
             // 
             // ```
             // function main() {
-            //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }, n: strin }
+            //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }, n: string }
             // }                                                                          ^(cursor position)
             // ``` 
-            { kind: 'typeText',      text:    ', n: string '                   },
-            { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 75] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 75] ]                      },
+            await context.typeText({ text: ', n: string ' });
+            context.assertPairs([ { line: 1, sides: [15, 75] } ]);
+            context.assertCursors([ [1, 75] ]);
+
+            // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
+            //
+            // Document state after:
+            // 
+            // ```
+            // function main() {
+            //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }, n: string }
+            // }                                                                         ^(cursor position)
+            // ``` 
+            await context.moveCursors({ direction: 'left' });
+            context.assertPairs([ { line: 1, sides: [15, 75] } ]);
+            context.assertCursors([ [1, 74] ]);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -342,9 +367,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }, n:  }
             // }                                                                   ^(cursor position)
             // ``` 
-            { kind: 'backspaceWord'                                            },
-            { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 69] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 68] ]                      },
+            await context.backspaceWord();
+            context.assertPairs([ { line: 1, sides: [15, 69] } ]);
+            context.assertCursors([ [1, 68] ]);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -355,9 +380,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }, n:  }
             // }                                                              ^(cursor position)
             // ``` 
-            { kind: 'moveCursors',   direction: 'left', repetitions: 5           },
-            { kind: 'assertPairs',   pairs:     [ { line: 1, sides: [15, 69] } ] },
-            { kind: 'assertCursors', cursors:   [ [1, 63] ]                      },
+            await context.moveCursors({ direction: 'left', repetitions: 5 });
+            context.assertPairs([ { line: 1, sides: [15, 69] } ]);
+            context.assertCursors([ [1, 63] ]);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -368,9 +393,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n:  }
             // }                                                               ^(cursor position)
             // ``` 
-            { kind: 'typeText',      text:    '>'                              },
-            { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 70] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 64] ]                      },
+            await context.typeText({ text: '>' });
+            context.assertPairs([ { line: 1, sides: [15, 70] } ]);
+            context.assertCursors([ [1, 64] ]);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -381,9 +406,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n:  }
             // }                                                                    ^(cursor position)
             // ``` 
-            { kind: 'moveCursors',   direction: 'right', repetitions: 5          },
-            { kind: 'assertPairs',   pairs:     [ { line: 1, sides: [15, 70] } ] },
-            { kind: 'assertCursors', cursors:   [ [1, 69] ]                      },
+            await context.moveCursors({ direction: 'right', repetitions: 5 });
+            context.assertPairs([ { line: 1, sides: [15, 70] } ]);
+            context.assertCursors([ [1, 69] ]);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -394,9 +419,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: num }
             // }                                                                       ^(cursor position)
             // ``` 
-            { kind: 'typeText',      text:    'num'                            },
-            { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 73] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 72] ]                      },
+            await context.typeText({ text: 'num' });
+            context.assertPairs([ { line: 1, sides: [15, 73] } ]);
+            context.assertCursors([ [1, 72] ]);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -409,9 +434,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }
             // }                                                                          ^(cursor position)
             // ``` 
-            { kind: 'triggerAndAcceptSuggestion'                               },
-            { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [15, 76] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 75] ]                      },
+            await context.triggerAndAcceptSuggestion();
+            context.assertPairs([ { line: 1, sides: [15, 76] } ]);
+            context.assertCursors([ [1, 75] ]);
 
         // This leap tests whether the cursor can jump across whitespace.
         //
@@ -422,9 +447,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }
         // }                                                                            ^(cursor position)
         // ``` 
-        { kind: 'leap'                                                },
-        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 77] ]                 },
+        await context.leap();
+        context.assertPairs([ { line: -1, sides: [] } ]);
+        context.assertCursors([ [1, 77] ]);
 
         // Document state after:
         // 
@@ -433,9 +458,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }[]
         // }                                                                             ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    '['                              },
-        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [77, 78] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 78] ]                      },
+        await context.typeText({ text: '['});
+        context.assertPairs([ { line: 1, sides: [77, 78] } ]);
+        context.assertCursors([ [1, 78] ]);
 
             // Mistake simulation: incorrect array type.
             //
@@ -446,9 +471,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }[[]]
             // }                                                                              ^(cursor position)
             // ``` 
-            { kind: 'typeText',      text:    '['                                      },
-            { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [77, 78, 79, 80] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 79] ]                              },
+            await context.typeText({ text: '[' });
+            context.assertPairs([ { line: 1, sides: [77, 78, 79, 80] } ]);
+            context.assertCursors([ [1, 79] ]);
 
             // Mistake simulation: incorrect array type.
             //
@@ -459,9 +484,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }[]
             // }                                                                             ^(cursor position)
             // ``` 
-            { kind: 'backspace'                                                },
-            { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [77, 78] } ] },
-            { kind: 'assertCursors', cursors: [ [1, 78] ]                      },
+            await context.backspace();
+            context.assertPairs([ { line: 1, sides: [77, 78] } ]);
+            context.assertCursors([ [1, 78] ]);
 
         // Document state after:
         // 
@@ -470,9 +495,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }[]
         // }                                                                              ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    ']'                         },
-        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 79] ]                 },
+        await context.typeText({ text: ']' });
+        context.assertPairs([ { line: -1, sides: [] } ]);
+        context.assertCursors([ [1, 79] ]);
 
         // Document state after:
         // 
@@ -481,9 +506,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }[][]
         // }                                                                               ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    '['                              },
-        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [79, 80] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 80] ]                      },
+        await context.typeText({ text: '[' });
+        context.assertPairs([ { line: 1, sides: [79, 80] } ]);
+        context.assertCursors([ [1, 80] ]);
 
         // Document state after:
         // 
@@ -492,9 +517,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }[][]
         // }                                                                                ^(cursor position)
         // ``` 
-        { kind: 'leap'                                                },
-        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 81] ]                 },
+        await context.leap();
+        context.assertPairs([ { line: -1, sides: [] } ]);
+        context.assertCursors([ [1, 81] ]);
 
         // Document state after:
         // 
@@ -503,9 +528,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }[][] = getArr()
         // }                                                                                          ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    ' = getArr('                     },
-        { kind: 'assertPairs',   pairs:   [ { line: 1, sides: [90, 91] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 91] ]                      },
+        await context.typeText({ text: ' = getArr(' });
+        context.assertPairs([ { line: 1, sides: [90, 91] } ]);
+        context.assertCursors([ [1, 91] ]);
 
         // Document state after:
         // 
@@ -514,9 +539,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     const arr: { t: TypeT<{ u: [TypeU, TypeV<TypeW, TypeZ[]>] }>, n: number }[][] = getArr()
         // }                                                                                           ^(cursor position)
         // ``` 
-        { kind: 'leap'                                                },
-        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-        { kind: 'assertCursors', cursors: [ [1, 92] ]                 },
+        await context.leap();
+        context.assertPairs([ { line: -1, sides: [] } ]);
+        context.assertCursors([ [1, 92] ]);
 
         // Document state after:
         // 
@@ -526,9 +551,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat()
         // }            ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    ';\narr.flat('                   },
-        { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [12, 13] } ] },
-        { kind: 'assertCursors', cursors: [ [2, 13] ]                      },
+        await context.typeText({ text: ';\narr.flat(' });
+        context.assertPairs([ { line: 2, sides: [12, 13] } ]);
+        context.assertCursors([ [2, 13] ]);
 
         // Document state after:
         // 
@@ -538,9 +563,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat()
         // }             ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    ')'                         },
-        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-        { kind: 'assertCursors', cursors: [ [2, 14] ]                 },
+        await context.typeText({ text: ')' });
+        context.assertPairs([ { line: -1, sides: [] } ]);
+        context.assertCursors([ [2, 14] ]);
 
         // Document state after:
         // 
@@ -550,9 +575,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem))
         // }                           ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    '.forEach((elem'                         },
-        { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 23, 28, 29] } ] },
-        { kind: 'assertCursors', cursors: [ [2, 28] ]                              },
+        await context.typeText({ text: '.forEach((elem' });
+        context.assertPairs([ { line: 2, sides: [22, 23, 28, 29] } ]);
+        context.assertCursors([ [2, 28] ]);
 
         // Document state after:
         // 
@@ -562,9 +587,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem))
         // }                            ^(cursor position)
         // ``` 
-        { kind: 'leap'                                                     },
-        { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 29] } ] },
-        { kind: 'assertCursors', cursors: [ [2, 29] ]                      },
+        await context.leap();
+        context.assertPairs([ { line: 2, sides: [22, 29] } ]);
+        context.assertCursors([ [2, 29] ]);
 
         // Document state after:
         // 
@@ -574,9 +599,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem) => )
         // }                                ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    ' => '                           },
-        { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 33] } ] },
-        { kind: 'assertCursors', cursors: [ [2, 33] ]                      },
+        await context.typeText({ text: ' => ' });
+        context.assertPairs([ { line: 2, sides: [22, 33] } ]);
+        context.assertCursors([ [2, 33] ]);
 
             // Mistake simulation: `console.log()` typed in instead of inserted as snippet.
             //
@@ -588,9 +613,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     arr.flat().forEach((elem) => con)
             // }                                   ^(cursor position)
             // ``` 
-            { kind: 'typeText',      text:    'con'                            },
-            { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 36] } ] },
-            { kind: 'assertCursors', cursors: [ [2, 36] ]                      },
+            await context.typeText({ text: 'con' });
+            context.assertPairs([ { line: 2, sides: [22, 36] } ]);
+            context.assertCursors([ [2, 36] ]);
 
             // Mistake simulation: `console.log()` typed in instead of inserted as snippet.
             //
@@ -604,9 +629,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     arr.flat().forEach((elem) => console)
             // }                                       ^(cursor position)
             // ``` 
-            { kind: 'triggerAndAcceptSuggestion'                               },
-            { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 40] } ] },
-            { kind: 'assertCursors', cursors: [ [2, 40] ]                      },
+            await context.triggerAndAcceptSuggestion();
+            context.assertPairs([ { line: 2, sides: [22, 40] } ]);
+            context.assertCursors([ [2, 40] ]);
             
             // Mistake simulation: `console.log()` typed in instead of inserted as snippet.
             //
@@ -618,9 +643,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     arr.flat().forEach((elem) => )
             // }                                ^(cursor position)
             // ``` 
-            { kind: 'backspaceWord'                                            },
-            { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 33] } ] },
-            { kind: 'assertCursors', cursors: [ [2, 33] ]                      },
+            await context.backspaceWord();
+            context.assertPairs([ { line: 2, sides: [22, 33] } ]);
+            context.assertCursors([ [2, 33] ]);
 
         // Document state after: 
         // 
@@ -632,9 +657,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem) => console.log())
         // }                                            ^(cursor position)
         // ``` 
-        { kind: 'insertSnippet', snippet: new SnippetString('console.log($1)$0') }, 
-        { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 46] } ]       },
-        { kind: 'assertCursors', cursors: [ [2, 45] ]                            },
+        await context.insertSnippet({ snippet: new SnippetString('console.log($1)$0') });
+        context.assertPairs([ { line: 2, sides: [22, 46] } ]);
+        context.assertCursors([ [2, 45] ]);
 
             // Mistake simulation: wrong property name. 
             //
@@ -646,9 +671,10 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     arr.flat().forEach((elem) => console.log(`{ elem_t: ${elem.t}}`))
             // }                                                               ^(cursor position)
             // ``` 
-            { kind: 'typeText',      text:    '`{ elem_t: ${elem.t'                                    }, 
-            { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 45, 46, 57, 64, 65, 66, 68] } ] },
-            { kind: 'assertCursors', cursors: [ [2, 64] ]                                              },
+            // await context.typeText({ text: '`{ elem_t: ${elem.t' });
+            await context.typeText({ text: '`{ elem_t: ${elem.t' });
+            context.assertPairs([ { line: 2, sides: [22, 45, 46, 57, 64, 65, 66, 68] } ]);
+            context.assertCursors([ [2, 64] ]);
 
             // Mistake simulation: wrong property name. 
             //
@@ -660,9 +686,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     arr.flat().forEach((elem) => console.log(`{ elem_t: ${elem.t}}`))
             // }                                                         ^(cursor position)
             // ``` 
-            { kind: 'moveCursors',   direction: 'left', repetitions: 6                                   }, 
-            { kind: 'assertPairs',   pairs:     [ { line: 2, sides: [22, 45, 46, 57, 64, 65, 66, 68] } ] },
-            { kind: 'assertCursors', cursors:   [ [2, 58] ]                                              },
+            await context.moveCursors({ direction: 'left', repetitions: 6 });
+            context.assertPairs([ { line: 2, sides: [22, 45, 46, 57, 64, 65, 66, 68] } ]);
+            context.assertCursors([ [2, 58] ]);
 
             // Mistake simulation: wrong property name. 
             //
@@ -676,9 +702,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     arr.flat().forEach((elem) => console.log(`{ elem_t: ${elem.t}}`))
             // }                                                        ^(cursor position)
             // ``` 
-            { kind: 'moveCursors',   direction: 'left'                                           }, 
-            { kind: 'assertPairs',   pairs:     [ { line: 2, sides: [22, 45, 46, 65, 66, 68] } ] },
-            { kind: 'assertCursors', cursors:   [ [2, 57] ]                                      },
+            await context.moveCursors({ direction: 'left' });
+            context.assertPairs([ { line: 2, sides: [22, 45, 46, 65, 66, 68] } ]);
+            context.assertCursors([ [2, 57] ]);
 
             // Mistake simulation: wrong property name. 
             //
@@ -690,9 +716,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     arr.flat().forEach((elem) => console.log(`{ elem_t: ${elem.t}}`))
             // }                                                     ^(cursor position)
             // ``` 
-            { kind: 'moveCursors',   direction: 'left', repetitions: 3                           }, 
-            { kind: 'assertPairs',   pairs:     [ { line: 2, sides: [22, 45, 46, 65, 66, 68] } ] },
-            { kind: 'assertCursors', cursors:   [ [2, 54] ]                                      },
+            await context.moveCursors({ direction: 'left', repetitions: 3 });
+            context.assertPairs([ { line: 2, sides: [22, 45, 46, 65, 66, 68] } ]);
+            context.assertCursors([ [2, 54] ]);
 
             // Mistake simulation: wrong property name. 
             //
@@ -704,9 +730,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     arr.flat().forEach((elem) => console.log(`{ : ${elem.t}}`))
             // }                                               ^(cursor position)
             // ``` 
-            { kind: 'backspaceWord'                                                            },
-            { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 45, 46, 59, 60, 62] } ] },
-            { kind: 'assertCursors', cursors: [ [2, 48] ]                                      },
+            await context.backspaceWord();
+            context.assertPairs([ { line: 2, sides: [22, 45, 46, 59, 60, 62] } ]);
+            context.assertCursors([ [2, 48] ]);
 
             // Mistake simulation: wrong property name. 
             //
@@ -718,9 +744,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     arr.flat().forEach((elem) => console.log(`{ t: ${elem.t}}`))
             // }                                                ^(cursor position)
             // ``` 
-            { kind: 'typeText',      text:    't'                                              },
-            { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 45, 46, 60, 61, 63] } ] },
-            { kind: 'assertCursors', cursors: [ [2, 49] ]                                      },
+            await context.typeText({ text: 't' });
+            context.assertPairs([ { line: 2, sides: [22, 45, 46, 60, 61, 63] } ]);
+            context.assertCursors([ [2, 49] ]);
 
             // Mistake simulation: wrong property name. 
             //
@@ -734,9 +760,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
             //     arr.flat().forEach((elem) => console.log(`{ t: ${elem.t}}`))
             // }                                                           ^(cursor position)
             // ``` 
-            { kind: 'setCursors',    cursors: [ [2, 60] ]                                      },
-            { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 45, 46, 60, 61, 63] } ] },
-            { kind: 'assertCursors', cursors: [ [2, 60] ]                                      },
+            await context.setCursors({ cursors: [ [2, 60] ] });
+            context.assertPairs([ { line: 2, sides: [22, 45, 46, 60, 61, 63] } ]);
+            context.assertCursors([ [2, 60] ]);
 
         // Document state after: 
         // 
@@ -746,9 +772,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem) => console.log(`{ t: ${elem.t}, n: ${elem.n}}`))
         // }                                                                        ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    ', n: ${elem.n'                                          },
-        { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 45, 46, 66, 73, 74, 75, 77] } ] },
-        { kind: 'assertCursors', cursors: [ [2, 73] ]                                              },
+        await context.typeText({ text: ', n: ${elem.n' });
+        context.assertPairs([ { line: 2, sides: [22, 45, 46, 66, 73, 74, 75, 77] } ]);
+        context.assertCursors([ [2, 73] ]);
 
         // Document state after: 
         // 
@@ -758,9 +784,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem) => console.log(`{ t: ${elem.t}, n: ${elem.n}}`))
         // }                                                                         ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    '}'                                              },
-        { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 45, 46, 74, 75, 77] } ] },
-        { kind: 'assertCursors', cursors: [ [2, 74] ]                                      },
+        await context.typeText({ text: '}' });
+        context.assertPairs([ { line: 2, sides: [22, 45, 46, 74, 75, 77] } ]);
+        context.assertCursors([ [2, 74] ]);
 
         // Document state after: 
         // 
@@ -770,9 +796,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem) => console.log(`{ t: ${elem.t}, n: ${elem.n} }`))
         // }                                                                          ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    ' '                                              },
-        { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 45, 46, 75, 76, 78] } ] },
-        { kind: 'assertCursors', cursors: [ [2, 75] ]                                      },
+        await context.typeText({ text: ' ' });
+        context.assertPairs([ { line: 2, sides: [22, 45, 46, 75, 76, 78] } ]);
+        context.assertCursors([ [2, 75] ]);
 
         // Document state after: 
         // 
@@ -782,9 +808,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem) => console.log(`{ t: ${elem.t}, n: ${elem.n} }`))
         // }                                                                           ^(cursor position)
         // ``` 
-        { kind: 'leap'                                                             },
-        { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 45, 76, 78] } ] },
-        { kind: 'assertCursors', cursors: [ [2, 76] ]                              },
+        await context.leap();
+        context.assertPairs([ { line: 2, sides: [22, 45, 76, 78] } ]);
+        context.assertCursors([ [2, 76] ]);
 
         // Document state after: 
         // 
@@ -794,9 +820,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem) => console.log(`{ t: ${elem.t}, n: ${elem.n} }`))
         // }                                                                            ^(cursor position)
         // ``` 
-        { kind: 'leap'                                                     },
-        { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 78] } ] },
-        { kind: 'assertCursors', cursors: [ [2, 77] ]                      },
+        await context.leap();
+        context.assertPairs([ { line: 2, sides: [22, 78] } ]);
+        context.assertCursors([ [2, 77] ]);
 
         // Document state after: 
         // 
@@ -808,9 +834,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem) => console.log(`{ t: ${elem.t}, n: ${elem.n} }`))
         // }                                                                             ^(cursor position)
         // ``` 
-        { kind: 'jumpToNextTabstop'                                        },
-        { kind: 'assertPairs',   pairs:   [ { line: 2, sides: [22, 78] } ] },
-        { kind: 'assertCursors', cursors: [ [2, 78] ]                      },
+        await context.jumpToNextTabstop();
+        context.assertPairs([ { line: 2, sides: [22, 78] } ]);
+        context.assertCursors([ [2, 78] ]);
 
         // Document state after: 
         // 
@@ -820,9 +846,9 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem) => console.log(`{ t: ${elem.t}, n: ${elem.n} }`))
         // }                                                                              ^(cursor position)
         // ``` 
-        { kind: 'leap'                                                },
-        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-        { kind: 'assertCursors', cursors: [ [2, 79] ]                 },
+        await context.leap();
+        context.assertPairs([ { line: -1, sides: [] } ]);
+        context.assertCursors([ [2, 79] ]);
 
         // Document state after:
         // 
@@ -832,19 +858,19 @@ const REAL_USER_SIMULATION_1: TestCase = {
         //     arr.flat().forEach((elem) => console.log(`{ t: ${elem.t}, n: ${elem.n} }`));
         // }                                                                               ^(cursor position)
         // ``` 
-        { kind: 'typeText',      text:    ';'                         },
-        { kind: 'assertPairs',   pairs:   [ { line: -1, sides: [] } ] },
-        { kind: 'assertCursors', cursors: [ [2, 80] ]                 },
-    ]
-};
+        await context.typeText({ text: ';' });
+        context.assertPairs([ { line: -1, sides: [] } ]);
+        context.assertCursors([ [2, 80] ]);
+    }
+});
 
 /** 
  * This test groups tests multiple features of the extension at once by simulating a real user 
  * interacting with the editor.
  */
-export const SINGLE_CURSOR_INTEGRATION_TEST_GROUP: TestGroup = {
-    name: 'Integration (Single Cursor)',
+export const SINGLE_CURSOR_INTEGRATION_TEST_GROUP: TestGroup = new TestGroup({
+    name: 'Integration',
     testCases: [
         REAL_USER_SIMULATION_1
     ]
-};
+});
