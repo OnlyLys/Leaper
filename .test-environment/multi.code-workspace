@@ -25,6 +25,10 @@
 		"editor.autoIndent": "full",
 		// Snippet suggestions are disabled because we will be testing autocompletions, and we do 
 		// not want user defined snippets to affect it. 
-		"editor.snippetSuggestions": "none"
+		"editor.snippetSuggestions": "none",
+		// Standardize the tab size to 4-spaces.
+		"editor.insertSpaces": true,
+		"editor.detectIndentation": false,
+		"editor.tabSize": 4
 	}
 }
