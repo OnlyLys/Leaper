@@ -208,7 +208,7 @@ const TEST_CASES: TestCase[] = [
  * Unless mentioned otherwise in the test description, the 'Leap' command is called by firing a 
  * `leaper.leap` command.  Direct command calls like these do not test the keybindings.
  */
-export const SINGLE_CURSOR_LEAP_TEST_GROUP: TestGroup = new TestGroup({
-    name: 'Leap',
+export const SINGLE_CURSOR_LEAP_COMMAND_TEST_GROUP: TestGroup = new TestGroup({
+    name: 'Leap Command',
     testCases: TEST_CASES
 });
