@@ -377,7 +377,7 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
  * kind of text insertions are tested in the `pair-invalidation.ts` module.
  */
 const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
-    name: 'Single-Line Text Modifications Between Pairs',
+    name: 'Single-line Text Modifications Between Pairs',
     editorLanguageId: 'markdown',
 
     // This sets up the initial document as:
