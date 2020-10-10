@@ -43,7 +43,9 @@ export function pickRandom<T>(arr: ReadonlyArray<T>): T {
  * Timeout by `n` milliseconds. 
  */
 export async function wait(n: number): Promise<void> {
-    return new Promise<void>((resolve) => setTimeout(resolve, n));
+    if (n > 0) {
+        return new Promise<void>((resolve) => setTimeout(resolve, n));
+    }
 }
 
 /**
