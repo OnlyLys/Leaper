@@ -196,11 +196,36 @@ export class Engine {
     /** 
      * Untrack all pairs and disable all keybinding contexts.
      */
-    public clear(): void {
+    private clear(): void {
         this.tracker.clear();
         this.inLeaperModeContext.clear();
         this.hasLineOfSightContext.clear();
         this.endOfLoopSync.clear();
+    }
+
+    /**
+     * Untrack all pairs and disable all keybinding contexts.
+     */
+    public escapeLeaperMode(): void {
+
+        // We only execute this command if the 'leaper.inLeaperMode' keybinding context is actually 
+        // enabled.
+        //
+        // Note that this check is not really necessary. 
+        //
+        // Unlike the 'Leap' command, where it is likely for the control flow to reach the `leap` 
+        // method (when say the user holds down the `Tab` key) during the transient period after the 
+        // 'setContext' command to disable the `leaper.hasLineOfSight` keybinding context was fired, 
+        // but before that command is acknowledged by vscode, it is unlikely for the user to press 
+        // the keybinding for the 'Escape Leaper Mode' command (which is bound to `Shift + Esc`) 
+        // during transient periods of the `leaper.inLeaperMode` keybinding context.
+        //
+        // That said, for purposes of consistency with the 'Leap' command, we do this check here.
+        if (!this.inLeaperModeContext.get()) {
+            return;
+        }
+
+        this.clear();
     }
 
     /** 

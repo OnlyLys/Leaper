@@ -21,7 +21,7 @@ export function activate(context: ExtensionContext): TestAPI {
     // Keybinding to untrack all the pairs and disable all keybinding contexts.
     const escapeLeaperModeCommand = commands.registerTextEditorCommand(
         `leaper.escapeLeaperMode`, 
-        () => engine?.clear()
+        () => engine?.escapeLeaperMode()
     );
 
     // Watcher that restarts a new engine on configuration change.
