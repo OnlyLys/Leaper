@@ -107,7 +107,7 @@ export class Engine {
         if (event.document !== this.editor.document) {
             return;
         }
-        this.tracker.syncToContentChanges(event.contentChanges);
+        this.tracker.syncToContentChanges(event);
         this.inLeaperModeContext.markStale();
         this.hasLineOfSightContext.markStale();
         this.endOfLoopSync.set();
@@ -120,7 +120,7 @@ export class Engine {
         if (event.textEditor !== this.editor) {
             return;
         }
-        this.tracker.syncToCursors(event.selections);
+        this.tracker.syncToSelectionChanges(event);
         this.inLeaperModeContext.markStale();
         this.hasLineOfSightContext.markStale();
         this.endOfLoopSync.set();
@@ -168,9 +168,9 @@ export class Engine {
 
         // Perform the leap. 
         //
-        // Note that we do not call `syncToCursor` after moving the cursors here. Instead we rely on 
-        // the selection change event that is fired due to cursors being modified to subsequently 
-        // call `syncToCursor`.
+        // Note that we do not call `syncToSelectionChanges` after moving the cursors here. Instead 
+        // we rely on the selection change event that is fired due to cursors being modified to call 
+        // `syncToSelectionChanges`.
         const innermostPairs   = this.tracker.getInnermostPairs();
         this.editor.selections = this.editor.selections.map((cursor, i) => {
             const innermostPair = innermostPairs[i];

@@ -1,4 +1,4 @@
-import { TextDocumentContentChangeEvent } from 'vscode';
+import { TextDocumentChangeEvent, TextDocumentContentChangeEvent } from 'vscode';
 
 /** 
  * An adaptor over the immutable content change array to make it behave like a mutable stack. 
@@ -7,10 +7,6 @@ import { TextDocumentContentChangeEvent } from 'vscode';
  *
  * This stack is ordered (from the top to bottom) by ascending starting position of the content 
  * changes. 
- * 
- * This ordering is the same as if we had iterated through the array of content changes obtained 
- * from vscode's API in reverse. Although it must be noted that there is no explicit guarantee from 
- * vscode's API about any kind of sort order for that array.
  * 
  * # Carries
  * 
@@ -60,7 +56,10 @@ export class ContentChangeStack {
     private top: number;
 
     /** 
-     * The immutable content change array that we are adapting.
+     * The immutable content change array that we are adapting over.
+     * 
+     * Our stack will yield content changes from this array, going from the end to the start of this
+     * array.
      */
     private src: ReadonlyArray<TextDocumentContentChangeEvent>;
 
@@ -121,9 +120,30 @@ export class ContentChangeStack {
         return this._horzCarry;
     }
 
-    public constructor(contentChanges: ReadonlyArray<TextDocumentContentChangeEvent>) {
-        this.top = contentChanges.length;
-        this.src = contentChanges;
+    public constructor(contentChangeEvent: TextDocumentChangeEvent) {
+
+        // We do not have to sort the content changes array from a `TextDocumentChangeEvent` because 
+        // it was discovered that whether it be replacing a bunch of text via the 'Find and Replace' 
+        // feature, or replacing a bunch of text via a single `edit` command, such as:
+        // 
+        //     window.activeTextEditor.edit(
+        //         (editBuilder) => {
+        //             editBuilder.replace(new Range(0, 10, 0, 20), 'hey');
+        //             editBuilder.replace(new Range(1, 50, 2, 90), '\nwoah!\n');
+        //             editBuilder.replace(new Range(0, 50, 0, 70), 'yo');
+        //             editBuilder.replace(new Range(10, 4, 11, 12), '');
+        //             editBuilder.replace(new Range(3, 0, 4, 30), '\n\n\n\t\d');
+        //         }
+        //     );
+        // 
+        // vscode will always fire a `TextDocumentChangeEvent` containing content changes ordered by 
+        // the range that they replace, from the end to the start of the document. The ordering that 
+        // vscode gives us is already what we want, albeit in reverse.
+        // 
+        // However, do note that there is no explicit guarantee from vscode's API that content 
+        // change events will yield contain content changes with such a sort order.
+        this.src = contentChangeEvent.contentChanges;
+        this.top = contentChangeEvent.contentChanges.length;
     }
 
     /** 

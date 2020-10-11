@@ -1,4 +1,4 @@
-import { TextDocumentContentChangeEvent, Range, Position, Selection, TextEditorDecorationType, TextDocument } from 'vscode';
+import { Range, Position, Selection, TextEditorDecorationType, TextDocument, TextDocumentChangeEvent, TextEditorSelectionChangeEvent } from 'vscode';
 import { ContentChangeStack } from './content-change-stack';
 
 /** 
@@ -121,13 +121,13 @@ export class Tracker {
         //
         // This step is necessary during initialization because we could have just switched to an 
         // editor with multiple cursors. Since a selection change event does not fire when switching 
-        // to another editor, we cannot rely on `syncToCursors` to be called to match the clusters 
-        // to the number of cursors.
+        // to another editor, we cannot rely on `syncToSelectionChanges` to be called to match the 
+        // clusters to the number of cursors.
         this.clusters = (new Array(this.prevSortedCursors.length)).fill([]);
     }
 
     /** 
-     * Synchronize the tracking to the cursors in the bound editor.
+     * Synchronize the tracking after selection changes (i.e. cursor changes) in the bound editor.
      * 
      * Calling this method does the following:
      * 
@@ -139,18 +139,18 @@ export class Tracker {
      * **Note that `syncDecorations` must be called at the end of the event loop cycle in which this 
      * method was called.**
      */
-    public syncToCursors(cursors: ReadonlyArray<Selection>): void {
+    public syncToSelectionChanges(selectionChangeEvent: TextEditorSelectionChangeEvent): void {
 
-        // As described in the definition of `SelectionChangeEngineEvent`, there are 4 possible 
-        // kinds of selection changes. However we only take the first three into account:
+        // There are 4 possible kinds of selection changes. 
         //
         //  1. Movement of cursors.
         //  2. Addition or removal of cursors.
         //  3. Expansion or shrinking of cursor selections.
-        // 
-        // The fourth kind (reordering of cursors in the `TextEditor.selections` array) we can 
-        // ignore because we are only dealing with sorted cursors within this class.
-        const sortedCursors = sortCursors(cursors);
+        //  4. Reordering of cursors.
+        //
+        // However, we can obviate the need for dealing with the fourth kind by sorting the cursors 
+        // here.
+        const sortedCursors = sortCursors(selectionChangeEvent.selections);
 
         // --------------------------------
         // STEP 1 - Add or remove clusters to match the new cursor count. 
@@ -260,9 +260,7 @@ export class Tracker {
      * **Note that `syncDecorations` must be called at the end of the event loop cycle in which this 
      * method was called.**
      */
-    public syncToContentChanges(
-        contentChanges: ReadonlyArray<TextDocumentContentChangeEvent>
-    ): void {
+    public syncToContentChanges(contentChangeEvent: TextDocumentChangeEvent): void {
 
         /** 
          * Calculate the shift in position that would result from content changes.
@@ -311,7 +309,7 @@ export class Tracker {
         // 
         // This means that there is no need to backtrack when going through the content changes, 
         // making a stack a good choice.
-        const stack = new ContentChangeStack(contentChanges);
+        const stack = new ContentChangeStack(contentChangeEvent);
 
         // Apply the content changes.
         this.clusters = this.clusters.map((cluster, iCursor) => {
@@ -350,7 +348,7 @@ export class Tracker {
             //
             // However, because the cursor ends up at different places afterwards (for example, an 
             // autoclosed pair will have the cursor end up in between `{}`, while a pasted one will 
-            // have the cursor end up after `{}`), we can rely on the subsequent `syncToCursors` 
+            // have the cursor end up after `{}`), we can rely on a subsequent `syncToSelectionChanges` 
             // call to remove erroneously added pairs.
             if (cursor && cursor.isEmpty) {
 
@@ -463,7 +461,8 @@ export class Tracker {
      * 
      * # Ordering
      * 
-     * The returned array is parallel to the cursors in the most recent `syncToCursors` call.
+     * The returned array is parallel to the cursors in the most recent `syncToSelectionChanges` 
+     * call.
      */
     public getInnermostPairs(): ({ open: Position, close: Position } | undefined)[] {
         const innermostPairs = Array(this.clusters.length).fill(undefined);
@@ -486,14 +485,14 @@ export class Tracker {
      * Whether all pairs or just the ones nearest to each cursor is decorated is determined by the 
      * `decorateAll` configuration.
      * 
-     * **This method must be called at the end of an event loop cycle where any of `syncToCursors`, 
-     * `syncToContentChanges` or `popInnermost` were called. 
+     * **This method must be called at the end of an event loop cycle where `syncToSelectionChanges`, 
+     * `syncToContentChanges` or `popInnermost` were called.**
      * 
      * # Why a Seperate Method?
      * 
      * Theoretically, we could sync decorations immediately as pairs are deleted or created in the 
-     * `syncToCursor` or `syncToContentChanges` methods. However, in practice, vscode does not 
-     * immediately apply decorations when the `TextEditor.setDecorations` method is called, and 
+     * `syncToSelectionChanges` or `syncToContentChanges` methods. However, in practice, vscode does 
+     * not immediately apply decorations when the `TextEditor.setDecorations` method is called, and 
      * instead waits for the next cycle to apply decorations. 
      * 
      * The aforementioned behavior causes problems when we have a single event loop cycle consisting 
@@ -600,7 +599,8 @@ export class Tracker {
      * 
      * # Ordering
      * 
-     * The returned array is parallel to the cursors in the most recent `syncToCursors` call.
+     * The returned array is parallel to the cursors in the most recent `syncToSelectionChanges` 
+     * call.
      */
     public snapshot(): { open: Position, close: Position, isDecorated: boolean }[][] {
         const snapshot = Array(this.clusters.length).fill(undefined);
