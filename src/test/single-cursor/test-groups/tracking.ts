@@ -487,7 +487,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[[[[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊人、在水一方。😮😣😖🤯]]]]]]H᭭a᭰p⃠p᭬ỳ֑]]]]
         //                                                                                          ^(cursor position)
         // ```
-        await context.insertText({ position: [1,66], text: '😮😣😖🤯' });
+        await context.insertText({ position: [1, 66], text: '😮😣😖🤯' });
         sliceAdd(pairs[0].sides, 10, 20, 8);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 74] ]);
