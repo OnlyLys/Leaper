@@ -12,9 +12,14 @@ import { TestCase, TestContext, TestGroup } from '../../framework/framework';
 // }                                                   ^(cursor position)
 // ```
 const SHARED_PRELUDE = async (context: TestContext) => {
-    await context.insertText({
-        position: [0, 0],
-        text:     'function () {\n    ; // Log object to console.\n}'
+    await context.editText({
+        edits: [
+            {
+                kind:     'insert',
+                position: [0, 0],
+                text:     'function () {\n    ; // Log object to console.\n}'
+            }
+        ]
     });
     await context.setCursors({ cursors: [[1, 4]] });
     await context.typeText({ text: 'console.log({  ' });
@@ -458,9 +463,14 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: cheesecake{ prop: someFn1, 20) } ] } }); // Log object to console.
             // }                                              ^(cursor position)
             // ```
-            await context.replaceText({ 
-                replace: { start: [1, 23], end: [1, 32] }, 
-                insert:  'cheesecake' 
+            await context.editText({
+                edits: [
+                    {
+                        kind:    'replace',
+                        replace: { start: [1, 23], end: [1, 32] }, 
+                        insert:  'cheesecake' 
+                    }
+                ]
             });
             context.assertPairs([ { line: 1, sides: [15, 16, 33, 54, 60, 61] } ]);
             context.assertCursors([ [1, 47] ]);
@@ -474,7 +484,11 @@ const TEST_CASES: TestCase[] = [
             //     { obj: cheesecake{ prop: someFn1, 20) } ] } }); // Log object to console.
             // }                                  ^(cursor position)
             // ```
-            await context.replaceText({ replace: { start: [1, 4], end: [1, 16] }, insert: '' });
+            await context.editText({
+                edits: [
+                    { kind: 'delete', range: { start: [1, 4], end: [1, 16] } }
+                ]
+            });
             context.assertPairs([ { line: 1, sides: [4, 21, 42, 48] } ]);
             context.assertCursors([ [1, 35] ]);
 
@@ -500,7 +514,11 @@ const TEST_CASES: TestCase[] = [
             //     rabbit obj: cheesecake1, 20) } ] } }); // Log object to console.
             // }                         ^(cursor position)
             // ```
-            await context.replaceText({ replace: { start: [1, 4], end: [1, 5] }, insert: 'rabbit' });
+            await context.editText({ 
+                edits: [
+                    { kind: 'replace', replace: { start: [1, 4], end: [1, 5] }, insert: 'rabbit' }
+                ]
+            });
             context.assertPairs([ { line: -1, sides: [] } ]);
             context.assertCursors([ [1, 26] ]);
         }
@@ -532,9 +550,14 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20 } cheesecake}); // Log object to console.
             // }                                                   ^(cursor position)
             // ```
-            await context.replaceText({ 
-                replace: { start: [1, 55], end: [1, 59] }, 
-                insert:  'cheesecake' 
+            await context.editText({
+                edits: [
+                    {
+                        kind:    'replace',
+                        replace: { start: [1, 55], end: [1, 59] }, 
+                        insert:  'cheesecake' 
+                    }
+                ]
             });
             context.assertPairs([ { line: 1, sides: [15, 16, 32, 53, 65, 66] } ]);
             context.assertCursors([ [1, 52] ]);
@@ -548,7 +571,11 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20 } cheesecake}
             // }                                                   ^(cursor position)
             // ```
-            await context.replaceText({ replace: { start: [1, 66], end: [1, 94] }, insert: '' });
+            await context.editText({
+                edits: [
+                    { kind: 'delete', range: { start: [1, 66], end: [1, 94] } }
+                ]
+            });
             context.assertPairs([ { line: 1, sides: [16, 32, 53, 65] } ]);
             context.assertCursors([ [1, 52] ]);
             
@@ -574,9 +601,10 @@ const TEST_CASES: TestCase[] = [
             //    console.log({rabbit
             // }              ^(cursor position)
             // ```
-            await context.replaceText({ 
-                replace: { start: [1, 17], end: [1, 64] }, 
-                insert:  'rabbit' 
+            await context.editText({
+                edits: [
+                    { kind: 'replace', replace: { start: [1, 17], end: [1, 64] }, insert: 'rabbit' }
+                ]
             });
             context.assertPairs([ { line: -1, sides: [] } ]);
             context.assertCursors([ [1, 23] ]);
@@ -601,7 +629,15 @@ const TEST_CASES: TestCase[] = [
             //        { obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                          ^(cursor position)
             // ```
-            await context.insertText({ position: [1, 16], text: '\n        ' });
+            await context.editText({
+                edits: [
+                    {
+                        kind:     'insert',
+                        position: [1, 16], 
+                        text:     '\n        '
+                    }
+                ]
+            });
             context.assertPairs([ { line: 2, sides: [8, 15, 22, 24, 38, 44, 46, 48, 50, 52] } ]);
             context.assertCursors( [ [2, 44] ]);
 
@@ -620,14 +656,19 @@ const TEST_CASES: TestCase[] = [
             //             lamb [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                      ^(cursor position)
             // ```
-            await context.replaceText({
-                replace: { start: [2, 17], end: [2, 21] }, 
-                insert:  '\n'
-                    + '            Mary\n'
-                    + '            had\n'
-                    + '            a\n'
-                    + '            little\n'
-                    + '            lamb'
+            await context.editText({
+                edits: [
+                    {
+                        kind:    'replace',
+                        replace: { start: [2, 17], end: [2, 21] }, 
+                        insert:  '\n'
+                            + '            Mary\n'
+                            + '            had\n'
+                            + '            a\n'
+                            + '            little\n'
+                            + '            lamb'
+                    }
+                ]
             });
             context.assertPairs([ { line: 7, sides: [17, 19, 33, 39, 41, 43] } ]);
             context.assertCursors([ [7, 39] ]);

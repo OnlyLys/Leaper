@@ -46,7 +46,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const x = [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.insertText({ position: [1, 4], text:  'const x = ' });
+        await context.editText({
+            edits: [ { kind: 'insert', position: [1, 4], text: 'const x = ' } ]
+        });
         context.assertPairs([ { line: 1, sides: range(14, 34) } ]);
         context.assertCursors([ [1, 24] ]);
 
@@ -61,9 +63,14 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const variable = [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.insertText({ 
-            position: [1, 14], 
-            text:     `'Hello 😃';\n    let y = 10.1;\n    const variable = ` 
+        await context.editText({
+            edits: [
+                { 
+                    kind:     'insert',
+                    position: [1, 14],
+                    text:     `'Hello 😃';\n    let y = 10.1;\n    const variable = ` 
+                }
+            ]
         });
         context.assertPairs([ { line: 3, sides: range(21, 41) } ]);
         context.assertCursors([ [3, 31] ]);
@@ -79,7 +86,11 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const var = [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.replaceText({ replace: { start: [3, 13], end: [3, 18] }, insert: '' });
+        await context.editText({
+            edits: [
+                { kind: 'delete', range: { start: [3, 13], end: [3, 18] } }
+            ]
+        });
         context.assertPairs([ { line: 3, sides: range(16, 36) } ]);
         context.assertCursors([ [3, 26] ]);
 
@@ -94,7 +105,11 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     let y = [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.replaceText({ replace: { start: [2, 10], end: [3, 14] }, insert: '' });
+        await context.editText({
+            edits: [ 
+                { kind: 'delete', range: { start: [2, 10], end: [3, 14] } }
+            ]
+        });
         context.assertPairs([ { line: 2, sides: range(12, 32) } ]);
         context.assertCursors([ [2, 22] ]);
 
@@ -108,9 +123,14 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     let reallyLongVariableName = [[[[[[[[[[]]]]]]]]]]
         // } 
         // ```
-        await context.replaceText({
-            replace: { start: [2, 8], end: [2, 9] }, 
-            insert:  'reallyLongVariableName' 
+        await context.editText({
+            edits: [
+                {
+                    kind:    'replace',
+                    replace: { start: [2, 8], end: [2, 9] }, 
+                    insert:  'reallyLongVariableName' 
+                }
+            ]
         });
         context.assertPairs([ { line: 2, sides: range(33, 53) } ]);
         context.assertCursors([ [2, 43] ]);
@@ -132,9 +152,14 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const a = [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.replaceText({
-            replace: { start: [2, 4], end: [2, 33] }, 
-            insert:  'const s = `' + ALICE_TEXT_1 + '`;\n    const a = '
+        await context.editText({
+            edits: [
+                {
+                    kind:    'replace',
+                    replace: { start: [2, 4], end: [2, 33] }, 
+                    insert:  'const s = `' + ALICE_TEXT_1 + '`;\n    const a = '
+                }
+            ]
         });
         context.assertPairs([ { line: 9, sides: range(14, 34) } ]);
         context.assertCursors([ [9, 24] ]);
@@ -150,9 +175,14 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const s = { first: 'Typescript 😎', second: [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.replaceText({
-            replace: { start: [2, 14], end: [9, 13] }, 
-            insert:  `{ first: 'Typescript 😎', second:`
+        await context.editText({
+            edits: [
+                {
+                    kind:    'replace',
+                    replace: { start: [2, 14], end: [9, 13] }, 
+                    insert:  `{ first: 'Typescript 😎', second:`
+                }
+            ]
         });
         context.assertPairs([ { line: 2, sides: range(48, 68) } ]);
         context.assertCursors([ [2, 58] ]);
@@ -171,9 +201,18 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.replaceText({
-            replace: { start: [1, 14], end: [2, 48] }, 
-            insert:  `[\n        'woah',\n        'dude'\n    ];\n    const fn = () => ['🐸', `
+        await context.editText({
+            edits: [
+                {
+                    kind:    'replace',
+                    replace: { start: [1, 14], end: [2, 48] }, 
+                    insert:  `[\n`
+                    + `        'woah',\n`
+                    + `        'dude'\n`
+                    + `    ];\n`
+                    + `    const fn = () => ['🐸', `
+                }
+            ]
         });
         context.assertPairs([ { line: 5, sides: range(28, 48) } ]);
         context.assertCursors([ [5, 38] ]);
@@ -191,7 +230,15 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.insertText({ position: [3, 13], text: ' 🤯🤯🤯🤯🤯🤯🤯🤯🤯🤯' });
+        await context.editText({
+            edits: [
+                {
+                    kind:    'insert',
+                    position: [3, 13], 
+                    text:     ' 🤯🤯🤯🤯🤯🤯🤯🤯🤯🤯' 
+                }
+            ]
+        });
         context.assertPairs([ { line: 5, sides: range(28, 48) } ]);
         context.assertCursors([ [5, 38] ]);
 
@@ -215,16 +262,22 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.insertText({ 
-            position: [3, 35], 
-            text: ',\n'
-            + `        'In those days',\n`
-            + `        'in those far remote days',\n`
-            + `        'in those nights',\n`
-            + `        'in those faraway nights',\n`
-            + `        'in those years',\n`
-            + `        'in those far remote years',\n`
-            + `        'at that time the wise one who knew how to speak in elaborate words lived in the Land'`
+        await context.editText({
+            edits: [
+                {
+                    kind:     'insert',
+                    position: [3, 35], 
+                    text:     ',\n'
+                    + `        'In those days',\n`
+                    + `        'in those far remote days',\n`
+                    + `        'in those nights',\n`
+                    + `        'in those faraway nights',\n`
+                    + `        'in those years',\n`
+                    + `        'in those far remote years',\n`
+                    + `        'at that time the wise one who knew how to speak in elaborate words lived in the Land'`
+
+                }
+            ]
         });
         context.assertPairs([ { line: 12, sides: range(28, 48) } ]);
         context.assertCursors([ [12, 38] ]);
@@ -249,7 +302,11 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.replaceText({ replace: { start: [10, 8], end: [10, 94] }, insert: '' });
+        await context.editText({ 
+            edits: [
+                { kind: 'delete', range: { start: [10, 8], end: [10, 94] } }
+            ]
+        });
         context.assertPairs([ { line: 12, sides: range(28, 48) } ]);
         context.assertCursors([ [12, 38] ]);
 
@@ -271,7 +328,11 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.replaceText({ replace: { start: [1, 15], end: [3, 36] }, insert: ''  });
+        await context.editText({ 
+            edits: [
+                { kind: 'delete', range: { start: [1, 15], end: [3, 36] } }
+            ]
+        });
         context.assertPairs([ { line: 10, sides: range(28, 48) } ]);
         context.assertCursors([ [10, 38] ]);
 
@@ -293,7 +354,11 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.replaceText({ replace: { start: [0, 9], end: [0, 13] }, insert: 'primary' });
+        await context.editText({ 
+            edits: [
+                { kind: 'replace', replace: { start: [0, 9], end: [0, 13] }, insert: 'primary' }
+            ]
+        });
         context.assertPairs([ { line: 10, sides: range(28, 48) } ]);
         context.assertCursors([ [10, 38] ]);
 
@@ -317,9 +382,16 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.replaceText({
-            replace: { start: [1, 10], end: [1, 11] }, 
-            insert:  'num = 1.4561;\n    \n    const instructionsOfShuruppak'
+        await context.editText({
+            edits: [
+                {
+                    kind:    'replace',
+                    replace: { start: [1, 10], end: [1, 11] }, 
+                    insert:  'num = 1.4561;\n' 
+                    + '    \n'
+                    + '    const instructionsOfShuruppak'
+                }
+            ]
         });
         context.assertPairs([ { line: 12, sides: range(28, 48) } ]);
         context.assertCursors([ [12, 38] ]);
@@ -336,9 +408,14 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.replaceText({ 
-            replace: { start: [3, 37], end: [11, 4] }, 
-            insert:  `'Fate is a wet bank; it can make one slip'`
+        await context.editText({
+            edits: [
+                { 
+                    kind:    'replace',
+                    replace: { start: [3, 37], end: [11, 4] }, 
+                    insert:  `'Fate is a wet bank; it can make one slip'`
+                }
+            ]
         });
         context.assertPairs([ { line: 4, sides: range(28, 48) } ]);
         context.assertCursors([ [4, 38] ]);
@@ -357,13 +434,18 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        await context.replaceText({ 
-            replace: { start: [0, 0], end: [2, 4] },
-            insert:  '() => {\n'
-                + '    function hey() {\n'
-                + `        console.log('🙂 + 🕶 = 😎');\n`
-                + '    }\n'
-                + '    hey();'
+        await context.editText({
+            edits: [
+                { 
+                    kind:    'replace',
+                    replace: { start: [0, 0], end: [2, 4] },
+                    insert:  '() => {\n'
+                        + '    function hey() {\n'
+                        + `        console.log('🙂 + 🕶 = 😎');\n`
+                        + '    }\n'
+                        + '    hey();'
+                }
+            ]
         });
         context.assertPairs([ { line: 6, sides: range(28, 48) } ]);
         context.assertCursors([ [6, 38] ]);
@@ -415,7 +497,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[[[[]]]]]]]]]]
         //                                       ^(cursor position)
         // ```
-        await context.insertText({ position: [1, 10], text: '❤🧡💛💚💙💜🤎🖤🤍' });
+        await context.editText({
+            edits: [
+                { kind: 'insert', position: [1, 10], text: '❤🧡💛💚💙💜🤎🖤🤍' }
+            ]
+        });
         sliceAdd(pairs[0].sides, 1, 20, 17);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 36] ]);
@@ -433,7 +519,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[[[[]]]]]]H᭭a᭰p⃠p᭬ỳ֑]]]]
         //                                       ^(cursor position)
         // ```
-        await context.insertText({ position: [1, 42], text: 'H᭭a᭰p⃠p᭬ỳ֑' });
+        await context.editText({
+            edits: [
+                { kind: 'insert', position: [1, 42], text: 'H᭭a᭰p⃠p᭬ỳ֑' }
+            ]
+        });
         sliceAdd(pairs[0].sides, 16, 20, 11);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 36] ]);
@@ -487,7 +577,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[[[[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊人、在水一方。😮😣😖🤯]]]]]]H᭭a᭰p⃠p᭬ỳ֑]]]]
         //                                                                                          ^(cursor position)
         // ```
-        await context.insertText({ position: [1, 66], text: '😮😣😖🤯' });
+        await context.editText({
+            edits: [
+                { kind: 'insert', position: [1, 66], text: '😮😣😖🤯' }
+            ]
+        });
         sliceAdd(pairs[0].sides, 10, 20, 8);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 74] ]);
@@ -523,7 +617,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[Ice Cream 🍦[[[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊人、在水一方。😮😣]]]]]]H᭭a᭰p⃠p᭬ỳ֑]]]]
         //                                                                                                  ^(cursor position)
         // ```
-        await context.insertText({ position: [1, 33], text: 'Ice Cream 🍦' });
+        await context.editText({
+            edits: [
+                { kind: 'insert', position: [1, 33], text: 'Ice Cream 🍦' }
+            ]
+        });
         sliceAdd(pairs[0].sides, 7, 20, 12);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 82] ]);
@@ -541,7 +639,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[Ice Cream 🍦[[[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊人、在水一方。😮😣]]🙏🙏🙏🙏🙏]]]]H᭭a᭰p⃠p᭬ỳ֑]]]]
         //                                                                                                  ^(cursor position)
         // ```
-        await context.insertText({ position: [1, 84], text: '🙏🙏🙏🙏🙏' });
+        await context.editText({
+            edits: [
+                { kind: 'insert', position: [1, 84], text: '🙏🙏🙏🙏🙏' }
+            ]
+        });
         sliceAdd(pairs[0].sides, 12, 20, 10);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 82] ]);
@@ -559,7 +661,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[Ice[[[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊人、在水一方。😮😣]]🙏🙏🙏🙏🙏]]]]H᭭a᭰p⃠p᭬ỳ֑]]]]
         //                                                                                         ^(cursor position)
         // ```
-        await context.replaceText({ replace: { start: [1, 36], end: [1, 45] }, insert: '' });
+        await context.editText({
+            edits: [ 
+                { kind: 'delete', range: { start: [1, 36], end: [1, 45] } }
+            ]
+        });
         sliceSub(pairs[0].sides, 7, 20, 9);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 73] ]);
@@ -577,7 +683,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[Ice[[[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊人、在水一方。😮😣]🥰😍🤫🤓]🙏🙏🙏🙏🙏]]]]H᭭a᭰p⃠p᭬ỳ֑]]]]
         //                                                                                         ^(cursor position)
         // ```
-        await context.insertText({ position: [1, 74], text: '🥰😍🤫🤓' });
+        await context.editText({
+            edits: [
+                { kind: 'insert', position: [1, 74], text: '🥰😍🤫🤓' }
+            ]
+        });
         sliceAdd(pairs[0].sides, 11, 20, 8);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 73] ]);
@@ -595,7 +705,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[Ice[[Bubble Tea 🧋[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊人、在水一方。😮😣]🥰😍🤫🤓]🙏🙏🙏🙏🙏]]]]H᭭a᭰p⃠p᭬ỳ֑]]]]
         //                                                                                                      ^(cursor position)
         // ```
-        await context.insertText({ position: [1, 38], text: 'Bubble Tea 🧋' });
+        await context.editText({
+            edits: [
+                { kind: 'insert', position: [1, 38], text: 'Bubble Tea 🧋' }
+            ]
+        });
         sliceAdd(pairs[0].sides, 9, 20, 13);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 86] ]);
@@ -613,7 +727,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[Ice[[Bubble Tea 🧋[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊人、在水一方。😮😣]🥰😍🤫🤓]🙏🙏🙏🙏🙏]]]]]]]]
         //                                                                                                      ^(cursor position)
         // ```
-        await context.replaceText({ replace: { start: [1, 110], end: [1, 121] }, insert: '' });
+        await context.editText({
+            edits: [ 
+                { kind: 'delete', range: { start: [1, 110], end: [1, 121] } }
+            ]
+        });
         sliceSub(pairs[0].sides, 16, 20, 11);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 86] ]);
@@ -631,7 +749,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[Ice[[Tea 🧋[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊人、在水一方。😮😣]🥰😍🤫🤓]🙏🙏🙏🙏🙏]]]]]]]]
         //                                                                                               ^(cursor position)
         // ```
-        await context.replaceText({ replace: { start: [1, 38], end: [1, 45] }, insert: '' });
+        await context.editText({
+            edits: [ 
+                { kind: 'delete', range: { start: [1, 38], end: [1, 45] } }
+            ]
+        });
         sliceSub(pairs[0].sides, 9, 20, 7);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 79] ]);
@@ -702,7 +824,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[Ice[[Tea 🧋[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊Fire 🔥人、在]🥰😍🤫🤓]🙏🙏🙏🙏🙏]]]]]Chicken 🍗]]]
         //                                                                                      ^(cursor position)
         // ```
-        await context.insertText({ position: [1, 103], text: 'Chicken 🍗' });
+        await context.editText({
+            edits: [
+                { kind: 'insert', position: [1, 103], text: 'Chicken 🍗' }
+            ]
+        });
         sliceAdd(pairs[0].sides, 17, 20, 10);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 75] ]);
@@ -720,7 +846,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[Popcorn 🍿[[[[[Ice[[Tea 🧋[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊Fire 🔥人、在]🥰😍🤫🤓]🙏🙏🙏🙏🙏]]]]]Chicken 🍗]]]
         //                                                                                                ^(cursor position)
         // ```
-        await context.insertText({ position: [1, 28], text: 'Popcorn 🍿' });
+        await context.editText({
+            edits: [
+                { kind: 'insert', position: [1, 28], text: 'Popcorn 🍿' }
+            ]
+        });
         sliceAdd(pairs[0].sides, 2, 20, 10);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 85] ]);
@@ -739,7 +869,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛🫀🖤🤍[Popcorn 🍿[[[[[Ice[[Tea 🧋[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊Fire 🔥人、在]🥰😍🤫🤓]🙏🙏🙏🙏🙏]]]]]Chicken 🍗]]]
         //                                                                                          ^(cursor position)
         // ```
-        await context.replaceText({ replace: { start: [1, 15], end: [1, 23] }, insert: '🫀' });
+        await context.editText({
+            edits: [
+                { kind: 'replace', replace: { start: [1, 15], end: [1, 23] }, insert: '🫀' }
+            ]
+        });
         sliceSub(pairs[0].sides, 1, 20, 6);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 79] ]);
@@ -757,7 +891,11 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛🫀🖤🤍[Popcorn 🍿[[[[[Ice[[Tea 🧋[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊Fire 🔥人、在]🥰😍🤫🤓]🙏🙏]]]]]Chicken 🍗]]]
         //                                                                                          ^(cursor position)
         // ```
-        await context.replaceText({ replace: { start: [1, 96], end: [1, 102] }, insert: '' });
+        await context.editText({
+            edits: [
+                { kind: 'delete', range: { start: [1, 96], end: [1, 102] } }
+            ]
+        });
         sliceSub(pairs[0].sides, 12, 20, 6);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 79] ]);
@@ -817,9 +955,17 @@ const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
     // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the pairs 
     // are randomly selected. However for notational convenience, we use `[]` to represent pairs.
     prelude: async (context) => {
-        await context.insertText({
-            position: [0, 0], 
-            text:     'function main(){\n    const reallyLongVariableName = 10;\n    \n}'
+        await context.editText({
+            edits: [
+                { 
+                    kind:     'insert',
+                    position: [0, 0], 
+                    text:     'function main(){\n'
+                    + '    const reallyLongVariableName = 10;\n'
+                    + '    \n'
+                    + '}'
+                }
+            ]
         });
         await context.setCursors({ cursors: [ [2, 4] ] });
         await context.typePair({ repetitions: 10 });
@@ -1252,7 +1398,11 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //     [[[[[[[[[[]]]]]]]]]] Goodbye World 🌍! 
         // }
         // ```
-        await context.insertText({ position: [1, 24], text: ' Goodbye World 🌍! ' });
+        await context.editText({ 
+            edits: [
+                { kind: 'insert', position: [1, 24], text: ' Goodbye World 🌍! ' }
+            ]
+        });
         check();
 
         // 2. Insert multi-line text on the same line after the pairs.
@@ -1270,7 +1420,11 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
         // }
         // ```
-        await context.insertText({ position: [1, 43], text: ALICE_TEXT_1 });
+        await context.editText({ 
+            edits: [
+                { kind: 'insert', position: [1, 43], text: ALICE_TEXT_1 }
+            ]
+        });
         check();
         
         // 3. Delete single-line text on the same line after the pairs.
@@ -1288,7 +1442,11 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
         // }
         // ```
-        await context.replaceText({  replace: { start: [1, 53], end: [1, 75] }, insert: '' });
+        await context.editText({ 
+            edits: [
+                { kind: 'delete', range: { start: [1, 53], end: [1, 75] } }
+            ]
+        });
         check();
 
         // 4. Delete multi-line text starting from the same line after the pairs and ending on a line 
@@ -1305,7 +1463,11 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
         // }
         // ``` 
-        await context.replaceText({ replace: { start: [1, 48], end: [3, 104] }, insert: '' });
+        await context.editText({ 
+            edits: [
+                { kind: 'delete', range: { start: [1, 48], end: [3, 104] } }
+            ]
+        });
         check();
 
         // 5. Replace single-line text on the same line after the pairs with single-line text.
@@ -1321,7 +1483,11 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
         // }
         // ```
-        await context.replaceText({ replace: { start: [1, 25], end: [1, 32] }, insert: 'Hello' });
+        await context.editText({ 
+            edits: [
+                { kind: 'replace', replace: { start: [1, 25], end: [1, 32] }, insert: 'Hello' }
+            ]
+        });
         check();
 
         // 6. Replace single-line text on the same line after the pairs with multi-line text.
@@ -1343,7 +1509,11 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
         // }
         // ``` 
-        await context.replaceText({ replace: { start: [1, 41], end: [1, 46] }, insert: LOREM_IPSUM_1 });
+        await context.editText({ 
+            edits: [
+                { kind: 'replace', replace: { start: [1, 41], end: [1, 46] }, insert: LOREM_IPSUM_1 }
+            ]
+        });
         check();
 
         // 7. Replace multi-line text starting from the same line after the pairs and ending on a line 
@@ -1360,7 +1530,11 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
         // }
         // ``` 
-        await context.replaceText({ replace: { start: [1, 41], end: [7, 81] }, insert: 'Cat 😺!' });
+        await context.editText({ 
+            edits: [
+                { kind: 'replace', replace: { start: [1, 41], end: [7, 81] }, insert: 'Cat 😺!' }
+            ]
+        });
         check();
 
         // 8. Replace multi-line text starting from the same line after the pairs and ending on a line 
@@ -1380,7 +1554,11 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // under the hedge.
         // }
         // ```
-        await context.replaceText({ replace: { start: [1, 41], end: [5, 89] }, insert: ALICE_TEXT_2 });
+        await context.editText({ 
+            edits: [
+                { kind: 'replace', replace: { start: [1, 41], end: [5, 89] }, insert: ALICE_TEXT_2 }
+            ]
+        });
         check();
 
         // 9. Insert single-line text on a line below the pairs.
@@ -1399,7 +1577,11 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // under the hedge.
         // }
         // ```
-        await context.insertText({ position: [3, 37], text: '😤 hmph 😤 ' });
+        await context.editText({ 
+            edits: [
+                { kind: 'insert', position: [3, 37], text: '😤 hmph 😤 ' }
+            ]
+        });
         check();
 
         // 10. Insert multi-line text on a line below the pairs.
@@ -1426,7 +1608,11 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
         // }
         // ```
-        await context.insertText({ position: [8, 16], text: '\n\n' + ALICE_TEXT_1 });
+        await context.editText({ 
+            edits: [
+                { kind: 'insert', position: [8, 16], text: '\n\n' + ALICE_TEXT_1 }
+            ]
+        });
         check();
 
         // 11. Delete single-line text on a line below the pairs. 
@@ -1453,7 +1639,11 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
         // }
         // ```
-        await context.replaceText({ replace: { start: [3, 37], end: [3, 48] }, insert: '' });
+        await context.editText({ 
+            edits: [
+                { kind: 'delete', range: { start: [3, 37], end: [3, 48] } }
+            ]
+        });
         check();
 
         // 12. Delete multi-line text on a line below the pairs.
@@ -1476,7 +1666,11 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
         // }
         // ```
-        await context.replaceText({ replace: { start: [10, 0], end: [13, 0] }, insert: '' });
+        await context.editText({ 
+            edits: [
+                { kind: 'delete', range: { start: [10, 0], end: [13, 0] } }
+            ]
+        });
         check();
 
         // 13. Replace single-line text on a line below the pairs with single-line text.
@@ -1499,7 +1693,15 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
         // } 
         // ```
-        await context.replaceText({ replace: { start: [10, 23], end: [10, 61] }, insert: '🥳🥳🥳🥳🥳🥳🥳🥳🥳🥳' });
+        await context.editText({ 
+            edits: [
+                { 
+                    kind:    'replace', 
+                    replace: { start: [10, 23], end: [10, 61] }, 
+                    insert:  '🥳🥳🥳🥳🥳🥳🥳🥳🥳🥳' 
+                }
+            ]
+        });
         check();
 
         // 14. Replace single-line text on a line below the pairs with multi-line text.
@@ -1529,7 +1731,15 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
         // }
         // ```
-        await context.replaceText({ replace: { start: [7, 35], end: [7, 64] }, insert: LOREM_IPSUM_1 + '\n' });
+        await context.editText({
+            edits: [
+                { 
+                    kind:    'replace', 
+                    replace: { start: [7, 35], end: [7, 64] }, 
+                    insert:  LOREM_IPSUM_1 + '\n'
+                }
+            ]
+        });
         check();
 
         // 15. Replace multi-line text on lines below the pairs with single-line text.
@@ -1546,9 +1756,14 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
         // }
         // ```
-        await context.replaceText({
-            replace: { start: [2, 32], end: [15, 16] }, 
-            insert:  `Hey now, you're an all star!'` 
+        await context.editText({
+            edits: [
+                { 
+                    kind:    'replace', 
+                    replace: { start: [2, 32], end: [15, 16] }, 
+                    insert:  `Hey now, you're an all star!'` 
+                }
+            ]
         });
         check();
 
@@ -1570,7 +1785,11 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
         // }
         // ```
-        await context.replaceText({ replace: { start: [2, 23], end: [5, 27] }, insert: ALICE_TEXT_2 });
+        await context.editText({
+            edits: [
+                { kind: 'replace', replace: { start: [2, 23], end: [5, 27] }, insert:  ALICE_TEXT_2 }
+            ]
+        });
         check();
     }
 });

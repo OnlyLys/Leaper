@@ -1,9 +1,9 @@
 //! The following module defines the test framework for this extension.
 
-import { TextEditor, commands, Range, Selection, Position, SnippetString, window, workspace, extensions } from 'vscode';
+import { TextEditor, commands, Range, Selection, Position, SnippetString, window, workspace, extensions, TextEditorEdit } from 'vscode';
 import * as assert from 'assert';
 import { TestAPI } from '../../extension';
-import { CompactCursors, CompactClusters, CompactRange } from './compact';
+import { CompactCursors, CompactClusters, CompactRange, CompactPosition } from './compact';
 import { pickRandom, wait, zip } from './utilities';
 
 export class TestCategory {
@@ -236,26 +236,27 @@ export class TestContext {
     }
 
     /**
-     * Replace a range of text in the document.
+     * Edit text in the document. 
+     * 
+     * All the edits made for each call of this method will be done simultaneously.
      */
-    public async replaceText(args: ReplaceTextArgs): Promise<void> {
-        const action = async () => {
-            const { start: [startLine, startChar], end: [endLine, endChar] } = args.replace;
-            const asRange = new Range(startLine, startChar, endLine, endChar);
-            await this.editor.edit((editBuilder) => editBuilder.replace(asRange, args.insert));
+    public async editText(args: EditTextArgs): Promise<void> {
+        const applyAllEdits = (builder: TextEditorEdit) => {
+            for (const edit of args.edits) {
+                if (edit.kind === 'replace') {
+                    const { start: [startLine, startChar], end: [endLine, endChar] } = edit.replace;
+                    builder.replace(new Range(startLine, startChar, endLine, endChar), edit.insert);
+                } else if (edit.kind === 'insert') {
+                    builder.insert(new Position(edit.position[0], edit.position[1]), edit.text);
+                } else {
+                    const { start: [startLine, startChar], end: [endLine, endChar] } = edit.range;
+                    builder.delete(new Range(startLine, startChar, endLine, endChar));
+                }
+            }
         };
-        return executeWithRepetitionDelay(action, args);
-    }
-
-    /**
-     * Insert text at a position in the document.
-     */
-    public async insertText(args: InsertTextArgs): Promise<void> {
-        const action = async () => {
-            const asPosition = new Position(args.position[0], args.position[1]);
-            await this.editor.edit((editBuilder) => editBuilder.insert(asPosition, args.text));
-        };
-        return executeWithRepetitionDelay(action, args);
+        return executeWithRepetitionDelay(async () => {
+            return this.editor.edit(applyAllEdits);
+        }, args);
     }
 
     /**
@@ -424,7 +425,7 @@ interface RepetitionDelayOptions {
      * 
      * Default is `1`. 
      */
-    repetitions?: number,
+    repetitions?: number;
 
     /** 
      * Milliseconds of delay to apply after each action execution. 
@@ -437,7 +438,7 @@ interface RepetitionDelayOptions {
      * 
      * This delay is applied after each repetition of this action.
      */
-    delay?: number
+    delay?: number;
 }
 
 interface TypeTextArgs extends RepetitionDelayOptions {
@@ -445,33 +446,64 @@ interface TypeTextArgs extends RepetitionDelayOptions {
     /**
      * Text which will be typed into the document, codepoint by codepoint.
      */
-    text: string
+    text: string;
 }
 
-interface ReplaceTextArgs extends RepetitionDelayOptions {
-    
+interface EditTextArgs extends RepetitionDelayOptions {
+
+    /**
+     * Edits to apply simultaneously.
+     */
+    edits: ReadonlyArray<ReplaceTextEdit | InsertTextArgs | DeleteTextArgs>;
+}
+
+interface ReplaceTextEdit {
+
+    /** 
+     * Replace a range of text in the document. 
+     */
+    kind: 'replace';
+
     /**
      * Range of text to replace.
      */
     replace: CompactRange;
 
     /**
-     * String to insert in place of the replaced range.
+     * Text to insert in place of the replaced range.
      */
     insert: string;
 }
 
-interface InsertTextArgs extends RepetitionDelayOptions {
+interface InsertTextArgs {
 
     /** 
-     * Position to insert text at. 
+     * Insert text at a position in the document.
      */
-    position: [number, number];
+    kind: 'insert';
 
-    /** 
-     * String to insert at that position. 
+    /**
+     * Position to insert `text` at.
+     */
+    position: CompactPosition;
+
+    /**
+     * Text to insert at that position.
      */
     text: string;
+}
+
+interface DeleteTextArgs {
+
+    /**
+     * Delete a range of text in the document.
+     */
+    kind: 'delete';
+
+    /**
+     * Range of text to delete.
+     */
+    range: CompactRange;
 }
 
 interface MoveCursorsArgs extends RepetitionDelayOptions {

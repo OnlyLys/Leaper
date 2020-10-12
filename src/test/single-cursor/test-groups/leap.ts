@@ -38,9 +38,10 @@ const TEST_CASES: TestCase[] = [
         prelude: async (context) => { 
 
             // Insert pairs between some text to simulate a typical usage scenario.
-            await context.insertText({ 
-                position: [0, 0], 
-                text:     ALICE_TEXT_1 + '\n\n' + ALICE_TEXT_2 
+            await context.editText({
+                edits: [
+                    { kind: 'insert', position: [0, 0], text: ALICE_TEXT_1 + '\n\n' + ALICE_TEXT_2 }
+                ]
             });
             await context.setCursors({ cursors: [ [6, 71] ] });
             await context.typePair({ repetitions: 10 });
