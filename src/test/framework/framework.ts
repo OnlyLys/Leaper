@@ -218,23 +218,21 @@ export class TestContext {
      * Which kind of autoclosing pair is typed in is randomly determined. 
      */
     public async typePair(options?: RepetitionDelayOptions): Promise<void> {
-        const action = async () => {
+        return executeWithRepetitionDelay(async () => {
             const opener = pickRandom([ '{', '[', '(' ]);
             return commands.executeCommand('default:type', { text: opener });
-        };
-        return executeWithRepetitionDelay(action, options);
+        }, options);
     }
 
     /**
      * Type text into the document, codepoint by codepoint.
      */
     public async typeText(args: TypeTextArgs): Promise<void> {
-        const action = async () => {
+        return executeWithRepetitionDelay(async () => {
             for (const char of args.text) {
                 await commands.executeCommand('default:type', { text: char });
             }
-        };
-        return executeWithRepetitionDelay(action, args);
+        }, args);
     }
 
     /**
@@ -264,7 +262,7 @@ export class TestContext {
      * Move all the cursors in a specific direction once.
      */
     public async moveCursors(args: MoveCursorsArgs): Promise<void> {
-        const action = async () => {
+        return executeWithRepetitionDelay(async () => {
             switch (args.direction) {
                 case 'right': return commands.executeCommand('cursorRight');
                 case 'left':  return commands.executeCommand('cursorLeft');
@@ -272,15 +270,14 @@ export class TestContext {
                 case 'down':  return commands.executeCommand('cursorDown');
                 default:      throw new Error('Unreachable!');
             }
-        };
-        return executeWithRepetitionDelay(action, args);
+        }, args);
     }
 
     /**
      * Set the cursors to specific positions in the document.
      */
     public async setCursors(args: SetCursorsArgs): Promise<void> {
-        const action = async () => {
+        return executeWithRepetitionDelay(async () => {
             this.editor.selections = args.cursors.map((cursor) => {
                 const anchorLine = Array.isArray(cursor) ? cursor[0] : cursor.anchor[0];
                 const anchorChar = Array.isArray(cursor) ? cursor[1] : cursor.anchor[1];
@@ -288,48 +285,52 @@ export class TestContext {
                 const activeChar = Array.isArray(cursor) ? cursor[1] : cursor.active[1];
                 return new Selection(anchorLine, anchorChar, activeLine, activeChar);
             });
-        };
-        return executeWithRepetitionDelay(action, args);
+        }, args);
     }
 
     /**
      * Call the 'Leap' command.
      */
     public async leap(options?: RepetitionDelayOptions): Promise<void> {
-        const action = async () => commands.executeCommand(`leaper.leap`);
-        return executeWithRepetitionDelay(action, options);
+        return executeWithRepetitionDelay(async () => {
+            return commands.executeCommand(`leaper.leap`);
+        }, options);
     }
 
     /**
      * Call the 'Escape Leaper Mode' command.
      */
     public async escapeLeaperMode(options?: RepetitionDelayOptions): Promise<void> {
-        const action = async () => commands.executeCommand(`leaper.escapeLeaperMode`);
-        return executeWithRepetitionDelay(action, options);
+        return executeWithRepetitionDelay(async () => {
+            return commands.executeCommand(`leaper.escapeLeaperMode`);
+        }, options);
     }
 
     /** 
      * Backspace once.
      */
     public async backspace(options?: RepetitionDelayOptions): Promise<void> {
-        const action = async () => commands.executeCommand('deleteLeft');
-        return executeWithRepetitionDelay(action, options);
+        return executeWithRepetitionDelay(async () => {
+            return commands.executeCommand('deleteLeft');
+        }, options);
     }
 
     /**
      * Backspace a word (i.e. press 'ctrl + backspace').
      */
     public async backspaceWord(options?: RepetitionDelayOptions): Promise<void> {
-        const action = async () => commands.executeCommand('deleteWordLeft');
-        return executeWithRepetitionDelay(action, options);
+        return executeWithRepetitionDelay(async () => {
+            return commands.executeCommand('deleteWordLeft');
+        }, options);
     }
 
     /**
      * Delete right once (i.e. press the 'delete' key).
      */
     public async deleteRight(options?: RepetitionDelayOptions): Promise<void> {
-        const action = async () => commands.executeCommand('deleteRight');
-        return executeWithRepetitionDelay(action, options);
+        return executeWithRepetitionDelay(async () => {
+            return commands.executeCommand('deleteRight');
+        }, options);
     }
 
     /**
@@ -338,60 +339,65 @@ export class TestContext {
      * The snippet will be inserted at cursor position.
      */
     public async insertSnippet(args: InsertSnippetArgs): Promise<void> {
-        const action = async () => this.editor.insertSnippet(args.snippet);
-        return executeWithRepetitionDelay(action, args);
+        return executeWithRepetitionDelay(async () => { 
+            return this.editor.insertSnippet(args.snippet);
+        }, args);
     }
 
     /** 
      * Jump to the next tabstop in the current snippet.
      */
     public async jumpToNextTabstop(options?: RepetitionDelayOptions): Promise<void> {
-        const action = async () => commands.executeCommand('jumpToNextSnippetPlaceholder');
-        return executeWithRepetitionDelay(action, options);
+        return executeWithRepetitionDelay(async () => {
+            return commands.executeCommand('jumpToNextSnippetPlaceholder');
+        }, options);
     }
 
     /** 
      * Jump to the previous tabstop in the current snippet.
      */
     public async jumpToPrevTabstop(options?: RepetitionDelayOptions): Promise<void> {
-        const action = async () => commands.executeCommand('jumpToPrevSnippetPlaceholder');
-        return executeWithRepetitionDelay(action, options);
+        return executeWithRepetitionDelay(async () => {
+            return commands.executeCommand('jumpToPrevSnippetPlaceholder');
+        }, options);
     }
 
     /**
      * Trigger an autocomplete suggestion then accept the first suggestion.
      */
     public async triggerAndAcceptSuggestion(options?: RepetitionDelayOptions): Promise<void> {
-        const action = async () => {
+        return executeWithRepetitionDelay(async () => {
             await commands.executeCommand('editor.action.triggerSuggest');
             await wait(100);    // Wait for the suggestion box to appear.
             await commands.executeCommand('acceptSelectedSuggestion');
-        };
-        return executeWithRepetitionDelay(action, options);
+        }, options);
     }
 
     /**
      * Perform an 'Undo' (i.e. press 'ctrl + z').
      */
     public async undo(options?: RepetitionDelayOptions): Promise<void> {
-        const action = async () => commands.executeCommand('undo');
-        return executeWithRepetitionDelay(action, options);
+        return executeWithRepetitionDelay(async () => {
+            return commands.executeCommand('undo');
+        }, options);
     }
 
     /**
      * Press the 'Home' key.
      */
     public async home(options?: RepetitionDelayOptions): Promise<void> {
-        const action = async () => commands.executeCommand('cursorHome');
-        return executeWithRepetitionDelay(action, options);
+        return executeWithRepetitionDelay(async () => {
+            return commands.executeCommand('cursorHome');
+        }, options);
     }
 
     /**
      * Press the 'End' key.
      */
     public async end(options?: RepetitionDelayOptions): Promise<void> {
-        const action = async () => commands.executeCommand('cursorEnd');
-        return executeWithRepetitionDelay(action, options);
+        return executeWithRepetitionDelay(async () => {
+            return commands.executeCommand('cursorEnd');
+        }, options);
     }
 }
 
