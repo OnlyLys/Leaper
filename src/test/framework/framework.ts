@@ -70,6 +70,9 @@ export class TestCase {
         const { name, editorLanguageId, prelude, action } = this.args;
         it(name, async function () {
 
+            // Sometimes tests can fail due to the editor lagging.
+            this.retries(1);
+
             // Initialize the context then run the prelude to setup the editor.
             const context = await TestContext.create(editorLanguageId);
 
