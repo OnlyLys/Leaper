@@ -33,6 +33,41 @@ export const SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP = new TestGroup
                 context.assertPairs([ { line: -1, sides: [] } ]);
                 context.assertCursors([ [5, 90] ]);
             }
+        }),
+
+        // Check if the 'Escape Leaper Mode' command can handle being called multiple times in one
+        // event loop cycle.
+        //
+        // Such a scenario could occur when the user presses and holds down the keybinding for the
+        // command.
+        new TestCase({
+            name: 'Can Handle Being Rapidly Called',
+            prelude: async (context) => {
+
+                // Type the following text into the editor:
+                //
+                // ```
+                // function main() {
+                //     function inner() {
+                //         return [ { a: { b: []}}]
+                //     }                       ^(cursor position)
+                // }
+                // ```
+                await context.typeText({ 
+                    text: 'function main() {\n'
+                        +     'function inner() {\n'
+                        +         'return [ { a: { b: ['
+                });
+                context.assertPairsPrelude([ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ]);
+                context.assertCursorsPrelude([ [2, 28] ]);
+            },
+            action: async (context) => {
+
+                // This should remove all pairs from being tracked and do nothing else.
+                await context.escapeLeaperMode({ delay: 0, repetitions: 50 }); 
+                context.assertPairs([ { line: -1, sides: [] } ]);
+                context.assertCursors([ [2, 28] ]);
+            }
         })
     ]
 });

@@ -201,6 +201,54 @@ const TEST_CASES: TestCase[] = [
             context.assertCursors([ [2, 49] ]);
         }
     }),
+
+    // Let's say the user created a new keybinding for the 'Leap' command that does not take into 
+    // consideration the `leaper.hasLineOfSight` or `leaper.inLeaperMode` keybinding contexts, and 
+    // managed to hold down said keybinding for a while. That will cause many calls of the 'Leap' 
+    // command to occur in a short span of time.
+    //
+    // This test case tests whether the extension can handle such a situation.
+    new TestCase({
+        name: 'Can Handle Being Rapidly Called',
+        prelude: async (context) => {
+
+            // Initialize the editor to the following state:
+            //
+            // ```
+            // function main() {
+            //     function inner() {
+            //         return [ { a: { b: [ 100 ]}}]
+            //     }                        ^(cursor position)
+            // }
+            // ```
+            await context.typeText({ 
+                text: 'function main() {\n'
+                    +     'function inner() {\n'
+                    +         'return [ { a: { b: [ 100 '
+            });
+            await context.moveCursors({ direction: 'left', repetitions: 4 });
+            context.assertPairsPrelude([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
+            context.assertCursorsPrelude([ [2, 29] ]);
+        },
+        action: async (context) => {
+
+            // Since there is an obstacle at where the cursor is at, a leap should not occur.
+            await context.leap({ delay: 0, repetitions: 50 });
+            context.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
+            context.assertCursors([ [2, 29] ]);
+
+            // Move past the '100' obstacle.
+            await context.moveCursors({ direction: 'right', repetitions: 3 });
+            context.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
+            context.assertCursors([ [2, 32] ]);
+
+            // Rapidly calling the 'Leap' command here should cause the cursor to leap out of all
+            // the pairs, and do nothing else after that.
+            await context.leap({ delay: 0, repetitions: 50 });
+            context.assertPairs([ { line: -1, sides: [] } ]);
+            context.assertCursors([ [2, 37] ]);
+        }
+    })
 ];
 
 /** 
