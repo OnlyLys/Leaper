@@ -449,6 +449,133 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         });
         context.assertPairs([ { line: 6, sides: range(28, 48) } ]);
         context.assertCursors([ [6, 38] ]);
+
+        // 17. Simultaneous text modifications before the pairs - Part 1.
+        //
+        // Document state after:
+        //
+        // ```
+        // () => {
+        //     function hey() {
+        //         console.log('🙂 + 🕶 = 😎');
+        //         console.log('🧐🧐🧐');
+        //         function theAnswer(): number {
+        //             return 42 + 42 - 42;
+        //         }
+        //         console.log(theAnswer());
+        //     }
+        //
+        //     const shuruppak = [
+        //         'The night: it can hide both good and evil.',
+        //         'To speak arrogantly is like an abscess: a herb that makes the stomach sick.',
+        //         'A loving heart maintains a family; a hateful heart destroys a family.'
+        //     ];
+        //     hey();
+        //     const fn = () => ['🐸', [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        await context.editText({
+            edits: [
+                {
+                    kind:     'insert',
+                    position: [6, 4],
+                    text:     'hey();\n    '
+                },
+                { 
+                    kind:    'replace',
+                    replace: { start: [5, 37], end: [5, 79] },
+                    insert:  '\n'
+                    + `        'The night: it can hide both good and evil.',\n`
+                    + `        'To speak arrogantly is like an abscess: a herb that makes the stomach sick.',\n`
+                    + `        'A loving heart maintains a family; a hateful heart destroys a family.'\n`
+                    + '    '
+                },
+                { 
+                    kind:    'replace', 
+                    replace: { start: [5, 10], end: [5, 25] }, 
+                    insert:  's' 
+                },
+                { 
+                    kind:  'delete',  
+                    range: { start: [4, 4], end: [4, 10] }             
+                },
+                {   
+                    kind:     'insert',  
+                    position: [3, 4], 
+                    text:     `    console.log('🧐🧐🧐');\n` 
+                    + '        function theAnswer(): number {\n'
+                    + '            return 42 + 42 - 42;\n'
+                    + '        }\n'
+                    + '        console.log(theAnswer());\n'
+                    + '    '
+                }
+            ]
+        });
+        context.assertPairs([ { line: 16, sides: range(28, 48) } ]);
+        context.assertCursors([ [16, 38] ]);
+
+        // 18. Simultaneous text modifications before the pairs - Part 2.
+        //
+        // Document state after:
+        //
+        // ```
+        // () => {
+        //     function hey() {
+        //         console.log('🙂 + 🕶 = 😎');
+        //         console.log('🧐🧐🧐😳😳😳');
+        //         function theAnswer(): number {
+        //             return 42 + 42 - 42;
+        //         }
+        //         console.log(theAnswer());
+        //     }
+        //     (() => {
+        //         console.log(hey());
+        //     });
+        //     const shuruppak = ['A loving heart maintains a family; a hateful heart destroys a family.'];
+        //     let callback = async (args) => ['🐸', [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        await context.editText({
+            edits: [
+                {
+                    kind:     'insert',
+                    position: [16, 16],
+                    text:     'args'
+                },
+                {
+                    kind:     'insert',
+                    position: [16, 15],
+                    text:     'async '
+                },
+                { 
+                    kind:    'replace',
+                    replace: { start: [15, 4], end: [16, 12] },
+                    insert:  'let callback'
+                },
+                {
+                    kind:     'insert',
+                    position: [3, 27],
+                    text:     '😳😳😳'
+                },
+                {
+                    kind:  'delete',
+                    range: { start: [13, 79], end: [14, 4] },
+                },
+                { 
+                    kind:  'delete',
+                    range: { start: [10, 23], end: [13, 8] }
+                },
+                {
+                    kind:     'insert',
+                    position: [9, 4],
+                    text: '(() => {\n'
+                    + '        console.log(hey());\n'
+                    + '    })();'
+                }
+            ]
+        });
+        context.assertPairs([ { line: 13, sides: range(42, 62) } ]);
+        context.assertCursors([ [13, 52] ]);
     }
 });
 
@@ -934,6 +1061,95 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         sliceSub(pairs[0].sides, 10, 20, 5);
         context.assertPairs(pairs);
         context.assertCursors([ [1, 72] ]);
+
+        // 21. Simultaneous single-line text modifications between the pairs - Part 1.
+        //
+        // After this, the sides of the pairs are at character indices:
+        //
+        //   29, 49, 60, 61, 62, 63, 64, 68, 69, 77, 108, 109, 114, 115, 116, 117, 118, 129, 130, 131
+        //
+        // Document state after:
+        //
+        // ```
+        //
+        // blah-bleh-blah-bleh-blah-bleh[❤🧡💛💚💙💜💝🫀🖤🤍[Popcorn 🍿[[[[[Ice[[Tea ☕☕☕[Pretzel 🥨采采芣苡、薄言采之。采采芣苡、薄言有之。]]🙏🙏]]]]]Chicken 🍗]]]
+        //                                                                                              ^(cursor position)
+        // ```
+        await context.editText({
+            edits: [
+                { 
+                    kind:  'delete',  
+                    range: { start: [1, 78], end: [1, 86] }                  
+                }, 
+                { 
+                    kind:    'replace', 
+                    replace: { start: [1, 74], end: [1, 77] }, 
+                    insert:  '采采芣苡、薄言采之。采采芣苡、薄言有之。' 
+                },
+                {
+                    kind:  'delete',
+                    range: { start: [1, 59], end: [1, 74] },
+                },
+                { 
+                    kind:    'replace',
+                    replace: { start: [1, 46], end: [1, 48] },
+                    insert:  '☕☕☕',
+                },
+                { 
+                    kind:     'insert',
+                    position: [1, 15],
+                    text:     '💚💙💜💝'
+                },
+                {
+                    kind:    'replace',
+                    replace: { start: [1, 4], end: [1, 9] },
+                    insert:  '-bleh'
+                },
+                { 
+                    kind:     'insert',
+                    position: [1, 0],
+                    text:     'blah-bleh-blah-bleh-'
+                }
+            ]
+        });
+        context.assertPairs([ 
+            { 
+                line:  1, 
+                sides: [
+                     29,  49,  60,  61,  62,  63,  64,  68,  69,  77,
+                    108, 109, 114, 115, 116, 117, 118, 129, 130, 131
+                ]
+            }
+        ]);
+        context.assertCursors([ [1, 88] ]);
+
+        // 22. Simultaneous single-line text modifications between the pairs - Part 2.
+        //
+        // After this, the sides of the pairs are at character indices:
+        //
+        //   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+        //
+        // Document state after:
+        //
+        // ```
+        //
+        // [[[[[[[[[[]]]]]]]]]]
+        //           ^(cursor position)
+        // ```
+        await context.editText({
+            edits: [
+                { kind: 'delete', range: { start: [1, 119], end: [1, 129] } },
+                { kind: 'delete', range: { start: [1, 110], end: [1, 114] } },
+                { kind: 'delete', range: { start: [1,  78], end: [1, 108] } },
+                { kind: 'delete', range: { start: [1,  70], end: [1,  77] } },
+                { kind: 'delete', range: { start: [1,  65], end: [1,  68] } },
+                { kind: 'delete', range: { start: [1,  50], end: [1,  60] } },
+                { kind: 'delete', range: { start: [1,  30], end: [1,  49] } },
+                { kind: 'delete', range: { start: [1,   0], end: [1,  29] } },
+            ]
+        });
+        context.assertPairs([ { line: 1, sides: range(0, 20) }]);
+        context.assertCursors([ [1, 10] ]);
     }
 });
 
@@ -1788,6 +2004,121 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         await context.editText({
             edits: [
                 { kind: 'replace', replace: { start: [2, 23], end: [5, 27] }, insert:  ALICE_TEXT_2 }
+            ]
+        });
+        check();
+
+        // 17. Simultaneous text modifications after the pairs - Part 1.
+        //
+        // Document text after:
+        //
+        // ```
+        // function main() {
+        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! Goodbye World 😢!
+        //
+        // There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+        // hear the Rabbit say to There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+        // hear the Rabbit say to itself, '3.14159265359' (when she thought it over afterwards, 
+        // it Alice started to her feet, for it flashed across her mind that she had never before seen 
+        // a rabbit with 🥪🥪🥪🥪🥪🥪🥪🥪🥪🥪 either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she 
+        // ran across the field after it, and 
+        //
+        // Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to 
+        // do: once or twice she had peeped into the book her sister was reading, but it had no pictures or 
+        // conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'
+        //
+        // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
+        // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
+        // up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.
+        // }
+        // ```
+        await context.editText({
+            edits: [
+                { 
+                    kind:    'replace', 
+                    replace: { start: [8, 35], end: [10, 89] },
+                    insert:  '\n\n' + ALICE_TEXT_1
+                }, 
+                {
+                    kind:     'insert',
+                    position: [7, 14],
+                    text:     '🥪🥪🥪🥪🥪🥪🥪🥪🥪🥪 '
+                },
+                {
+                    kind:  'delete',
+                    range: { start: [4, 3], end: [6, 12] },
+                },
+                {
+                    kind:    'replace',
+                    replace: { start: [3, 32], end: [3, 66] },
+                    insert:  '3.14159265359'
+                },
+                {
+                    kind:     'insert',
+                    position: [1, 41],
+                    text:     'Goodbye World 😢!\n\n'
+                },
+                {
+                    kind:  'delete',
+                    range: { start: [1, 24], end: [1, 40] }
+                }
+            ]
+        });
+        check();
+
+        // 18. Simultaneous text modifications after the pairs - Part 2.
+        //
+        // ```
+        // function main() {
+        //     [[[[[[[[[[]]]]]]]]]] Goodbye 😢!
+        //
+        //     const text = `There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+        //     hear the Rabbit say to itself, '3.14159265359' (when she thought it over afterwards, 
+        //     it Alice started to her feet, for it flashed across her mind that she had never before seen 
+        //     a rabbit with knowledge of mathematics).`
+        //     console.log(text);
+        // }
+        // ```
+        await context.editText({
+            edits: [
+                { 
+                    kind:    'replace',
+                    replace: { start: [9, 0], end: [16, 89] },
+                    insert:  '    console.log(text);'
+                },
+                {
+                    kind:  'delete',
+                    range: { start: [7, 14], end: [8, 34] },
+                },
+                {
+                    kind:     'insert',
+                    position: [7, 14],
+                    text:     'knowledge of mathematics).`;'
+                },
+                {
+                    kind:     'insert',
+                    position: [7, 0],
+                    text:     '    '
+                },
+                {
+                    kind:     'insert',
+                    position: [6, 0],
+                    text:     '    '
+                },
+                {
+                    kind:     'insert',
+                    position: [5, 0],
+                    text:     '    '
+                },
+                {
+                    kind:    'replace',
+                    replace: { start: [3, 0], end: [4, 23] },
+                    insert:  '    const text = `'
+                },
+                {
+                    kind:  'delete',
+                    range: { start: [1, 33], end: [1, 39] },
+                }
             ]
         });
         check();
