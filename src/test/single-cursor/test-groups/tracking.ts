@@ -1668,7 +1668,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // ```
         await context.editText({ 
             edits: [
-                { kind: 'delete', range: { start: [10, 0], end: [13, 0] } }
+                { kind: 'delete', range: { start: [10, 0], end: [14, 0] } }
             ]
         });
         check();
