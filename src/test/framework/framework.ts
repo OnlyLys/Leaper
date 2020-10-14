@@ -4,7 +4,7 @@ import { TextEditor, commands, Range, Selection, Position, SnippetString, window
 import * as assert from 'assert';
 import { TestAPI } from '../../extension';
 import { CompactCursors, CompactClusters, CompactRange, CompactPosition } from './compact';
-import { pickRandom, wait, zip } from './utilities';
+import { pickRandom, wait, waitUntil, zip } from './utilities';
 
 export class TestCategory {
 
@@ -142,10 +142,8 @@ export class TestContext {
      * Close the editor that was opened.
      */
     public async terminate(): Promise<void> {
-        await commands.executeCommand('workbench.action.closeActiveEditor');
-
-        // Wait a short while for the extension to acknowledge the editor has closed.
-        await wait(100);
+        await commands.executeCommand('workbench.action.closeAllEditors');
+        await waitUntil(() => window.visibleTextEditors.length === 0);
     }
     
     /**
