@@ -4,7 +4,7 @@ import { TextEditor, commands, Range, Selection, Position, SnippetString, window
 import * as assert from 'assert';
 import { TestAPI } from '../../extension';
 import { CompactCursors, CompactClusters, CompactRange, CompactPosition } from './compact';
-import { pickRandom, wait, waitUntil, zip } from './utilities';
+import { pickRandom, waitFor, waitUntil, zip } from './utilities';
 
 export class TestCategory {
 
@@ -122,7 +122,7 @@ export class TestContext {
         const editor   = await window.showTextDocument(document);
 
         // Wait a short while for the extension to acknowledge that a new editor was opened.
-        await wait(100);
+        await waitFor(100);
 
         // Get a handle to the extension.
         const instance = extensions.getExtension<TestAPI>(`OnlyLys.leaper`)?.exports;
@@ -370,7 +370,7 @@ export class TestContext {
     public async triggerAndAcceptSuggestion(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
             await commands.executeCommand('editor.action.triggerSuggest');
-            await wait(100);    // Wait for the suggestion box to appear.
+            await waitFor(100);    // Wait for the suggestion box to appear.
             await commands.executeCommand('acceptSelectedSuggestion');
         }, options);
     }
@@ -415,7 +415,7 @@ async function executeWithRepetitionDelay(
     let repetitions = options?.repetitions ?? 1;
     while (repetitions-- > 0) {
         await callback();
-        await wait(delay);
+        await waitFor(delay);
     }
 }
 
