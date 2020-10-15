@@ -1,4 +1,4 @@
-import { DecorationRenderOptions, DecorationRangeBehavior } from 'vscode';
+import { DecorationRenderOptions, DecorationRangeBehavior, ConfigurationScope } from 'vscode';
 import { VCDualReader } from '@onlylys/vscode-validated-configuration-reader';
 
 /** 
@@ -98,28 +98,29 @@ export class Configuration {
 
     });
 
-    private constructor() {
+    private constructor(scope?: ConfigurationScope) {
 
         // The `read()` calls here may throw if an effective value cannot be calculated. 
-        this.decorateAll        = Configuration.decorateAllReader.read().effectiveValue;
-        this.detectedPairs      = Configuration.detectedPairsReader.read().effectiveValue;
-        this.decorationOptions  = Configuration.decorationOptionsReader.read().effectiveValue; 
+        this.decorateAll        = Configuration.decorateAllReader.read(scope).effectiveValue;
+        this.detectedPairs      = Configuration.detectedPairsReader.read(scope).effectiveValue;
+        this.decorationOptions  = Configuration.decorationOptionsReader.read(scope).effectiveValue; 
 
         // Override the range behavior of the decoration such that it is closed on both sides.
         //
         // We have to do this because we don't want the decoration of the closing pair to expand
         // when inserting text next to it.
         this.decorationOptions.rangeBehavior = DecorationRangeBehavior.ClosedClosed;
-
     }
 
     /** 
      * Get the current configuration values. 
      * 
-     * @throws Will throw if any of the configurations can't be read.
+     * @param scope The scope to read configuration values from. If `undefined`, will use the 
+     *              default scope (which is usually the active text editor).
+     * @throws Will throw if any of the configurations cannot be read.
      */
-    public static read(): Configuration {
-        return new Configuration();
+    public static read(scope?: ConfigurationScope): Configuration {
+        return new Configuration(scope);
     }
 
 }
