@@ -152,16 +152,14 @@ export class Engine {
 
         // Check whether leaping is actually possible before executing it.
         //
-        // There are two reasons why we do this: 
+        // We do this check because even if the 'Leap' keybinding is disabled by a falsy 
+        // `leaper.hasLineOfSight` keybinding context when it is not possible to perform a cursor 
+        // jump, prior broadcasts of a falsy context value to disable the keybinding could still be 
+        // pending acknowledgement by vscode, as broadcasted context values are asynchronously read 
+        // by vscode.
         //
-        //  1. Even though the 'Leap' keybinding is disabled by the falsy `leaper.hasLineOfSight` 
-        //     context when it is not possible to perform a cursor jump, prior broadcasts of a falsy 
-        //     context value could possibly be pending acknowledgement by vscode.
-        //  2. Even if the 'Leap' keybinding is disabled, a user could still call 'Leap' via the 
-        //     command pallete. 
-        //
-        // Both reasons lead to the possibility of flow of execution reaching here even though we
-        // have disabled the keybinding. For this reason, we have to perform the following check.
+        // Therefore it is possible for the flow of execution to reach here even though we have 
+        // disabled the keybinding. So we must perform this check.
         if (!this.inLeaperModeContext.get() || !this.hasLineOfSightContext.get()) {
             return;
         }
@@ -211,14 +209,12 @@ export class Engine {
         // We only execute this command if the 'leaper.inLeaperMode' keybinding context is actually 
         // enabled.
         //
-        // Note that this check is not really necessary. 
-        //
-        // Unlike the 'Leap' command, where it is likely for the control flow to reach the `leap` 
-        // method (when say the user holds down the `Tab` key) during the transient period after the 
-        // 'setContext' command to disable the `leaper.hasLineOfSight` keybinding context was fired, 
-        // but before that command is acknowledged by vscode, it is unlikely for the user to press 
-        // the keybinding for the 'Escape Leaper Mode' command (which is bound to `Shift + Esc`) 
-        // during transient periods of the `leaper.inLeaperMode` keybinding context.
+        // Note that this check is not really necessary, because unlike the 'Leap' command, where it 
+        // is likely for the control flow to reach the `leap` method (when say the user holds down 
+        // the `Tab` key) during the transient period after the broadcast to disable the keybinding 
+        // context was made, but before it is acknowledged by vscode, it is unlikely for the user to 
+        // press the keybinding for the 'Escape Leaper Mode' command (which is bound by default to 
+        // `Shift + Esc`) during such transient periods.
         //
         // That said, for purposes of consistency with the 'Leap' command, we do this check here.
         if (!this.inLeaperModeContext.get()) {
