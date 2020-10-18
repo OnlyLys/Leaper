@@ -12,22 +12,16 @@ export class Configuration {
 
     /** 
      * Whether decorations should be applied to all pairs or just the ones nearest to each cursor.
-     * 
-     * This supercedes the old `decorateOnlyNearestPair` configuration.
      */
     public readonly decorateAll: boolean;
 
     /** 
      * Which pairs should be detected and tracked. 
-     * 
-     * This supercedes the old `decorateOnlyNearestPair` configuration.
      */
     public readonly detectedPairs: ReadonlyArray<string>;
 
     /** 
      * Decoration style for the closing side of pairs. 
-     * 
-     * This supercedes the old `customDecorationOptions` configuration.
      */
     public readonly decorationOptions: DecorationRenderOptions;
 

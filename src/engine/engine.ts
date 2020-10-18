@@ -96,8 +96,8 @@ export class Engine {
             return decoration;
         };
         this.tracker.syncDecorations(decoratePair);
-        this.inLeaperModeContext.syncExternal();
-        this.hasLineOfSightContext.syncExternal();
+        this.inLeaperModeContext.broadcast();
+        this.hasLineOfSightContext.broadcast();
     });
 
     /**
