@@ -593,9 +593,9 @@ export class Tracker {
     }
 
     /** 
-     * Get a snapshot of the internal state of this tracker. 
+     * Get a copy of the internal state.
      * 
-     * The returned snapshot can be mutated without mutating the internal state of this tracker.
+     * The returned copy can be mutated affecting the internal state.
      * 
      * # Ordering
      * 
