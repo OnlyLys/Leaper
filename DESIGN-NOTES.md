@@ -1,5 +1,101 @@
 # Design Notes
 
+## 0.8.0 -> 0.9.0
+
+In this update, the extension was rearchitected to be able to handle multiple 
+visible text editors.
+
+By that, we mean that a user can now insert a pair into a visible text editor, 
+switch to another visible text editor, come back, and still have the pairs and 
+keybinding contexts be as how the user left it. 
+
+To facilitate this update, multiple changes were made to the code.
+
+### Rename the (previously known as) `Engine` class to `Tracker`
+
+Instead of having one global `Engine` instance, we now assign to each visible
+text editor its own (what was previously known as) `Engine` instance. 
+
+We could do so because the logic in the (what was previously known as) `Engine` 
+class was fairly 'self-contained'. Thus it was possible for us to run multiple 
+instances in parallel, with each visible text editor owning one instance.
+
+I have decided to rename the class from `Engine` to `Tracker` (creating much 
+confusion, I'm sure) since its new role is now to watch and 'track' all changes 
+in the text editor that it is owned by. 
+
+While most the (what was previously known as) `Engine` code was preserved, two 
+changes were made to make the newly renamed class:
+
+ 1. Each instance of now watches for configuration changes in its owning text 
+    editor, and reloads them when necessary. 
+    
+    This is different from what was done before, where the top level code 
+    restarts a new instance when a configuration change is detected.
+
+ 2. The class no longer broadcasts keybinding context values to vscode. 
+ 
+    Rather, there is now a way to allow the top level controller to be notified 
+    when context values in a `Tracker` have changed. Furthermore, there are new 
+    methods that allow the top level controller to retrieve the latest context 
+    values. 
+
+    The `Tracker` class now no longer communicates with vscode, and leaves it
+    up to the top level controller (see the 'Create a new `Engine` class section
+    below) to broadcast keybinding context values to vscode.
+
+### Rename the (previously known as) `Tracker` Class to `TrackerCore`
+
+Since we renamed `Engine` to `Tracker`, we had to rename the (previously known 
+as) `Tracker` class to `TrackerCore`. 
+
+Aside from many changes in the comments, nearly all of the code in this class 
+was left unchanged. 
+
+### Rename 'Internal' and 'External' Context Values to 'Private' and 'Global'.
+
+Previously, throughout the code, we mentioned that context values had 'internal'
+and 'external' values, referring to the fact that:
+
+ 1. The cached context values within (what was then known as) the `Tracker` 
+    class were not visible to vscode and were therefore 'internal'.
+
+ 2. That context values broadcasted to vscode are 'external' because they are 
+    visible to vscode.
+
+However, because we now handle multiple `Tracker`s at a time, it makes more 
+sense to rename 'internal' and 'external' to 'private' and 'global', since:
+
+ 1. For any given keybinding context, each `Tracker` is allowed to have its own 
+    value for it, thus making the value internal to each `Tracker` 'private'.
+    
+ 2. A keybinding context value broadcasted to vscode is 'global' because it
+    applies to the entire vscode instance.
+
+### Create a new `Engine` class
+
+Just to make things even more confusing, I have decided to create a new `Engine` 
+class that serves as the top level controller of the extension.
+
+The primary responsibilities of the new `Engine` class are:
+
+ 1. To make sure that each visible text editor has its own `Tracker` instance.
+    
+ 2. To make sure that `Tracker`s are cleaned up when their owning text editors 
+    are closed. 
+
+ 3. To appropriately toggle keybindings by broadcasting the context values of 
+    the active text editor's `Tracker` to vscode. 
+
+### Properly Read Scoped Configuration Values
+
+The `Configuration` class was tweaked slightly to allow scoped configuration 
+values scoped to be read.
+
+This change allowed each `Tracker` class to read configuration values pertinent 
+to its owning text editor.
+
+
 ## 0.7.0 -> 0.8.0
 ------------------------
 

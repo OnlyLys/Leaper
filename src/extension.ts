@@ -1,80 +1,34 @@
-import { ExtensionContext, commands, workspace, window, Position } from 'vscode';
+import { ExtensionContext, Position } from 'vscode';
 import { Engine } from './engine/engine';
-import { Configuration } from './engine/configuration';
 
 /**
  * Entry point of the extension.
  */
 export function activate(context: ExtensionContext): TestAPI {
 
-    let engine: Engine | undefined = undefined;
-    if (window.activeTextEditor) {
-        engine = new Engine(window.activeTextEditor, Configuration.read());
-    }
+    // This starts the extension.
+    const engine = new Engine();
 
-    // Keybinding to move the cursor past the nearest available pair.
-    const leapCommand = commands.registerTextEditorCommand(
-        `leaper.leap`, 
-        () => engine?.leap()
-    );
-
-    // Keybinding to untrack all the pairs and disable all keybinding contexts.
-    const escapeLeaperModeCommand = commands.registerTextEditorCommand(
-        `leaper.escapeLeaperMode`, 
-        () => engine?.escapeLeaperMode()
-    );
-
-    // Watcher that restarts a new engine on configuration change.
-    const configurationChangeWatcher = workspace.onDidChangeConfiguration((event) => {
-        if (event.affectsConfiguration(`leaper`) && engine) {
-            engine.dispose();
-            engine = new Engine(engine.editor, Configuration.read());
-        }
-    });
-
-    // Watcher that restarts a new engine on editor focus change.
-    const activeTextEditorChangeWatcher = window.onDidChangeActiveTextEditor((newEditor) => {
-
-        // We require fresh configuration values to be loaded when the active text editor is changed 
-        // because of the existence of multi-root workspaces.
-        // 
-        // Multi-root workspaces allow for workspace specific configurations. But when switching 
-        // between editors in separate workspaces, the `onDidChangeConfiguration` emitter does not 
-        // fire, even though the effective configuration could change. 
-        engine?.dispose();
-        engine = newEditor ? new Engine(newEditor, Configuration.read()) : undefined;
-    });
-
-    context.subscriptions.push(
-        { 
-            dispose: () => engine?.dispose() 
-        },
-        leapCommand,
-        escapeLeaperModeCommand,
-        configurationChangeWatcher,
-        activeTextEditorChangeWatcher,
-    );
+    // So that the engine will be disposed of when the extension is shut down.
+    context.subscriptions.push(engine);
 
     // Expose the engine for tests.
-    return { 
-        snapshot: () => engine?.snapshot() ?? [] 
-    };
-
+    return engine;
 } 
 
 export interface TestAPI {
 
     /** 
-     * Get a snapshot of all the pairs that are being tracked. 
+     * Get a snapshot of all the pairs that are being tracked in the active text editor. 
      * 
      * The return value is an array of subarrays, where each subarray contains the pairs belonging 
-     * to each cursor. The top level array is parallel to the array of cursors obtained from 
-     * `TextEditor.selections`. 
+     * to each cursor. The top level array is parallel to the array of cursors in the active text
+     * editor (i.e. `activeTextEditor.selections`).
      * 
-     * The returned array can be mutated without affecting the extension's state.
+     * The return value can be mutated without affecting the extension's state.
      */
     snapshot(): { open: Position, close: Position, isDecorated: boolean }[][];
-
+    
 }
 
 export function deactivate() {
