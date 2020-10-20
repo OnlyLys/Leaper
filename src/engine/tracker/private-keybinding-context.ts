@@ -59,7 +59,10 @@ export class PrivateKeybindingContext {
      * @param init The initial value to give the context.
      * @param calc Callback used to calculate the latest context value. 
      */
-    public constructor(init: boolean, calc: () => boolean) {
+    public constructor(
+        init: boolean, 
+        calc: () => boolean
+    ) {
         this.cached   = init;
         this.stale    = false;
         this.calc     = calc;        
