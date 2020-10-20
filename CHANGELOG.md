@@ -1,27 +1,17 @@
 # CHANGELOG
 
-### 0.8.0
+### 0.8.0 _(Unpublished)_
 - Add multicursor support.
-- Rewrite almost all the code to make it faster.
+- Rewrite almost all of the code to reduce overhead.
 - Tweak default decoration to make the decorated bracket bold.
 - Deprecate old configurations and replace with new counterparts:
-  * `leaper.additionalTriggerPairs` is superseded by `leaper.detectedPairs`. 
-    Instead of the default pairs being hardcoded into the source file, they are 
-    now specified in the default value for the configuration. This allows the 
-    user to see the default value of the configuration via autocomplete. 
-    Furthermore, the user can now override the default value, compared to before 
-    where the user can only define 'additional' pairs on top of the hardcoded 
-    defaults.
-  * `leaper.customDecorationOptions` is superseded by `leaper.decorationOptions`. 
-    In this change, the default value was moved from source code to the package 
-    manifest. Thus just like for `leaper.detectedPairs`, the user can now see 
-    the default value of this configuration via autocomplete.
-  * `leaper.decorateOnlyNearestPair` is superseded by `leaper.decorateAll`. This 
-    is simply a rename of the configuration with an inverted truth value. The 
-    rename was done to make clearer what the configuration does.
+  * Replace `leaper.additionalTriggerPairs` with `leaper.detectedPairs`. 
+  * Replace `leaper.customDecorationOptions` with `leaper.decorationOptions`
+  * Replace `leaper.decorateOnlyNearestPair` with `leaper.decorateAll`.
 - Overhaul README to reflect the above changes.
 - Significantly expand the testing suite to ensure correct behavior.
-- Use 'webpack' to condense the code into one file to speed up load times.
+- Make the 'Leap' command work the same whether through the `Tab` keybinding or 
+  through the command pallete. This reverses the change introduced in `0.4.0`.
 
 ### 0.6.0
 - Remove the unnecessary `!config.emmet.triggerExpansionOnTab` when context for 
