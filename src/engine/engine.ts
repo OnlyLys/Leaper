@@ -5,7 +5,7 @@
 //! for tracking and decorating the pairs in its owning text editor.
 
 import { commands, Disposable, Position, TextEditor, window } from 'vscode';
-import { ImmediateReusable } from './tracker/immediate-reusable';
+import { KeybindingContextBroadcaster } from './keybinding-context-broadcaster';
 import { Tracker } from './tracker/tracker';
 
 /**
@@ -32,45 +32,6 @@ export class Engine {
      * This is `undefined` if there is no active text editor.
      */
     private activeTracker: Tracker | undefined;
-
-    /**
-     * Watcher that schedules for a broadcast when the context values of the active tracker have 
-     * been updated.
-     */
-    private activeTrackerContextValuesUpdateWatcher: Disposable | undefined;
-
-    /**
-     * A timer to broadcast the latest context values of the active tracker to vscode at the end of 
-     * the current event loop cycle.
-     * 
-     * # Why We Only Broadcast Keybinding Contexts at the End of Event Loop Cycles
-     * 
-     * For keybinding contexts broadcasted to vscode (i.e. global keybinding contexts), we only 
-     * broadcast them the end of event loop cycles since broadcasts received by vscode are only 
-     * acknowledged during subsequent event loop cycles.
-     * 
-     * For instance, consider a situation where a context value has changed 5 times during one event 
-     * loop cycle. Had we broadcasted after each change, then that would have placed 5 context 
-     * change commands into vscode's event queue. However, when it comes time for vscode to process 
-     * the commands, only the last context value broadcasted matters, since it is the one that ends 
-     * up being the effective value. 
-     *
-     * Therefore, by delaying broadcasts until the end of event loop cycles, instead of broadcasting
-     * them 'on the spot' when the context value changes, we can reduce the number of broadcasts we
-     * have to do. 
-     */
-    private readonly globalContextBroadcastTimer = new ImmediateReusable(() => {
-        commands.executeCommand(
-            'setContext', 
-            'leaper.hasLineOfSight',
-            this.activeTracker?.getHasLineOfSightContext() ?? false
-        );
-        commands.executeCommand(
-            'setContext',
-            'leaper.inLeaperMode',
-            this.activeTracker?.getInLeaperModeContext() ?? false
-        );
-    });
 
     /**
      * Keybinding to move the cursor in the active text editor past the nearest available pair.
@@ -125,6 +86,28 @@ export class Engine {
         this.rebindActiveTracker();
     });
 
+    /**
+     * To broadcast the `leaper.hasLineOfSight` context of the active tracker to vscode.
+     */
+    private readonly hasLineOfSightContextBroadcaster = new KeybindingContextBroadcaster(
+        'leaper.hasLineOfSight',
+        () => this.activeTracker?.getHasLineOfSightContext() ?? false
+    );
+
+    /**
+     * To broadcast the `leaper.inLeaperMode` context of the active tracker to vscode.
+     */
+    private readonly inLeaperModeContextBroadcaster = new KeybindingContextBroadcaster(
+        'leaper.inLeaperMode',
+        () => this.activeTracker?.getInLeaperModeContext() ?? false
+    );
+
+    /**
+     * Watcher that schedules for a broadcast when the keybinding context values of the active 
+     * tracker have been updated.
+     */
+    private activeTrackerContextValuesUpdateWatcher: Disposable | undefined;
+
     public constructor() {
         
         const { visibleTextEditors } = window;
@@ -149,13 +132,17 @@ export class Engine {
         // Stop the previous watcher since it might be listening to a now non-active tracker.
         this.activeTrackerContextValuesUpdateWatcher?.dispose();
 
-        // Begin watching the current active tracker's context values for any updates.
+        // Start watcher that broadcasts the active tracker's context values when they have changed.
         this.activeTrackerContextValuesUpdateWatcher = this.activeTracker?.onDidUpdateContextValues(
-            () => this.globalContextBroadcastTimer.set()
+            () => {
+                this.hasLineOfSightContextBroadcaster.set();
+                this.inLeaperModeContextBroadcaster.set();
+            }
         );
 
         // Make the active tracker's context values the global context values.
-        this.globalContextBroadcastTimer.set();
+        this.hasLineOfSightContextBroadcaster.set();
+        this.inLeaperModeContextBroadcaster.set();
     }
 
     /**
@@ -183,13 +170,12 @@ export class Engine {
     public dispose(): void {
         this.trackers.forEach((tracker) => tracker.dispose());  
         this.activeTrackerContextValuesUpdateWatcher?.dispose();
-        this.globalContextBroadcastTimer.clear();
+        this.hasLineOfSightContextBroadcaster.dispose();
+        this.inLeaperModeContextBroadcaster.dispose();
         this.leapCommand.dispose();
         this.escapeLeaperModeCommand.dispose();
         this.visibleTextEditorsChangeWatcher.dispose();
         this.activeTextEditorChangeWatcher.dispose();
-        commands.executeCommand('setContext', 'leaper.hasLineOfSight', false);
-        commands.executeCommand('setContext', 'leaper.inLeaperMode',   false);
     }
 
 }
