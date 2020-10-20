@@ -1,3 +1,7 @@
+import { commands, extensions, TextDocumentShowOptions, TextEditor, window, workspace } from 'vscode';
+import * as path from 'path';
+import { TestAPI } from '../../extension';
+
 /**
  * Generate an array of sequential integers.
  */
@@ -68,4 +72,58 @@ export function* zip<T>(a: Iterable<T>, b: Iterable<T>): Generator<[T, T], undef
             return;
         }
     }
+}
+
+/**
+ * Open an existing file in the testing workspace.
+ * 
+ * @param rel The path relative to the root of the multi-root testing workspace. 
+ * @param options Specifies the behavior when showing the opened file.
+ * @return The text editor of the opened file.
+ */
+export async function openFile(rel: string, options?: TextDocumentShowOptions): Promise<TextEditor> {
+    const rootPath = path.dirname(workspace.workspaceFile?.path ?? '');
+    const filePath = path.join(rootPath, rel);
+    const document = await workspace.openTextDocument(filePath);
+    const editor   = await window.showTextDocument(document, options);
+    return editor;
+}
+
+/**
+ * Open a new text editor containing a new text document.
+ * 
+ * @param languageId The language of the opened text document. Defaults to `'typescript'`.
+ */
+export async function openNewTextEditor(languageId: string = 'typescript'): Promise<TextEditor> {
+    const document = await workspace.openTextDocument({ language: languageId });
+    const editor   = await window.showTextDocument(document);
+    return editor;
+}
+
+/**
+ * Get a handle to the extension.
+ */
+export function getHandle(): TestAPI {
+    const handle = extensions.getExtension<TestAPI>(`OnlyLys.leaper`)?.exports;
+    if (!handle) {
+        throw new Error('Unable to access Leaper API for testing!');
+    }
+    return handle;
+}
+
+/**
+ * Close the active text editor.
+ */
+export async function closeActiveEditor(): Promise<void> {
+    const toClose = window.activeTextEditor;
+    await commands.executeCommand('workbench.action.closeActiveEditor');
+    await waitUntil(() => toClose === undefined || window.activeTextEditor !== toClose);
+}
+
+/**
+ * Close all text editors.
+ */
+export async function closeAllEditors(): Promise<void> {
+    await commands.executeCommand('workbench.action.closeAllEditors');
+    await waitUntil(() => window.visibleTextEditors.length === 0);
 }
