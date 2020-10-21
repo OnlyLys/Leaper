@@ -1,5 +1,5 @@
 import { SnippetString } from 'vscode';
-import { TestCase, TestContext, TestGroup } from '../../framework/framework';
+import { PreludeActionExecutor, TestCase, TestGroup } from '../../framework/framework';
 
 // In this prelude that is shared across all the test cases in this module, we insert pairs in a way 
 // that simulates a typical usage scenario.
@@ -11,8 +11,8 @@ import { TestCase, TestContext, TestGroup } from '../../framework/framework';
 //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
 // }                                                   ^(cursor position)
 // ```
-const SHARED_PRELUDE = async (context: TestContext) => {
-    await context.editText({
+const SHARED_PRELUDE = async (executor: PreludeActionExecutor) => {
+    await executor.editText({
         edits: [
             {
                 kind:     'insert',
@@ -21,20 +21,18 @@ const SHARED_PRELUDE = async (context: TestContext) => {
             }
         ]
     });
-    await context.setCursors({ cursors: [[1, 4]] });
-    await context.typeText({ text: 'console.log({  ' });
-    await context.moveCursors({ direction: 'left', });
-    await context.typeText({ text: 'obj: {  ' });
-    await context.moveCursors({ direction: 'left', });
-    await context.typeText({ text: 'arr: [  ' });
-    await context.moveCursors({ direction: 'left', });
-    await context.typeText({ text: '{  ' });
-    await context.moveCursors({ direction: 'left', });
-    await context.typeText({ text: 'prop: someFn(1, 20' });
-    context.assertPairsPrelude(
-        [ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ],
-    ); 
-    context.assertCursorsPrelude([ [1, 52] ]);
+    await executor.setCursors({ cursors: [[1, 4]] });
+    await executor.typeText({ text: 'console.log({  ' });
+    await executor.moveCursors({ direction: 'left', });
+    await executor.typeText({ text: 'obj: {  ' });
+    await executor.moveCursors({ direction: 'left', });
+    await executor.typeText({ text: 'arr: [  ' });
+    await executor.moveCursors({ direction: 'left', });
+    await executor.typeText({ text: '{  ' });
+    await executor.moveCursors({ direction: 'left', });
+    await executor.typeText({ text: 'prop: someFn(1, 20' });
+    executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ]); 
+    executor.assertCursors([ [1, 52] ]);
 };
 
 const TEST_CASES: TestCase[] = [
@@ -45,7 +43,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Rightwards Exit of Cursor (Incremental)',
         prelude: SHARED_PRELUDE,
-        action: async (context) => {
+        action: async (executor) => {
 
             // Move out of the nearest pair.
             //
@@ -56,9 +54,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                                    ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'right' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
-            context.assertCursors([ [1, 53] ]);
+            await executor.moveCursors({ direction: 'right' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
+            executor.assertCursors([ [1, 53] ]);
 
             // Move to the boundary of the next nearest pair.
             //
@@ -69,9 +67,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                                     ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'right' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
-            context.assertCursors([ [1, 54] ]);
+            await executor.moveCursors({ direction: 'right' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
+            executor.assertCursors([ [1, 54] ]);
 
             // Move out of the nearest pair.
             //
@@ -82,9 +80,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                                      ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'right' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
-            context.assertCursors([ [1, 55] ]);
+            await executor.moveCursors({ direction: 'right' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
+            executor.assertCursors([ [1, 55] ]);
 
             // Move to the boundary of the next nearest pair.
             //
@@ -95,9 +93,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                                       ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'right' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
-            context.assertCursors([ [1, 56] ]);
+            await executor.moveCursors({ direction: 'right' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
+            executor.assertCursors([ [1, 56] ]);
 
             // Move out of the nearest pair.
             //
@@ -108,9 +106,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                                        ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'right' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
-            context.assertCursors([ [1, 57] ]);
+            await executor.moveCursors({ direction: 'right' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
+            executor.assertCursors([ [1, 57] ]);
 
             // Move to the boundary of the next nearest pair.
             //
@@ -121,9 +119,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                                         ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'right' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
-            context.assertCursors([ [1, 58] ]);
+            await executor.moveCursors({ direction: 'right' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
+            executor.assertCursors([ [1, 58] ]);
 
             // Move out of the nearest pair.
             //
@@ -134,9 +132,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                                          ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'right' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
-            context.assertCursors([ [1, 59] ]);
+            await executor.moveCursors({ direction: 'right' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
+            executor.assertCursors([ [1, 59] ]);
 
             // Move to the boundary of the next nearest pair.
             //
@@ -147,9 +145,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                                           ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'right' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
-            context.assertCursors([ [1, 60] ]);
+            await executor.moveCursors({ direction: 'right' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
+            executor.assertCursors([ [1, 60] ]);
          
             // Move out of the nearest pair.
             //
@@ -160,9 +158,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                                            ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'right' });
-            context.assertPairs([ { line: 1, sides: [15, 61] } ]);
-            context.assertCursors([ [1, 61] ]);
+            await executor.moveCursors({ direction: 'right' });
+            executor.assertPairs([ { line: 1, sides: [15, 61] } ]);
+            executor.assertCursors([ [1, 61] ]);
 
             // Move out of the last pair.
             //
@@ -173,15 +171,15 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                                             ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'right' });
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [1, 62] ]);
+            await executor.moveCursors({ direction: 'right' });
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [1, 62] ]);
         }
     }),
     new TestCase({
         name: 'Rightwards Exit of Cursor (in One Go by Clicking Out)',
         prelude: SHARED_PRELUDE,
-        action: async (context) => {
+        action: async (executor) => {
 
             // Document state after:
             // 
@@ -190,15 +188,15 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                                             ^(cursor position)
             // ```
-            await context.setCursors({ cursors: [ [1, 62] ] });
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [1, 62] ]);
+            await executor.setCursors({ cursors: [ [1, 62] ] });
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [1, 62] ]);
         }
     }),
     new TestCase({
         name: 'Rightwards Exit of Cursor (in One Go by Pressing `End` Key)',
         prelude: SHARED_PRELUDE,
-        action: async (context) => {
+        action: async (executor) => {
 
             // Document state after:
             // 
@@ -207,15 +205,15 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                                                                        ^(cursor position)
             // ```
-            await context.end();
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [1, 89] ]);
+            await executor.end();
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [1, 89] ]);
         }
     }),
     new TestCase({
         name: 'Leftwards Exit of Cursor (Incremental)',
         prelude: SHARED_PRELUDE,
-        action: async (context) => {
+        action: async (executor) => {
 
             // Move to the boundary of the nearest pair.
             //
@@ -226,9 +224,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                              ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'left', repetitions: 5 });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ]); 
-            context.assertCursors([ [1, 47] ]);
+            await executor.moveCursors({ direction: 'left', repetitions: 5 });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ]); 
+            executor.assertCursors([ [1, 47] ]);
 
             // Move out of the nearest pair.
             //
@@ -239,9 +237,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                             ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'left' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
-            context.assertCursors([ [1, 46] ]);
+            await executor.moveCursors({ direction: 'left' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
+            executor.assertCursors([ [1, 46] ]);
 
             // Move to the boundary of the next nearest pair.
             //
@@ -252,9 +250,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'left', repetitions: 13 });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
-            context.assertCursors([ [1, 33] ]);
+            await executor.moveCursors({ direction: 'left', repetitions: 13 });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
+            executor.assertCursors([ [1, 33] ]);
 
             // Move out of the nearest pair.
             //
@@ -265,9 +263,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                               ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'left' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
-            context.assertCursors([ [1, 32] ]);
+            await executor.moveCursors({ direction: 'left' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
+            executor.assertCursors([ [1, 32] ]);
 
             // Move to the boundary of the next nearest pair.
             //
@@ -278,9 +276,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                              ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'left' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
-            context.assertCursors([ [1, 31] ]);
+            await executor.moveCursors({ direction: 'left' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
+            executor.assertCursors([ [1, 31] ]);
 
             // Move out of the nearest pair.
             //
@@ -291,9 +289,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                             ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'left' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
-            context.assertCursors([ [1, 30] ]);
+            await executor.moveCursors({ direction: 'left' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
+            executor.assertCursors([ [1, 30] ]);
 
             // Move to the boundary of the next nearest pair.
             //
@@ -304,9 +302,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                       ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'left', repetitions: 6 });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
-            context.assertCursors([ [1, 24] ]);
+            await executor.moveCursors({ direction: 'left', repetitions: 6 });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
+            executor.assertCursors([ [1, 24] ]);
                 
             // Move out of the nearest pair.
             //
@@ -317,9 +315,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                      ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'left' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
-            context.assertCursors([ [1, 23] ]);
+            await executor.moveCursors({ direction: 'left' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
+            executor.assertCursors([ [1, 23] ]);
 
             // Move to the boundary of the next nearest pair.
             //
@@ -330,9 +328,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'left', repetitions: 6 });
-            context.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
-            context.assertCursors([ [1, 17] ]);
+            await executor.moveCursors({ direction: 'left', repetitions: 6 });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
+            executor.assertCursors([ [1, 17] ]);
  
             // Move out of the nearest pair.
             //
@@ -343,9 +341,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }               ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'left' });
-            context.assertPairs([ { line: 1, sides: [15, 61] } ]);
-            context.assertCursors([ [1, 16] ]);
+            await executor.moveCursors({ direction: 'left' });
+            executor.assertPairs([ { line: 1, sides: [15, 61] } ]);
+            executor.assertCursors([ [1, 16] ]);
 
             // Move out of the last pair.
             //
@@ -356,15 +354,15 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }              ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'left' });
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [1, 15] ]);
+            await executor.moveCursors({ direction: 'left' });
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [1, 15] ]);
         }
     }),
     new TestCase({
         name: 'Leftwards Exit of Cursor (in One Go by Clicking Out)',
         prelude: SHARED_PRELUDE,
-        action: async (context) => {
+        action: async (executor) => {
 
             // Document state after:
             // 
@@ -373,15 +371,15 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }              ^(cursor position)
             // ```
-            await context.setCursors({ cursors: [ [1, 15] ] });
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [1, 15] ]);
+            await executor.setCursors({ cursors: [ [1, 15] ] });
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [1, 15] ]);
         }
     }),
     new TestCase({
         name: 'Leftwards Exit of Cursor (in One Go by Pressing `Home` Key)',
         prelude: SHARED_PRELUDE,
-        action: async (context) => {
+        action: async (executor) => {
 
             // Document state after:
             // 
@@ -390,15 +388,15 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }   ^(cursor position)
             // ```
-            await context.home();
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [1, 4] ]);
+            await executor.home();
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [1, 4] ]);
         }
     }),
     new TestCase({
         name: 'Upwards Exit of Cursor',
         prelude: SHARED_PRELUDE,
-        action: async (context) => {
+        action: async (executor) => {
 
             // Document state after:
             // 
@@ -408,15 +406,15 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }
             // ```
-            await context.moveCursors({ direction: 'up' });
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [0, 13] ]);
+            await executor.moveCursors({ direction: 'up' });
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [0, 13] ]);
         }
     }),
     new TestCase({
         name: 'Downwards Exit of Cursor',
         prelude: SHARED_PRELUDE,
-        action: async (context) => {
+        action: async (executor) => {
 
             // Document state after:
             // 
@@ -426,9 +424,9 @@ const TEST_CASES: TestCase[] = [
             // }
             //  ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'down' });
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [2, 1] ]);
+            await executor.moveCursors({ direction: 'down' });
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [2, 1] ]);
         }
     }),
 
@@ -438,7 +436,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Deletion of Opening Side',
         prelude: SHARED_PRELUDE,
-        action: async (context) => {
+        action: async (executor) => {
 
             // Move to the opening side of the first pair and then backspace it.
             //
@@ -449,10 +447,10 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn1, 20) } ] } }); // Log object to console.
             // }                                             ^(cursor position)
             // ```
-            await context.moveCursors({ direction: 'left', repetitions: 5 });
-            await context.backspace();
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } ]);
-            context.assertCursors([ [1, 46] ]);
+            await executor.moveCursors({ direction: 'left', repetitions: 5 });
+            await executor.backspace();
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } ]);
+            executor.assertCursors([ [1, 46] ]);
 
             // Overwrite text including the third and fourth of the remaining pairs.
             //
@@ -463,7 +461,7 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: cheesecake{ prop: someFn1, 20) } ] } }); // Log object to console.
             // }                                              ^(cursor position)
             // ```
-            await context.editText({
+            await executor.editText({
                 edits: [
                     {
                         kind:    'replace',
@@ -472,8 +470,8 @@ const TEST_CASES: TestCase[] = [
                     }
                 ]
             });
-            context.assertPairs([ { line: 1, sides: [15, 16, 33, 54, 60, 61] } ]);
-            context.assertCursors([ [1, 47] ]);
+            executor.assertPairs([ { line: 1, sides: [15, 16, 33, 54, 60, 61] } ]);
+            executor.assertCursors([ [1, 47] ]);
 
             // Overwrite some text including the first of the remaining pairs. 
             //
@@ -484,13 +482,13 @@ const TEST_CASES: TestCase[] = [
             //     { obj: cheesecake{ prop: someFn1, 20) } ] } }); // Log object to console.
             // }                                  ^(cursor position)
             // ```
-            await context.editText({
+            await executor.editText({
                 edits: [
                     { kind: 'delete', range: { start: [1, 4], end: [1, 16] } }
                 ]
             });
-            context.assertPairs([ { line: 1, sides: [4, 21, 42, 48] } ]);
-            context.assertCursors([ [1, 35] ]);
+            executor.assertPairs([ { line: 1, sides: [4, 21, 42, 48] } ]);
+            executor.assertCursors([ [1, 35] ]);
 
             // Backspace until the second of the remaining pairs is deleted.
             //
@@ -501,9 +499,9 @@ const TEST_CASES: TestCase[] = [
             //     { obj: cheesecake1, 20) } ] } }); // Log object to console.
             // }                    ^(cursor position)
             // ```
-            await context.backspace({ repetitions: 14 });
-            context.assertPairs([ { line: 1, sides: [4, 34] } ]);
-            context.assertCursors([ [1, 21] ]);
+            await executor.backspace({ repetitions: 14 });
+            executor.assertPairs([ { line: 1, sides: [4, 34] } ]);
+            executor.assertCursors([ [1, 21] ]);
 
             // Overwrite first pair.
             //
@@ -514,19 +512,19 @@ const TEST_CASES: TestCase[] = [
             //     rabbit obj: cheesecake1, 20) } ] } }); // Log object to console.
             // }                         ^(cursor position)
             // ```
-            await context.editText({ 
+            await executor.editText({ 
                 edits: [
                     { kind: 'replace', replace: { start: [1, 4], end: [1, 5] }, insert: 'rabbit' }
                 ]
             });
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [1, 26] ]);
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [1, 26] ]);
         }
     }),
     new TestCase({
         name: 'Deletion of Closing Side',
         prelude: SHARED_PRELUDE,
-        action: async (context) => {
+        action: async (executor) => {
 
             // Delete right the closing character of the first pair. 
             //
@@ -537,9 +535,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20 } ] } }); // Log object to console.
             // }                                                   ^(cursor position)
             // ```
-            await context.deleteRight();
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } ]);
-            context.assertCursors([ [1, 52] ]);
+            await executor.deleteRight();
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } ]);
+            executor.assertCursors([ [1, 52] ]);
 
             // Overwrite text including the third and fourth of the remaining pairs.
             //
@@ -550,7 +548,7 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20 } cheesecake}); // Log object to console.
             // }                                                   ^(cursor position)
             // ```
-            await context.editText({
+            await executor.editText({
                 edits: [
                     {
                         kind:    'replace',
@@ -559,8 +557,8 @@ const TEST_CASES: TestCase[] = [
                     }
                 ]
             });
-            context.assertPairs([ { line: 1, sides: [15, 16, 32, 53, 65, 66] } ]);
-            context.assertCursors([ [1, 52] ]);
+            executor.assertPairs([ { line: 1, sides: [15, 16, 32, 53, 65, 66] } ]);
+            executor.assertCursors([ [1, 52] ]);
 
             // Overwrite some text including the first of the remaining pairs.
             //
@@ -571,13 +569,13 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20 } cheesecake}
             // }                                                   ^(cursor position)
             // ```
-            await context.editText({
+            await executor.editText({
                 edits: [
                     { kind: 'delete', range: { start: [1, 66], end: [1, 94] } }
                 ]
             });
-            context.assertPairs([ { line: 1, sides: [16, 32, 53, 65] } ]);
-            context.assertCursors([ [1, 52] ]);
+            executor.assertPairs([ { line: 1, sides: [16, 32, 53, 65] } ]);
+            executor.assertCursors([ [1, 52] ]);
             
             // Delete right until the second of the remaining pairs is deleted.
             //
@@ -588,9 +586,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20 cheesecake}
             // }                                                   ^(cursor position)
             // ```
-            await context.deleteRight({ repetitions: 2 });
-            context.assertPairs([ { line: 1, sides: [16, 63] } ]);
-            context.assertCursors([ [1, 52] ]);
+            await executor.deleteRight({ repetitions: 2 });
+            executor.assertPairs([ { line: 1, sides: [16, 63] } ]);
+            executor.assertCursors([ [1, 52] ]);
             
             // Overwrite text including the final pair.
             //
@@ -601,13 +599,13 @@ const TEST_CASES: TestCase[] = [
             //    console.log({rabbit
             // }              ^(cursor position)
             // ```
-            await context.editText({
+            await executor.editText({
                 edits: [
                     { kind: 'replace', replace: { start: [1, 17], end: [1, 64] }, insert: 'rabbit' }
                 ]
             });
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [1, 23] ]);
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [1, 23] ]);
         }
     }),
 
@@ -617,7 +615,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Multi-line Text Inserted Between Pairs',
         prelude: SHARED_PRELUDE,
-        action: async (context) => {
+        action: async (executor) => {
 
             // Indent the text after the first pair.
             //
@@ -629,7 +627,7 @@ const TEST_CASES: TestCase[] = [
             //        { obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                          ^(cursor position)
             // ```
-            await context.editText({
+            await executor.editText({
                 edits: [
                     {
                         kind:     'insert',
@@ -638,8 +636,8 @@ const TEST_CASES: TestCase[] = [
                     }
                 ]
             });
-            context.assertPairs([ { line: 2, sides: [8, 15, 22, 24, 38, 44, 46, 48, 50, 52] } ]);
-            context.assertCursors( [ [2, 44] ]);
+            executor.assertPairs([ { line: 2, sides: [8, 15, 22, 24, 38, 44, 46, 48, 50, 52] } ]);
+            executor.assertCursors( [ [2, 44] ]);
 
             // Replace the text between the second and third remaining pairs with multiline text.
             //
@@ -656,7 +654,7 @@ const TEST_CASES: TestCase[] = [
             //             lamb [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                      ^(cursor position)
             // ```
-            await context.editText({
+            await executor.editText({
                 edits: [
                     {
                         kind:    'replace',
@@ -670,8 +668,8 @@ const TEST_CASES: TestCase[] = [
                     }
                 ]
             });
-            context.assertPairs([ { line: 7, sides: [17, 19, 33, 39, 41, 43] } ]);
-            context.assertCursors([ [7, 39] ]);
+            executor.assertPairs([ { line: 7, sides: [17, 19, 33, 39, 41, 43] } ]);
+            executor.assertCursors([ [7, 39] ]);
 
             // Type in a newline at the cursor position.
             //
@@ -691,15 +689,15 @@ const TEST_CASES: TestCase[] = [
             // ```
             //
             // (Note that auto-indentation of Typescript applies).
-            await context.typeText({ text: '\n' });
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [8, 16] ]);
+            await executor.typeText({ text: '\n' });
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [8, 16] ]);
         }
     }),
     new TestCase({
         name: 'Multi-line Snippet Inserted Between Pairs',
         prelude: SHARED_PRELUDE,
-        action: async (context) => {
+        action: async (executor) => {
 
             // Delete the `20` from the second argument of `someFn`.
             //
@@ -710,9 +708,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, ) } ] } }); // Log object to console.
             // }                                                 ^(cursor position)
             // ```
-            await context.backspace({ repetitions: 2 });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 50, 52, 54, 56, 58, 59] } ]);
-            context.assertCursors([ [1, 50] ]);
+            await executor.backspace({ repetitions: 2 });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 50, 52, 54, 56, 58, 59] } ]);
+            executor.assertCursors([ [1, 50] ]);
 
             // Type in an array of numbers.
             //
@@ -723,9 +721,9 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3]) } ] } }); // Log object to console.
             // }                                                             ^(cursor position)
             // ```
-            await context.typeText({ text: '[-1, -2, -3]' });
-            context.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 62, 64, 66, 68, 70, 71] } ]);
-            context.assertCursors([ [1, 62] ]);
+            await executor.typeText({ text: '[-1, -2, -3]' });
+            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 62, 64, 66, 68, 70, 71] } ]);
+            executor.assertCursors([ [1, 62] ]);
 
             // Insert a multi-line snippet.
             // 
@@ -738,11 +736,11 @@ const TEST_CASES: TestCase[] = [
             //     }, init)) } ] } }); // Log object to console.
             // }                                                            
             // ```
-            await context.insertSnippet({ 
+            await executor.insertSnippet({ 
                 snippet: new SnippetString('.reduce((${1:acc}, ${2:prev}) => {\n    $3\n}, ${4:init})$0') 
             });
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ { anchor: [1, 71], active: [1, 74] } ]);
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ { anchor: [1, 71], active: [1, 74] } ]);
 
             // Make sure that the snippet still works by jumping to the second tabstop.
             // 
@@ -755,9 +753,9 @@ const TEST_CASES: TestCase[] = [
             //     }, init)) } ] } }); // Log object to console.
             // }                                                            
             // ```
-            await context.jumpToNextTabstop();
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ { anchor: [1, 76], active: [1, 80] } ]);
+            await executor.jumpToNextTabstop();
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ { anchor: [1, 76], active: [1, 80] } ]);
 
             // Make sure that the snippet still works by jumping to the third tabstop.
             // 
@@ -771,9 +769,9 @@ const TEST_CASES: TestCase[] = [
             //     }, init)) } ] } }); // Log object to console.
             // }                                                            
             // ```
-            await context.jumpToNextTabstop();
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [2, 8] ]);
+            await executor.jumpToNextTabstop();
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [2, 8] ]);
 
             // Make sure that the snippet still works by jumping to the fourth tabstop.
             //
@@ -786,9 +784,9 @@ const TEST_CASES: TestCase[] = [
             //     }, init)) } ] } }); // Log object to console.
             // }      |---^(cursor selection)
             // ```
-            await context.jumpToNextTabstop();
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ { anchor: [3, 7], active: [3, 11] } ]);
+            await executor.jumpToNextTabstop();
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ { anchor: [3, 7], active: [3, 11] } ]);
 
             // Make sure that the snippet still works by jumping to the final tabstop.
             //
@@ -801,9 +799,9 @@ const TEST_CASES: TestCase[] = [
             //     }, init)) } ] } }); // Log object to console.
             // }           ^(cursor position)
             // ```
-            await context.jumpToNextTabstop();
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [3, 12] ]);
+            await executor.jumpToNextTabstop();
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [3, 12] ]);
         }
     })
 ];

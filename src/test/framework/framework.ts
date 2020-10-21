@@ -1,10 +1,10 @@
 //! The following module defines the test framework for this extension.
 
-import { TextEditor, commands, Range, Selection, Position, SnippetString, window, workspace, extensions, TextEditorEdit } from 'vscode';
+import { TextEditor, commands, Range, Selection, Position, SnippetString, TextEditorEdit } from 'vscode';
 import * as assert from 'assert';
 import { TestAPI } from '../../extension';
 import { CompactCursors, CompactClusters, CompactRange, CompactPosition } from './compact';
-import { pickRandom, waitFor, waitUntil, zip } from './utilities';
+import { closeActiveEditor, getHandle, openNewTextEditor, pickRandom, waitFor, zip } from './utilities';
 
 export class TestCategory {
 
@@ -57,12 +57,12 @@ export class TestCase {
         /**
          *  Callback to setup the editor for this test case. 
          */
-        readonly prelude?: (context: TestContext) => Promise<void>,
+        readonly prelude?: (executor: PreludeActionExecutor) => Promise<void>,
 
         /** 
          * Callback to execute as part of the test case. 
          */
-        readonly action: (context: TestContext) => Promise<void>
+        readonly action: (executor: ActionExecutor) => Promise<void>
 
     }) {}
 
@@ -73,96 +73,57 @@ export class TestCase {
             // Sometimes tests can fail due to the editor lagging.
             this.retries(1);
 
-            // Initialize the context then run the prelude to setup the editor.
-            const context = await TestContext.create(editorLanguageId);
+            // Open a new editor for the tests.
+            const editor = await openNewTextEditor(editorLanguageId);
+
+            // Get a handle to the active editor instance.
+            const handle = getHandle();
 
             // Setup the editor for the test.
             if (prelude) {
-                await prelude(context);
+                await prelude(new PreludeActionExecutor(editor, handle));
             }
 
             // Run the actual test.
-            await action(context);
+            await action(new ActionExecutor(editor, handle));
 
             // Close the opened editor.
-            await context.terminate();
+            await closeActiveEditor();
         });
     }
 
 }
 
+
 /**
- * A binding to a fresh text editor that allows a test case to:
+ * A convenience class that allows a test case to:
  * 
- * 1. Modify the state of the editor.
- * 2. Assert the state of the editor and the extension.
- * 
- * The new text editor takes focus of the window upon creation.
+ *  1. Modify and assert the state of the editor that it is bound to.
+ *  2. Assert the state of the extension.
  */
-export class TestContext {
-
-    /** 
-     * The fresh text editor that is provided to each test case. 
-     */
-    private readonly editor: TextEditor;
+export class ActionExecutor {
 
     /**
-     * A handle to the active extension instance.
+     * @param editor The fresh text editor that is provided ot each test case.
+     * @param handle A handle to the active extension instance.
      */
-    private readonly instance: TestAPI;
-
-    /* 
-     * The editor will be set to the language specified by `languageId`. By default, `typescript`
-     * is used. 
-     */
-    public static async create(languageId: string = 'typescript'): Promise<TestContext> {
-        
-        // Open a new editor.
-        const document = await workspace.openTextDocument({ language: languageId });
-        const editor   = await window.showTextDocument(document);
-
-        // Wait a short while for the extension to acknowledge that a new editor was opened.
-        await waitFor(100);
-
-        // Get a handle to the extension.
-        const instance = extensions.getExtension<TestAPI>(`OnlyLys.leaper`)?.exports;
-        if (!instance) {
-            throw new Error('Unable to access Leaper API for testing!');
-        }
-
-        return new TestContext(editor, instance);
-    }
-
-    private constructor(editor: TextEditor, instance: TestAPI) {
-        this.editor   = editor;
-        this.instance = instance;
-    }
-
-    /**
-     * Close the editor that was opened.
-     */
-    public async terminate(): Promise<void> {
-        await commands.executeCommand('workbench.action.closeAllEditors');
-        await waitUntil(() => window.visibleTextEditors.length === 0);
+    public constructor(
+        protected readonly editor: TextEditor, 
+        protected readonly handle: TestAPI
+    ) {
+        this.editor = editor;
+        this.handle = handle;
     }
     
-    /**
-     * Same as `assertPairs` but with a slightly different error message that notes that the 
-     * assertion failed in a test case's prelude.
-     */
-    public assertPairsPrelude(expected: CompactClusters): void {
-        this._assertPairs(expected, '(Prelude Failure) Pairs Mismatch');
-    }
-
     public assertPairs(expected: CompactClusters): void {
         this._assertPairs(expected, 'Pairs Mismatch');
     }
 
-    private _assertPairs(expected: CompactClusters, msg: string): void {
+    protected _assertPairs(expected: CompactClusters, msg: string): void {
 
         // Convert the clusters to a simpler form that displays better during assertion failures.
         type Simple = { open: [number, number], close: [number, number] }[][];
-        const actual: Simple = this.instance.snapshot().map((cluster) => 
+        const actual: Simple = this.handle.snapshot().map((cluster) => 
             cluster.map(({ open, close }) => 
                 ({ open: [open.line,  open.character], close: [close.line, close.character] })
             )
@@ -183,19 +144,11 @@ export class TestContext {
         assert.deepStrictEqual(actual, _expected, msg);
     }
 
-    /**
-     * Same as `assertCursors` but with a slightly different error message that notes that the 
-     * assertion failed in a test case's prelude.
-     */
-    public assertCursorsPrelude(expected: CompactCursors): void {
-        this._assertCursors(expected, '(Prelude Failure) Cursors Mismatch');
-    }
-
     public assertCursors(expected: CompactCursors): void {
         this._assertCursors(expected, 'Cursors Mismatch');
     }
 
-    private _assertCursors(expected: CompactCursors, msg: string): void {
+    protected _assertCursors(expected: CompactCursors, msg: string): void {
         const actual: CompactCursors = this.editor.selections.map(({ active, anchor }) => {
             return { 
                 anchor: [anchor.line, anchor.character], 
@@ -401,6 +354,23 @@ export class TestContext {
             return commands.executeCommand('cursorEnd');
         }, options);
     }
+
+}
+
+/**
+ * Same as `ActionExecutor` except that the `assertPairs` and `assertCursors` method show slightly 
+ * different error messages that indicate that the assertions failed in test case preludes.
+ */
+export class PreludeActionExecutor extends ActionExecutor {
+
+    public assertPairs(expected: CompactClusters): void {
+        this._assertPairs(expected, '(Prelude Failure) Pairs Mismatch');
+    }
+
+    public assertCursors(expected: CompactCursors): void {
+        this._assertCursors(expected, '(Prelude Failure) Cursors Mismatch');
+    }
+
 }
 
 /**

@@ -13,25 +13,25 @@ export const SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP = new TestGroup
         new TestCase({
             name: 'Command Works',
             editorLanguageId: 'markdown',
-            prelude: async (context) => {
+            prelude: async (executor) => {
                 
                 // Insert pairs between some text to simulate a typical usage scenario.
-                await context.typeText({ text: ALICE_TEXT_1 });
-                await context.moveCursors({ direction: 'up' });
-                await context.moveCursors({ direction: 'left', repetitions: 10 });
-                await context.typePair({ repetitions: 10 });
-                context.assertPairsPrelude([ { line: 5, sides: range(79, 99) } ]);
-                context.assertCursorsPrelude([ [5, 89] ]);
+                await executor.typeText({ text: ALICE_TEXT_1 });
+                await executor.moveCursors({ direction: 'up' });
+                await executor.moveCursors({ direction: 'left', repetitions: 10 });
+                await executor.typePair({ repetitions: 10 });
+                executor.assertPairs([ { line: 5, sides: range(79, 99) } ]);
+                executor.assertCursors([ [5, 89] ]);
             },
-            action: async (context) => {
+            action: async (executor) => {
 
                 // Jump out of one pair first, just to simulate a more 'realistic' scenario.
-                await context.leap();
+                await executor.leap();
 
                 // This should remove all pairs from being tracked.
-                await context.escapeLeaperMode();
-                context.assertPairs([ { line: -1, sides: [] } ]);
-                context.assertCursors([ [5, 90] ]);
+                await executor.escapeLeaperMode();
+                executor.assertPairs([ { line: -1, sides: [] } ]);
+                executor.assertCursors([ [5, 90] ]);
             }
         }),
 
@@ -42,7 +42,7 @@ export const SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP = new TestGroup
         // command.
         new TestCase({
             name: 'Can Handle Being Rapidly Called',
-            prelude: async (context) => {
+            prelude: async (executor) => {
 
                 // Type the following text into the editor:
                 //
@@ -53,20 +53,20 @@ export const SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP = new TestGroup
                 //     }                       ^(cursor position)
                 // }
                 // ```
-                await context.typeText({ 
+                await executor.typeText({ 
                     text: 'function main() {\n'
                         +     'function inner() {\n'
                         +         'return [ { a: { b: ['
                 });
-                context.assertPairsPrelude([ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ]);
-                context.assertCursorsPrelude([ [2, 28] ]);
+                executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ]);
+                executor.assertCursors([ [2, 28] ]);
             },
-            action: async (context) => {
+            action: async (executor) => {
 
                 // This should remove all pairs from being tracked and do nothing else.
-                await context.escapeLeaperMode({ delay: 0, repetitions: 50 }); 
-                context.assertPairs([ { line: -1, sides: [] } ]);
-                context.assertCursors([ [2, 28] ]);
+                await executor.escapeLeaperMode({ delay: 0, repetitions: 50 }); 
+                executor.assertPairs([ { line: -1, sides: [] } ]);
+                executor.assertCursors([ [2, 28] ]);
             }
         })
     ]

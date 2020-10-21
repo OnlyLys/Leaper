@@ -7,198 +7,196 @@ import { ALICE_TEXT_1, ALICE_TEXT_2, } from '../../framework/placeholder-texts';
 const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Single Leap',
-        prelude: async (context) => {
-            await context.typePair();
-            context.assertPairsPrelude([ { line: 0, sides: [0, 1] } ]);
-            context.assertCursorsPrelude([ [0, 1] ]);
+        prelude: async (executor) => {
+            await executor.typePair();
+            executor.assertPairs([ { line: 0, sides: [0, 1] } ]);
+            executor.assertCursors([ [0, 1] ]);
         },
-        action: async (context) => {
-            await context.leap();
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [0, 2] ]);
+        action: async (executor) => {
+            await executor.leap();
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [0, 2] ]);
         }
     }),
     new TestCase({
         name: 'Single Leap Across Whitespace',
-        prelude: async (context) => { 
-            await context.typePair();
-            await context.typeText({ text: '     ' });
-            await context.moveCursors({ direction: 'left', repetitions: 5 });
-            context.assertPairsPrelude([ { line: 0, sides: [0, 6] } ]);
-            context.assertCursorsPrelude([ [0, 1] ]);
+        prelude: async (executor) => { 
+            await executor.typePair();
+            await executor.typeText({ text: '     ' });
+            await executor.moveCursors({ direction: 'left', repetitions: 5 });
+            executor.assertPairs([ { line: 0, sides: [0, 6] } ]);
+            executor.assertCursors([ [0, 1] ]);
         },
-        action: async (context) => { 
-            await context.leap();
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [0, 7] ]);
+        action: async (executor) => { 
+            await executor.leap();
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [0, 7] ]);
         }
     }),
     new TestCase({
         name: 'Consecutive Leaps',
-        prelude: async (context) => { 
+        prelude: async (executor) => { 
 
             // Insert pairs between some text to simulate a typical usage scenario.
-            await context.editText({
+            await executor.editText({
                 edits: [
                     { kind: 'insert', position: [0, 0], text: ALICE_TEXT_1 + '\n\n' + ALICE_TEXT_2 }
                 ]
             });
-            await context.setCursors({ cursors: [ [6, 71] ] });
-            await context.typePair({ repetitions: 10 });
-            context.assertPairsPrelude([ { line: 6, sides: range(71, 91) } ]);
-            context.assertCursorsPrelude([ [6, 81] ]);
+            await executor.setCursors({ cursors: [ [6, 71] ] });
+            await executor.typePair({ repetitions: 10 });
+            executor.assertPairs([ { line: 6, sides: range(71, 91) } ]);
+            executor.assertCursors([ [6, 81] ]);
         },
-        action: async (context) => { 
+        action: async (executor) => { 
             const cluster = { line: 6, sides: range(71, 91) };
             while (cluster.sides.length > 0) {
-                await context.leap();
-                context.assertCursors([ [6, cluster.sides[cluster.sides.length / 2] + 1] ]);
+                await executor.leap();
+                executor.assertCursors([ [6, cluster.sides[cluster.sides.length / 2] + 1] ]);
                 cluster.sides = [
                     ...cluster.sides.slice(0, (cluster.sides.length / 2) - 1),
                     ...cluster.sides.slice((cluster.sides.length / 2) + 1),
                 ];
-                context.assertPairs([ cluster ]);
+                executor.assertPairs([ cluster ]);
             }
         }
     }),
     new TestCase({
         name: 'Consecutive Leaps Across Whitespace',
-        prelude: async (context) => { 
+        prelude: async (executor) => { 
 
             // Insert pairs after some text to simulate a typical usage scenario.
-            await context.typeText({ text: 'some text\n\nfunction ' });
+            await executor.typeText({ text: 'some text\n\nfunction ' });
             for (let i = 0; i < 6; ++i) {
-                await context.typePair();
-                await context.typeText({ text: '     ' });
-                await context.moveCursors({ direction: 'left', repetitions: 5 });
+                await executor.typePair();
+                await executor.typeText({ text: '     ' });
+                await executor.moveCursors({ direction: 'left', repetitions: 5 });
             }
-            context.assertPairsPrelude(
-                [ { line: 2, sides: [9, 10, 11, 12, 13, 14, 20, 26, 32, 38, 44, 50] } ],
-            );
-            context.assertCursorsPrelude([ [2, 15] ]);
+            executor.assertPairs([ { line: 2, sides: [9, 10, 11, 12, 13, 14, 20, 26, 32, 38, 44, 50] } ]);
+            executor.assertCursors([ [2, 15] ]);
         },
-        action: async (context) => { 
+        action: async (executor) => { 
             const cluster = { line: 2, sides: [9, 10, 11, 12, 13, 14, 20, 26, 32, 38, 44, 50] };
             while (cluster.sides.length > 0) {
-                await context.leap();
-                context.assertCursors([ [2, cluster.sides[cluster.sides.length / 2] + 1] ]);
+                await executor.leap();
+                executor.assertCursors([ [2, cluster.sides[cluster.sides.length / 2] + 1] ]);
                 cluster.sides = [
                     ...cluster.sides.slice(0, (cluster.sides.length / 2) - 1),
                     ...cluster.sides.slice((cluster.sides.length / 2) + 1),
                 ];
-                context.assertPairs([ cluster ]);
+                executor.assertPairs([ cluster ]);
             }
         }
     }),
     new TestCase({
         name: 'Leap Call Ignored When No Pairs',
         editorLanguageId: 'markdown',
-        prelude: async (context) => { 
-            await context.typeText({ text: ALICE_TEXT_2  });
-            await context.setCursors({ cursors: [ [2, 11] ] });
-            context.assertPairsPrelude([ { line: -1, sides: [] } ]);
-            context.assertCursorsPrelude([ [2, 11] ]);  
+        prelude: async (executor) => { 
+            await executor.typeText({ text: ALICE_TEXT_2  });
+            await executor.setCursors({ cursors: [ [2, 11] ] });
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [2, 11] ]);  
         },
-        action: async (context) => { 
+        action: async (executor) => { 
 
             // Leap a bunch of times when there are no pairs and check that the cursor has not moved.
             for (let i = 0; i < 10; ++i) {
-                await context.leap();
-                context.assertPairs([ { line: -1, sides: [] } ]);
-                context.assertCursors([ [2, 11] ]);
+                await executor.leap();
+                executor.assertPairs([ { line: -1, sides: [] } ]);
+                executor.assertCursors([ [2, 11] ]);
             }
 
             // Now insert 5 pairs.
-            await context.typePair({ repetitions: 5 });
-            context.assertPairs([ { line: 2, sides: range(11, 21) } ]);
-            context.assertCursors([ [2, 16] ]);
+            await executor.typePair({ repetitions: 5 });
+            executor.assertPairs([ { line: 2, sides: range(11, 21) } ]);
+            executor.assertCursors([ [2, 16] ]);
 
             // Leap out of all of the inserted pairs.
-            await context.leap({ repetitions: 5 });
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [2, 21] ]);
+            await executor.leap({ repetitions: 5 });
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [2, 21] ]);
 
             // After leaping, check that future leap calls do not move the cursor at all.
             for (let i = 0; i < 10; ++i) {
-                await context.leap();
-                context.assertPairs([ { line: -1, sides: [] } ]);
-                context.assertCursors([ [2, 21] ]);
+                await executor.leap();
+                executor.assertPairs([ { line: -1, sides: [] } ]);
+                executor.assertCursors([ [2, 21] ]);
             }
         }
     }),
     new TestCase({
         name: 'Leap Call Ignored When No Line of Sight',
         editorLanguageId: 'markdown',
-        prelude: async (context) => { 
+        prelude: async (executor) => { 
 
             // Insert some random text to simulate a typical usage scenario.
-            await context.typeText({ text: ALICE_TEXT_2 });
-            await context.setCursors({ cursors: [ [2, 11] ] });
+            await executor.typeText({ text: ALICE_TEXT_2 });
+            await executor.setCursors({ cursors: [ [2, 11] ] });
 
             // Insert `{ { Hello { Markdown } is } Awesome }` into the text.
-            await context.typeText({ text: ' {  Awesome ' });
-            await context.moveCursors({ direction: 'left', repetitions: 9 });
-            await context.typeText({ text: '{ Hello  is ' });
-            await context.moveCursors({ direction: 'left', repetitions: 4 });
-            await context.typeText({ text: '{ Markdown ' });
-            await context.moveCursors({ direction: 'left', repetitions: 10 });
-            context.assertPairsPrelude([ { line: 2, sides: [12, 14, 22, 33, 38, 48] } ]);
-            context.assertCursorsPrelude([ [2, 23] ]);
+            await executor.typeText({ text: ' {  Awesome ' });
+            await executor.moveCursors({ direction: 'left', repetitions: 9 });
+            await executor.typeText({ text: '{ Hello  is ' });
+            await executor.moveCursors({ direction: 'left', repetitions: 4 });
+            await executor.typeText({ text: '{ Markdown ' });
+            await executor.moveCursors({ direction: 'left', repetitions: 10 });
+            executor.assertPairs([ { line: 2, sides: [12, 14, 22, 33, 38, 48] } ]);
+            executor.assertCursors([ [2, 23] ]);
         },
-        action: async (context) => { 
+        action: async (executor) => { 
 
             // First leap a few times and check that the cursor has not moved at all.
             //
             // Leaping is not possible due to the ' Markdown ' obstalce.
             for (let i = 0; i < 5; ++i) {
-                await context.leap();
-                context.assertPairs([ { line: 2, sides: [12, 14, 22, 33, 38, 48] } ]);
-                context.assertCursors([ [2, 23] ]);
+                await executor.leap();
+                executor.assertPairs([ { line: 2, sides: [12, 14, 22, 33, 38, 48] } ]);
+                executor.assertCursors([ [2, 23] ]);
             }
 
             // Move past the ' Markdown ' obstacle.
-            await context.moveCursors({ direction: 'right', repetitions: 10 });
-            context.assertPairs([ { line: 2, sides: [12, 14, 22, 33, 38, 48] } ]);
-            context.assertCursors([ [2, 33] ]);
+            await executor.moveCursors({ direction: 'right', repetitions: 10 });
+            executor.assertPairs([ { line: 2, sides: [12, 14, 22, 33, 38, 48] } ]);
+            executor.assertCursors([ [2, 33] ]);
 
             // Check that leaping is now possible.
-            await context.leap();
-            context.assertPairs([ { line: 2, sides: [12, 14, 38, 48] } ]);
-            context.assertCursors([ [2, 34] ]);
+            await executor.leap();
+            executor.assertPairs([ { line: 2, sides: [12, 14, 38, 48] } ]);
+            executor.assertCursors([ [2, 34] ]);
 
             // After leaping, check that leaping is not possible due to the ' is ' obstacle.
             for (let i = 0; i < 5; ++i) {
-                await context.leap();
-                context.assertPairs([ { line: 2, sides: [12, 14, 38, 48] } ]);
-                context.assertCursors([ [2, 34] ]);
+                await executor.leap();
+                executor.assertPairs([ { line: 2, sides: [12, 14, 38, 48] } ]);
+                executor.assertCursors([ [2, 34] ]);
             }
 
             // Move past the ' is ' obstacle.
-            await context.moveCursors({ direction: 'right', repetitions: 4 });
-            context.assertPairs([ { line: 2, sides: [12, 14, 38, 48] } ]);
-            context.assertCursors([ [2, 38] ]);
+            await executor.moveCursors({ direction: 'right', repetitions: 4 });
+            executor.assertPairs([ { line: 2, sides: [12, 14, 38, 48] } ]);
+            executor.assertCursors([ [2, 38] ]);
 
             // Check that leaping is now possible.
-            await context.leap();
-            context.assertPairs([ { line: 2, sides: [12, 48] } ]);
-            context.assertCursors([ [2, 39] ]);
+            await executor.leap();
+            executor.assertPairs([ { line: 2, sides: [12, 48] } ]);
+            executor.assertCursors([ [2, 39] ]);
 
             // After leaping, check that leaping is not possible due to the ' Awesome ' obstacle.
             for (let i = 0; i < 5; ++i) {
-                await context.leap();
-                context.assertPairs([ { line: 2, sides: [12, 48] } ]);
-                context.assertCursors([ [2, 39] ]);
+                await executor.leap();
+                executor.assertPairs([ { line: 2, sides: [12, 48] } ]);
+                executor.assertCursors([ [2, 39] ]);
             }
 
             // Move past the ' Awesome ' obstacle.
-            await context.moveCursors({ direction: 'right', repetitions: 9 });
-            context.assertPairs([ { line: 2, sides: [12, 48] } ]);
-            context.assertCursors([ [2, 48] ]);
+            await executor.moveCursors({ direction: 'right', repetitions: 9 });
+            executor.assertPairs([ { line: 2, sides: [12, 48] } ]);
+            executor.assertCursors([ [2, 48] ]);
 
             // Perform the final leap.
-            await context.leap();
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [2, 49] ]);
+            await executor.leap();
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [2, 49] ]);
         }
     }),
 
@@ -210,7 +208,7 @@ const TEST_CASES: TestCase[] = [
     // This test case tests whether the extension can handle such a situation.
     new TestCase({
         name: 'Can Handle Being Rapidly Called',
-        prelude: async (context) => {
+        prelude: async (executor) => {
 
             // Initialize the editor to the following state:
             //
@@ -221,32 +219,32 @@ const TEST_CASES: TestCase[] = [
             //     }                        ^(cursor position)
             // }
             // ```
-            await context.typeText({ 
+            await executor.typeText({ 
                 text: 'function main() {\n'
                     +     'function inner() {\n'
                     +         'return [ { a: { b: [ 100 '
             });
-            await context.moveCursors({ direction: 'left', repetitions: 4 });
-            context.assertPairsPrelude([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
-            context.assertCursorsPrelude([ [2, 29] ]);
+            await executor.moveCursors({ direction: 'left', repetitions: 4 });
+            executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
+            executor.assertCursors([ [2, 29] ]);
         },
-        action: async (context) => {
+        action: async (executor) => {
 
             // Since there is an obstacle at where the cursor is at, a leap should not occur.
-            await context.leap({ delay: 0, repetitions: 50 });
-            context.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
-            context.assertCursors([ [2, 29] ]);
+            await executor.leap({ delay: 0, repetitions: 50 });
+            executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
+            executor.assertCursors([ [2, 29] ]);
 
             // Move past the '100' obstacle.
-            await context.moveCursors({ direction: 'right', repetitions: 3 });
-            context.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
-            context.assertCursors([ [2, 32] ]);
+            await executor.moveCursors({ direction: 'right', repetitions: 3 });
+            executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
+            executor.assertCursors([ [2, 32] ]);
 
             // Rapidly calling the 'Leap' command here should cause the cursor to leap out of all
             // the pairs, and do nothing else after that.
-            await context.leap({ delay: 0, repetitions: 50 });
-            context.assertPairs([ { line: -1, sides: [] } ]);
-            context.assertCursors([ [2, 37] ]);
+            await executor.leap({ delay: 0, repetitions: 50 });
+            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertCursors([ [2, 37] ]);
         }
     })
 ];
