@@ -2,8 +2,8 @@
 
 ## 0.8.0 -> 0.9.0
 
-In this update, the extension was rearchitected to be able to handle multiple 
-visible text editors.
+In this update, the extension was rearchitected to be able to perform context
+switching (i.e. handle multiple visible text editors).
 
 By that, we mean that a user can now insert a pair into a visible text editor, 
 switch to another visible text editor, come back, and still have the pairs and 

@@ -1,8 +1,4 @@
 //! The following module defines the 'starting point' class of the extension.
-//! 
-//! The `Engine` class defined here mainly acts as a coordinator, assigning to each visible text 
-//! editor a `Tracker` instance. The `Tracker` instance belonging to each class is then responsible 
-//! for tracking and decorating the pairs in its owning text editor.
 
 import { commands, Disposable, Position, TextEditor, window } from 'vscode';
 import { ContextBroadcaster } from './context-broadcaster';
@@ -13,11 +9,22 @@ import { Tracker } from './tracker/tracker';
  * 
  * Creating an instance of this class starts the extension. 
  * 
- * Only one instance should be active at any time.
+ * # What This Class Does
+ * 
+ * This class mainly acts as a coordinator. 
+ * 
+ * The primary responsbility of this class is to assign to each visible text editor a `Tracker` 
+ * instance. The `Tracker` instance belonging to each class is then responsible for tracking and 
+ * decorating the pairs in its owning text editor.
+ * 
+ * Furthermore, this class manages the keybindings of this extension by 'context switching', that is, 
+ * by making sure that the context values within vscode are always synchronized with the context 
+ * values of the active text editor's tracker.
  * 
  * # Safety
  * 
- * The created instance of this class must be disposed of when the extension is shut down.
+ * Only one instance of this class should be active at any time. And the created instance of this 
+ * class must be disposed of when the extension is shut down.
  */
 export class Engine {
 
@@ -120,7 +127,9 @@ export class Engine {
     }
 
     /**
-     * Rebind to the current active text editor's tracker.
+     * Rebind to the currently active text editor's tracker.
+     * 
+     * This switches vscode's context to the context of the active tracker.
      */
     private rebindActiveTracker(): void {
 
@@ -140,7 +149,7 @@ export class Engine {
             }
         );
 
-        // Make the active tracker's context values the global context values.
+        // Switch vscode's context to the active tracker's context.
         this.hasLineOfSightContextBroadcaster.set();
         this.inLeaperModeContextBroadcaster.set();
     }

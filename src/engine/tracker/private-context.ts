@@ -26,8 +26,7 @@
  * All `Tracker`s share the same global value for the same keybinding context. 
  * 
  * A global value is a value that was most recently broadcasted to and acknowledged by vscode, and 
- * is what is used by vscode to determine if a keybinding is active or not. Only the active text 
- * editor (and therefore active `Tracker`) has its context values be broadcasted to vscode. 
+ * is what is used by vscode to determine if a keybinding is active or not. 
  * 
  * An analogy can be drawn to multi-threading on PCs. Each thread can have its own values for what
  * should go onto the CPU registers, but only the active thread has its values loaded onto the CPU 

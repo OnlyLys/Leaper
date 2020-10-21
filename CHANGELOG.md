@@ -1,9 +1,10 @@
 # CHANGELOG
 
 ### 0.9.0
-- Add support for handling multiple visible text editors at a time. Users can 
-  now insert pairs in one editor, switch to another editor, then come back and
-  still have the pairs be 'leapable', as the user had left them.
+- Add support for context switching (i.e. handle multiple visible text editors 
+  at a time. Users can now insert pairs in one editor, switch to another editor, 
+  then come back and still have the pairs be 'leapable', as the user had left 
+  them.
 
 ### 0.8.0 _(Unpublished)_
 - Add multicursor support.
