@@ -56,7 +56,7 @@
                         "minLength": 2
                     },
                     "uniqueItems": true,
-                    "markdownDescription": "The pairs to detect. \n\nNote that there is no support for pairs that are more than 1 character wide on either side, so `(())`, for instance, is disallowed.",
+                    "markdownDescription": "The autoclosing pairs to detect. \n\nNote that there is no support for pairs that are more than 1 character wide on either side, so `(())`, for instance, is disallowed.",
                     "scope": "language-overridable"
                 },
                 "leaper.decorationOptions": {
