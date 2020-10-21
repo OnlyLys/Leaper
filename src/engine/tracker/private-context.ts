@@ -38,7 +38,7 @@
  * 
  * [`when` keybinding context]: https://code.visualstudio.com/docs/getstarted/keybindings#_when-clause-contexts
  */
-export class PrivateKeybindingContext {
+export class PrivateContext {
 
     /**
      * The cached value.

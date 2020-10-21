@@ -5,7 +5,7 @@
 //! for tracking and decorating the pairs in its owning text editor.
 
 import { commands, Disposable, Position, TextEditor, window } from 'vscode';
-import { KeybindingContextBroadcaster } from './keybinding-context-broadcaster';
+import { ContextBroadcaster } from './context-broadcaster';
 import { Tracker } from './tracker/tracker';
 
 /**
@@ -89,7 +89,7 @@ export class Engine {
     /**
      * To broadcast the `leaper.hasLineOfSight` context of the active tracker to vscode.
      */
-    private readonly hasLineOfSightContextBroadcaster = new KeybindingContextBroadcaster(
+    private readonly hasLineOfSightContextBroadcaster = new ContextBroadcaster(
         'leaper.hasLineOfSight',
         () => this.activeTracker?.getHasLineOfSightContext() ?? false
     );
@@ -97,7 +97,7 @@ export class Engine {
     /**
      * To broadcast the `leaper.inLeaperMode` context of the active tracker to vscode.
      */
-    private readonly inLeaperModeContextBroadcaster = new KeybindingContextBroadcaster(
+    private readonly inLeaperModeContextBroadcaster = new ContextBroadcaster(
         'leaper.inLeaperMode',
         () => this.activeTracker?.getInLeaperModeContext() ?? false
     );

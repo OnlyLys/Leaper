@@ -1,7 +1,7 @@
 import { TextEditor, Selection, window, Position, workspace, EventEmitter, Event } from 'vscode';
 import { Configuration } from './configuration';
 import { ImmediateReusable } from './immediate-reusable';
-import { PrivateKeybindingContext } from './private-keybinding-context';
+import { PrivateContext } from './private-context';
 import { TrackerCore } from './tracker-core/tracker-core';
 
 /** 
@@ -40,7 +40,7 @@ export class Tracker {
      * 
      * This value is used by the parent `Engine` to toggle all of this extension's keybindings.
      */
-    private readonly inLeaperModeContext = new PrivateKeybindingContext(
+    private readonly inLeaperModeContext = new PrivateContext(
         false, 
         () => !this.core.isEmpty(),
     );
@@ -58,7 +58,7 @@ export class Tracker {
      * the keybinding heirarchy, preventing this extension from unnecessarily intercepting `Tab` 
      * keypresses.
      */
-    private readonly hasLineOfSightContext = new PrivateKeybindingContext(
+    private readonly hasLineOfSightContext = new PrivateContext(
         false,
         () => this.core.hasLineOfSight(this.owner.document),
     );

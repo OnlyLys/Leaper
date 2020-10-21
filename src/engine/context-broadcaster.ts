@@ -26,7 +26,7 @@ import { ImmediateReusable } from './tracker/immediate-reusable';
  * Another thing that we do to reduce the overhead of our extension is to only broadcast context
  * values when they are different from the context values that we most recently broadcasted.
  */
-export class KeybindingContextBroadcaster {
+export class ContextBroadcaster {
 
     /**
      * The name of the keybinding context as declared in the extension manifest.
