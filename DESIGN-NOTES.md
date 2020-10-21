@@ -52,14 +52,13 @@ as) `Tracker` class to `TrackerCore`.
 Aside from many changes in the comments, nearly all of the code in this class 
 was left unchanged. 
 
-### Rename 'Internal' and 'External' Context Values to 'Private' and 'Global'.
+### Rename 'Internal' and 'External' Context Values to 'Private' and 'Global'
 
 Previously, throughout the code, we mentioned that context values had 'internal'
 and 'external' values, referring to the fact that:
 
  1. The cached context values within (what was then known as) the `Tracker` 
     class were not visible to vscode and were therefore 'internal'.
-
  2. That context values broadcasted to vscode are 'external' because they are 
     visible to vscode.
 
@@ -68,7 +67,6 @@ sense to rename 'internal' and 'external' to 'private' and 'global', since:
 
  1. For any given keybinding context, each `Tracker` is allowed to have its own 
     value for it, thus making the value internal to each `Tracker` 'private'.
-    
  2. A keybinding context value broadcasted to vscode is 'global' because it
     applies to the entire vscode instance.
 
@@ -80,10 +78,8 @@ class that serves as the top level controller of the extension.
 The primary responsibilities of the new `Engine` class are:
 
  1. To make sure that each visible text editor has its own `Tracker` instance.
-    
  2. To make sure that `Tracker`s are cleaned up when their owning text editors 
     are closed. 
-
  3. To appropriately toggle keybindings by broadcasting the context values of 
     the active text editor's `Tracker` to vscode. 
 
