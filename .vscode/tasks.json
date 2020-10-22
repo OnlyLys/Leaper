@@ -4,17 +4,63 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "npm: compile",
             "type": "npm",
-            "script": "watch",
-            "problemMatcher": "$tsc-watch",
-            "isBackground": true,
+            "script": "compile",
+            "problemMatcher": [
+                "$eslint-stylish",
+                "$tsc"
+            ],
+            "isBackground": false,
             "presentation": {
-                "reveal": "never"
+                "reveal": "silent"
+            },
+            "group": "build"
+        },
+        {
+            "label": "npm: fast-compile",
+            "type": "npm",
+            "script": "fast-compile",
+            "problemMatcher": [
+                "$eslint-stylish",
+                "$tsc"
+            ],
+            "isBackground": false,
+            "presentation": {
+                "reveal": "silent"
             },
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
-        }
+        },
+        {
+            "label": "npm: pretest",
+            "type": "npm",
+            "script": "pretest",
+            "problemMatcher": [
+                "$eslint-stylish",
+                "$tsc",
+            ],
+            "isBackground": false,
+            "presentation": {
+                "reveal": "silent"
+            },
+            "group": "build"
+        },
+        {
+            "label": "npm: fast-pretest",
+            "type": "npm",
+            "script": "fast-pretest",
+            "problemMatcher": [
+                "$eslint-stylish",
+                "$tsc",
+            ],
+            "isBackground": false,
+            "presentation": {
+                "reveal": "silent"
+            },
+            "group": "build"
+        },
     ]
 }
