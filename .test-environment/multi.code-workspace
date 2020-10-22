@@ -29,6 +29,8 @@
 		// Standardize the tab size to 4-spaces.
 		"editor.insertSpaces": true,
 		"editor.detectIndentation": false,
-		"editor.tabSize": 4
+		"editor.tabSize": 4,
+		// Disable autosave since we don't want to save files while testing.
+		"files.autoSave": "off"
 	}
 }
