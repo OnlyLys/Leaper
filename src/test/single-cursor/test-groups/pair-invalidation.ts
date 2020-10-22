@@ -1,5 +1,5 @@
 import { SnippetString } from 'vscode';
-import { PreludeActionExecutor, TestCase, TestGroup } from '../../framework/framework';
+import { PreludeActionExecutor, TestCase, TestGroup } from '../../utilities/framework';
 
 // In this prelude that is shared across all the test cases in this module, we insert pairs in a way 
 // that simulates a typical usage scenario.

@@ -4,7 +4,7 @@ import { TextEditor, commands, Range, Selection, Position, SnippetString, TextEd
 import * as assert from 'assert';
 import { TestAPI } from '../../extension';
 import { CompactCursors, CompactClusters, CompactRange, CompactPosition } from './compact';
-import { closeActiveEditor, getHandle, openNewTextEditor, pickRandom, waitFor, zip } from './utilities';
+import { closeActiveEditor, getHandle, openNewTextEditor, pickRandom, waitFor, zip } from './other';
 
 export class TestCategory {
 

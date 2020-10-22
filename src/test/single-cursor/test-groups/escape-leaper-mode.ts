@@ -1,6 +1,6 @@
-import { TestCase, TestGroup } from '../../framework/framework';
-import { range } from '../../framework/utilities';
-import { ALICE_TEXT_1 } from '../../framework/placeholder-texts';
+import { TestCase, TestGroup } from '../../utilities/framework';
+import { range } from '../../utilities/other';
+import { ALICE_TEXT_1 } from '../../utilities/placeholder-texts';
 
 const TEST_CASES: TestCase[] = [
 

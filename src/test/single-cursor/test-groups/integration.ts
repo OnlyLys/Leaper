@@ -1,5 +1,5 @@
 import { SnippetString } from 'vscode';
-import { TestCase, TestGroup } from '../../framework/framework';
+import { TestCase, TestGroup } from '../../utilities/framework';
 
 /** 
  * Here we simulate a typical usage scenario by typing code into a document as a user would.

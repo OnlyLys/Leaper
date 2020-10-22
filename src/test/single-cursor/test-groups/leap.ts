@@ -1,6 +1,6 @@
-import { TestCase, TestGroup } from '../../framework/framework';
-import { range } from '../../framework/utilities';
-import { ALICE_TEXT_1, ALICE_TEXT_2, } from '../../framework/placeholder-texts';
+import { TestCase, TestGroup } from '../../utilities/framework';
+import { range } from '../../utilities/other';
+import { ALICE_TEXT_1, ALICE_TEXT_2, } from '../../utilities/placeholder-texts';
 
 // TODO: Test Case: Holding `Tab` down OK (Multiple content changes per loop)
 
