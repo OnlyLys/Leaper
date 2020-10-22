@@ -33,7 +33,7 @@ import { TestCase, TestGroup } from '../../framework/framework';
  * 
  * Of note is that `<>` is not auto-bracketed in Typescript.
  */
-const REAL_USER_SIMULATION_1 = new TestCase({
+const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
     name: 'Real User Simulation 1',
     action: async (executor) => {
 
@@ -871,6 +871,6 @@ const REAL_USER_SIMULATION_1 = new TestCase({
 export const SINGLE_CURSOR_INTEGRATION_TEST_GROUP: TestGroup = new TestGroup({
     name: 'Integration',
     testCases: [
-        REAL_USER_SIMULATION_1
+        REAL_USER_SIMULATION_1_TEST_CASE
     ]
 });
