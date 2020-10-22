@@ -27,7 +27,7 @@ export interface TestAPI {
      * 
      * The return value can be mutated without affecting the extension's state.
      */
-    snapshot(): { open: Position, close: Position, isDecorated: boolean }[][];
+    activeSnapshot(): { open: Position, close: Position, isDecorated: boolean }[][];
     
 }
 

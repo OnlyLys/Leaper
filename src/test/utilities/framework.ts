@@ -123,7 +123,7 @@ export class ActionExecutor {
 
         // Convert the clusters to a simpler form that displays better during assertion failures.
         type Simple = { open: [number, number], close: [number, number] }[][];
-        const actual: Simple = this.handle.snapshot().map((cluster) => 
+        const actual: Simple = this.handle.activeSnapshot().map((cluster) => 
             cluster.map(({ open, close }) => 
                 ({ open: [open.line,  open.character], close: [close.line, close.character] })
             )

@@ -159,7 +159,7 @@ export class Engine {
      * 
      * The return value can be mutated without affecting the extension's state.
      */
-    public snapshot(): { open: Position, close: Position, isDecorated: boolean }[][] {
+    public activeSnapshot(): { open: Position, close: Position, isDecorated: boolean }[][] {
         return this.activeTracker?.snapshot() ?? [];
     }
 
