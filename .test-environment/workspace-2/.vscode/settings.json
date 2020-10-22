@@ -1,2 +1,6 @@
 {
+    "leaper.detectedPairs": [],
+    "[python]": {
+        "leaper.detectedPairs": [ "{}", "()" ]
+    }
 }
