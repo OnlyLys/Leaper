@@ -146,8 +146,8 @@
         "fast-compile": "tsc -p ./ --allowUnusedLabels true --noUnusedParameters false --noUnusedLocals false",
         "lint": "eslint src --ext ts",
         "watch": "npm run lint && tsc -watch -p ./",
-        "pretest": "npm run compile",
-        "fast-pretest": "npm run fast-compile",
+        "pretest": "npm run compile && node ./out/test/gen-env.js",
+        "fast-pretest": "npm run fast-compile && node ./out/test/gen-env.js",
         "test": "node ./out/test/run-tests.js"
     },
     "dependencies": {
