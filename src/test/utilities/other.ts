@@ -1,4 +1,4 @@
-import { commands, extensions, TextDocumentShowOptions, TextEditor, window, workspace } from 'vscode';
+import { commands, ConfigurationTarget, extensions, TextDocumentShowOptions, TextEditor, window, workspace } from 'vscode';
 import * as path from 'path';
 import { TestAPI } from '../../extension';
 
@@ -138,4 +138,40 @@ export async function closeActiveEditor(): Promise<void> {
 export async function closeAllEditors(): Promise<void> {
     await commands.executeCommand('workbench.action.closeAllEditors');
     await waitUntil(() => window.visibleTextEditors.length === 0);
+}
+
+/**
+ * Object returned by the `setConfiguration` function, which allows for restoring the previous
+ * configuration value.
+ */
+export interface ConfigurationRestore {
+    restore(): Promise<void>;
+}
+
+/**
+ * Set a configuration value scoped to the active text editor's document.
+ * 
+ * A `ConfigurationRestore` type is returned that allows for restoring the previous configuration.
+ * 
+ * @param partialName The name of the configuration after the `leaper.` prefix.
+ * @param value Value to set the configuration to.
+ * @param target Which scope to set the configuration in.
+ * @param overrideInLanguage Whether to set the configuration scoped to the language of the active 
+ *                           text editor's document.
+ */
+export async function setConfiguration<T>(
+    partialName:         string, 
+    value:               T, 
+    target:              ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder,
+    overrideInLanguage?: boolean
+): Promise<ConfigurationRestore> {
+    const activeDocument         = window.activeTextEditor?.document;
+    const workspaceConfiguration = workspace.getConfiguration('leaper', activeDocument);
+    const prev                   = workspaceConfiguration.get<T>(partialName);
+    await workspaceConfiguration.update(partialName, value, target, overrideInLanguage);
+    return {
+        async restore(): Promise<void> {
+            return workspaceConfiguration.update(partialName, prev, target, overrideInLanguage);
+        }
+    };
 }
