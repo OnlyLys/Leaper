@@ -1,10 +1,10 @@
 //! The following module defines the test framework for this extension.
 
-import { TextEditor, commands, Range, Selection, Position, SnippetString, TextEditorEdit } from 'vscode';
+import { commands, Range, Selection, Position, SnippetString, TextEditorEdit } from 'vscode';
 import * as assert from 'assert';
 import { TestAPI } from '../../extension';
 import { CompactCursors, CompactClusters, CompactRange, CompactPosition } from './compact';
-import { closeActiveEditor, getHandle, openNewTextEditor, pickRandom, waitFor, zip } from './other';
+import { closeActiveEditor, getActiveEditor, getHandle, openNewTextEditor, pickRandom, waitFor, zip } from './other';
 
 export class TestCategory {
 
@@ -55,7 +55,7 @@ export class TestCase {
         readonly editorLanguageId?: string,
 
         /**
-         *  Callback to setup the editor for this test case. 
+         *  Callback to setup the editor before running the test case.
          */
         readonly prelude?: (executor: PreludeActionExecutor) => Promise<void>,
 
@@ -74,18 +74,15 @@ export class TestCase {
             this.retries(1);
 
             // Open a new editor for the tests.
-            const editor = await openNewTextEditor(editorLanguageId);
-
-            // Get a handle to the active editor instance.
-            const handle = getHandle();
+            await openNewTextEditor(editorLanguageId);
 
             // Setup the editor for the test.
             if (prelude) {
-                await prelude(new PreludeActionExecutor(editor, handle));
+                await prelude(new PreludeActionExecutor());
             }
 
             // Run the actual test.
-            await action(new ActionExecutor(editor, handle));
+            await action(new ActionExecutor());
 
             // Close the opened editor.
             await closeActiveEditor();
@@ -94,25 +91,22 @@ export class TestCase {
 
 }
 
-
 /**
  * A convenience class that allows a test case to:
  * 
- *  1. Modify and assert the state of the editor that it is bound to.
- *  2. Assert the state of the extension.
+ *  1. Call commands.
+ *  2. Modify and assert the state of the active text editor.
+ *  3. Assert the state of the extension.
  */
 export class ActionExecutor {
 
     /**
-     * @param editor The fresh text editor that is provided ot each test case.
-     * @param handle A handle to the active extension instance.
+     * A handle to the active extension instance.
      */
-    public constructor(
-        protected readonly editor: TextEditor, 
-        protected readonly handle: TestAPI
-    ) {
-        this.editor = editor;
-        this.handle = handle;
+    private handle: TestAPI;
+
+    public constructor() {
+        this.handle = getHandle();
     }
     
     public assertPairs(expected: CompactClusters): void {
@@ -149,7 +143,7 @@ export class ActionExecutor {
     }
 
     protected _assertCursors(expected: CompactCursors, msg: string): void {
-        const actual: CompactCursors = this.editor.selections.map(({ active, anchor }) => {
+        const actual: CompactCursors = getActiveEditor().selections.map(({ active, anchor }) => {
             return { 
                 anchor: [anchor.line, anchor.character], 
                 active: [active.line, active.character]
@@ -209,7 +203,7 @@ export class ActionExecutor {
             }
         };
         return executeWithRepetitionDelay(async () => {
-            return this.editor.edit(applyAllEdits);
+            return getActiveEditor().edit(applyAllEdits);
         }, args);
     }
 
@@ -233,7 +227,7 @@ export class ActionExecutor {
      */
     public async setCursors(args: SetCursorsArgs): Promise<void> {
         return executeWithRepetitionDelay(async () => {
-            this.editor.selections = args.cursors.map((cursor) => {
+            getActiveEditor().selections = args.cursors.map((cursor) => {
                 const anchorLine = Array.isArray(cursor) ? cursor[0] : cursor.anchor[0];
                 const anchorChar = Array.isArray(cursor) ? cursor[1] : cursor.anchor[1];
                 const activeLine = Array.isArray(cursor) ? cursor[0] : cursor.active[0];
@@ -289,13 +283,13 @@ export class ActionExecutor {
     }
 
     /**
-     * Insert a snippet into the editor.
+     * Insert a snippet into the active text editor.
      * 
      * The snippet will be inserted at cursor position.
      */
     public async insertSnippet(args: InsertSnippetArgs): Promise<void> {
         return executeWithRepetitionDelay(async () => { 
-            return this.editor.insertSnippet(args.snippet);
+            return getActiveEditor().insertSnippet(args.snippet);
         }, args);
     }
 
@@ -488,7 +482,7 @@ interface MoveCursorsArgs extends RepetitionDelayOptions {
 interface SetCursorsArgs extends RepetitionDelayOptions {
 
     /**
-     * Set all the cursors in the editor.
+     * Set all the cursors in the active text editor to this.
      */
     cursors: CompactCursors;
 }
@@ -496,7 +490,9 @@ interface SetCursorsArgs extends RepetitionDelayOptions {
 interface InsertSnippetArgs extends RepetitionDelayOptions {
 
     /**
-     * Insert a snippet into the editor at where the cursors are at.
+     * Insert this snippet into the active text editor.
+     * 
+     * The snippet will be inserted at the cursors.
      */
     snippet: SnippetString;
 }

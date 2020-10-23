@@ -112,6 +112,18 @@ export function getHandle(): TestAPI {
 }
 
 /**
+ * Get a reference to the active editor.
+ * 
+ * @throws Will throw an error if there is no active text editor.
+ */
+export function getActiveEditor(): TextEditor {
+    if (!window.activeTextEditor) {
+        throw new Error('Unable to obtain active text editor!');
+    }
+    return window.activeTextEditor;
+}
+
+/**
  * Close the active text editor.
  */
 export async function closeActiveEditor(): Promise<void> {
