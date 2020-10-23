@@ -349,6 +349,15 @@ export class ActionExecutor {
         }, options);
     }
 
+    /**
+     * Move the cursor to the end of the document.
+     */
+    public async cursorBottom(options?: RepetitionDelayOptions): Promise<void> {
+        return executeWithRepetitionDelay(async () => {
+            return commands.executeCommand('cursorBottom');
+        }, options);
+    }
+
 }
 
 /**
