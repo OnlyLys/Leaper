@@ -387,16 +387,16 @@ export class Executor {
     /**
      * Open an existing file in the testing workspace.
      * 
+     * The opened file immediately takes focus.
+     * 
      * @param rel The path relative to the root of the multi-root testing workspace. 
      * @param options Specifies the behavior when showing the opened file.
-     * @return The text editor of the opened file.
      */
-    public async openFile(rel: string, options?: TextDocumentShowOptions): Promise<TextEditor> {
+    public async openFile(rel: string, options?: TextDocumentShowOptions): Promise<void> {
         const rootPath = path.dirname(workspace.workspaceFile?.path ?? '');
         const filePath = path.join(rootPath, rel);
         const document = await workspace.openTextDocument(filePath);
-        const editor   = await window.showTextDocument(document, options);
-        return editor;
+        await window.showTextDocument(document, options);
     }
 
     /**
@@ -406,10 +406,9 @@ export class Executor {
      * 
      * @param languageId The language of the opened text document. Defaults to `'typescript'`.
      */
-    public async openNewTextEditor(languageId: string = 'typescript'): Promise<TextEditor> {
+    public async openNewTextEditor(languageId: string = 'typescript'): Promise<void> {
         const document = await workspace.openTextDocument({ language: languageId });
-        const editor   = await window.showTextDocument(document);
-        return editor;
+        await window.showTextDocument(document);
     }
 
     /**
