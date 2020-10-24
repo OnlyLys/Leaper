@@ -1,10 +1,11 @@
 //! The following module defines the test framework for this extension.
 
-import { commands, Range, Selection, Position, SnippetString, TextEditorEdit } from 'vscode';
+import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, extensions, window, ConfigurationTarget } from 'vscode';
 import * as assert from 'assert';
+import * as path from 'path';
 import { TestAPI } from '../../extension';
 import { CompactCursors, CompactClusters, CompactRange, CompactPosition } from './compact';
-import { closeActiveEditor, getActiveEditor, getHandle, openNewTextEditor, pickRandom, waitFor, zip } from './other';
+import { pickRandom, waitFor, waitUntil, zip } from './other';
 
 export class TestCategory {
 
@@ -72,9 +73,11 @@ export class TestCase {
 
             // Sometimes tests can fail due to the editor lagging.
             this.retries(1);
+            
+            const executor = new ActionExecutor();
 
             // Open a new editor for the tests.
-            await openNewTextEditor(editorLanguageId);
+            await executor.openNewTextEditor(editorLanguageId);
 
             // Setup the editor for the test.
             if (prelude) {
@@ -82,10 +85,10 @@ export class TestCase {
             }
 
             // Run the actual test.
-            await action(new ActionExecutor());
+            await action(executor);
 
             // Close the opened editor.
-            await closeActiveEditor();
+            await executor.closeActiveEditor();
         });
     }
 
@@ -358,6 +361,79 @@ export class ActionExecutor {
         }, options);
     }
 
+    /**
+     * Open an existing file in the testing workspace.
+     * 
+     * @param rel The path relative to the root of the multi-root testing workspace. 
+     * @param options Specifies the behavior when showing the opened file.
+     * @return The text editor of the opened file.
+     */
+    public async openFile(rel: string, options?: TextDocumentShowOptions): Promise<TextEditor> {
+        const rootPath = path.dirname(workspace.workspaceFile?.path ?? '');
+        const filePath = path.join(rootPath, rel);
+        const document = await workspace.openTextDocument(filePath);
+        const editor   = await window.showTextDocument(document, options);
+        return editor;
+    }
+
+    /**
+     * Open a new text editor containing an empty text document.
+     * 
+     * The opened editor immediately takes focus.
+     * 
+     * @param languageId The language of the opened text document. Defaults to `'typescript'`.
+     */
+    public async openNewTextEditor(languageId: string = 'typescript'): Promise<TextEditor> {
+        const document = await workspace.openTextDocument({ language: languageId });
+        const editor   = await window.showTextDocument(document);
+        return editor;
+    }
+
+    /**
+     * Close the active text editor.
+     */
+    public async closeActiveEditor(): Promise<void> {
+        const toClose = window.activeTextEditor;
+        await commands.executeCommand('workbench.action.closeActiveEditor');
+        await waitUntil(() => toClose === undefined || window.activeTextEditor !== toClose);
+    }
+
+    /**
+     * Close all text editors.
+     */
+    public async closeAllEditors(): Promise<void> {
+        await commands.executeCommand('workbench.action.closeAllEditors');
+        await waitUntil(() => window.visibleTextEditors.length === 0);
+    }
+
+    /**
+     * Set a configuration value scoped to the active text editor's document.
+     * 
+     * A `ConfigurationRestore` type is returned that allows for restoring the previous configuration.
+     * 
+     * @param partialName The name of the configuration after the `leaper.` prefix.
+     * @param value Value to set the configuration to.
+     * @param target Which scope to set the configuration in.
+     * @param overrideInLanguage Whether to set the configuration scoped to the language of the active 
+     *                           text editor's document.
+     */
+    public async setConfiguration<T>(
+        partialName:         string, 
+        value:               T, 
+        target:              ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder,
+        overrideInLanguage?: boolean
+    ): Promise<ConfigurationRestore> {
+        const activeDocument         = window.activeTextEditor?.document;
+        const workspaceConfiguration = workspace.getConfiguration('leaper', activeDocument);
+        const prev                   = workspaceConfiguration.get<T>(partialName);
+        await workspaceConfiguration.update(partialName, value, target, overrideInLanguage);
+        return {
+            async restore(): Promise<void> {
+                return workspaceConfiguration.update(partialName, prev, target, overrideInLanguage);
+            }
+        };
+    }
+
 }
 
 /**
@@ -374,6 +450,37 @@ export class PreludeActionExecutor extends ActionExecutor {
         this._assertCursors(expected, '(Prelude Failure) Cursors Mismatch');
     }
 
+}
+
+/**
+ * Object returned by the `Executor.setConfiguration` method, which allows for restoring the 
+ * previous configuration value.
+ */
+export interface ConfigurationRestore {
+    restore(): Promise<void>;
+}
+
+/**
+ * Get a handle to the extension.
+ */
+function getHandle(): TestAPI {
+    const handle = extensions.getExtension<TestAPI>(`OnlyLys.leaper`)?.exports;
+    if (!handle) {
+        throw new Error('Unable to access Leaper API for testing!');
+    }
+    return handle;
+}
+
+/**
+ * Get a reference to the active editor.
+ * 
+ * @throws Will throw an error if there is no active text editor.
+ */
+function getActiveEditor(): TextEditor {
+    if (!window.activeTextEditor) {
+        throw new Error('Unable to obtain active text editor!');
+    }
+    return window.activeTextEditor;
 }
 
 /**
