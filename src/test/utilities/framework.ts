@@ -535,13 +535,13 @@ interface EditTextArgs extends RepetitionDelayOptions {
     /**
      * Edits to apply simultaneously.
      */
-    edits: ReadonlyArray<ReplaceTextEdit | InsertTextArgs | DeleteTextArgs>;
+    edits: ReadonlyArray<ReplaceTextEdit | InsertTextEdit | DeleteTextEdit>;
 }
 
 interface ReplaceTextEdit {
 
     /** 
-     * Replace a range of text in the document. 
+     * Replace a range of text in the active text document document. 
      */
     kind: 'replace';
 
@@ -556,10 +556,10 @@ interface ReplaceTextEdit {
     insert: string;
 }
 
-interface InsertTextArgs {
+interface InsertTextEdit {
 
     /** 
-     * Insert text at a position in the document.
+     * Insert text at a position in the active text document.
      */
     kind: 'insert';
 
@@ -574,10 +574,10 @@ interface InsertTextArgs {
     text: string;
 }
 
-interface DeleteTextArgs {
+interface DeleteTextEdit {
 
     /**
-     * Delete a range of text in the document.
+     * Delete a range of text in the active text document.
      */
     kind: 'delete';
 
