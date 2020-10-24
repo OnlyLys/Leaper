@@ -121,11 +121,6 @@ export class TestCase {
 export class Executor {
 
     /**
-     * A handle to the active extension instance.
-     */
-    private handle: TestAPI;
-
-    /**
      * Callbacks to restore configurations then this executor is cleaned up.
      * 
      * The callbacks of this array must be executed in reverse ordering.
@@ -143,7 +138,6 @@ export class Executor {
     protected assertCursorsFailMsg: string;
 
     public constructor() {
-        this.handle                 = getHandle();
         this.configurationRestorers = [];
         this.assertPairsFailMsg     = 'Pairs Mismatch';
         this.assertCursorsFailMsg   = 'Cursors Mismatch';
@@ -153,7 +147,7 @@ export class Executor {
 
         // Convert the clusters to a simpler form that displays better during assertion failures.
         type Simple = { open: [number, number], close: [number, number] }[][];
-        const actual: Simple = this.handle.activeSnapshot().map((cluster) => 
+        const actual: Simple = getHandle().activeSnapshot().map((cluster) => 
             cluster.map(({ open, close }) => 
                 ({ open: [open.line,  open.character], close: [close.line, close.character] })
             )
