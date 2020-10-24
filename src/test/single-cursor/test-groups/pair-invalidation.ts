@@ -1,5 +1,5 @@
 import { SnippetString } from 'vscode';
-import { PreludeExecutor, TestCase, TestGroup } from '../../utilities/framework';
+import { Executor, TestCase, TestGroup } from '../../utilities/framework';
 
 // In this prelude that is shared across all the test cases in this module, we insert pairs in a way 
 // that simulates a typical usage scenario.
@@ -11,7 +11,7 @@ import { PreludeExecutor, TestCase, TestGroup } from '../../utilities/framework'
 //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
 // }                                                   ^(cursor position)
 // ```
-const SHARED_PRELUDE = async (executor: PreludeExecutor) => {
+const SHARED_PRELUDE = async (executor: Executor) => {
     await executor.editText({
         edits: [
             {

@@ -7,6 +7,9 @@ import { TestAPI } from '../../extension';
 import { CompactCursors, CompactClusters, CompactRange, CompactPosition } from './compact';
 import { pickRandom, waitFor, waitUntil, zip } from './other';
 
+/**
+ * A collection of `TestGroup`s.
+ */
 export class TestCategory {
 
     public constructor(private readonly args: {
@@ -23,6 +26,9 @@ export class TestCategory {
     
 }
 
+/**
+ * A collection of `TestCase`s.
+ */
 export class TestGroup {
     
     public constructor(private readonly args: {
@@ -58,7 +64,7 @@ export class TestCase {
         /**
          *  Callback to setup the editor before running the test case.
          */
-        readonly prelude?: (executor: PreludeExecutor) => Promise<void>,
+        readonly prelude?: (executor: Executor) => Promise<void>,
 
         /** 
          * Callback to execute as part of the test case. 
@@ -74,21 +80,30 @@ export class TestCase {
             // Sometimes tests can fail due to the editor lagging.
             this.retries(1);
 
-            const executor = new Executor();
+            // To allow test cases to modify and check the state of the running vscode instance.
+            const executor = new ExecutorExtended();
 
-            // Open a new editor for the tests.
-            await executor.openNewTextEditor(editorLanguageId);
+            try {
+                
+                // Open a new editor for the test case.
+                await executor.openNewTextEditor(editorLanguageId);
+    
+                // Setup the opened editor for the test.
+                if (prelude) {
+                    executor.inPrelude = true;
+                    await prelude(executor);
+                    executor.inPrelude = false;
+                }
+    
+                // Run the actual test.            
+                await action(executor);
 
-            // Setup the editor for the test.
-            if (prelude) {
-                await prelude(new PreludeExecutor());
+            } finally {
+
+                // Leave no trace behind.
+                await executor.dispose();
             }
 
-            // Run the actual test.
-            await action(executor);
-
-            // Close the opened editor.
-            await executor.closeActiveEditor();
         });
     }
 
@@ -98,8 +113,10 @@ export class TestCase {
  * A convenience class that allows a test case to:
  * 
  *  1. Call commands.
- *  2. Modify and assert the state of the active text editor.
+ *  2. Modify the state of the active text editor.
  *  3. Assert the state of the extension.
+ *  4. Temporarily change configuration values of the test workspace and the folders within it.
+ *  5. Open documents in the test workspace.
  */
 export class Executor {
 
@@ -108,15 +125,31 @@ export class Executor {
      */
     private handle: TestAPI;
 
+    /**
+     * Callbacks to restore configurations then this executor is cleaned up.
+     * 
+     * The callbacks of this array must be executed in reverse ordering.
+     */
+    protected configurationRestorers: (() => Promise<void>)[];
+
+    /**
+     * Message to print when `assertPairs` fails.
+     */
+    protected assertPairsFailMsg: string;
+
+    /**
+     * Message to print when `assertCursors` fails.
+     */
+    protected assertCursorsFailMsg: string;
+
     public constructor() {
-        this.handle = getHandle();
-    }
-    
-    public assertPairs(expected: CompactClusters): void {
-        this._assertPairs(expected, 'Pairs Mismatch');
+        this.handle                 = getHandle();
+        this.configurationRestorers = [];
+        this.assertPairsFailMsg     = 'Pairs Mismatch';
+        this.assertCursorsFailMsg   = 'Cursors Mismatch';
     }
 
-    protected _assertPairs(expected: CompactClusters, msg: string): void {
+    public assertPairs(expected: CompactClusters): void {
 
         // Convert the clusters to a simpler form that displays better during assertion failures.
         type Simple = { open: [number, number], close: [number, number] }[][];
@@ -138,14 +171,10 @@ export class Executor {
             }
         });
 
-        assert.deepStrictEqual(actual, _expected, msg);
+        assert.deepStrictEqual(actual, _expected, this.assertPairsFailMsg);
     }
 
     public assertCursors(expected: CompactCursors): void {
-        this._assertCursors(expected, 'Cursors Mismatch');
-    }
-
-    protected _assertCursors(expected: CompactCursors, msg: string): void {
         const actual: CompactCursors = getActiveEditor().selections.map(({ active, anchor }) => {
             return { 
                 anchor: [anchor.line, anchor.character], 
@@ -160,7 +189,7 @@ export class Executor {
             }
         });
             
-        assert.deepStrictEqual(actual, _expected, msg);
+        assert.deepStrictEqual(actual, _expected, this.assertCursorsFailMsg);
     }
 
     /**
@@ -409,8 +438,6 @@ export class Executor {
     /**
      * Set a configuration value scoped to the active text editor's document.
      * 
-     * A `ConfigurationRestore` type is returned that allows for restoring the previous configuration.
-     * 
      * @param partialName The name of the configuration after the `leaper.` prefix.
      * @param value Value to set the configuration to.
      * @param target Which scope to set the configuration in.
@@ -422,42 +449,47 @@ export class Executor {
         value:               T, 
         target:              ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder,
         overrideInLanguage?: boolean
-    ): Promise<ConfigurationRestore> {
-        const activeDocument         = window.activeTextEditor?.document;
+    ): Promise<void> {
+        const activeDocument         = getActiveEditor().document;
         const workspaceConfiguration = workspace.getConfiguration('leaper', activeDocument);
         const prev                   = workspaceConfiguration.get<T>(partialName);
         await workspaceConfiguration.update(partialName, value, target, overrideInLanguage);
-        return {
-            async restore(): Promise<void> {
-                return workspaceConfiguration.update(partialName, prev, target, overrideInLanguage);
-            }
-        };
+        this.configurationRestorers.push(async () => {
+            await workspaceConfiguration.update(partialName, prev, target, overrideInLanguage);
+        });
     }
 
 }
 
 /**
- * Same as `Executor` except that the `assertPairs` and `assertCursors` method show slightly 
- * different error messages that indicate that the assertions failed in test case preludes.
+ * An extension of the `Executor` class to add a few methods that should not be exposed to the test
+ * cases.
+ * 
+ * This class is strictly meant to be used within this module.
  */
-export class PreludeExecutor extends Executor {
+class ExecutorExtended extends Executor {
 
-    public assertPairs(expected: CompactClusters): void {
-        this._assertPairs(expected, '(Prelude Failure) Pairs Mismatch');
+    /**
+     * Whether the assertion messages should denote that the assertions failed in a prelude.
+     */
+    public set inPrelude(value: boolean) {
+        this.assertPairsFailMsg   = value ? '(Prelude Failure) Pairs Mismatch'   : 'Pairs Mismatch';
+        this.assertCursorsFailMsg = value ? '(Prelude Failure) Cursors Mismatch' : 'Cursors Mismatch';
     }
 
-    public assertCursors(expected: CompactCursors): void {
-        this._assertCursors(expected, '(Prelude Failure) Cursors Mismatch');
+    /**
+     * Perform cleanup of this executor by:
+     * 
+     *  1. Closing all opened text editors.
+     *  2. Restoring configuration values that were changed.
+     */
+    public async dispose(): Promise<void> {
+        for (const restorer of this.configurationRestorers.reverse()) {
+            await restorer();
+        }
+        await this.closeAllEditors();
     }
 
-}
-
-/**
- * Object returned by the `Executor.setConfiguration` method, which allows for restoring the 
- * previous configuration value.
- */
-export interface ConfigurationRestore {
-    restore(): Promise<void>;
 }
 
 /**
