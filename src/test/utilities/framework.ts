@@ -58,12 +58,12 @@ export class TestCase {
         /**
          *  Callback to setup the editor before running the test case.
          */
-        readonly prelude?: (executor: PreludeActionExecutor) => Promise<void>,
+        readonly prelude?: (executor: PreludeExecutor) => Promise<void>,
 
         /** 
          * Callback to execute as part of the test case. 
          */
-        readonly action: (executor: ActionExecutor) => Promise<void>
+        readonly action: (executor: Executor) => Promise<void>
 
     }) {}
 
@@ -73,15 +73,15 @@ export class TestCase {
 
             // Sometimes tests can fail due to the editor lagging.
             this.retries(1);
-            
-            const executor = new ActionExecutor();
+
+            const executor = new Executor();
 
             // Open a new editor for the tests.
             await executor.openNewTextEditor(editorLanguageId);
 
             // Setup the editor for the test.
             if (prelude) {
-                await prelude(new PreludeActionExecutor());
+                await prelude(new PreludeExecutor());
             }
 
             // Run the actual test.
@@ -101,7 +101,7 @@ export class TestCase {
  *  2. Modify and assert the state of the active text editor.
  *  3. Assert the state of the extension.
  */
-export class ActionExecutor {
+export class Executor {
 
     /**
      * A handle to the active extension instance.
@@ -437,10 +437,10 @@ export class ActionExecutor {
 }
 
 /**
- * Same as `ActionExecutor` except that the `assertPairs` and `assertCursors` method show slightly 
+ * Same as `Executor` except that the `assertPairs` and `assertCursors` method show slightly 
  * different error messages that indicate that the assertions failed in test case preludes.
  */
-export class PreludeActionExecutor extends ActionExecutor {
+export class PreludeExecutor extends Executor {
 
     public assertPairs(expected: CompactClusters): void {
         this._assertPairs(expected, '(Prelude Failure) Pairs Mismatch');
