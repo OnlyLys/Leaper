@@ -415,9 +415,9 @@ export class Executor {
      * Close the active text editor.
      */
     public async closeActiveEditor(): Promise<void> {
-        const toClose = window.activeTextEditor;
+        const toClose = getActiveEditor();;
         await commands.executeCommand('workbench.action.closeActiveEditor');
-        await waitUntil(() => toClose === undefined || window.activeTextEditor !== toClose);
+        await waitUntil(() => window.activeTextEditor !== toClose);
     }
 
     /**
