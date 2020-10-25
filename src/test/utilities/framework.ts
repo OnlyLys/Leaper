@@ -433,6 +433,24 @@ export class Executor {
     }
 
     /**
+     * Move the active text editor to the right tab group.
+     */
+    public async moveEditorToRight(): Promise<void> {
+        return executeWithRepetitionDelay(async () => {
+            await commands.executeCommand('workbench.action.moveEditorToRightGroup');
+        });
+    }
+
+    /**
+     * Move the active text editor to the left tab group.
+     */
+    public async moveEditorToLeft(): Promise<void> {
+        return executeWithRepetitionDelay(async () => {
+            await commands.executeCommand('workbench.action.moveEditorToLeftGroup');
+        });
+    }
+
+    /**
      * Close the active text editor.
      */
     public async closeActiveEditor(): Promise<void> {
