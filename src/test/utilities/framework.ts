@@ -187,6 +187,23 @@ export class Executor {
     }
 
     /**
+     * Get the cursors in the active text editor.
+     */
+    public getCursors(): CompactCursors {
+        return getActiveEditor().selections.map((selection) => {
+            const anchorLine = selection.anchor.line;
+            const anchorChar = selection.anchor.character;
+            const activeLine = selection.active.line;
+            const activeChar = selection.active.character;
+            if (anchorLine === activeLine && anchorChar === activeChar) {
+                return [anchorLine, anchorChar];
+            } else {
+                return { anchor: [anchorLine, anchorChar], active: [activeLine, activeChar] };
+            }
+        });
+    }
+
+    /**
      * Type an autoclosing pair into the document.
      * 
      * Which kind of autoclosing pair is typed in is randomly determined. 
