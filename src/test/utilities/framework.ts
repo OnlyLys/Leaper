@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { TestAPI } from '../../extension';
 import { CompactCursors, CompactClusters, CompactRange, CompactPosition } from './compact';
-import { pickRandom, waitFor, waitUntil, zip } from './other';
+import { pickRandom, waitFor, zip } from './other';
 
 /**
  * A collection of `TestGroup`s.
@@ -410,10 +410,12 @@ export class Executor {
      * @param options Specifies the behavior when showing the opened file.
      */
     public async openFile(rel: string, options?: TextDocumentShowOptions): Promise<void> {
-        const rootPath = path.dirname(workspace.workspaceFile?.path ?? '');
-        const filePath = path.join(rootPath, rel);
-        const document = await workspace.openTextDocument(filePath);
-        await window.showTextDocument(document, options);
+        return executeWithRepetitionDelay(async () => {
+            const rootPath = path.dirname(workspace.workspaceFile?.path ?? '');
+            const filePath = path.join(rootPath, rel);
+            const document = await workspace.openTextDocument(filePath);
+            await window.showTextDocument(document, options);
+        });
     }
 
     /**
@@ -424,25 +426,28 @@ export class Executor {
      * @param languageId The language of the opened text document. Defaults to `'typescript'`.
      */
     public async openNewTextEditor(languageId: string = 'typescript'): Promise<void> {
-        const document = await workspace.openTextDocument({ language: languageId });
-        await window.showTextDocument(document);
+        return executeWithRepetitionDelay(async () => {
+            const document = await workspace.openTextDocument({ language: languageId });
+            await window.showTextDocument(document);
+        });
     }
 
     /**
      * Close the active text editor.
      */
     public async closeActiveEditor(): Promise<void> {
-        const toClose = getActiveEditor();;
-        await commands.executeCommand('workbench.action.closeActiveEditor');
-        await waitUntil(() => window.activeTextEditor !== toClose);
+        return executeWithRepetitionDelay(async () => {
+            await commands.executeCommand('workbench.action.closeActiveEditor');
+        });
     }
 
     /**
      * Close all text editors.
      */
     public async closeAllEditors(): Promise<void> {
-        await commands.executeCommand('workbench.action.closeAllEditors');
-        await waitUntil(() => window.visibleTextEditors.length === 0);
+        return executeWithRepetitionDelay(async () => {
+            await commands.executeCommand('workbench.action.closeAllEditors');
+        });
     }
 
     /**

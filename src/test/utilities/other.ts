@@ -47,13 +47,6 @@ export async function waitFor(n: number): Promise<void> {
 }
 
 /**
- * Halt the control flow until the `callback` yields `true`.
- */
-export async function waitUntil(callback: () => boolean): Promise<void> {
-    while (!callback()) {}
-}
-
-/**
  * Zip two iterables together.
  */
 export function* zip<T>(a: Iterable<T>, b: Iterable<T>): Generator<[T, T], undefined, undefined> {
