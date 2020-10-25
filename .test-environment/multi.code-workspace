@@ -31,6 +31,9 @@
 		"editor.detectIndentation": false,
 		"editor.tabSize": 4,
 		// Disable autosave since we don't want to save files while testing.
-		"files.autoSave": "off"
+		"files.autoSave": "off",
+		"[plaintext]": {
+			"leaper.detectedPairs": []
+		}
 	}
 }
