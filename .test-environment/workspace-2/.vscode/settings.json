@@ -1,6 +1,6 @@
 {
     "leaper.detectedPairs": [],
     "[markdown]": {
-        "leaper.detectedPairs": [ "{}", "()" ]
+        "leaper.detectedPairs": [ "{}", "<>" ]
     }
 }
