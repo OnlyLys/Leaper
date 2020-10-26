@@ -2,8 +2,6 @@ import { TestCase, TestGroup } from '../../utilities/framework';
 import { range } from '../../utilities/other';
 import { ALICE_TEXT_1, ALICE_TEXT_2, } from '../../utilities/placeholder-texts';
 
-// TODO: Test Case: Holding `Tab` down OK (Multiple content changes per loop)
-
 const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Single Leap',
