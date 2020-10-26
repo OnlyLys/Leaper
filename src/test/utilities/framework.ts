@@ -549,6 +549,16 @@ function getActiveEditor(): TextEditor {
 }
 
 /**
+ * Default amount of time to delay after each action repetition.
+ */
+const DEFAULT_DELAY_MS = 30;
+
+/**
+ * Default number of times to execute each action.
+ */
+const DEFAULT_REPETITIONS = 1;
+
+/**
  * This function is a way for us to abstract out the handling of repetitions and delays from the
  * method definitions in `Executor`.
  */
@@ -556,8 +566,8 @@ async function executeWithRepetitionDelay(
     callback: () => Promise<any>, 
     options?: RepetitionDelayOptions
 ): Promise<void> {
-    const delay     = options?.delay ?? 30;
-    let repetitions = options?.repetitions ?? 1;
+    const delay     = options?.delay       ?? DEFAULT_DELAY_MS;
+    let repetitions = options?.repetitions ?? DEFAULT_REPETITIONS;
     while (repetitions-- > 0) {
         await callback();
         await waitFor(delay);
