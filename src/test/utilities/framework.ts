@@ -458,6 +458,24 @@ export class Executor {
     }
 
     /**
+     * Switch focus to the text editor tab group to the right.
+     */
+    public async focusRightEditorGroup(options?: RepetitionDelayOptions): Promise<void> {
+        return executeWithRepetitionDelay(async () => {
+            await commands.executeCommand('workbench.action.focusRightGroup');
+        }, options);
+    }
+
+    /** 
+     * Switch focus to the text editor tab group to the left. 
+     */
+    public async focusLeftEditorGroup(options?: RepetitionDelayOptions): Promise<void> {
+        return executeWithRepetitionDelay(async () => {
+            await commands.executeCommand('workbench.action.focusLeftGroup');
+        }, options);
+    }
+
+    /**
      * Close the active text editor.
      */
     public async closeActiveEditor(options?: RepetitionDelayOptions): Promise<void> {
