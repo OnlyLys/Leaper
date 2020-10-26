@@ -1,6 +1,6 @@
 //! The following module defines the test framework for this extension.
 
-import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, extensions, window, ConfigurationTarget } from 'vscode';
+import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, extensions, window, ConfigurationTarget, ViewColumn } from 'vscode';
 import * as assert from 'assert';
 import * as path from 'path';
 import { TestAPI } from '../../extension';
@@ -476,27 +476,35 @@ export class Executor {
     }
 
     /**
-     * Set a configuration value scoped to the active text editor's document.
+     * Set a configuration value scoped to the text document of a visible text editor.
      * 
      * @param partialName The name of the configuration after the `leaper.` prefix.
      * @param value Value to set the configuration to.
      * @param target Which scope to set the configuration in.
-     * @param overrideInLanguage Whether to set the configuration scoped to the language of the active 
-     *                           text editor's document.
+     * @param overrideInLanguage Whether to set the configuration scoped to the language of the 
+     *                           active text editor's document.
+     * @param viewColumn Column of the visible text editor. Defaults to the active text editor.
+     * @param options Options to configure repetitions and delay.
      */
-    public async setConfiguration<T>(
+    public async setConfiguration<T>(args: {
         partialName:         string, 
         value:               T, 
         target:              ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder,
-        overrideInLanguage?: boolean
-    ): Promise<void> {
-        const activeDocument         = getActiveEditor().document;
-        const workspaceConfiguration = workspace.getConfiguration('leaper', activeDocument);
-        const prev                   = workspaceConfiguration.get<T>(partialName);
-        await workspaceConfiguration.update(partialName, value, target, overrideInLanguage);
-        this.configurationRestorers.push(async () => {
-            await workspaceConfiguration.update(partialName, prev, target, overrideInLanguage);
-        });
+        overrideInLanguage?: boolean,
+        viewColumn?:         ViewColumn,
+        options?:            RepetitionDelayOptions
+    }): Promise<void> {
+        const { partialName, value, target, overrideInLanguage, viewColumn, options } = args;
+        return executeWithRepetitionDelay(async () => {
+            const find          = window.visibleTextEditors.find((v) => v.viewColumn === viewColumn);
+            const editor        = (viewColumn !== undefined && find) ? find : getActiveEditor();
+            const configuration = workspace.getConfiguration('leaper', editor.document);
+            const prevValue     = configuration.get<T>(partialName);
+            await configuration.update(partialName, value, target, overrideInLanguage);
+            this.configurationRestorers.push(async () => {
+                await configuration.update(partialName, prevValue, target, overrideInLanguage);
+            });
+        }, options);
     }
 
 }
