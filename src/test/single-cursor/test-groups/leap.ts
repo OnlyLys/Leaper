@@ -12,7 +12,7 @@ const TEST_CASES: TestCase[] = [
             executor.assertPairs([ { line: 0, sides: [0, 1] } ]);
             executor.assertCursors([ [0, 1] ]);
         },
-        action: async (executor) => {
+        task: async (executor) => {
             await executor.leap();
             executor.assertPairs([ { line: -1, sides: [] } ]);
             executor.assertCursors([ [0, 2] ]);
@@ -27,7 +27,7 @@ const TEST_CASES: TestCase[] = [
             executor.assertPairs([ { line: 0, sides: [0, 6] } ]);
             executor.assertCursors([ [0, 1] ]);
         },
-        action: async (executor) => { 
+        task: async (executor) => { 
             await executor.leap();
             executor.assertPairs([ { line: -1, sides: [] } ]);
             executor.assertCursors([ [0, 7] ]);
@@ -48,7 +48,7 @@ const TEST_CASES: TestCase[] = [
             executor.assertPairs([ { line: 6, sides: range(71, 91) } ]);
             executor.assertCursors([ [6, 81] ]);
         },
-        action: async (executor) => { 
+        task: async (executor) => { 
             const cluster = { line: 6, sides: range(71, 91) };
             while (cluster.sides.length > 0) {
                 await executor.leap();
@@ -75,7 +75,7 @@ const TEST_CASES: TestCase[] = [
             executor.assertPairs([ { line: 2, sides: [9, 10, 11, 12, 13, 14, 20, 26, 32, 38, 44, 50] } ]);
             executor.assertCursors([ [2, 15] ]);
         },
-        action: async (executor) => { 
+        task: async (executor) => { 
             const cluster = { line: 2, sides: [9, 10, 11, 12, 13, 14, 20, 26, 32, 38, 44, 50] };
             while (cluster.sides.length > 0) {
                 await executor.leap();
@@ -97,7 +97,7 @@ const TEST_CASES: TestCase[] = [
             executor.assertPairs([ { line: -1, sides: [] } ]);
             executor.assertCursors([ [2, 11] ]);  
         },
-        action: async (executor) => { 
+        task: async (executor) => { 
 
             // Leap a bunch of times when there are no pairs and check that the cursor has not moved.
             for (let i = 0; i < 10; ++i) {
@@ -143,7 +143,7 @@ const TEST_CASES: TestCase[] = [
             executor.assertPairs([ { line: 2, sides: [12, 14, 22, 33, 38, 48] } ]);
             executor.assertCursors([ [2, 23] ]);
         },
-        action: async (executor) => { 
+        task: async (executor) => { 
 
             // First leap a few times and check that the cursor has not moved at all.
             //
@@ -228,7 +228,7 @@ const TEST_CASES: TestCase[] = [
             executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
             executor.assertCursors([ [2, 29] ]);
         },
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Since there is an obstacle at where the cursor is at, a leap should not occur.
             await executor.leap({ delay: 0, repetitions: 50 });

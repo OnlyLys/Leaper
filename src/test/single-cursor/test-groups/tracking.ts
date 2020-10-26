@@ -35,7 +35,7 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         executor.assertCursors([ [1, 14] ]);
     },
 
-    action: async (executor) => {
+    task: async (executor) => {
 
         // 1. Insert single-line text on the same line before the pairs.
         //
@@ -608,7 +608,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         executor.assertCursors([ [1, 19] ]);
     },
 
-    action: async (executor) => {
+    task: async (executor) => {
         const pairs: CompactClusters = [ { line: 1, sides: range(9, 29) } ];
 
         // 1. Insert 17 code units between the opening sides of the first and second pairs.
@@ -1189,7 +1189,7 @@ const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
         executor.assertCursors([ [2, 14] ]);
     },
 
-    action: async (executor) => {
+    task: async (executor) => {
         const pairs: CompactClusters = [ { line: 2, sides: range(4, 24) } ];
 
         // Autocomplete the variable name and check that all pairs are correctly tracked.
@@ -1253,7 +1253,7 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         executor.assertPairs([ { line: 1, sides: [20, 21, 30, 39, 40, 41] } ]);
         executor.assertCursors([ [1, 39] ]);
     },
-    action: async (executor) => {
+    task: async (executor) => {
 
         // Insert the snippet.
         //
@@ -1596,7 +1596,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         executor.assertCursors([ [1, 14] ]);
     },
 
-    action: async (executor) => {
+    task: async (executor) => {
 
         // Because the pairs and cursors are not expected to change due to text modification 
         // occurring after them, this convenience method allows us to cut down on boilerplate.

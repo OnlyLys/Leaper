@@ -21,7 +21,7 @@ const TEST_CASES: TestCase[] = [
             executor.assertPairs([ { line: 5, sides: range(79, 99) } ]);
             executor.assertCursors([ [5, 89] ]);
         },
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Jump out of one pair first, just to simulate a more 'realistic' scenario.
             await executor.leap();
@@ -59,7 +59,7 @@ const TEST_CASES: TestCase[] = [
             executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ]);
             executor.assertCursors([ [2, 28] ]);
         },
-        action: async (executor) => {
+        task: async (executor) => {
 
             // This should remove all pairs from being tracked and do nothing else.
             await executor.escapeLeaperMode({ delay: 0, repetitions: 50 }); 

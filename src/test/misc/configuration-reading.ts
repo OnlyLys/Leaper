@@ -66,7 +66,7 @@ async function testDetectedPairs(
  */
 const CAN_READ_VALUES_TEST_CASE = new TestCase({
     name: 'Can Read Values',
-    action: async (executor) => {
+    task: async (executor) => {
 
         // 1. Test whether workspace configuration values can be read.
         // 

@@ -43,7 +43,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Rightwards Exit of Cursor (Incremental)',
         prelude: SHARED_PRELUDE,
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Move out of the nearest pair.
             //
@@ -179,7 +179,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Rightwards Exit of Cursor (in One Go by Clicking Out)',
         prelude: SHARED_PRELUDE,
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Document state after:
             // 
@@ -196,7 +196,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Rightwards Exit of Cursor (in One Go by Pressing `End` Key)',
         prelude: SHARED_PRELUDE,
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Document state after:
             // 
@@ -213,7 +213,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Leftwards Exit of Cursor (Incremental)',
         prelude: SHARED_PRELUDE,
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Move to the boundary of the nearest pair.
             //
@@ -362,7 +362,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Leftwards Exit of Cursor (in One Go by Clicking Out)',
         prelude: SHARED_PRELUDE,
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Document state after:
             // 
@@ -379,7 +379,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Leftwards Exit of Cursor (in One Go by Pressing `Home` Key)',
         prelude: SHARED_PRELUDE,
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Document state after:
             // 
@@ -396,7 +396,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Upwards Exit of Cursor',
         prelude: SHARED_PRELUDE,
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Document state after:
             // 
@@ -414,7 +414,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Downwards Exit of Cursor',
         prelude: SHARED_PRELUDE,
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Document state after:
             // 
@@ -436,7 +436,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Deletion of Opening Side',
         prelude: SHARED_PRELUDE,
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Move to the opening side of the first pair and then backspace it.
             //
@@ -524,7 +524,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Deletion of Closing Side',
         prelude: SHARED_PRELUDE,
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Delete right the closing character of the first pair. 
             //
@@ -615,7 +615,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Multi-line Text Inserted Between Pairs',
         prelude: SHARED_PRELUDE,
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Indent the text after the first pair.
             //
@@ -697,7 +697,7 @@ const TEST_CASES: TestCase[] = [
     new TestCase({
         name: 'Multi-line Snippet Inserted Between Pairs',
         prelude: SHARED_PRELUDE,
-        action: async (executor) => {
+        task: async (executor) => {
 
             // Delete the `20` from the second argument of `someFn`.
             //

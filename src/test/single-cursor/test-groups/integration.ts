@@ -35,7 +35,7 @@ import { TestCase, TestGroup } from '../../utilities/framework';
  */
 const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
     name: 'Real User Simulation 1',
-    action: async (executor) => {
+    task: async (executor) => {
 
         // Document state after:
         // 

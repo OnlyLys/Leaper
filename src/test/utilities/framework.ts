@@ -69,12 +69,12 @@ export class TestCase {
         /** 
          * Callback to execute as part of the test case. 
          */
-        readonly action: (executor: Executor) => Promise<void>
+        readonly task: (executor: Executor) => Promise<void>
 
     }) {}
 
     public run(): void {
-        const { name, editorLanguageId, prelude, action } = this.args;
+        const { name, editorLanguageId, prelude, task } = this.args;
         it(name, async function () {
 
             // Sometimes tests can fail due to the editor lagging.
@@ -96,7 +96,7 @@ export class TestCase {
                 }
     
                 // Run the actual test.            
-                await action(executor);
+                await task(executor);
 
             } finally {
 
