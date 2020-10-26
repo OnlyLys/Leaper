@@ -409,13 +409,17 @@ export class Executor {
      * @param rel The path relative to the root of the multi-root testing workspace. 
      * @param options Specifies the behavior when showing the opened file.
      */
-    public async openFile(rel: string, options?: TextDocumentShowOptions): Promise<void> {
+    public async openFile(
+        rel:              string, 
+        showOptions?:     TextDocumentShowOptions, 
+        repDelayOptions?: RepetitionDelayOptions
+    ): Promise<void> {
         return executeWithRepetitionDelay(async () => {
             const rootPath = path.dirname(workspace.workspaceFile?.path ?? '');
             const filePath = path.join(rootPath, rel);
             const document = await workspace.openTextDocument(filePath);
-            await window.showTextDocument(document, options);
-        });
+            await window.showTextDocument(document, showOptions);
+        }, repDelayOptions);
     }
 
     /**
@@ -425,47 +429,50 @@ export class Executor {
      * 
      * @param languageId The language of the opened text document. Defaults to `'typescript'`.
      */
-    public async openNewTextEditor(languageId: string = 'typescript'): Promise<void> {
+    public async openNewTextEditor(
+        languageId: string = 'typescript', 
+        options?:   RepetitionDelayOptions
+    ): Promise<void> {
         return executeWithRepetitionDelay(async () => {
             const document = await workspace.openTextDocument({ language: languageId });
             await window.showTextDocument(document);
-        });
+        }, options);
     }
 
     /**
      * Move the active text editor to the right tab group.
      */
-    public async moveEditorToRight(): Promise<void> {
+    public async moveEditorToRight(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
             await commands.executeCommand('workbench.action.moveEditorToRightGroup');
-        });
+        }, options);
     }
 
     /**
      * Move the active text editor to the left tab group.
      */
-    public async moveEditorToLeft(): Promise<void> {
+    public async moveEditorToLeft(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
             await commands.executeCommand('workbench.action.moveEditorToLeftGroup');
-        });
+        }, options);
     }
 
     /**
      * Close the active text editor.
      */
-    public async closeActiveEditor(): Promise<void> {
+    public async closeActiveEditor(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
             await commands.executeCommand('workbench.action.closeActiveEditor');
-        });
+        }, options);
     }
 
     /**
      * Close all text editors.
      */
-    public async closeAllEditors(): Promise<void> {
+    public async closeAllEditors(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
             await commands.executeCommand('workbench.action.closeAllEditors');
-        });
+        }, options);
     }
 
     /**
