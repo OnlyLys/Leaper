@@ -550,7 +550,7 @@ function getActiveEditor(): TextEditor {
 
 /**
  * This function is a way for us to abstract out the handling of repetitions and delays from the
- * method definitions in `TestContext`.
+ * method definitions in `Executor`.
  */
 async function executeWithRepetitionDelay(
     callback: () => Promise<any>, 
