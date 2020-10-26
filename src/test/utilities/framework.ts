@@ -559,8 +559,8 @@ const DEFAULT_DELAY_MS = 30;
 const DEFAULT_REPETITIONS = 1;
 
 /**
- * This function is a way for us to abstract out the handling of repetitions and delays from the
- * method definitions in `Executor`.
+ * Execute a callback `options.repetitions` amount of times, applying a `options.delay` wait after
+ * each repetition.
  */
 async function executeWithRepetitionDelay(
     callback: () => Promise<any>, 
@@ -616,7 +616,7 @@ interface EditTextArgs extends RepetitionDelayOptions {
 interface ReplaceTextEdit {
 
     /** 
-     * Replace a range of text in the active text document document. 
+     * Replace a range of text in the active text document. 
      */
     kind: 'replace';
 
