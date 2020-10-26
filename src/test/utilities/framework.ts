@@ -404,10 +404,9 @@ export class Executor {
     /**
      * Open an existing file in the testing workspace.
      * 
-     * The opened file immediately takes focus.
-     * 
-     * @param rel The path relative to the root of the multi-root testing workspace. 
-     * @param options Specifies the behavior when showing the opened file.
+     * @param rel The path of the file relative to the root of the workspace.
+     * @param showOptions How to show the opened file.
+     * @param repDelayOptions Specify the repetitions and delay time after each repetition.
      */
     public async openFile(
         rel:              string, 
@@ -425,18 +424,19 @@ export class Executor {
     /**
      * Open a new text editor containing an empty text document.
      * 
-     * The opened editor immediately takes focus.
-     * 
-     * @param languageId The language of the opened text document. Defaults to `'typescript'`.
+     * @param languageId The language of the opened text document.
+     * @param showOptions How to show the opened file.
+     * @param repDelayOptions Specify the repetitions and delay time after each repetition.
      */
     public async openNewTextEditor(
-        languageId: string = 'typescript', 
-        options?:   RepetitionDelayOptions
+        languageId:       string = 'typescript', 
+        showOptions?:     TextDocumentShowOptions, 
+        repDelayOptions?: RepetitionDelayOptions
     ): Promise<void> {
         return executeWithRepetitionDelay(async () => {
             const document = await workspace.openTextDocument({ language: languageId });
-            await window.showTextDocument(document);
-        }, options);
+            await window.showTextDocument(document, showOptions);
+        }, repDelayOptions);
     }
 
     /**
