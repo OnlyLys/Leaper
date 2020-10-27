@@ -139,30 +139,75 @@ export class Executor {
 
     /**
      * Assert the position of pairs being tracked.
+     * 
+     * # Decorations
+     * 
+     * The value of `expectDecorations` determines if decorations are checked:
+     * 
+     *  - `'all'`: Assert that all pairs are decorated.
+     *  - `'nearest'`: Assert that only the pairs nearest to each cursor are decorated.
+     *  - `undefined`: Will not check the decorations.
      */
-    public assertPairs(expected: CompactClusters): void {
+    public assertPairs(
+        expected:           CompactClusters, 
+        expectDecorations?: 'all' | 'nearest'
+    ): void {
 
-        // Convert the clusters to a simpler form that displays better during assertion failures.
-        type Simple = { open: [number, number], close: [number, number] }[][];
-        const actual: Simple = getHandle().activeSnapshot().map((cluster) => 
-            cluster.map(({ open, close }) => 
-                ({ open: [open.line,  open.character], close: [close.line, close.character] })
+        // Representation of a pair that displays better during assertion failures.
+        type PairPartial = { open: [number, number], close: [number, number] };
+
+        // Is `Pair` but with information about whether the pair is decorated.
+        type PairFull = { open: [number, number], close: [number, number], isDecorated: boolean };
+
+        // The actual pairs (including decorations) but in a more print friendly form.
+        const actualFull: PairFull[][] = getHandle().activeSnapshot().map((cluster) => 
+            cluster.map(({ open, close, isDecorated }) =>
+                ({ 
+                    open:  [open.line,  open.character], 
+                    close: [close.line, close.character],
+                    isDecorated
+                })
             )
         );
-        const _expected: Simple = expected.map((cluster) => {
+
+        // The expected pairs (including decorations) but in a more print friendly form.
+        const expectedFull: PairFull[][] = expected.map((cluster) => {
             const line = cluster.line;
             if (line === -1) {
                 return [];
             } else {
                 const openers = cluster.sides.slice(0, cluster.sides.length / 2);
                 const closers = cluster.sides.slice(cluster.sides.length / 2).reverse();
-                return [...zip(openers, closers)].map(([opener, closer]) => 
-                    ({ open: [line, opener], close: [line, closer] })
+                const pairs: PairFull[] = [...zip(openers, closers)].map(([opener, closer]) => 
+                    ({ open: [line, opener], close: [line, closer], isDecorated: false })
                 );
+                if (expectDecorations === 'all') {
+                    pairs.forEach(pair => pair.isDecorated = true);
+                } else if (expectDecorations === 'nearest' && pairs.length > 0) {
+                    pairs[pairs.length - 1].isDecorated = true;
+                }
+                return pairs;
             }
         });
 
-        assert.deepStrictEqual(actual, _expected, this.assertFailMsgHeader + 'Pairs Mismatch');
+        // The message to show on assertion failure.
+        const errMsg = this.assertFailMsgHeader + 'Pairs Mismatch';
+
+        if (expectDecorations) {
+            assert.deepStrictEqual(actualFull, expectedFull, errMsg);
+        } else {
+
+            function strip(full: PairFull[][]): PairPartial[][] {
+                return full.map((cluster) => cluster.map(({ open, close}) => ({ open, close })));
+            }
+
+            // Since `expectDecorations` was not specified, we strip the `isDecorated` flag before
+            // performing assertions.
+            const actualPartial   = strip(actualFull);
+            const expectedPartial = strip(expectedFull);
+
+            assert.deepStrictEqual(actualPartial, expectedPartial, errMsg);
+        }
     }
 
     /**
