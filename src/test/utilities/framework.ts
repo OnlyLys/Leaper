@@ -128,21 +128,18 @@ export class Executor {
     protected configurationRestorers: (() => Promise<void>)[];
 
     /**
-     * Message to print when `assertPairs` fails.
+     * Text to print at the front of an assertion failure message.
      */
-    protected assertPairsFailMsg: string;
-
-    /**
-     * Message to print when `assertCursors` fails.
-     */
-    protected assertCursorsFailMsg: string;
+    protected assertFailMsgHeader: string;
 
     public constructor() {
         this.configurationRestorers = [];
-        this.assertPairsFailMsg     = 'Pairs Mismatch';
-        this.assertCursorsFailMsg   = 'Cursors Mismatch';
+        this.assertFailMsgHeader    = '';
     }
 
+    /**
+     * Assert the position of pairs being tracked.
+     */
     public assertPairs(expected: CompactClusters): void {
 
         // Convert the clusters to a simpler form that displays better during assertion failures.
@@ -165,9 +162,12 @@ export class Executor {
             }
         });
 
-        assert.deepStrictEqual(actual, _expected, this.assertPairsFailMsg);
+        assert.deepStrictEqual(actual, _expected, this.assertFailMsgHeader + 'Pairs Mismatch');
     }
 
+    /**
+     * Assert the positions of the cursors within the active text editor.
+     */
     public assertCursors(expected: CompactCursors): void {
         const actual: CompactCursors = getActiveEditor().selections.map(({ active, anchor }) => {
             return { 
@@ -183,7 +183,7 @@ export class Executor {
             }
         });
             
-        assert.deepStrictEqual(actual, _expected, this.assertCursorsFailMsg);
+        assert.deepStrictEqual(actual, _expected, this.assertFailMsgHeader + 'Cursors Mismatch');
     }
 
     /**
@@ -556,8 +556,7 @@ class ExecutorExtended extends Executor {
      * Whether the assertion messages should denote that the assertions failed in a prelude.
      */
     public set inPrelude(value: boolean) {
-        this.assertPairsFailMsg   = value ? '(Prelude Failure) Pairs Mismatch'   : 'Pairs Mismatch';
-        this.assertCursorsFailMsg = value ? '(Prelude Failure) Cursors Mismatch' : 'Cursors Mismatch';
+        this.assertFailMsgHeader = value ? '(Prelude Failure) ' : '';
     }
 
     /**
