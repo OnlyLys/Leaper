@@ -169,19 +169,13 @@ export class Executor {
      * Assert the positions of the cursors within the active text editor.
      */
     public assertCursors(expected: CompactCursors): void {
-        const actual: CompactCursors = getActiveEditor().selections.map(({ active, anchor }) => {
-            return { 
-                anchor: [anchor.line, anchor.character], 
-                active: [active.line, active.character]
-            };
-        });
-        const _expected: CompactCursors = expected.map((cursor) => {
-            if (Array.isArray(cursor)) {
-                return { anchor: [cursor[0], cursor[1]], active: [cursor[0], cursor[1]] };
-            } else {
-                return cursor;
-            }
-        });
+        const actual: CompactCursors = getActiveEditor().selections.map(({ active, anchor }) =>
+            ({ anchor: [anchor.line, anchor.character], active: [active.line, active.character] })
+        );
+        const _expected: CompactCursors = expected.map((cursor) => 
+            Array.isArray(cursor) ? { anchor: [cursor[0], cursor[1]], active: [cursor[0], cursor[1]] }
+                                  : cursor
+        );
             
         assert.deepStrictEqual(actual, _expected, this.assertFailMsgHeader + 'Cursors Mismatch');
     }
