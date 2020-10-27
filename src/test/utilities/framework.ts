@@ -517,10 +517,27 @@ export class Executor {
             const find          = window.visibleTextEditors.find((v) => v.viewColumn === viewColumn);
             const editor        = (viewColumn !== undefined && find) ? find : getActiveEditor();
             const configuration = workspace.getConfiguration('leaper', editor.document);
-            const prevValue     = configuration.get<T>(partialName);
+            const prevValue     = (() => {
+                const inspect = configuration.inspect<T>(partialName);
+                if (!inspect) {
+                    throw new Error("Failed to inspect configuration!");
+                }
+                const { 
+                    workspaceValue,
+                    workspaceLanguageValue,
+                    workspaceFolderValue,
+                    workspaceFolderLanguageValue
+                } = inspect;
+                if (target === ConfigurationTarget.Workspace) {
+                    return overrideInLanguage ? workspaceLanguageValue : workspaceValue;
+                } else {
+                    return overrideInLanguage ? workspaceFolderLanguageValue : workspaceFolderValue;
+                }
+            })();
             await configuration.update(partialName, value, target, overrideInLanguage);
             this.configurationRestorers.push(async () => {
-                await configuration.update(partialName, prevValue, target, overrideInLanguage);
+                await workspace.getConfiguration('leaper', editor.document)
+                               .update(partialName, prevValue, target, overrideInLanguage);
             });
         }, options);
     }
