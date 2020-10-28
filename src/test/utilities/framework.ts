@@ -1,6 +1,6 @@
 //! The following module defines the test framework for this extension.
 
-import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, extensions, window, ConfigurationTarget, ViewColumn } from 'vscode';
+import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, extensions, window, ConfigurationTarget } from 'vscode';
 import * as assert from 'assert';
 import * as path from 'path';
 import { TestAPI } from '../../extension';
@@ -537,46 +537,48 @@ export class Executor {
      * 
      * @param partialName The name of the configuration after the `leaper.` prefix.
      * @param value Value to set the configuration to.
-     * @param target Which scope to set the configuration in.
-     * @param overrideInLanguage Whether to set the configuration scoped to the language of the 
-     *                           active text editor's document.
-     * @param viewColumn Column of the visible text editor. Defaults to the active text editor.
+     * @param targetWorkspaceFolder The name of the workspace folder to set the configuration in. If
+     *                              not specified, will set the configuration in the root workspace.
+     * @param targetLanguage The language to scope the configuration to. Defaults to none.
      * @param options Options to configure repetitions and delay.
      */
     public async setConfiguration<T>(args: {
-        partialName:         string, 
-        value:               T, 
-        target:              ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder,
-        overrideInLanguage?: boolean,
-        viewColumn?:         ViewColumn,
-        options?:            RepetitionDelayOptions
+        partialName:            string, 
+        value:                  T,
+        targetWorkspaceFolder?: string,
+        targetLanguage?:        string,
+        options?:               RepetitionDelayOptions
     }): Promise<void> {
-        const { partialName, value, target, overrideInLanguage, viewColumn, options } = args;
+        const { partialName, value, targetWorkspaceFolder, targetLanguage, options } = args;
         return executeWithRepetitionDelay(async () => {
-            const find          = window.visibleTextEditors.find((v) => v.viewColumn === viewColumn);
-            const editor        = (viewColumn !== undefined && find) ? find : getActiveEditor();
-            const configuration = workspace.getConfiguration('leaper', editor.document);
-            const prevValue     = (() => {
-                const inspect = configuration.inspect<T>(partialName);
-                if (!inspect) {
-                    throw new Error("Failed to inspect configuration!");
-                }
-                const { 
-                    workspaceValue,
-                    workspaceLanguageValue,
-                    workspaceFolderValue,
-                    workspaceFolderLanguageValue
-                } = inspect;
-                if (target === ConfigurationTarget.Workspace) {
-                    return overrideInLanguage ? workspaceLanguageValue : workspaceValue;
-                } else {
-                    return overrideInLanguage ? workspaceFolderLanguageValue : workspaceFolderValue;
-                }
-            })();
-            await configuration.update(partialName, value, target, overrideInLanguage);
+
+            // Get the resource identifier of the workspace / workspace folder.
+            const targetUri = workspace.workspaceFolders?.find(
+                (workspaceFolder) => workspaceFolder.name === targetWorkspaceFolder
+            )?.uri ?? workspace.workspaceFile;
+            if (!targetUri) {
+                throw new Error('Unable to find workspace to set configurations for!');
+            }
+
+            // The scope to to confine where we get the `WorkspaceConfiguration` object from.
+            const receiveScope = targetLanguage ? { uri: targetUri, languageId: targetLanguage } : targetUri;
+
+            // Get the object that is used to get / set configuration values.
+            const configuration = workspace.getConfiguration('leaper', receiveScope);
+
+            // Save the previous value (so that we can restore it later).
+            const prevValue = configuration.get<T>(partialName);    
+
+            // Scope to set the configuration in.
+            const targetScope = targetWorkspaceFolder ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
+            
+            // Set the configuration.
+            await configuration.update(partialName, value, targetScope, !!targetLanguage);
+
+            // Store the callback that allows this configuration change to be reverted.
             this.configurationRestorers.push(async () => {
-                await workspace.getConfiguration('leaper', editor.document)
-                               .update(partialName, prevValue, target, overrideInLanguage);
+                const configuration = workspace.getConfiguration('leaper', receiveScope);
+                await configuration.update(partialName, prevValue, targetScope, !!targetLanguage);
             });
         }, options);
     }
