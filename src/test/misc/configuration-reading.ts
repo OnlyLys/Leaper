@@ -172,6 +172,222 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
 });
 
 /**
+ * Test whether the extension reloads configuration values when a change in them is detected.
+ */
+const RELOAD_ON_CHANGE_TEST_CASE = new TestCase({
+    name: 'Reload on Change',
+    task: async (executor) => {
+
+        // First open the text files in all three workspace folders. 
+        //
+        // This results in a total of 4 text editors (including the one provided to this test case)
+        // being opened, arranged as so:
+        //
+        //      Provided Text | Workspace 1 Text | Workspace 2 Text | Workspace 3 Text 
+        //
+        // # Focus
+        // 
+        // The text document in the third workspace will be in focus after this step.
+        await executor.openFile('./workspace-1/text.txt', { viewColumn: 2 });
+        await executor.openFile('./workspace-2/text.ts',  { viewColumn: 3 });
+        await executor.openFile('./workspace-3/text.md',  { viewColumn: 4 });
+
+        // 1. Change the workspace configuration value.
+        //
+        // The testing workspace's `leaper.detectedPairs` configuration is changed:
+        //
+        //     From: [ "{}", "[]", "()", "<>", "''", "\"\"", "``" ]
+        // 
+        //     To:   [ "{}" ]
+        //
+        // # Effect on the Provided Text Document
+        // 
+        // The provided text document inherits the workspace configuration value since there are no
+        // values in more nested scopes that would override the workspace configuration value.
+        //  
+        // Since the provided text document is Typescript, and Typescript autocloses the following 
+        // pairs:
+        //
+        //     [ "{}", "[]", "()", "''", "\"\"", "``" ]
+        // 
+        // we would expect the following autoclosing pairs of Typescript to be tracked:
+        //
+        //     [ "{}" ]
+        // 
+        // Furthermore, we would expect the following autoclosing pairs of Typescript to not be 
+        // tracked: 
+        //
+        //     [ "{}", "[]", "''", "\"\"", "``" ]
+        //
+        // # Effect on the Other Text Documents
+        //
+        // The other text documents have been configured to override the workspace configuration 
+        // value, so no change is expected for them.
+        //
+        // # Focus 
+        // 
+        // The provided text editor (view column 1) will be in focus after this step.
+        await executor.setConfiguration<ReadonlyArray<string>>({
+            partialName: 'detectedPairs',
+            value:       [ "{}" ],
+        });
+        await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);                // Workspace 3 (Markdown).
+        await executor.focusLeftEditorGroup();
+        await testDetectedPairs(executor, [ "()" ], [ "{}", "[]", "''", "\"\"", "``" ]);  // Workspace 2 (Typescript).
+        await executor.focusLeftEditorGroup();
+        await testDetectedPairs(executor, [], [ "{}", "[]", "()" ]);                      // Workspace 1 (Plaintext).
+        await executor.focusLeftEditorGroup();
+        await testDetectedPairs(executor, [ "{}" ], [ "[]", "()", "''", "\"\"", "``" ]);  // Provided (Typescript).
+
+        // 2. Change a language-specific workspace configuration value.
+        //
+        // The testing workspace's `leaper.detectedPairs` configuration, scoped to Plaintext, is 
+        // changed:
+        //
+        //     From: []
+        //     
+        //     To:   [ "[]",  "()" ]
+        //
+        // # Effect on Workspace 1's Text Document
+        //
+        // Workspace 1's text document inherits the language-specific workspace configuration value
+        // from the root workspace.
+        //
+        // Since Workspace 1's text document is Plaintext, and Plaintext autocloses the following 
+        // pairs:
+        //
+        //     [ "{}", "[]", "()" ]
+        // 
+        // we would expect the following autoclosing pairs of Plaintext to be tracked:
+        //
+        //     [ "[]",  "()" ]
+        //
+        // Furthermore, we would expect the following autoclosing pairs of Plaintext to not be 
+        // tracked:
+        //
+        //     [ "{}" ]
+        //
+        // # Effect on the Other Text Documents
+        //
+        // The other text documents are not of Plaintext language and are therefore not affected by
+        // this change.
+        //
+        // # Focus 
+        //
+        // The text editor of the third workspace (view column 4) will be in focus after this step.
+        await executor.setConfiguration<ReadonlyArray<string>>({
+            partialName:    'detectedPairs',
+            value:          [ "[]", "()" ],
+            targetLanguage: 'plaintext',
+        });
+        await testDetectedPairs(executor, [ "{}" ], [ "[]", "()", "''", "\"\"", "``" ]);  // Provided (Typescript).
+        await executor.focusRightEditorGroup();
+        await testDetectedPairs(executor, [ "[]", "()" ], [ "{}" ] );                     // Workspace 1 (Plaintext).
+        await executor.focusRightEditorGroup();
+        await testDetectedPairs(executor, [ "()" ], [ "{}", "[]", "''", "\"\"", "``" ]);  // Workspace 2 (Typescript).
+        await executor.focusRightEditorGroup();
+        await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);                // Workspace 3 (Markdown).
+
+        // 3. Change a workspace folder configuration value.
+        //
+        // Workspace 2's `leaper.detectedPairs` configuration is changed:
+        //
+        //     From: [ "()" ]
+        //
+        //     To:   [ "''", "\"\"", "``" ]
+        //
+        // # Effect on Workspace 2's Text Document
+        //
+        // Workspace 2's text document is affected by this change as there is no override of the
+        // configuration value for Typescript in Workspace 2.
+        //
+        // Since Workspace 2's text document is Typescript, and Typescript autocloses the following
+        // pairs:
+        //
+        //      [ "{}", "[]", "()", "''", "\"\"", "``" ]
+        //
+        // we would expect the following autoclosing pairs of Typescript to be tracked:
+        //
+        //      [ "''", "\"\"", "``" ]
+        //
+        // Furthermore, we would expect the following autoclosing pairs of Typescript to not be 
+        // tracked: 
+        //
+        //      [ "{}", "[]", "()" ]
+        //
+        // # Effect on the Other Text Documents
+        //
+        // The provided text document is not within any of the workspace folders so it is not 
+        // affected. 
+        //
+        // Meanwhile, the text documents in Workspace 1 and Workspace 3 are not affected at all as 
+        // this change only applies to Workspace 2.
+        //
+        // # Focus 
+        // 
+        // The provided text editor (view column 1) will be in focus after this step.
+        await executor.setConfiguration<ReadonlyArray<string>>({
+            partialName:           'detectedPairs',
+            value:                 [ "''", "\"\"", "``" ],
+            targetWorkspaceFolder: 'workspace-2'
+        });
+        await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);                // Workspace 3 (Markdown).
+        await executor.focusLeftEditorGroup();
+        await testDetectedPairs(executor, [ "''", "\"\"", "``" ], [ "{}", "[]", "()" ]);  // Workspace 2 (Typescript).
+        await executor.focusLeftEditorGroup();
+        await testDetectedPairs(executor, [ "[]", "()" ], [ "{}" ] );                     // Workspace 1 (Plaintext).
+        await executor.focusLeftEditorGroup();
+        await testDetectedPairs(executor, [ "{}" ], [ "[]", "()", "''", "\"\"", "``" ]);  // Provided (Typescript).
+
+        // 4. Change a language-specific workspace folder configuration value.
+        //
+        // Workspace 3's `leaper.detectedPairs` configuration, scoped to Markdown, is changed:
+        //
+        //     From: [ "{}", "<>" ]
+        //
+        //     To:   [ "{}", "()", "<>", "[]" ]
+        //
+        // # Effect on Workspace 3's Text Document
+        // 
+        // Workspace 3's text document is affected by this change as it is of Markdown language.
+        //
+        // Since Workspace 3's text document is Markdown, and Markdown autocloses the following
+        // pairs:
+        //
+        //     [ "{}", "()", "<>", "[]" ]
+        //
+        // we would expect all of the autoclosing pairs of Markdown to be tracked.
+        //
+        // Furthermore, we would expect none of the autoclosing pairs of Markdown to not be tracked.
+        //
+        // # Effect on Other Text Documents
+        //
+        // The provided text document is not within any of the workspace folders so it is not 
+        // affected.         
+        //
+        // Meanwhile, the text documents in Workspace 1 and Workspace 2 are not affected at all as 
+        // this change only applies to Markdown text documents in Workspace 3.
+        //
+        // # Focus 
+        //
+        // The text editor of the third workspace (view column 4) will be in focus after this step.
+        await executor.setConfiguration<ReadonlyArray<string>>({
+            partialName:           'detectedPairs',
+            value:                 [ "{}", "()", "<>", "[]" ],
+            targetWorkspaceFolder: 'workspace-3',
+            targetLanguage:        'markdown',
+        });
+        await testDetectedPairs(executor, [ "{}" ], [ "[]", "()", "''", "\"\"", "``" ]);  // Provided (Typescript).
+        await executor.focusRightEditorGroup();
+        await testDetectedPairs(executor, [ "[]", "()" ], [ "{}" ] );                     // Workspace 1 (Plaintext).
+        await executor.focusRightEditorGroup();
+        await testDetectedPairs(executor, [ "''", "\"\"", "``" ], [ "{}", "[]", "()" ]);  // Workspace 2 (Typescript).
+        await executor.focusRightEditorGroup();
+        await testDetectedPairs(executor, [ "{}", "()", "<>", "[]" ], []);                // Workspace 3 (Markdown).
+    }
+});
+
+/**
  * This test group tests whether this extension can correctly read configuration values.
  *
  * Within this group, the `leaper.detectedPairs` configuration will be modified in the workspace and 
@@ -181,6 +397,7 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
 export const CONFIGURATION_READING_TEST_GROUP = new TestGroup({
     name: 'Configuration Reading',
     testCases: [
-        CAN_READ_VALUES_TEST_CASE
+        CAN_READ_VALUES_TEST_CASE,
+        RELOAD_ON_CHANGE_TEST_CASE
     ]
 });
