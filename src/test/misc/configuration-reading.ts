@@ -74,13 +74,13 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
         //
         // Because we did not specify a language for the provided text editor, it will be Typescript.
         // And because the opened text editor does not belong to any of the workspace folders within 
-        // the workspace folder, it is expected to only inherit up to workspace configuration values.
+        // the workspace, it is expected to only inherit up to workspace configuration values.
         // 
         // The testing workspace has `leaper.detectedPairs` configured to: 
         // 
         //     [ "{}", "[]", "()", "''", "\"\"", "``", "<>" ]
         // 
-        // While Typescript autocloses the following pairs: 
+        // while Typescript autocloses the following pairs: 
         //
         //     [ "{}", "[]", "()", "''", "\"\"", "``" ]
         //
@@ -95,7 +95,7 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
         //
         //      []
         //
-        // While Plaintext autocloses the following pairs:
+        // while Plaintext autocloses the following pairs:
         //
         //      [ "{}", "[]", "()" ]
         //
@@ -118,7 +118,7 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
         // 
         //     [ "()" ]
         //
-        // While Typescript autocloses the following pairs:
+        // while Typescript autocloses the following pairs:
         //
         //     [ "{}", "[]", "()", "''", "\"\"", "``" ]
         // 
@@ -126,7 +126,7 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
         //
         //     [ "()" ]
         // 
-        // And would expect the following autoclosing pairs of Typescript to not be tracked: 
+        // and would expect the following autoclosing pairs of Typescript to not be tracked: 
         //
         //     [ "{}", "[]", "''", "\"\"", "``" ]
         await executor.openFile('./workspace-2/text.ts');
@@ -147,7 +147,7 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
         //
         //     [ "{}", "<>" ]
         //
-        // While Markdown autocloses the following pairs:
+        // while Markdown autocloses the following pairs:
         //
         //     [ "{}", "()", "<>", "[]" ]
         //
@@ -155,7 +155,7 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
         //
         //     [ "{}", "<>" ]
         //
-        // And would expect the following autoclosing pairs of Markdown to not be tracked:
+        // and would expect the following autoclosing pairs of Markdown to not be tracked:
         //
         //     [ "()", "[]" ]
         await executor.openFile('./workspace-3/text.md');
