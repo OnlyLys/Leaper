@@ -242,6 +242,28 @@ export class Executor {
         });
     }
 
+    /**
+     * Assert the most recently broadcasted value of `leaper.inLeaperMode` keybinding context.
+     */
+    public assertMRBInLeaperModeContext(expected: boolean): void {
+        assert.deepStrictEqual(
+            getHandle().MRBInLeaperModeContext, 
+            expected,
+            this.assertFailMsgHeader + 'Most Recently Broadcasted `leaper.inLeaperMode` Context Mismatch'
+        );
+    }
+
+    /**
+     * Assert the most recently broadcasted value of `leaper.hasLineOfSight` keybinding context.
+     */
+    public assertMRBHasLineOfSightContext(expected: boolean): void {
+        assert.deepStrictEqual(
+            getHandle().MRBHasLineOfSightContext, 
+            expected,
+            this.assertFailMsgHeader + 'Most Recently Broadcasted `leaper.hasLineOfSight` Context Mismatch'
+        );
+    }
+
     // --------------------------------------
     // All of the methods below are `async` because they modify the state of the vscode instance 
     // running the tests. 
