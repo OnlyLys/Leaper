@@ -28,20 +28,14 @@ import { ImmediateReusable } from './tracker/immediate-reusable';
  */
 export class ContextBroadcaster {
 
-    /**
-     * The name of the keybinding context as declared in the extension manifest.
-     */
-    private name: string;
+    private _prevBroadcasted: boolean | undefined;
 
     /**
-     * Callback used to obtain the latest value of the keybinding context.
+     * The context value that was most recently broadcasted.
      */
-    private getValue: () => boolean; 
-
-    /**
-     * The value that was most recently broadcasted.
-     */
-    private prevBroadcasted: boolean | undefined;
+    public get prevBroadcasted(): boolean | undefined {
+        return this._prevBroadcasted;
+    }
 
     /**
      * Timer to broadcast at the end of the current event loop cycle.
@@ -51,21 +45,29 @@ export class ContextBroadcaster {
         // Only broadcast a value if it was different from what we previously broadcasted.
         const newValue = this.getValue();
         if (newValue !== this.prevBroadcasted) {
-            commands.executeCommand('setContext', this.name, newValue);
-            this.prevBroadcasted = newValue;
+            this.broadcast(newValue);
         }
     });
 
     /**
-     * @param name The name of the keybinding context.
-     * @param getValue Callback used to obtain the latest value of the keybinding context.
+     * The context value is **not** broadcasted in this constructor.
+     * 
+     * @param name The full name of the keybinding context.
+     * @param getValue Callback used to get the latest value of the keybinding context.
      */
     public constructor(
-        name:     string,
-        getValue: () => boolean
+        private readonly name: string,
+        private getValue: () => boolean
     ) {
-        this.name     = name;
         this.getValue = getValue;
+    }
+
+    /**
+     * Immediately broadcast a context value to vscode. 
+     */    
+    private broadcast(value: boolean): void {
+        commands.executeCommand('setContext', this.name, value);
+        this._prevBroadcasted = value;
     }
 
     /**
@@ -78,15 +80,13 @@ export class ContextBroadcaster {
     /**
      * Disable the keybinding context by **immediately** broadcasting `false`.
      * 
-     * This broadcaster is then terminated, meaning it can no longer be used after this.
+     * This broadcaster is then terminated, disabling it from any further use.
      */
     public dispose(): void {
-        commands.executeCommand('setContext', this.name, false);
-        this.prevBroadcasted = false;
+        this.broadcast(false);
 
-        // So that future calls to `set` will no longer broadcast any more values.
+        // So that future calls to `endOfLoopTimer.set()` will no longer broadcast any more values.
         this.getValue = () => false;
     }
-
 
 }
