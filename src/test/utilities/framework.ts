@@ -242,6 +242,15 @@ export class Executor {
         });
     }
 
+    // --------------------------------------
+    // All of the methods below are `async` because they modify the state of the vscode instance 
+    // running the tests. 
+    //
+    // Because we are 'writing' to vscode, we need some delay time (configurable by passing 
+    // `RepetitionDelayOptions`) after each repetition of the methods to make sure the writes have 
+    // been processed by vscode before proceeding. Furthermore, the delay time gives time for this 
+    // extension to acknowledge those changes, since this extension receives input asynchronously.
+
     /**
      * Type an autoclosing pair into the document.
      * 
