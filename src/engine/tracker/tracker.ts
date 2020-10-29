@@ -26,11 +26,6 @@ import { TrackerCore } from './tracker-core/tracker-core';
  */
 export class Tracker {
 
-    /**
-     * The text editor that this tracker is bound to (i.e. the owning text editor).
-     */
-    private readonly owner: TextEditor;
-
     /** 
      * Where most of the logic in this class is delegated to.
      */
@@ -116,10 +111,9 @@ export class Tracker {
     });
 
     /** 
-     * @param owner The text editor to bind to.
+     * @param owner The text editor to bind to (i.e. the owning text editor).
      */
-    public constructor(owner: TextEditor) {
-        this.owner = owner;
+    public constructor(private readonly owner: TextEditor) {
         this.core  = new TrackerCore(owner.selections, Configuration.read(owner.document));
     }
 

@@ -89,7 +89,6 @@ export class Engine implements TestAPI {
         this.rebindActiveTracker();
     });
 
-
     /**
      * To broadcast the `leaper.inLeaperMode` context of the active tracker to vscode.
      */
@@ -120,10 +119,8 @@ export class Engine implements TestAPI {
     
     public constructor() {
         
-        const { visibleTextEditors } = window;
-
         // Assign to each text editor its own tracker.
-        this.trackers = new Map(visibleTextEditors.map((editor) => [editor, new Tracker(editor)]));
+        this.trackers = new Map(window.visibleTextEditors.map((e) => [e, new Tracker(e)]));
 
         // Bind this engine to the active text editor's tracker.
         this.rebindActiveTracker();
