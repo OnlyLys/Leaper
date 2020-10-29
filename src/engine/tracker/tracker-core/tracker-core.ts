@@ -607,6 +607,16 @@ export class TrackerCore {
     }
 
     /**
+     * Change the configuration that is being used.
+     * 
+     * This will untrack all pairs which were previously being tracked.
+     */
+    public changeConfiguration(newConfiguration: Configuration): void {
+        this.untrackPairs();
+        this.configuration = newConfiguration;
+    }
+
+    /**
      * Terminate this instance by:
      * 
      *   1. Untracking all pairs.
@@ -620,16 +630,6 @@ export class TrackerCore {
         this.toUndecorate.forEach((pair) => pair.decoration?.dispose());
         this.toUndecorate     = [];
         this.decorationsStale = false;
-    }
-
-    /**
-     * Change the configuration that is being used.
-     * 
-     * This will untrack all pairs which were previously being tracked.
-     */
-    public changeConfiguration(newConfiguration: Configuration): void {
-        this.untrackPairs();
-        this.configuration = newConfiguration;
     }
 
     /** 
