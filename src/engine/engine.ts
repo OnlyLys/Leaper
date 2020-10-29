@@ -35,7 +35,7 @@ export class Engine implements TestAPI {
     private trackers: Map<TextEditor, Tracker>;
 
     /**
-     * The tracker assigned to the active text editor.
+     * A pointer to the tracker assigned to the active text editor.
      * 
      * This is `undefined` if there is no active text editor.
      */
@@ -63,21 +63,16 @@ export class Engine implements TestAPI {
     private readonly visibleTextEditorsChangeWatcher = window.onDidChangeVisibleTextEditors(
         (_visibleTextEditors) => {
 
-            const visibleTextEditors = new Set(_visibleTextEditors);
-
-            // Preserve the trackers of text editors that are still visible, and clean up those that 
-            // are no longer visible.
+            const visibleSet  = new Set(_visibleTextEditors);
             const newTrackers = new Map<TextEditor, Tracker>();
-            for (const [editor, tracker] of this.trackers.entries()) {
-                if (visibleTextEditors.has(editor)) {
-                    newTrackers.set(editor, tracker);
-                } else {
-                    tracker.dispose();
-                }
-            }
 
-            // Create trackers for text editors that are newly visible.
-            for (const visibleTextEditor of visibleTextEditors) {
+            // Preserve the trackers of text editors that are still visible and clean up the rest.
+            for (const [editor, tracker] of this.trackers.entries()) {
+                visibleSet.has(editor) ? newTrackers.set(editor, tracker) : tracker.dispose();
+                }
+
+            // Assign trackers for text editors that are newly visible.
+            for (const visibleTextEditor of visibleSet) {
                 if (!newTrackers.has(visibleTextEditor)) {
                     newTrackers.set(visibleTextEditor, new Tracker(visibleTextEditor));
                 }
@@ -88,7 +83,7 @@ export class Engine implements TestAPI {
     )
 
     /**
-     * Watcher that tracks which text editor is the active one.
+     * Watcher to make sure that this engine follows the active text editor.
      */
     private readonly activeTextEditorChangeWatcher = window.onDidChangeActiveTextEditor(() => {
         this.rebindActiveTracker();
@@ -123,12 +118,12 @@ export class Engine implements TestAPI {
         // Assign to each text editor its own tracker.
         this.trackers = new Map(visibleTextEditors.map((editor) => [editor, new Tracker(editor)]));
 
-        // Bind to the active text editor's tracker.
+        // Bind this engine to the active text editor's tracker.
         this.rebindActiveTracker();
     }
 
     /**
-     * Rebind to the currently active text editor's tracker.
+     * Rebind this engine to the currently active text editor's tracker.
      * 
      * This switches vscode's context to the context of the active tracker.
      */
@@ -151,8 +146,8 @@ export class Engine implements TestAPI {
         );
 
         // Switch vscode's context to the active tracker's context.
-        this.hasLineOfSightContextBroadcaster.set();
         this.inLeaperModeContextBroadcaster.set();
+        this.hasLineOfSightContextBroadcaster.set();
     }
 
     /**
