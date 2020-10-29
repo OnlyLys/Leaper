@@ -3,7 +3,7 @@
 import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, extensions, window, ConfigurationTarget } from 'vscode';
 import * as assert from 'assert';
 import * as path from 'path';
-import { TestAPI } from '../../extension';
+import { TestAPI } from '../../engine/test-api';
 import { CompactCursors, CompactClusters, CompactRange, CompactPosition } from './compact';
 import { pickRandom, waitFor, zip } from './other';
 

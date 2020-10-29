@@ -1,5 +1,6 @@
-import { ExtensionContext, Position } from 'vscode';
+import { ExtensionContext } from 'vscode';
 import { Engine } from './engine/engine';
+import { TestAPI } from './engine/test-api';
 
 /**
  * Entry point of the extension.
@@ -15,21 +16,6 @@ export function activate(context: ExtensionContext): TestAPI {
     // Expose the engine for tests.
     return engine;
 } 
-
-export interface TestAPI {
-
-    /** 
-     * Get a snapshot of all the pairs that are being tracked in the active text editor. 
-     * 
-     * The return value is an array of subarrays, where each subarray contains the pairs belonging 
-     * to each cursor. The top level array is parallel to the array of cursors in the active text
-     * editor (i.e. `activeTextEditor.selections`).
-     * 
-     * The return value can be mutated without affecting the extension's state.
-     */
-    activeSnapshot(): { open: Position, close: Position, isDecorated: boolean }[][];
-    
-}
 
 export function deactivate() {
     // Intentionally empty.

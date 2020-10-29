@@ -1,6 +1,7 @@
 //! The following module defines the 'starting point' class of the extension.
 
 import { commands, Disposable, Position, TextEditor, window } from 'vscode';
+import { TestAPI } from './test-api';
 import { ContextBroadcaster } from './context-broadcaster';
 import { Tracker } from './tracker/tracker';
 
@@ -26,7 +27,7 @@ import { Tracker } from './tracker/tracker';
  * Only one instance of this class should be active at any time. And the created instance of this 
  * class must be disposed of when the extension is shut down.
  */
-export class Engine {
+export class Engine implements TestAPI {
 
     /**
      * The trackers assigned to each visible text editor.
@@ -155,9 +156,7 @@ export class Engine {
     }
 
     /**
-     * Get a snapshot of all the pairs that are being tracked in the active text editor.
-     * 
-     * The return value can be mutated without affecting the extension's state.
+     * See `TestAPI` for more info.
      */
     public activeSnapshot(): { open: Position, close: Position, isDecorated: boolean }[][] {
         return this.activeTracker?.snapshot() ?? [];
