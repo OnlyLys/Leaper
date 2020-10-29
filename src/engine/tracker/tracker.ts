@@ -220,6 +220,15 @@ export class Tracker {
         return this.onDidUpdateContextValuesEventEmitter.event;
     }
 
+    /**
+     * Mark the context values as stale then inform listeners of `onDidUpdateContextValues`. 
+     */
+    private markContextsStale(): void {
+        this.inLeaperModeContext.markStale();
+        this.hasLineOfSightContext.markStale();
+        this.onDidUpdateContextValuesEventEmitter.fire(undefined);
+    }
+
     /** 
      * Terminate this instance by doing the following:
      * 
@@ -237,15 +246,6 @@ export class Tracker {
         this.contentChangesWatcher.dispose();
         this.selectionChangesWatcher.dispose();
         this.configurationChangeWatcher.dispose();
-    }
-
-    /**
-     * Mark the context values as stale then inform listeners of `onDidUpdateContextValues`. 
-     */
-    private markContextsStale(): void {
-        this.inLeaperModeContext.markStale();
-        this.hasLineOfSightContext.markStale();
-        this.onDidUpdateContextValuesEventEmitter.fire(undefined);
     }
 
     /**
