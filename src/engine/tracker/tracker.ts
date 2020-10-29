@@ -1,7 +1,8 @@
-import { TextEditor, Selection, window, Position, workspace, EventEmitter, Event } from 'vscode';
+import { TextEditor, Selection, window, Position, workspace } from 'vscode';
 import { Configuration } from './configuration';
 import { ImmediateReusable } from './immediate-reusable';
-import { PrivateContext } from './private-context';
+import { PrivateContext } from './private-context/private-context';
+import { PrivateContextLazy } from './private-context/private-context-lazy';
 import { TrackerCore } from './tracker-core/tracker-core';
 
 /** 
@@ -36,19 +37,21 @@ export class Tracker {
     private readonly core: TrackerCore;
 
     /**
-     * Keybinding context that represents whether there are currently any pairs being tracked.
-     * 
      * This value is used by the parent `Engine` to toggle all of this extension's keybindings.
      */
-    private readonly inLeaperModeContext = new PrivateContext(
+    private readonly _inLeaperModeContext = new PrivateContextLazy(
         false, 
         () => !this.core.isEmpty(),
     );
 
+    /** 
+     * Keybinding context that represents whether there are currently any pairs being tracked.
+     */
+    public get inLeaperModeContext(): PrivateContext {
+        return this._inLeaperModeContext;
+    }
+
     /**
-     * Keybinding context that represents whether the path from the cursor to the closing side of 
-     * its nearest tracked pair is unobstructed.
-     *  
      * We need this context because the `Tab` key is very overloaded. This context is used by the
      * parent `Engine` to enable the keybinding for the 'Leap' command when the cursor is at a 
      * position where leaping is possible, and used to disable the keybinding when leaping is not 
@@ -58,23 +61,19 @@ export class Tracker {
      * the keybinding heirarchy, preventing this extension from unnecessarily intercepting `Tab` 
      * keypresses.
      */
-    private readonly hasLineOfSightContext = new PrivateContext(
+    private readonly _hasLineOfSightContext = new PrivateContextLazy(
         false,
         () => this.core.hasLineOfSight(this.owner.document),
     );
 
-    /**
-     * Emitter to inform listeners when context values have updated.
-     * 
-     * Note that because context values are lazily recalculated, we actually emit this event when 
-     * the context values have been marked as stale, and not when they have been recalculated. 
-     * 
-     * However, that should not create any problems, since the laziness in recalculating context 
-     * values is hidden from users of this class anyways, as external users can only access context
-     * values through the `getInLeaperModeContext` and `getHasLineOfSightContext` methods, which
-     * hide the fact that recalculations are done on-demand when necessary.
+
+    /** 
+     * Keybinding context that represents whether the path from the cursor to the closing side of 
+     * its nearest tracked pair is unobstructed.
      */
-    private readonly onDidUpdateContextValuesEventEmitter = new EventEmitter<undefined>();
+    public get hasLineOfSightContext(): PrivateContext {
+        return this._hasLineOfSightContext;
+    }
 
     /**
      * A timer to synchronize decorations at the end the current event loop cycle.
@@ -89,24 +88,20 @@ export class Tracker {
      * Watcher that keeps track of any textual changes in the owning text editor.
      */
     private readonly contentChangesWatcher = workspace.onDidChangeTextDocument((event) => {
-        if (event.document !== this.owner.document) {
-            return;
+        if (event.document === this.owner.document) {
+            this.core.syncToContentChanges(event);
+            this.markStaleSetSync();
         }
-        this.core.syncToContentChanges(event);
-        this.markContextsStale();
-        this.decorationSyncTimer.set();
     });
     
     /** 
      * Watcher that keeps track of any cursor changes in the owning text editor.
      */
     private readonly selectionChangesWatcher = window.onDidChangeTextEditorSelection((event) => {
-        if (event.textEditor !== this.owner) {
-            return;
+        if (event.textEditor === this.owner) {
+            this.core.syncToSelectionChanges(event);
+            this.markStaleSetSync();
         }
-        this.core.syncToSelectionChanges(event);
-        this.markContextsStale();
-        this.decorationSyncTimer.set();
     });
 
     /**
@@ -116,8 +111,7 @@ export class Tracker {
     private readonly configurationChangeWatcher = workspace.onDidChangeConfiguration((event) => {
         if (event.affectsConfiguration('leaper', this.owner.document)) {
             this.core.changeConfiguration(Configuration.read(this.owner.document));
-            this.markContextsStale();
-            this.decorationSyncTimer.set();
+            this.markStaleSetSync();
         }
     });
 
@@ -195,38 +189,16 @@ export class Tracker {
         }
 
         this.core.untrackPairs();
-        this.markContextsStale();
+        this.markStaleSetSync();
+    }
+
+    /**
+     * Mark the context values as stale and set the timer to synchronize decorations.
+     */
+    private markStaleSetSync(): void {
+        this._inLeaperModeContext.markStale();
+        this._hasLineOfSightContext.markStale();
         this.decorationSyncTimer.set();
-    }
-
-    /**
-     * Get the value of the `leaper.inLeaperMode` context for this tracker.
-     */
-    public getInLeaperModeContext(): boolean {
-        return this.inLeaperModeContext.get();
-    }
-
-    /**
-     * Get the value of the `leaper.hasLineOfSight` context for this tracker.
-     */
-    public getHasLineOfSightContext(): boolean {
-        return this.hasLineOfSightContext.get();
-    }
-
-    /**
-     * Register a listener that is called when context values are updated.
-     */
-    public get onDidUpdateContextValues(): Event<undefined> {
-        return this.onDidUpdateContextValuesEventEmitter.event;
-    }
-
-    /**
-     * Mark the context values as stale then inform listeners of `onDidUpdateContextValues`. 
-     */
-    private markContextsStale(): void {
-        this.inLeaperModeContext.markStale();
-        this.hasLineOfSightContext.markStale();
-        this.onDidUpdateContextValuesEventEmitter.fire(undefined);
     }
 
     /** 
@@ -239,9 +211,8 @@ export class Tracker {
      */
     public dispose(): void {
         this.core.dispose();
-        this.inLeaperModeContext.dispose();
-        this.hasLineOfSightContext.dispose();
-        this.onDidUpdateContextValuesEventEmitter.dispose();
+        this._inLeaperModeContext.dispose();
+        this._hasLineOfSightContext.dispose();
         this.decorationSyncTimer.clear();
         this.contentChangesWatcher.dispose();
         this.selectionChangesWatcher.dispose();

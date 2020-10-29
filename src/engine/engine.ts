@@ -69,7 +69,7 @@ export class Engine implements TestAPI {
             // Preserve the trackers of text editors that are still visible and clean up the rest.
             for (const [editor, tracker] of this.trackers.entries()) {
                 visibleSet.has(editor) ? newTrackers.set(editor, tracker) : tracker.dispose();
-                }
+            }
 
             // Assign trackers for text editors that are newly visible.
             for (const visibleTextEditor of visibleSet) {
@@ -89,28 +89,35 @@ export class Engine implements TestAPI {
         this.rebindActiveTracker();
     });
 
-    /**
-     * To broadcast the `leaper.hasLineOfSight` context of the active tracker to vscode.
-     */
-    private readonly hasLineOfSightContextBroadcaster = new ContextBroadcaster(
-        'leaper.hasLineOfSight',
-        () => this.activeTracker?.getHasLineOfSightContext() ?? false
-    );
 
     /**
      * To broadcast the `leaper.inLeaperMode` context of the active tracker to vscode.
      */
     private readonly inLeaperModeContextBroadcaster = new ContextBroadcaster(
         'leaper.inLeaperMode',
-        () => this.activeTracker?.getInLeaperModeContext() ?? false
+        () => this.activeTracker?.inLeaperModeContext.get() ?? false
     );
 
     /**
-     * Watcher that schedules for a broadcast when the keybinding context values of the active 
-     * tracker have been updated.
+     * Watcher that schedules for a broadcast when the `leaper.inLeaperMode` context of the active 
+     * tracker has been updated.
      */
-    private activeTrackerContextValuesUpdateWatcher: Disposable | undefined;
+    private activeInLeaperModeContextUpdateWatcher: Disposable | undefined;
 
+    /**
+     * To broadcast the `leaper.hasLineOfSight` context of the active tracker to vscode.
+     */
+    private readonly hasLineOfSightContextBroadcaster = new ContextBroadcaster(
+        'leaper.hasLineOfSight',
+        () => this.activeTracker?.hasLineOfSightContext.get() ?? false
+    );
+
+    /**
+     * Watcher that schedules for a broadcast when the `leaper.hasLineOfSight` context of the active 
+     * tracker has been updated.
+     */
+    private activeHasLineOfSightContextUpdateWatcher: Disposable | undefined;
+    
     public constructor() {
         
         const { visibleTextEditors } = window;
@@ -134,17 +141,18 @@ export class Engine implements TestAPI {
         // Point to the current active text editor's tracker.
         this.activeTracker = activeTextEditor ? this.trackers.get(activeTextEditor): undefined;
 
-        // Stop the previous watcher since it might be listening to a now non-active tracker.
-        this.activeTrackerContextValuesUpdateWatcher?.dispose();
+        // Stop the previous context watchers since they might be listening to a now inactive tracker.
+        this.activeInLeaperModeContextUpdateWatcher?.dispose();
+        this.activeHasLineOfSightContextUpdateWatcher?.dispose();
 
-        // Start watcher that broadcasts the active tracker's context values when they have changed.
-        this.activeTrackerContextValuesUpdateWatcher = this.activeTracker?.onDidUpdateContextValues(
-            () => {
-                this.hasLineOfSightContextBroadcaster.set();
-                this.inLeaperModeContextBroadcaster.set();
-            }
-        );
-
+        // Begin to watch the active tracker's context values.
+        this.activeInLeaperModeContextUpdateWatcher = this.activeTracker?.inLeaperModeContext.onDidUpdate(() => {
+            this.inLeaperModeContextBroadcaster.set();
+        });
+        this.activeHasLineOfSightContextUpdateWatcher = this.activeTracker?.hasLineOfSightContext.onDidUpdate(() => {
+            this.hasLineOfSightContextBroadcaster.set();
+        });
+            
         // Switch vscode's context to the active tracker's context.
         this.inLeaperModeContextBroadcaster.set();
         this.hasLineOfSightContextBroadcaster.set();
@@ -172,13 +180,14 @@ export class Engine implements TestAPI {
      */
     public dispose(): void {
         this.trackers.forEach((tracker) => tracker.dispose());  
-        this.activeTrackerContextValuesUpdateWatcher?.dispose();
-        this.hasLineOfSightContextBroadcaster.dispose();
-        this.inLeaperModeContextBroadcaster.dispose();
         this.leapCommand.dispose();
         this.escapeLeaperModeCommand.dispose();
-        this.visibleTextEditorsChangeWatcher.dispose();
         this.activeTextEditorChangeWatcher.dispose();
+        this.visibleTextEditorsChangeWatcher.dispose();
+        this.inLeaperModeContextBroadcaster.dispose();
+        this.activeInLeaperModeContextUpdateWatcher?.dispose();
+        this.hasLineOfSightContextBroadcaster.dispose();
+        this.activeHasLineOfSightContextUpdateWatcher?.dispose();
     }
 
 }
