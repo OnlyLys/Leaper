@@ -41,18 +41,10 @@ export class PrivateContext {
 
     /**
      * The cached value.
+     * 
+     * The `stale` flag determines if the context value requires recalculation.
      */
-    private cached: boolean;
-
-    /**
-     * Whether the cached value is stale.
-     */
-    private stale: boolean;
-
-    /**
-     * Callback used to calculate the latest value.
-     */
-    private calc: () => boolean;
+    private readonly cached: { stale: boolean, value: boolean };
 
     /**
      * @param init The initial value to give the context.
@@ -60,11 +52,9 @@ export class PrivateContext {
      */
     public constructor(
         init: boolean, 
-        calc: () => boolean
+        private calc: () => boolean
     ) {
-        this.cached   = init;
-        this.stale    = false;
-        this.calc     = calc;        
+        this.cached = { stale: false, value: init };
     }
 
     /**
@@ -73,7 +63,7 @@ export class PrivateContext {
      * This will cause a recalculation to occur when `get` is next called.
      */
     public markStale(): void {
-        this.stale = true;
+        this.cached.stale = true;
     }
 
     /**
@@ -82,22 +72,22 @@ export class PrivateContext {
      * A recalculation will occur if the cached value was marked as stale.
      */
     public get(): boolean {
-        if (this.stale) {
-            this.cached = this.calc();
-            this.stale  = false;
+        if (this.cached.stale) {
+            this.cached.value = this.calc();
+            this.cached.stale = false;
         }
-        return this.cached;
+        return this.cached.value;
     }
 
     /**
      * Set the value to `false`, and disable further recalculations.
      * 
-     * Further calls to `get` after this method is called will always yield `false`.
+     * Further calls to `get` after this will always yield `false`.
      */
     public dispose(): void {
-        this.calc   = () => false;
-        this.cached = false;
-        this.stale  = false;
+        this.calc         = () => false;
+        this.cached.value = false;
+        this.cached.stale = false;
     }
 
 }
