@@ -58,6 +58,13 @@ export class Engine implements TestAPI {
     );
 
     /**
+     * Watcher to make sure that this engine follows the active text editor.
+     */
+    private readonly activeTextEditorChangeWatcher = window.onDidChangeActiveTextEditor(() => {
+        this.rebindActiveTracker();
+    });
+
+    /**
      * Watcher that keeps track of the visible text editors.
      */
     private readonly visibleTextEditorsChangeWatcher = window.onDidChangeVisibleTextEditors(
@@ -81,13 +88,6 @@ export class Engine implements TestAPI {
             this.trackers = newTrackers;
         }
     )
-
-    /**
-     * Watcher to make sure that this engine follows the active text editor.
-     */
-    private readonly activeTextEditorChangeWatcher = window.onDidChangeActiveTextEditor(() => {
-        this.rebindActiveTracker();
-    });
 
     /**
      * To broadcast the `leaper.inLeaperMode` context of the active tracker to vscode.
