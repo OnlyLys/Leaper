@@ -103,6 +103,13 @@ export class Engine implements TestAPI {
      */
     private activeInLeaperModeContextUpdateWatcher: Disposable | undefined;
 
+    /** 
+     * See `TestAPI` for more info. 
+     */
+    public get MRBInLeaperModeContext(): boolean | undefined {
+        return this.inLeaperModeContextBroadcaster.prevBroadcasted;
+    }
+
     /**
      * To broadcast the `leaper.hasLineOfSight` context of the active tracker to vscode.
      */
@@ -116,6 +123,13 @@ export class Engine implements TestAPI {
      * tracker has been updated.
      */
     private activeHasLineOfSightContextUpdateWatcher: Disposable | undefined;
+
+    /** 
+     * See `TestAPI` for more info. 
+     */
+    public get MRBHasLineOfSightContext(): boolean | undefined {
+        return this.hasLineOfSightContextBroadcaster.prevBroadcasted;
+    }
     
     public constructor() {
         

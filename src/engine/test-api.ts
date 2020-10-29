@@ -5,6 +5,16 @@ import { Position } from 'vscode';
  */
 export interface TestAPI {
 
+    /**
+     * The most recently broadcasted value of the `leaper.inLeaperMode` keybinding context.
+     */
+    readonly MRBInLeaperModeContext: boolean | undefined;
+
+    /**
+     * The most recently broadcasted value of the `leaper.hasLineOfSight` keybinding context.
+     */
+    readonly MRBHasLineOfSightContext: boolean | undefined;
+
     /** 
      * Get a snapshot of all the pairs that are being tracked in the active text editor. 
      * 
