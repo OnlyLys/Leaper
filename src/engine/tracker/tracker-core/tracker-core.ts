@@ -47,11 +47,6 @@ interface Pair {
 export class TrackerCore {
 
     /**
-     * The configuration values that are in use.
-     */
-    private configuration: Configuration;
-
-    /**
      * The most recently seen cursors, sorted by increasing `anchor` positions.
      * 
      * Accompanying each cursor is an `unsortedIndex` which is the index of the cursor in the 
@@ -115,10 +110,9 @@ export class TrackerCore {
      * @param configuration The configuration values to use. 
      */
     public constructor(
-        cursors:       ReadonlyArray<Selection>,
-        configuration: Configuration
+        cursors: ReadonlyArray<Selection>,
+        private configuration: Configuration
     ) {
-        this.configuration     = configuration;
         this.prevSortedCursors = sortCursors(cursors);
         this.toUndecorate      = [];
         this.decorationsStale  = false;
