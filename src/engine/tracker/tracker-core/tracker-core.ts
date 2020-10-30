@@ -93,6 +93,15 @@ export class TrackerCore {
      */
     private clusters: Pair[][];
 
+    /**
+     * The number of pairs that are being tracked.
+     * 
+     * This number is at all times equivalent to the total number of `Pair`s in `this.clusters`. 
+     * Storing this number here means we do not have to iterate through `this.clusters` each time
+     * we want to know how many pairs are being tracked, therefore improving efficiency.
+     */
+    private pairCount: number;
+
     /** 
      * Pairs to undecorate during the next `syncDecorations` call.
      */
@@ -114,6 +123,7 @@ export class TrackerCore {
         private configuration: Configuration
     ) {
         this.prevSortedCursors = sortCursors(cursors);
+        this.pairCount         = 0;
         this.toUndecorate      = [];
         this.decorationsStale  = false;
 
@@ -180,6 +190,7 @@ export class TrackerCore {
                 // removed by the user. We know they have been removed because there are no 
                 // matching cursors for them in the latest sorted cursors array.
                 while (this.prevSortedCursors[prev]?.cursor.anchor.isBefore(cursor.anchor)) {
+                    this.pairCount -= this.clusters[prev].length;
                     this.toUndecorate.push(...this.clusters[prev++]);
                 }
 
@@ -206,6 +217,7 @@ export class TrackerCore {
             //
             // Therefore they must also be cursors that were removed. 
             while (prev < this.prevSortedCursors.length) {
+                this.pairCount -= this.clusters[prev].length;
                 this.toUndecorate.push(...this.clusters[prev++]);
             }
 
@@ -238,6 +250,7 @@ export class TrackerCore {
             // enclose the cursor.
             for (let i = cluster.length - 1; i >= 0; --i) {
                 if (anchor.isBeforeOrEqual(cluster[i].open) || anchor.isAfter(cluster[i].close)) {
+                    this.pairCount -= 1;
                     this.toUndecorate.push(cluster.pop() as Pair);
                 } else {
                     break;
@@ -324,6 +337,9 @@ export class TrackerCore {
                     pair.open = newOpen;
                     openDone.push(pair);
                 } else {
+
+                    // Pair deleted.
+                    this.pairCount -= 1;
                     this.toUndecorate.push(pair);
                 }
             }
@@ -434,11 +450,14 @@ export class TrackerCore {
                     pair.close = newClose;
                     doneReversed.push(pair);
                 } else {
+
+                    // Pair deleted.
+                    this.pairCount -= 1;
                     this.toUndecorate.push(pair);
                 }
             }
 
-            // Reverse `doneReversed` to get the finalized cluster (less the newly detected pair)
+            // Reverse `doneReversed` to get the finalized cluster (less the newly detected pair).
             const done = doneReversed.reverse();
 
             // --------------------------------
@@ -450,6 +469,7 @@ export class TrackerCore {
                 // We can append new pairs to the end of the finalized cluster because the new pair 
                 // (being closest to the cursor) is enclosed by all the other pairs in the cluster. 
                 done.push(newPair);
+                this.pairCount += 1;
                 this.decorationsStale = true;
             }
 
@@ -561,33 +581,27 @@ export class TrackerCore {
      * Whether there are currently any pairs being tracked.
      */
     public isEmpty(): boolean {
-        return this.clusters.every((cluster) => cluster.length === 0);
+        return this.pairCount < 1;
     }
 
     /** 
-     * Return `true` only if the following condition is satisfied:
+     * Return `true` only if the following conditions are satisfied:
      * 
-     *  For every cursor which has pairs, there is _line of sight_ from that cursor to its nearest 
-     *  pair.
+     *  1. There is at least one pair being tracked in the document.
+     *  2. All cursors must have empty selections.
+     *  3. For every cursor with pairs being tracked for it, there is _line of sight_ from it to its 
+     *     nearest pair. 
      * 
-     * A cursor has 'line of sight' to its nearest pair if:
+     * By 'line of sight' we mean that the text between the cursor's `anchor` position and the 
+     * closing side of its nearest tracked pair is empty or consists of only whitespace characters.
      * 
-     *  - The cursor's selection is empty.
-     *  - The text between the cursor's `anchor` position and the closing side of its nearest pair 
-     *    is empty or consists of only whitespace characters.
-     * 
-     * One can think of 'line of sight' as the condition required for us to execute a leap.
-     * 
-     * Note that it follows from the condition above that if a cursor has no pairs, then it still is 
-     * considered to have line of sight.
+     * One can think of the above conditions as what is required to execute a leap.
      * 
      * @param document The text document of the owning text editor.
      */
     public hasLineOfSight(document: TextDocument): boolean {
-        return this.clusters.every((cluster, i) => {
-            if (cluster.length === 0) {
-                return true;
-            } else if (this.prevSortedCursors[i].cursor.isEmpty) {
+        return this.pairCount >= 1 && this.clusters.every((cluster, i) => {
+            if (this.prevSortedCursors[i].cursor.isEmpty) {
                 const anchor  = this.prevSortedCursors[i].cursor.anchor;
                 const nearest = cluster[cluster.length - 1];
                 return !document.getText(new Range(anchor, nearest.close)).trim();
@@ -606,6 +620,7 @@ export class TrackerCore {
     public untrackPairs(): void {
         this.toUndecorate.push(...this.clusters.flat());
         this.clusters         = (new Array(this.clusters.length)).fill([]);
+        this.pairCount        = 0;
         this.decorationsStale = this.decorationsStale || this.toUndecorate.length > 0;
     }
 
