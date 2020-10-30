@@ -276,7 +276,7 @@ export class Executor {
     /**
      * Type an autoclosing pair into the document.
      * 
-     * Which kind of autoclosing pair is typed in is randomly determined. 
+     * Which kind of autoclosing pair is typed in is randomly picked between `{}`, `[]` and `()`. 
      */
     public async typePair(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
