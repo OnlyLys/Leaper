@@ -1,4 +1,4 @@
-import { Executor, TestCase, TestGroup } from '../utilities/framework';
+import { Executor, TestCase, TestGroup } from '../../utilities/framework';
 
 /**
  * Tests the effective `detectedPairs` configuration by asserting that:
