@@ -36,7 +36,7 @@ export class Tracker {
      */
     private readonly _inLeaperModeContext = new PrivateContextLazy(
         false, 
-        () => !this.core.isEmpty(),
+        () => !this.core.isEmpty,
     );
 
     /** 

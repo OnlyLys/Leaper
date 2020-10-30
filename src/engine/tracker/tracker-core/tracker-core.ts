@@ -580,7 +580,7 @@ export class TrackerCore {
     /**
      * Whether there are currently any pairs being tracked.
      */
-    public isEmpty(): boolean {
+    public get isEmpty(): boolean {
         return this.pairCount < 1;
     }
 
