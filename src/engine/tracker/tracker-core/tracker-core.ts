@@ -155,9 +155,9 @@ export class TrackerCore {
         // This step is only done when there is a change in the number of cursors and utilizes the 
         // following assumption: 
         // 
-        //   When there is a change in the number of cursors, the cursor add or remove operation is 
-        //   the only operation being done. Other cursors that were neither added nor removed remain 
-        //   at their previous positions. 
+        //  When there is a change in the number of cursors, the cursor add or remove operation is 
+        //  the only operation being done. Other cursors that were neither added nor removed remain 
+        //  at their previous positions. 
         //
         // In theory, a single selection change event can contain any combination of changes. For
         // example, it is possible for a single selection change event to change the cursor count,
@@ -174,10 +174,11 @@ export class TrackerCore {
             let prev = 0;
             const newClusters = sortedCursors.map(({ cursor }) => {
 
-                // Clean up all previous cursors that are positioned before `cursor`.
+                // Drop the clusters of previous cursors positioned before `cursor`.
                 //
-                // These previous cursors have been removed. We know this because there are no 
-                // matching cursors for them in the latest cursors array.
+                // We have to perform cleanup for these previous cursors because they have been 
+                // removed by the user. We know they have been removed because there are no 
+                // matching cursors for them in the latest sorted cursors array.
                 while (this.prevSortedCursors[prev]?.cursor.anchor.isBefore(cursor.anchor)) {
                     this.toUndecorate.push(...this.clusters[prev++]);
                 }
@@ -201,9 +202,9 @@ export class TrackerCore {
             });
     
             // Any cursors still remaining in `prevSortedCursors` have not matched with any cursors
-            // in the latest cursors array. 
+            // in the latest sorted cursors array. 
             //
-            // Therefore they must be cursors that were removed. 
+            // Therefore they must also be cursors that were removed. 
             while (prev < this.prevSortedCursors.length) {
                 this.toUndecorate.push(...this.clusters[prev++]);
             }
@@ -331,13 +332,15 @@ export class TrackerCore {
             // STEP 2 - Check if an autoclosing pair has been inserted. 
             // --------------------------------
 
-            // We store the new pair as a variable here instead of into `openDone` is that both 
-            // sides of this new pair has been finalized already.
-            let newPair: Pair | undefined = undefined;
-
             const cursor = this.prevSortedCursors[iCursor].cursor;
 
-            // One thing to note that there is a possibility of us adding pairs that shouldn't be 
+            // A new autoclosing pair that is detected within this step.
+            //
+            // Note that the position of this new pair (if detected) is already "finalized" and does 
+            // not require further shifting.
+            let newPair: Pair | undefined;
+
+            // One thing to note is that there is a possibility of us adding pairs that shouldn't be 
             // added here. For instance, this step wouldn't be able to tell the difference between a 
             // pasted `{}` and an autoclosed one, so both kinds of pairs get added to the finalized 
             // clutser. 
@@ -435,11 +438,17 @@ export class TrackerCore {
                 }
             }
 
+            // Reverse `doneReversed` to get the finalized cluster (less the newly detected pair)
             const done = doneReversed.reverse();
 
-            // We can append new pairs to the end of the finished array because the new pair (being 
-            // closest to the cursor) is enclosed by all the other pairs in the cluster. 
+            // --------------------------------
+            // STEP 4 - Store the newly detected pair (if there is one).
+            // --------------------------------
+
             if (newPair) {
+
+                // We can append new pairs to the end of the finalized cluster because the new pair 
+                // (being closest to the cursor) is enclosed by all the other pairs in the cluster. 
                 done.push(newPair);
                 this.decorationsStale = true;
             }
@@ -613,11 +622,11 @@ export class TrackerCore {
     /**
      * Terminate this instance by:
      * 
-     *   1. Untracking all pairs.
-     *   2. Immediately removing all decorations.
+     *  1. Untracking all pairs.
+     *  2. Immediately removing all decorations.
      * 
      * This method is the same as `untrackPairs` except that decorations are immediately removed,
-     * instead of requiring a subsequent `syncDecorations` call.
+     * which means that a subsequent `syncDecorations` call is not necessary.
      */
     public dispose(): void {
         this.untrackPairs();
