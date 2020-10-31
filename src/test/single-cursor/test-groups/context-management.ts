@@ -5,7 +5,7 @@ import { TestCase, TestGroup } from '../../utilities/framework';
  */
 const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
     name: 'Context Toggling for a Given Text Editor',
-    task: async (executor) => {
+    prelude: async (executor) => {
 
         // The provided text editor starts out empty (and therefore without any pairs) so we would 
         // expect this extension to have initially disabled both keybinding contexts.
@@ -13,6 +13,10 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         executor.assertMRBHasLineOfSightContext(false);
         executor.assertPairs([ { line: -1, sides: [] }]);
         executor.assertCursors([ [0, 0] ]);
+    },
+    task: async (executor) => {
+
+
 
         // Type in some text to simulate a user typing in code.
         //
