@@ -44,8 +44,7 @@ async function testDetectedPairs(
 
             // Check that the pair is being tracked (or not tracked, depending on `expect`).
             executor.assertPairs([ 
-                expect ? { line: cursor[0], sides: [ cursor[1], cursor[1] + 1 ] } 
-                       : { line: -1, sides: [] }
+                expect ? { line: cursor[0], sides: [ cursor[1], cursor[1] + 1 ] } : 'None'
             ]);
             executor.assertCursors([ [cursor[0], cursor[1] + 1] ]);
 
@@ -53,7 +52,7 @@ async function testDetectedPairs(
             await executor.undo();
 
             // Check that the inserted pair was removed.
-            executor.assertPairs([ { line: -1, sides: [] }]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ cursor ]);
         }
     }

@@ -11,7 +11,7 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // expect this extension to have initially disabled both keybinding contexts.
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
-        executor.assertPairs([ { line: -1, sides: [] }]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [0, 0] ]);
     },
     task: async (executor) => {
@@ -33,7 +33,7 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.typeText({ text: 'const ARR = ' });
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
-        executor.assertPairs([ { line: -1, sides: [] }]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [0, 12] ]);
 
         // Now type in a square bracket pair.
@@ -320,7 +320,7 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.leap();
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
-        executor.assertPairs([ { line: -1, sides: [] }]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [0, 32] ]);
     }
 });

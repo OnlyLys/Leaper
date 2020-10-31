@@ -172,10 +172,10 @@ export class Executor {
 
         // The expected pairs (including decorations) but in a more print friendly form.
         const expectedFull: PairFull[][] = expected.map((cluster) => {
-            const line = cluster.line;
-            if (line === -1) {
+            if (cluster === 'None') {
                 return [];
             } else {
+                const line    = cluster.line;
                 const openers = cluster.sides.slice(0, cluster.sides.length / 2);
                 const closers = cluster.sides.slice(cluster.sides.length / 2).reverse();
                 const pairs: PairFull[] = [...zip(openers, closers)].map(([opener, closer]) => 

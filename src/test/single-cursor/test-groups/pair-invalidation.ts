@@ -172,7 +172,7 @@ const TEST_CASES: TestCase[] = [
             // }                                                             ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'right' });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 62] ]);
         }
     }),
@@ -189,7 +189,7 @@ const TEST_CASES: TestCase[] = [
             // }                                                             ^(cursor position)
             // ```
             await executor.setCursors({ cursors: [ [1, 62] ] });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 62] ]);
         }
     }),
@@ -206,7 +206,7 @@ const TEST_CASES: TestCase[] = [
             // }                                                                                        ^(cursor position)
             // ```
             await executor.end();
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 89] ]);
         }
     }),
@@ -355,7 +355,7 @@ const TEST_CASES: TestCase[] = [
             // }              ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'left' });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 15] ]);
         }
     }),
@@ -372,7 +372,7 @@ const TEST_CASES: TestCase[] = [
             // }              ^(cursor position)
             // ```
             await executor.setCursors({ cursors: [ [1, 15] ] });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 15] ]);
         }
     }),
@@ -389,7 +389,7 @@ const TEST_CASES: TestCase[] = [
             // }   ^(cursor position)
             // ```
             await executor.home();
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 4] ]);
         }
     }),
@@ -407,7 +407,7 @@ const TEST_CASES: TestCase[] = [
             // }
             // ```
             await executor.moveCursors({ direction: 'up' });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [0, 13] ]);
         }
     }),
@@ -425,7 +425,7 @@ const TEST_CASES: TestCase[] = [
             //  ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'down' });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [2, 1] ]);
         }
     }),
@@ -517,7 +517,7 @@ const TEST_CASES: TestCase[] = [
                     { kind: 'replace', replace: { start: [1, 4], end: [1, 5] }, insert: 'rabbit' }
                 ]
             });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 26] ]);
         }
     }),
@@ -604,7 +604,7 @@ const TEST_CASES: TestCase[] = [
                     { kind: 'replace', replace: { start: [1, 17], end: [1, 64] }, insert: 'rabbit' }
                 ]
             });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 23] ]);
         }
     }),
@@ -690,7 +690,7 @@ const TEST_CASES: TestCase[] = [
             //
             // (Note that auto-indentation of Typescript applies).
             await executor.typeText({ text: '\n' });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [8, 16] ]);
         }
     }),
@@ -739,7 +739,7 @@ const TEST_CASES: TestCase[] = [
             await executor.insertSnippet({ 
                 snippet: new SnippetString('.reduce((${1:acc}, ${2:prev}) => {\n    $3\n}, ${4:init})$0') 
             });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ { anchor: [1, 71], active: [1, 74] } ]);
 
             // Make sure that the snippet still works by jumping to the second tabstop.
@@ -754,7 +754,7 @@ const TEST_CASES: TestCase[] = [
             // }                                                            
             // ```
             await executor.jumpToNextTabstop();
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ { anchor: [1, 76], active: [1, 80] } ]);
 
             // Make sure that the snippet still works by jumping to the third tabstop.
@@ -770,7 +770,7 @@ const TEST_CASES: TestCase[] = [
             // }                                                            
             // ```
             await executor.jumpToNextTabstop();
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [2, 8] ]);
 
             // Make sure that the snippet still works by jumping to the fourth tabstop.
@@ -785,7 +785,7 @@ const TEST_CASES: TestCase[] = [
             // }      |---^(cursor selection)
             // ```
             await executor.jumpToNextTabstop();
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ { anchor: [3, 7], active: [3, 11] } ]);
 
             // Make sure that the snippet still works by jumping to the final tabstop.
@@ -800,7 +800,7 @@ const TEST_CASES: TestCase[] = [
             // }           ^(cursor position)
             // ```
             await executor.jumpToNextTabstop();
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [3, 12] ]);
         }
     })

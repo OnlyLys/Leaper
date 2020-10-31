@@ -2,7 +2,7 @@
 //! against regressions since at one point this extension was not able track pairs once non-ASCII
 //! text was involved.
 
-import { CompactClusters } from '../../utilities/compact';
+import { CompactCluster } from '../../utilities/compact';
 import { range, sliceAdd, sliceSub } from '../../utilities/other';
 import { TestCase, TestGroup } from '../../utilities/framework';
 import { SnippetString } from 'vscode';
@@ -609,7 +609,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
     },
 
     task: async (executor) => {
-        const pairs: CompactClusters = [ { line: 1, sides: range(9, 29) } ];
+        const pairs: CompactCluster[] = [ { line: 1, sides: range(9, 29) } ];
 
         // 1. Insert 17 code units between the opening sides of the first and second pairs.
         //
@@ -1190,7 +1190,7 @@ const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
     },
 
     task: async (executor) => {
-        const pairs: CompactClusters = [ { line: 2, sides: range(4, 24) } ];
+        const pairs: CompactCluster[] = [ { line: 2, sides: range(4, 24) } ];
 
         // Autocomplete the variable name and check that all pairs are correctly tracked.
         //
@@ -1550,7 +1550,7 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                                                    ^(cursor position)
         // ```
         await executor.leap();
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [1, 133] ]);
 
         // Complete the line with a semicolon at the end.
@@ -1563,7 +1563,7 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                                                     ^(cursor position)
         // ```
         await executor.typeText({ text: ';' });
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [1, 134] ]);
     }
 });

@@ -12,7 +12,7 @@ const TEST_CASES: TestCase[] = [
         },
         task: async (executor) => {
             await executor.leap();
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [0, 2] ]);
         }
     }),
@@ -27,7 +27,7 @@ const TEST_CASES: TestCase[] = [
         },
         task: async (executor) => { 
             await executor.leap();
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [0, 7] ]);
         }
     }),
@@ -92,7 +92,7 @@ const TEST_CASES: TestCase[] = [
         prelude: async (executor) => { 
             await executor.typeText({ text: ALICE_TEXT_2  });
             await executor.setCursors({ cursors: [ [2, 11] ] });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [2, 11] ]);  
         },
         task: async (executor) => { 
@@ -100,7 +100,7 @@ const TEST_CASES: TestCase[] = [
             // Leap a bunch of times when there are no pairs and check that the cursor has not moved.
             for (let i = 0; i < 10; ++i) {
                 await executor.leap();
-                executor.assertPairs([ { line: -1, sides: [] } ]);
+                executor.assertPairs([ 'None' ]);
                 executor.assertCursors([ [2, 11] ]);
             }
 
@@ -111,13 +111,13 @@ const TEST_CASES: TestCase[] = [
 
             // Leap out of all of the inserted pairs.
             await executor.leap({ repetitions: 5 });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [2, 21] ]);
 
             // After leaping, check that future leap calls do not move the cursor at all.
             for (let i = 0; i < 10; ++i) {
                 await executor.leap();
-                executor.assertPairs([ { line: -1, sides: [] } ]);
+                executor.assertPairs([ 'None' ]);
                 executor.assertCursors([ [2, 21] ]);
             }
         }
@@ -193,7 +193,7 @@ const TEST_CASES: TestCase[] = [
 
             // Perform the final leap.
             await executor.leap();
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [2, 49] ]);
         }
     }),
@@ -241,7 +241,7 @@ const TEST_CASES: TestCase[] = [
             // Rapidly calling the 'Leap' command here should cause the cursor to leap out of all
             // the pairs, and do nothing else after that.
             await executor.leap({ delay: 0, repetitions: 50 });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [2, 37] ]);
         }
     })

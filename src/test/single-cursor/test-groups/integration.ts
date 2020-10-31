@@ -51,7 +51,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         //              ^(cursor position)
         // ```
         await executor.typeText({ text: 'function main' });
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [0, 13] ]);
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
@@ -75,7 +75,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         //                ^(cursor position)
         // ```
         await executor.leap();
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [0, 15] ]);
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
@@ -104,7 +104,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // ]   ^(cursor position)
             // ```
             await executor.typeText({ text: '\n' });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 4] ]);
             executor.assertMRBInLeaperModeContext(false);
             executor.assertMRBHasLineOfSightContext(false);
@@ -117,7 +117,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // function main() []
             // ```              ^(cursor position)
             await executor.undo();
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [0, 17] ]);
             executor.assertMRBInLeaperModeContext(false);
             executor.assertMRBHasLineOfSightContext(false);
@@ -131,7 +131,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             //                ^(cursor position)
             // ```
             await executor.backspace({ repetitions: 2 });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [0, 15] ]);
             executor.assertMRBInLeaperModeContext(false);
             executor.assertMRBHasLineOfSightContext(false);
@@ -156,7 +156,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }   ^(cursor position)
         // ```
         await executor.typeText({ text: '\n' });
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [1, 4] ]);
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
@@ -171,7 +171,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }            ^(cursor position)
             // ```
             await executor.typeText({ text: 'let arr: ' });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 13] ]);
             executor.assertMRBInLeaperModeContext(false);
             executor.assertMRBHasLineOfSightContext(false);
@@ -186,7 +186,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }      ^(cursor position)
             // ```
             await executor.setCursors({ cursors: [ [1, 7] ] });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 7] ]);
             executor.assertMRBInLeaperModeContext(false);
             executor.assertMRBHasLineOfSightContext(false);
@@ -201,7 +201,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }   ^(cursor position)
             // ```
             await executor.backspaceWord();
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 4] ]);
             executor.assertMRBInLeaperModeContext(false);
             executor.assertMRBHasLineOfSightContext(false);
@@ -216,7 +216,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }        ^(cursor position)
             // ```
             await executor.typeText({ text: 'const' });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 9] ]);
             executor.assertMRBInLeaperModeContext(false);
             executor.assertMRBHasLineOfSightContext(false);
@@ -231,7 +231,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }              ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'right', repetitions: 6 });
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 15] ]);
             executor.assertMRBInLeaperModeContext(false);
             executor.assertMRBHasLineOfSightContext(false);
@@ -660,7 +660,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                            ^(cursor position)
         // ``` 
         await executor.leap();
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [1, 77] ]);
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
@@ -716,7 +716,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                              ^(cursor position)
         // ``` 
         await executor.typeText({ text: ']' });
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [1, 79] ]);
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
@@ -742,7 +742,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                                ^(cursor position)
         // ``` 
         await executor.leap();
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [1, 81] ]);
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
@@ -755,7 +755,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                                         ^(cursor position)
         // ``` 
         await executor.typeText({ text: ' = getArr' });
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [1, 90] ]);
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
@@ -781,7 +781,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                                           ^(cursor position)
         // ``` 
         await executor.leap();
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [1, 92] ]);
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
@@ -795,7 +795,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }           ^(cursor position)
         // ``` 
         await executor.typeText({ text: ';\narr.flat' });
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [2, 12] ]);
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
@@ -823,7 +823,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }             ^(cursor position)
         // ``` 
         await executor.typeText({ text: ')' });
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [2, 14] ]);
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
@@ -837,7 +837,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                     ^(cursor position)
         // ``` 
         await executor.typeText({ text: '.forEach' });
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [2, 22] ]);
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
@@ -1295,7 +1295,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                              ^(cursor position)
         // ``` 
         await executor.leap();
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [2, 79] ]);
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
@@ -1309,7 +1309,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                               ^(cursor position)
         // ``` 
         await executor.typeText({ text: ';' });
-        executor.assertPairs([ { line: -1, sides: [] } ]);
+        executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [2, 80] ]);
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);

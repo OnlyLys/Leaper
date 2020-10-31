@@ -34,7 +34,7 @@ async function sharedPrelude(executor: Executor, decorateAll: boolean): Promise<
         ]
     }); 
     await executor.setCursors({ cursors: [ [7, 10] ] });
-    executor.assertPairs([ { line: -1, sides: [] } ]);
+    executor.assertPairs([ 'None' ]);
     executor.assertCursors([ [7, 10] ]); 
 
     // Then set the `leaper.decorateAll` configuration in the test workspace to `decorateAll`.

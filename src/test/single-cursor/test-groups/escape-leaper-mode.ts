@@ -28,7 +28,7 @@ const TEST_CASES: TestCase[] = [
 
             // This should remove all pairs from being tracked.
             await executor.escapeLeaperMode();
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [5, 90] ]);
         }
     }),
@@ -63,7 +63,7 @@ const TEST_CASES: TestCase[] = [
 
             // This should remove all pairs from being tracked and do nothing else.
             await executor.escapeLeaperMode({ delay: 0, repetitions: 50 }); 
-            executor.assertPairs([ { line: -1, sides: [] } ]);
+            executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [2, 28] ]);
         }
     })

@@ -31,8 +31,6 @@ export type CompactRange = { start: CompactPosition, end: CompactPosition };
  * Then we can represent the above in a more compact way:
  * 
  *     { line: 1, sides: [ 10, 14, 15, 16, 17, 20 ] }
- * 
- * Note that `line` is `-1` if a cursor has no pairs being tracked for it.
  */
 export type CompactCluster = { line: number, sides: number[] };
 
@@ -40,8 +38,10 @@ export type CompactCluster = { line: number, sides: number[] };
  * Compact way to represent pairs for all cursors.
  * 
  * The pairs for a cursor is `undefined` if there are no pairs being tracked for it. 
+ * 
+ * Specify 'None' if there are no pairs for a given cursor.
  */
-export type CompactClusters = CompactCluster[];
+export type CompactClusters = (CompactCluster | 'None')[];
 
 /**
  * Compact way to represent a cursor in the editor.
