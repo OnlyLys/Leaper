@@ -2125,8 +2125,12 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
     }
 });
 
-export const SINGLE_CURSOR_TRACKING_TEST_GROUP = new TestGroup({
-    name: 'Tracking',
+/**
+ * Test whether the position of pairs are correctly tracked following text insertions between or 
+ * before them that do not involve deleting them.
+ */
+export const SINGLE_CURSOR_PAIR_POSITION_TRACKING_TEST_GROUP = new TestGroup({
+    name: 'Pair Position Tracking',
     testCases: [
         TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE,
         SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE,
