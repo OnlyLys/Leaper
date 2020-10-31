@@ -5,6 +5,7 @@ import { SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP } from './test-grou
 import { SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP } from './test-groups/pair-invalidation';
 import { SINGLE_CURSOR_TRACKING_TEST_GROUP } from './test-groups/tracking';
 import { SINGLE_CURSOR_DECORATIONS_TEST_GROUP } from './test-groups/decorations';
+import { SINGLE_CURSOR_CONTEXT_TOGGLING_TEST_GROUP } from './test-groups/context-toggling';
 
 const TEST_CATEGORY = new TestCategory({
     name: 'Single Cursor Tests',
@@ -14,7 +15,8 @@ const TEST_CATEGORY = new TestCategory({
         SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP,
         SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP,
         SINGLE_CURSOR_TRACKING_TEST_GROUP,
-        SINGLE_CURSOR_DECORATIONS_TEST_GROUP
+        SINGLE_CURSOR_DECORATIONS_TEST_GROUP,
+        SINGLE_CURSOR_CONTEXT_TOGGLING_TEST_GROUP
     ]
 });
 
