@@ -34,6 +34,8 @@
 		"files.autoSave": "off",
 		"[plaintext]": {
 			"leaper.detectedPairs": []
-		}
+		},
+		// Reduce the overhead in the test instance by disabling git.
+		"git.enabled": false,
 	}
 }
