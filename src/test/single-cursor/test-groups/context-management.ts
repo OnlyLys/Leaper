@@ -1,17 +1,20 @@
 import { TestCase, TestGroup } from '../../utilities/framework';
 
-const WORKING_TEST_GROUP = new TestCase({
-    name: 'Working',
+/**
+ * Test whether the keybinding contexts are correctly toggled while using a given text editor.
+ */
+const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
+    name: 'Context Toggling for a Given Text Editor',
     task: async (executor) => {
 
-        // The text editor starts out without any pairs, so we would expect this extension to have
-        // initially disabled both keybinding contexts.
+        // The provided text editor starts out empty (and therefore without any pairs) so we would 
+        // expect this extension to have initially disabled both keybinding contexts.
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
         executor.assertPairs([ { line: -1, sides: [] }]);
         executor.assertCursors([ [0, 0] ]);
 
-        // Type in some text so simulate a normal user typing in code.
+        // Type in some text to simulate a user typing in code.
         //
         // Document state after:
         // 
@@ -319,16 +322,12 @@ const WORKING_TEST_GROUP = new TestCase({
 });
 
 /**
- * This test group tests whether the appropriate context values are being broadcasted in order to 
- * toggle keybindings.
- *
- * Note that the testing in this test group is restricted to one active text editor. This test group 
- * does not test the ability of the extension to switch between the keybinding contexts of different 
- * editors. That test is instead performed in the `SINGLE_CURSOR_FOCUS_SWITCHING_TEST_GROUP`.
+ * This test group tests whether the keybinding context values are being appropriately managed for
+ * single cursor situations.
  */
-export const SINGLE_CURSOR_CONTEXT_TOGGLING_TEST_GROUP = new TestGroup({
-    name: 'Context Toggling',
+export const SINGLE_CURSOR_CONTEXT_MANAGEMENT_TEST_GROUP = new TestGroup({
+    name: 'Context Management',
     testCases: [
-        WORKING_TEST_GROUP
+        CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE
     ]
 });
