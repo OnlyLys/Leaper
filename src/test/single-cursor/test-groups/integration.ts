@@ -35,11 +35,14 @@ import { TestCase, TestGroup } from '../../utilities/framework';
  */
 const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
     name: 'Real User Simulation 1',
-    task: async (executor) => {
+    prelude: async (executor) => {
 
-        // Since the document is empty, we expect both keybinding contexts to be initially disabled.
+        // Since the provided text document is empty, we expect both keybinding contexts to be 
+        // initially disabled, since there are clearly no pairs being tracked for it.
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
+    },
+    task: async (executor) => {
 
         // Document state after:
         // 
