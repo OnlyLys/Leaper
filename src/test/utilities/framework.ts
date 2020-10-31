@@ -138,7 +138,7 @@ export class Executor {
     }
 
     /**
-     * Assert the position of pairs being tracked.
+     * Assert the position of pairs being tracked within the active text editor.
      * 
      * # Decorations
      * 
