@@ -807,7 +807,7 @@ const TEST_CASES: TestCase[] = [
 ];
 
 /**
- * This test group tests pair invalidation due to:
+ * Test pair invalidation due to:
  * 
  *  1. Cursor being moved out of them (also known as 'cursor escape' or 'cursor exit').
  *  2. Multi-line text being inserted between them.
