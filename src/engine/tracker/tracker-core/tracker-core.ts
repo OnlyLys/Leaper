@@ -1,4 +1,5 @@
 import { Range, Position, Selection, TextEditorDecorationType, TextDocument, TextDocumentChangeEvent, TextEditorSelectionChangeEvent, window, TextEditor } from 'vscode';
+import { Snapshot } from '../../test-api';
 import { Configuration } from '../configuration';
 import { ContentChangeStack } from './content-change-stack';
 
@@ -660,7 +661,7 @@ export class TrackerCore {
      * The returned array is parallel to the cursors in the most recent `syncToSelectionChanges` 
      * call.
      */
-    public snapshot(): { open: Position, close: Position, isDecorated: boolean }[][] {
+    public snapshot(): Snapshot {
         const snapshot = Array(this.clusters.length).fill(undefined);
         for (const [i, cluster] of this.clusters.entries()) {
             snapshot[this.prevSortedCursors[i].unsortedIndex] = cluster.map((pair) => {

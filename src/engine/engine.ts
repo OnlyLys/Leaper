@@ -1,7 +1,7 @@
 //! The following module defines the 'starting point' class of the extension.
 
-import { commands, Disposable, Position, TextEditor, window } from 'vscode';
-import { TestAPI } from './test-api';
+import { commands, Disposable, TextEditor, ViewColumn, window } from 'vscode';
+import { Snapshot, TestAPI } from './test-api';
 import { ContextBroadcaster } from './context-broadcaster';
 import { Tracker } from './tracker/tracker';
 
@@ -172,8 +172,14 @@ export class Engine implements TestAPI {
     /**
      * See `TestAPI` for more info.
      */
-    public activeSnapshot(): { open: Position, close: Position, isDecorated: boolean }[][] {
-        return this.activeTracker?.snapshot() ?? [];
+    public snapshots(): Map<ViewColumn, Snapshot> {
+        const map = new Map<ViewColumn, Snapshot>();
+        for (const [visibleTextEditor, tracker] of this.trackers) {
+            if (visibleTextEditor.viewColumn !== undefined) {
+                map.set(visibleTextEditor.viewColumn, tracker.snapshot());
+            }
+        }
+        return map;
     }
 
     /**

@@ -1,4 +1,4 @@
-import { Position } from 'vscode';
+import { Position, ViewColumn } from 'vscode';
 
 /**
  * The parts of the extension's engine exposed to tests.
@@ -16,14 +16,22 @@ export interface TestAPI {
     readonly MRBHasLineOfSightContext: boolean | undefined;
 
     /** 
-     * Get a snapshot of all the pairs that are being tracked in the active text editor. 
+     * Get a snapshot of all the pairs that are being tracked for each visible text editor.
      * 
-     * The return value is an array of subarrays, where each subarray contains the pairs belonging 
-     * to each cursor. The top level array is parallel to the array of cursors in the active text
-     * editor (i.e. `activeTextEditor.selections`).
-     * 
-     * The return value can be mutated without affecting the extension's state.
+     * The return value is a hash map, mapping the view column of each visible text editor to a
+     * snapshot of all the pairs being tracked for it.
      */
-    activeSnapshot(): { open: Position, close: Position, isDecorated: boolean }[][];
+    snapshots(): Map<ViewColumn, Snapshot>;
     
 }
+
+/** 
+ * Each snapshot of a visible text editor is an array of subarrays, where each subarray (called a 
+ * _cluster_) contains the pairs belonging to a cursor. 
+ * 
+ * The clusters in a snapshot are ordered parallel to the array of cursors (obtained through 
+ * `TextEditor.selections`) of its corresponding text editor. 
+ * 
+ * Snapshots can be mutated without affecting the extension's state.
+ */
+export type Snapshot = { open: Position, close: Position, isDecorated: boolean }[][];

@@ -1,4 +1,5 @@
-import { TextEditor, Selection, window, Position, workspace } from 'vscode';
+import { TextEditor, Selection, window, workspace } from 'vscode';
+import { Snapshot } from '../test-api';
 import { Configuration } from './configuration';
 import { ImmediateReusable } from './immediate-reusable';
 import { PrivateContext } from './private-context/private-context';
@@ -218,7 +219,7 @@ export class Tracker {
      * 
      * The returned snapshot can be mutated without affecting the internal state.
      */
-    public snapshot(): { open: Position, close: Position, isDecorated: boolean }[][] {
+    public snapshot(): Snapshot {
         return this.core.snapshot();
     }
 
