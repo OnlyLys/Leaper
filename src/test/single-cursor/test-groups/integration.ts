@@ -185,7 +185,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             //     let arr: 
             // }      ^(cursor position)
             // ```
-            await executor.setCursors({ cursors: [ [1, 7] ] });
+            await executor.setCursors({ to: [ [1, 7] ] });
             executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 7] ]);
             executor.assertMRBInLeaperModeContext(false);
@@ -1166,7 +1166,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         //     arr.flat().forEach((elem) => console.log(`{ t: ${elem.t}}`))
         // }                                                           ^(cursor position)
         // ``` 
-        await executor.setCursors({ cursors: [ [2, 60] ] });
+        await executor.setCursors({ to: [ [2, 60] ] });
         executor.assertPairs([ { line: 2, sides: [22, 45, 46, 60, 61, 63] } ]);
         executor.assertCursors([ [2, 60] ]);
         executor.assertMRBInLeaperModeContext(true);

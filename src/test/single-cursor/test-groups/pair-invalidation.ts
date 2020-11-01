@@ -15,13 +15,13 @@ const SHARED_PRELUDE = async (executor: Executor) => {
     await executor.editText({
         edits: [
             {
-                kind:     'insert',
-                position: [0, 0],
-                text:     'function () {\n    ; // Log object to console.\n}'
+                kind: 'insert',
+                at:   [0, 0],
+                text: 'function () {\n    ; // Log object to console.\n}'
             }
         ]
     });
-    await executor.setCursors({ cursors: [[1, 4]] });
+    await executor.setCursors({ to: [[1, 4]] });
     await executor.typeText({ text: 'console.log({  ' });
     await executor.moveCursors({ direction: 'left', });
     await executor.typeText({ text: 'obj: {  ' });
@@ -188,7 +188,7 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }                                                             ^(cursor position)
             // ```
-            await executor.setCursors({ cursors: [ [1, 62] ] });
+            await executor.setCursors({ to: [ [1, 62] ] });
             executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 62] ]);
         }
@@ -371,7 +371,7 @@ const TEST_CASES: TestCase[] = [
             //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
             // }              ^(cursor position)
             // ```
-            await executor.setCursors({ cursors: [ [1, 15] ] });
+            await executor.setCursors({ to: [ [1, 15] ] });
             executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [1, 15] ]);
         }
@@ -463,11 +463,7 @@ const TEST_CASES: TestCase[] = [
             // ```
             await executor.editText({
                 edits: [
-                    {
-                        kind:    'replace',
-                        replace: { start: [1, 23], end: [1, 32] }, 
-                        insert:  'cheesecake' 
-                    }
+                    { kind: 'replace', range: { start: [1, 23], end: [1, 32] }, with: 'cheesecake' }
                 ]
             });
             executor.assertPairs([ { line: 1, sides: [15, 16, 33, 54, 60, 61] } ]);
@@ -514,7 +510,7 @@ const TEST_CASES: TestCase[] = [
             // ```
             await executor.editText({ 
                 edits: [
-                    { kind: 'replace', replace: { start: [1, 4], end: [1, 5] }, insert: 'rabbit' }
+                    { kind: 'replace', range: { start: [1, 4], end: [1, 5] }, with: 'rabbit' }
                 ]
             });
             executor.assertPairs([ 'None' ]);
@@ -550,11 +546,7 @@ const TEST_CASES: TestCase[] = [
             // ```
             await executor.editText({
                 edits: [
-                    {
-                        kind:    'replace',
-                        replace: { start: [1, 55], end: [1, 59] }, 
-                        insert:  'cheesecake' 
-                    }
+                    { kind: 'replace', range: { start: [1, 55], end: [1, 59] }, with: 'cheesecake' }
                 ]
             });
             executor.assertPairs([ { line: 1, sides: [15, 16, 32, 53, 65, 66] } ]);
@@ -601,7 +593,7 @@ const TEST_CASES: TestCase[] = [
             // ```
             await executor.editText({
                 edits: [
-                    { kind: 'replace', replace: { start: [1, 17], end: [1, 64] }, insert: 'rabbit' }
+                    { kind: 'replace', range: { start: [1, 17], end: [1, 64] }, with: 'rabbit' }
                 ]
             });
             executor.assertPairs([ 'None' ]);
@@ -629,11 +621,7 @@ const TEST_CASES: TestCase[] = [
             // ```
             await executor.editText({
                 edits: [
-                    {
-                        kind:     'insert',
-                        position: [1, 16], 
-                        text:     '\n        '
-                    }
+                    { kind: 'insert', at: [1, 16], text: '\n        ' }
                 ]
             });
             executor.assertPairs([ { line: 2, sides: [8, 15, 22, 24, 38, 44, 46, 48, 50, 52] } ]);
@@ -657,9 +645,9 @@ const TEST_CASES: TestCase[] = [
             await executor.editText({
                 edits: [
                     {
-                        kind:    'replace',
-                        replace: { start: [2, 17], end: [2, 21] }, 
-                        insert:  '\n'
+                        kind:  'replace',
+                        range: { start: [2, 17], end: [2, 21] }, 
+                        with:  '\n'
                             + '            Mary\n'
                             + '            had\n'
                             + '            a\n'

@@ -38,10 +38,10 @@ const TEST_CASES: TestCase[] = [
             // Insert pairs between some text to simulate a typical usage scenario.
             await executor.editText({
                 edits: [
-                    { kind: 'insert', position: [0, 0], text: ALICE_TEXT_1 + '\n\n' + ALICE_TEXT_2 }
+                    { kind: 'insert', at: [0, 0], text: ALICE_TEXT_1 + '\n\n' + ALICE_TEXT_2 }
                 ]
             });
-            await executor.setCursors({ cursors: [ [6, 71] ] });
+            await executor.setCursors({ to: [ [6, 71] ] });
             await executor.typePair({ repetitions: 10 });
             executor.assertPairs([ { line: 6, sides: range(71, 91) } ]);
             executor.assertCursors([ [6, 81] ]);
@@ -91,7 +91,7 @@ const TEST_CASES: TestCase[] = [
         editorLanguageId: 'markdown',
         prelude: async (executor) => { 
             await executor.typeText({ text: ALICE_TEXT_2  });
-            await executor.setCursors({ cursors: [ [2, 11] ] });
+            await executor.setCursors({ to: [ [2, 11] ] });
             executor.assertPairs([ 'None' ]);
             executor.assertCursors([ [2, 11] ]);  
         },
@@ -129,7 +129,7 @@ const TEST_CASES: TestCase[] = [
 
             // Insert some random text to simulate a typical usage scenario.
             await executor.typeText({ text: ALICE_TEXT_2 });
-            await executor.setCursors({ cursors: [ [2, 11] ] });
+            await executor.setCursors({ to: [ [2, 11] ] });
 
             // Insert `{ { Hello { Markdown } is } Awesome }` into the text.
             await executor.typeText({ text: ' {  Awesome ' });

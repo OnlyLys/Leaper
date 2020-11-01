@@ -47,7 +47,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         // }
         // ```
         await executor.editText({
-            edits: [ { kind: 'insert', position: [1, 4], text: 'const x = ' } ]
+            edits: [ 
+                { kind: 'insert', at: [1, 4], text: 'const x = ' } 
+            ]
         });
         executor.assertPairs([ { line: 1, sides: range(14, 34) } ]);
         executor.assertCursors([ [1, 24] ]);
@@ -66,9 +68,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 { 
-                    kind:     'insert',
-                    position: [1, 14],
-                    text:     `'Hello 😃';\n    let y = 10.1;\n    const variable = ` 
+                    kind: 'insert',
+                    at:   [1, 14],
+                    text: `'Hello 😃';\n    let y = 10.1;\n    const variable = ` 
                 }
             ]
         });
@@ -126,9 +128,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 {
-                    kind:    'replace',
-                    replace: { start: [2, 8], end: [2, 9] }, 
-                    insert:  'reallyLongVariableName' 
+                    kind:  'replace',
+                    range: { start: [2, 8], end: [2, 9] }, 
+                    with:  'reallyLongVariableName' 
                 }
             ]
         });
@@ -155,9 +157,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 {
-                    kind:    'replace',
-                    replace: { start: [2, 4], end: [2, 33] }, 
-                    insert:  'const s = `' + ALICE_TEXT_1 + '`;\n    const a = '
+                    kind:  'replace',
+                    range: { start: [2, 4], end: [2, 33] }, 
+                    with:  'const s = `' + ALICE_TEXT_1 + '`;\n    const a = '
                 }
             ]
         });
@@ -178,9 +180,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 {
-                    kind:    'replace',
-                    replace: { start: [2, 14], end: [9, 13] }, 
-                    insert:  `{ first: 'Typescript 😎', second:`
+                    kind:  'replace',
+                    range: { start: [2, 14], end: [9, 13] }, 
+                    with:  `{ first: 'Typescript 😎', second:`
                 }
             ]
         });
@@ -204,9 +206,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 {
-                    kind:    'replace',
-                    replace: { start: [1, 14], end: [2, 48] }, 
-                    insert:  `[\n`
+                    kind:  'replace',
+                    range: { start: [1, 14], end: [2, 48] }, 
+                    with:  `[\n`
                     + `        'woah',\n`
                     + `        'dude'\n`
                     + `    ];\n`
@@ -233,9 +235,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 {
-                    kind:    'insert',
-                    position: [3, 13], 
-                    text:     ' 🤯🤯🤯🤯🤯🤯🤯🤯🤯🤯' 
+                    kind: 'insert',
+                    at:   [3, 13], 
+                    text: ' 🤯🤯🤯🤯🤯🤯🤯🤯🤯🤯' 
                 }
             ]
         });
@@ -265,9 +267,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 {
-                    kind:     'insert',
-                    position: [3, 35], 
-                    text:     ',\n'
+                    kind: 'insert',
+                    at:   [3, 35], 
+                    text: ',\n'
                     + `        'In those days',\n`
                     + `        'in those far remote days',\n`
                     + `        'in those nights',\n`
@@ -356,7 +358,7 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({ 
             edits: [
-                { kind: 'replace', replace: { start: [0, 9], end: [0, 13] }, insert: 'primary' }
+                { kind: 'replace', range: { start: [0, 9], end: [0, 13] }, with: 'primary' }
             ]
         });
         executor.assertPairs([ { line: 10, sides: range(28, 48) } ]);
@@ -385,9 +387,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 {
-                    kind:    'replace',
-                    replace: { start: [1, 10], end: [1, 11] }, 
-                    insert:  'num = 1.4561;\n' 
+                    kind:  'replace',
+                    range: { start: [1, 10], end: [1, 11] }, 
+                    with:  'num = 1.4561;\n' 
                     + '    \n'
                     + '    const instructionsOfShuruppak'
                 }
@@ -411,9 +413,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 { 
-                    kind:    'replace',
-                    replace: { start: [3, 37], end: [11, 4] }, 
-                    insert:  `'Fate is a wet bank; it can make one slip'`
+                    kind:  'replace',
+                    range: { start: [3, 37], end: [11, 4] }, 
+                    with:  `'Fate is a wet bank; it can make one slip'`
                 }
             ]
         });
@@ -437,9 +439,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 { 
-                    kind:    'replace',
-                    replace: { start: [0, 0], end: [2, 4] },
-                    insert:  '() => {\n'
+                    kind:  'replace',
+                    range: { start: [0, 0], end: [2, 4] },
+                    with:  '() => {\n'
                         + '    function hey() {\n'
                         + `        console.log('🙂 + 🕶 = 😎');\n`
                         + '    }\n'
@@ -477,32 +479,32 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 {
-                    kind:     'insert',
-                    position: [6, 4],
-                    text:     'hey();\n    '
+                    kind: 'insert',
+                    at:   [6, 4],
+                    text: 'hey();\n    '
                 },
                 { 
-                    kind:    'replace',
-                    replace: { start: [5, 37], end: [5, 79] },
-                    insert:  '\n'
+                    kind:  'replace',
+                    range: { start: [5, 37], end: [5, 79] },
+                    with:  '\n'
                     + `        'The night: it can hide both good and evil.',\n`
                     + `        'To speak arrogantly is like an abscess: a herb that makes the stomach sick.',\n`
                     + `        'A loving heart maintains a family; a hateful heart destroys a family.'\n`
                     + '    '
                 },
                 { 
-                    kind:    'replace', 
-                    replace: { start: [5, 10], end: [5, 25] }, 
-                    insert:  's' 
+                    kind:  'replace', 
+                    range: { start: [5, 10], end: [5, 25] }, 
+                    with:  's' 
                 },
                 { 
                     kind:  'delete',  
                     range: { start: [4, 4], end: [4, 10] }             
                 },
                 {   
-                    kind:     'insert',  
-                    position: [3, 4], 
-                    text:     `    console.log('🧐🧐🧐');\n` 
+                    kind: 'insert',  
+                    at:   [3, 4], 
+                    text: `    console.log('🧐🧐🧐');\n` 
                     + '        function theAnswer(): number {\n'
                     + '            return 42 + 42 - 42;\n'
                     + '        }\n'
@@ -538,24 +540,24 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 {
-                    kind:     'insert',
-                    position: [16, 16],
-                    text:     'args'
+                    kind: 'insert',
+                    at:   [16, 16],
+                    text: 'args'
                 },
                 {
-                    kind:     'insert',
-                    position: [16, 15],
-                    text:     'async '
+                    kind: 'insert',
+                    at:   [16, 15],
+                    text: 'async '
                 },
                 { 
-                    kind:    'replace',
-                    replace: { start: [15, 4], end: [16, 12] },
-                    insert:  'let callback'
+                    kind:  'replace',
+                    range: { start: [15, 4], end: [16, 12] },
+                    with:  'let callback'
                 },
                 {
-                    kind:     'insert',
-                    position: [3, 27],
-                    text:     '😳😳😳'
+                    kind: 'insert',
+                    at:   [3, 27],
+                    text: '😳😳😳'
                 },
                 {
                     kind:  'delete',
@@ -566,8 +568,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                     range: { start: [10, 23], end: [13, 8] }
                 },
                 {
-                    kind:     'insert',
-                    position: [9, 4],
+                    kind: 'insert',
+                    at:   [9, 4],
                     text: '(() => {\n'
                     + '        console.log(hey());\n'
                     + '    })();'
@@ -626,7 +628,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({
             edits: [
-                { kind: 'insert', position: [1, 10], text: '❤🧡💛💚💙💜🤎🖤🤍' }
+                { kind: 'insert', at: [1, 10], text: '❤🧡💛💚💙💜🤎🖤🤍' }
             ]
         });
         sliceAdd(pairs[0].sides, 1, 20, 17);
@@ -648,7 +650,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({
             edits: [
-                { kind: 'insert', position: [1, 42], text: 'H᭭a᭰p⃠p᭬ỳ֑' }
+                { kind: 'insert', at: [1, 42], text: 'H᭭a᭰p⃠p᭬ỳ֑' }
             ]
         });
         sliceAdd(pairs[0].sides, 16, 20, 11);
@@ -706,7 +708,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({
             edits: [
-                { kind: 'insert', position: [1, 66], text: '😮😣😖🤯' }
+                { kind: 'insert', at: [1, 66], text: '😮😣😖🤯' }
             ]
         });
         sliceAdd(pairs[0].sides, 10, 20, 8);
@@ -746,7 +748,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({
             edits: [
-                { kind: 'insert', position: [1, 33], text: 'Ice Cream 🍦' }
+                { kind: 'insert', at: [1, 33], text: 'Ice Cream 🍦' }
             ]
         });
         sliceAdd(pairs[0].sides, 7, 20, 12);
@@ -768,7 +770,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({
             edits: [
-                { kind: 'insert', position: [1, 84], text: '🙏🙏🙏🙏🙏' }
+                { kind: 'insert', at: [1, 84], text: '🙏🙏🙏🙏🙏' }
             ]
         });
         sliceAdd(pairs[0].sides, 12, 20, 10);
@@ -812,7 +814,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({
             edits: [
-                { kind: 'insert', position: [1, 74], text: '🥰😍🤫🤓' }
+                { kind: 'insert', at: [1, 74], text: '🥰😍🤫🤓' }
             ]
         });
         sliceAdd(pairs[0].sides, 11, 20, 8);
@@ -834,7 +836,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({
             edits: [
-                { kind: 'insert', position: [1, 38], text: 'Bubble Tea 🧋' }
+                { kind: 'insert', at: [1, 38], text: 'Bubble Tea 🧋' }
             ]
         });
         sliceAdd(pairs[0].sides, 9, 20, 13);
@@ -953,7 +955,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({
             edits: [
-                { kind: 'insert', position: [1, 103], text: 'Chicken 🍗' }
+                { kind: 'insert', at: [1, 103], text: 'Chicken 🍗' }
             ]
         });
         sliceAdd(pairs[0].sides, 17, 20, 10);
@@ -975,7 +977,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({
             edits: [
-                { kind: 'insert', position: [1, 28], text: 'Popcorn 🍿' }
+                { kind: 'insert', at: [1, 28], text: 'Popcorn 🍿' }
             ]
         });
         sliceAdd(pairs[0].sides, 2, 20, 10);
@@ -998,7 +1000,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({
             edits: [
-                { kind: 'replace', replace: { start: [1, 15], end: [1, 23] }, insert: '🫀' }
+                { kind: 'replace', range: { start: [1, 15], end: [1, 23] }, with: '🫀' }
             ]
         });
         sliceSub(pairs[0].sides, 1, 20, 6);
@@ -1082,33 +1084,33 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
                     range: { start: [1, 78], end: [1, 86] }                  
                 }, 
                 { 
-                    kind:    'replace', 
-                    replace: { start: [1, 74], end: [1, 77] }, 
-                    insert:  '采采芣苡、薄言采之。采采芣苡、薄言有之。' 
+                    kind:  'replace', 
+                    range: { start: [1, 74], end: [1, 77] }, 
+                    with:  '采采芣苡、薄言采之。采采芣苡、薄言有之。' 
                 },
                 {
                     kind:  'delete',
                     range: { start: [1, 59], end: [1, 74] },
                 },
                 { 
-                    kind:    'replace',
-                    replace: { start: [1, 46], end: [1, 48] },
-                    insert:  '☕☕☕',
+                    kind:  'replace',
+                    range: { start: [1, 46], end: [1, 48] },
+                    with:  '☕☕☕',
                 },
                 { 
-                    kind:     'insert',
-                    position: [1, 15],
-                    text:     '💚💙💜💝'
+                    kind: 'insert',
+                    at:   [1, 15],
+                    text: '💚💙💜💝'
                 },
                 {
-                    kind:    'replace',
-                    replace: { start: [1, 4], end: [1, 9] },
-                    insert:  '-bleh'
+                    kind:  'replace',
+                    range: { start: [1, 4], end: [1, 9] },
+                    with:  '-bleh'
                 },
                 { 
-                    kind:     'insert',
-                    position: [1, 0],
-                    text:     'blah-bleh-blah-bleh-'
+                    kind: 'insert',
+                    at:   [1, 0],
+                    text: 'blah-bleh-blah-bleh-'
                 }
             ]
         });
@@ -1174,16 +1176,16 @@ const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 { 
-                    kind:     'insert',
-                    position: [0, 0], 
-                    text:     'function main(){\n'
+                    kind: 'insert',
+                    at:   [0, 0], 
+                    text: 'function main(){\n'
                     + '    const reallyLongVariableName = 10;\n'
                     + '    \n'
                     + '}'
                 }
             ]
         });
-        await executor.setCursors({ cursors: [ [2, 4] ] });
+        await executor.setCursors({ to: [ [2, 4] ] });
         await executor.typePair({ repetitions: 10 });
         executor.assertPairs([ { line: 2, sides: range(4, 24) } ]);
         executor.assertCursors([ [2, 14] ]);
@@ -1218,7 +1220,7 @@ const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
         //     [[[[[[[[[[reallyLongVariableName reallyLongVariableName]]]]]]]]]]
         // }
         // ```
-        await executor.setCursors({ cursors: [ [2, 14] ] });
+        await executor.setCursors({ to: [ [2, 14] ] });
         await executor.typeText({ text: ' ' });
         await executor.moveCursors({ direction: 'left' });
         await executor.typeText({ text: 'really' });
@@ -1248,7 +1250,7 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
     // ```
     prelude: async (executor) => {
         await executor.typeText({ text: 'function main() {\nconst x = ' });
-        await executor.setCursors({ cursors: [ [1, 14] ] });
+        await executor.setCursors({ to: [ [1, 14] ] });
         await executor.typeText({ text: 'someFn({ outer: { inner: ' });
         executor.assertPairs([ { line: 1, sides: [20, 21, 30, 39, 40, 41] } ]);
         executor.assertCursors([ [1, 39] ]);
@@ -1616,7 +1618,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({ 
             edits: [
-                { kind: 'insert', position: [1, 24], text: ' Goodbye World 🌍! ' }
+                { kind: 'insert', at: [1, 24], text: ' Goodbye World 🌍! ' }
             ]
         });
         check();
@@ -1638,7 +1640,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({ 
             edits: [
-                { kind: 'insert', position: [1, 43], text: ALICE_TEXT_1 }
+                { kind: 'insert', at: [1, 43], text: ALICE_TEXT_1 }
             ]
         });
         check();
@@ -1701,7 +1703,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({ 
             edits: [
-                { kind: 'replace', replace: { start: [1, 25], end: [1, 32] }, insert: 'Hello' }
+                { kind: 'replace', range: { start: [1, 25], end: [1, 32] }, with: 'Hello' }
             ]
         });
         check();
@@ -1727,7 +1729,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // ``` 
         await executor.editText({ 
             edits: [
-                { kind: 'replace', replace: { start: [1, 41], end: [1, 46] }, insert: LOREM_IPSUM_1 }
+                { kind: 'replace', range: { start: [1, 41], end: [1, 46] }, with: LOREM_IPSUM_1 }
             ]
         });
         check();
@@ -1748,7 +1750,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // ``` 
         await executor.editText({ 
             edits: [
-                { kind: 'replace', replace: { start: [1, 41], end: [7, 81] }, insert: 'Cat 😺!' }
+                { kind: 'replace', range: { start: [1, 41], end: [7, 81] }, with: 'Cat 😺!' }
             ]
         });
         check();
@@ -1772,7 +1774,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({ 
             edits: [
-                { kind: 'replace', replace: { start: [1, 41], end: [5, 89] }, insert: ALICE_TEXT_2 }
+                { kind: 'replace', range: { start: [1, 41], end: [5, 89] }, with: ALICE_TEXT_2 }
             ]
         });
         check();
@@ -1795,7 +1797,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({ 
             edits: [
-                { kind: 'insert', position: [3, 37], text: '😤 hmph 😤 ' }
+                { kind: 'insert', at: [3, 37], text: '😤 hmph 😤 ' }
             ]
         });
         check();
@@ -1826,7 +1828,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({ 
             edits: [
-                { kind: 'insert', position: [8, 16], text: '\n\n' + ALICE_TEXT_1 }
+                { kind: 'insert', at: [8, 16], text: '\n\n' + ALICE_TEXT_1 }
             ]
         });
         check();
@@ -1912,9 +1914,9 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({ 
             edits: [
                 { 
-                    kind:    'replace', 
-                    replace: { start: [10, 23], end: [10, 61] }, 
-                    insert:  '🥳🥳🥳🥳🥳🥳🥳🥳🥳🥳' 
+                    kind:  'replace', 
+                    range: { start: [10, 23], end: [10, 61] }, 
+                    with:  '🥳🥳🥳🥳🥳🥳🥳🥳🥳🥳' 
                 }
             ]
         });
@@ -1950,9 +1952,9 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 { 
-                    kind:    'replace', 
-                    replace: { start: [7, 35], end: [7, 64] }, 
-                    insert:  LOREM_IPSUM_1 + '\n'
+                    kind:  'replace', 
+                    range: { start: [7, 35], end: [7, 64] }, 
+                    with:  LOREM_IPSUM_1 + '\n'
                 }
             ]
         });
@@ -1975,9 +1977,9 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 { 
-                    kind:    'replace', 
-                    replace: { start: [2, 32], end: [15, 16] }, 
-                    insert:  `Hey now, you're an all star!'` 
+                    kind:  'replace', 
+                    range: { start: [2, 32], end: [15, 16] }, 
+                    with:  `Hey now, you're an all star!'` 
                 }
             ]
         });
@@ -2003,7 +2005,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.editText({
             edits: [
-                { kind: 'replace', replace: { start: [2, 23], end: [5, 27] }, insert:  ALICE_TEXT_2 }
+                { kind: 'replace', range: { start: [2, 23], end: [5, 27] }, with:  ALICE_TEXT_2 }
             ]
         });
         check();
@@ -2035,28 +2037,28 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 { 
-                    kind:    'replace', 
-                    replace: { start: [8, 35], end: [10, 89] },
-                    insert:  '\n\n' + ALICE_TEXT_1
+                    kind:  'replace', 
+                    range: { start: [8, 35], end: [10, 89] },
+                    with:  '\n\n' + ALICE_TEXT_1
                 }, 
                 {
-                    kind:     'insert',
-                    position: [7, 14],
-                    text:     '🥪🥪🥪🥪🥪🥪🥪🥪🥪🥪 '
+                    kind: 'insert',
+                    at:   [7, 14],
+                    text: '🥪🥪🥪🥪🥪🥪🥪🥪🥪🥪 '
                 },
                 {
                     kind:  'delete',
                     range: { start: [4, 3], end: [6, 12] },
                 },
                 {
-                    kind:    'replace',
-                    replace: { start: [3, 32], end: [3, 66] },
-                    insert:  '3.14159265359'
+                    kind:  'replace',
+                    range: { start: [3, 32], end: [3, 66] },
+                    with:  '3.14159265359'
                 },
                 {
-                    kind:     'insert',
-                    position: [1, 41],
-                    text:     'Goodbye World 😢!\n\n'
+                    kind: 'insert',
+                    at:   [1, 41],
+                    text: 'Goodbye World 😢!\n\n'
                 },
                 {
                     kind:  'delete',
@@ -2082,38 +2084,38 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         await executor.editText({
             edits: [
                 { 
-                    kind:    'replace',
-                    replace: { start: [9, 0], end: [16, 89] },
-                    insert:  '    console.log(text);'
+                    kind:  'replace',
+                    range: { start: [9, 0], end: [16, 89] },
+                    with:  '    console.log(text);'
                 },
                 {
                     kind:  'delete',
                     range: { start: [7, 14], end: [8, 34] },
                 },
                 {
-                    kind:     'insert',
-                    position: [7, 14],
-                    text:     'knowledge of mathematics).`;'
+                    kind: 'insert',
+                    at:   [7, 14],
+                    text: 'knowledge of mathematics).`;'
                 },
                 {
-                    kind:     'insert',
-                    position: [7, 0],
-                    text:     '    '
+                    kind: 'insert',
+                    at:   [7, 0],
+                    text: '    '
                 },
                 {
-                    kind:     'insert',
-                    position: [6, 0],
-                    text:     '    '
+                    kind: 'insert',
+                    at:   [6, 0],
+                    text: '    '
                 },
                 {
-                    kind:     'insert',
-                    position: [5, 0],
-                    text:     '    '
+                    kind: 'insert',
+                    at:   [5, 0],
+                    text: '    '
                 },
                 {
-                    kind:    'replace',
-                    replace: { start: [3, 0], end: [4, 23] },
-                    insert:  '    const text = `'
+                    kind:  'replace',
+                    range: { start: [3, 0], end: [4, 23] },
+                    with:  '    const text = `'
                 },
                 {
                     kind:  'delete',

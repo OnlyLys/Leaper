@@ -307,10 +307,10 @@ export class Executor {
         const applyAllEdits = (builder: TextEditorEdit) => {
             for (const edit of args.edits) {
                 if (edit.kind === 'replace') {
-                    const { start: [startLine, startChar], end: [endLine, endChar] } = edit.replace;
-                    builder.replace(new Range(startLine, startChar, endLine, endChar), edit.insert);
+                    const { start: [startLine, startChar], end: [endLine, endChar] } = edit.range;
+                    builder.replace(new Range(startLine, startChar, endLine, endChar), edit.with);
                 } else if (edit.kind === 'insert') {
-                    builder.insert(new Position(edit.position[0], edit.position[1]), edit.text);
+                    builder.insert(new Position(edit.at[0], edit.at[1]), edit.text);
                 } else {
                     const { start: [startLine, startChar], end: [endLine, endChar] } = edit.range;
                     builder.delete(new Range(startLine, startChar, endLine, endChar));
@@ -342,7 +342,7 @@ export class Executor {
      */
     public async setCursors(args: SetCursorsArgs): Promise<void> {
         return executeWithRepetitionDelay(async () => {
-            getActiveEditor().selections = args.cursors.map((cursor) => {
+            getActiveEditor().selections = args.to.map((cursor) => {
                 const anchorLine = Array.isArray(cursor) ? cursor[0] : cursor.anchor[0];
                 const anchorChar = Array.isArray(cursor) ? cursor[1] : cursor.anchor[1];
                 const activeLine = Array.isArray(cursor) ? cursor[0] : cursor.active[0];
@@ -714,23 +714,27 @@ interface TypeTextArgs extends RepetitionDelayOptions {
 }
 
 interface EditTextArgs extends RepetitionDelayOptions {
+
+    /** 
+     * All edits specified in this array will be done simultaneously. 
+     */
     edits: ReadonlyArray<
         {
             /** Replace a range of text.*/
             kind: 'replace';
         
             /** Range of text to replace. */
-            replace: CompactRange;
+            range: CompactRange;
         
             /** Text to insert in place of the replaced range. */
-            insert: string;
+            with: string;
         } | 
         {
             /** Insert text at a position. */
             kind: 'insert';
         
             /** Position to insert `text` at. */
-            position: CompactPosition;
+            at: CompactPosition;
         
             /** Text to insert. */
             text: string;
@@ -750,7 +754,7 @@ interface MoveCursorsArgs extends RepetitionDelayOptions {
 }
 
 interface SetCursorsArgs extends RepetitionDelayOptions {
-    cursors: CompactCursors;
+    to: CompactCursors;
 }
 
 interface InsertSnippetArgs extends RepetitionDelayOptions {

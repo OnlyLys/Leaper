@@ -19,9 +19,9 @@ async function sharedPrelude(executor: Executor, decorateAll: boolean): Promise<
     await executor.editText({
         edits: [
             { 
-                kind:     'insert', 
-                position: [0, 0],
-                text:     'async function helloWorld(): Promise<string> {\n' 
+                kind: 'insert', 
+                at:   [0, 0],
+                text: 'async function helloWorld(): Promise<string> {\n' 
                 +         '    return new Promise((resolve) => {\n'
                 +         `        setTimeout(() => resolve('Hello World'), 1000);\n`
                 +         '    });\n'
@@ -33,7 +33,7 @@ async function sharedPrelude(executor: Executor, decorateAll: boolean): Promise<
             },
         ]
     }); 
-    await executor.setCursors({ cursors: [ [7, 10] ] });
+    await executor.setCursors({ to: [ [7, 10] ] });
     executor.assertPairs([ 'None' ]);
     executor.assertCursors([ [7, 10] ]); 
 
@@ -338,7 +338,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```
     await executor.editText({
         edits: [
-            { kind: 'insert', position: [7, 50], text: ', await helloWorld' }
+            { kind: 'insert', at: [7, 50], text: ', await helloWorld' }
         ]
     });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 69, 71, 72, 74, 75] } ]);
@@ -376,8 +376,8 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```
     await executor.editText({
         edits: [
-            { kind: 'insert', position: [7, 78], text: '();' },
-            { kind: 'insert', position: [7, 75], text: ';'   }
+            { kind: 'insert', at: [7, 78], text: '();' },
+            { kind: 'insert', at: [7, 75], text: ';'   }
         ]
     });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 68, 69, 71, 73, 74, 77, 78] } ]);
@@ -402,10 +402,10 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```
     await executor.editText({
         edits: [
-            { kind: 'insert', position: [7, 78], text: '\n    '           },
-            { kind: 'insert', position: [7, 77], text: '\n        '       },
-            { kind: 'insert', position: [7, 25], text: '\n            '   },
-            { kind: 'insert', position: [7, 11], text: '\n        '       },
+            { kind: 'insert', at: [7, 78], text: '\n    '           },
+            { kind: 'insert', at: [7, 77], text: '\n        '       },
+            { kind: 'insert', at: [7, 25], text: '\n            '   },
+            { kind: 'insert', at: [7, 11], text: '\n        '       },
         ]
     });
     assertPairsAndDecorations([ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ]);
