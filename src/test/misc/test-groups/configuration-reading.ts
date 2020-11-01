@@ -99,7 +99,7 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
         //      [ "{}", "[]", "()" ]
         //
         // Therefore we would expect none of the autoclosing pairs of Plaintext to be tracked.
-        await executor.openFile('./workspace-1/text.txt');
+        await executor.openFile({ rel: './workspace-1/text.txt' });
         await testDetectedPairs(executor, [], [ "{}", "[]", "()" ]);
 
         // 2b. Repeat the test after moving the opened text editor to another tab.
@@ -128,7 +128,7 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
         // and would expect the following autoclosing pairs of Typescript to not be tracked: 
         //
         //     [ "{}", "[]", "''", "\"\"", "``" ]
-        await executor.openFile('./workspace-2/text.ts');
+        await executor.openFile({ rel: './workspace-2/text.ts' });
         await testDetectedPairs(executor, [ "()" ], [ "{}", "[]", "''", "\"\"", "``" ]);
 
         // 3b. Repeat the test after moving the active text editor to another tab.
@@ -157,7 +157,7 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
         // and would expect the following autoclosing pairs of Markdown to not be tracked:
         //
         //     [ "()", "[]" ]
-        await executor.openFile('./workspace-3/text.md');
+        await executor.openFile({ rel: './workspace-3/text.md'});
         await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);
 
         // 4b. Repeat the test after moving the active text editor to another tab.
@@ -187,9 +187,9 @@ const RELOAD_ON_CHANGE_TEST_CASE = new TestCase({
         // # Focus
         // 
         // The text document in the third workspace will be in focus after this step.
-        await executor.openFile('./workspace-1/text.txt', { viewColumn: 2 });
-        await executor.openFile('./workspace-2/text.ts',  { viewColumn: 3 });
-        await executor.openFile('./workspace-3/text.md',  { viewColumn: 4 });
+        await executor.openFile({ rel: './workspace-1/text.txt', showOptions: { viewColumn: 2 }});
+        await executor.openFile({ rel: './workspace-2/text.ts',  showOptions: { viewColumn: 3 }});
+        await executor.openFile({ rel: './workspace-3/text.md',  showOptions: { viewColumn: 4 }});
 
         // 1. Change the workspace configuration value.
         //

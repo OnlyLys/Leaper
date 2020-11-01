@@ -86,7 +86,7 @@ export class TestCase {
             try {
                 
                 // Open a new editor for the test case.
-                await executor.openNewTextEditor(editorLanguageId);
+                await executor.openNewTextEditor({ languageId: editorLanguageId });
     
                 // Setup the opened editor for the test.
                 if (prelude) {
@@ -476,40 +476,26 @@ export class Executor {
 
     /**
      * Open an existing file in the testing workspace.
-     * 
-     * @param rel The path of the file relative to the root of the workspace.
-     * @param showOptions How to show the opened file.
-     * @param repDelayOptions Specify the repetitions and delay time after each repetition.
      */
-    public async openFile(
-        rel:              string, 
-        showOptions?:     TextDocumentShowOptions, 
-        repDelayOptions?: RepetitionDelayOptions
-    ): Promise<void> {
+    public async openFile(args: OpenFileArgs): Promise<void> {
+        const { rel, showOptions } = args;
         return executeWithRepetitionDelay(async () => {
             const rootPath = path.dirname(workspace.workspaceFile?.path ?? '');
             const filePath = path.join(rootPath, rel);
             const document = await workspace.openTextDocument(filePath);
             await window.showTextDocument(document, showOptions);
-        }, repDelayOptions);
+        }, args);
     }
 
     /**
      * Open a new text editor containing an empty text document.
-     * 
-     * @param languageId The language of the opened text document.
-     * @param showOptions How to show the opened file.
-     * @param repDelayOptions Specify the repetitions and delay time after each repetition.
      */
-    public async openNewTextEditor(
-        languageId:       string = 'typescript', 
-        showOptions?:     TextDocumentShowOptions, 
-        repDelayOptions?: RepetitionDelayOptions
-    ): Promise<void> {
+    public async openNewTextEditor(args: OpenNewTextEditorArgs): Promise<void> {
+        const languageId = args.languageId ?? 'typescript';
         return executeWithRepetitionDelay(async () => {
             const document = await workspace.openTextDocument({ language: languageId });
-            await window.showTextDocument(document, showOptions);
-        }, repDelayOptions);
+            await window.showTextDocument(document, args.showOptions);
+        }, args);
     }
 
     /**
@@ -651,6 +637,8 @@ class ExecutorExtended extends Executor {
 
 /**
  * Get a handle to the extension.
+ * 
+ * @throws Will throw an error if the extension API cannot be reached.
  */
 function getHandle(): TestAPI {
     const handle = extensions.getExtension<TestAPI>(`OnlyLys.leaper`)?.exports;
@@ -722,92 +710,77 @@ interface RepetitionDelayOptions {
 }
 
 interface TypeTextArgs extends RepetitionDelayOptions {
-
-    /**
-     * Text which will be typed into the document, codepoint by codepoint.
-     */
     text: string;
 }
 
 interface EditTextArgs extends RepetitionDelayOptions {
-
-    /**
-     * Edits to apply simultaneously.
-     */
-    edits: ReadonlyArray<ReplaceTextEdit | InsertTextEdit | DeleteTextEdit>;
-}
-
-interface ReplaceTextEdit {
-
-    /** 
-     * Replace a range of text in the active text document. 
-     */
-    kind: 'replace';
-
-    /**
-     * Range of text to replace.
-     */
-    replace: CompactRange;
-
-    /**
-     * Text to insert in place of the replaced range.
-     */
-    insert: string;
-}
-
-interface InsertTextEdit {
-
-    /** 
-     * Insert text at a position in the active text document.
-     */
-    kind: 'insert';
-
-    /**
-     * Position to insert `text` at.
-     */
-    position: CompactPosition;
-
-    /**
-     * Text to insert at that position.
-     */
-    text: string;
-}
-
-interface DeleteTextEdit {
-
-    /**
-     * Delete a range of text in the active text document.
-     */
-    kind: 'delete';
-
-    /**
-     * Range of text to delete.
-     */
-    range: CompactRange;
+    edits: ReadonlyArray<
+        {
+            /** Replace a range of text.*/
+            kind: 'replace';
+        
+            /** Range of text to replace. */
+            replace: CompactRange;
+        
+            /** Text to insert in place of the replaced range. */
+            insert: string;
+        } | 
+        {
+            /** Insert text at a position. */
+            kind: 'insert';
+        
+            /** Position to insert `text` at. */
+            position: CompactPosition;
+        
+            /** Text to insert. */
+            text: string;
+        } |
+        {
+            /** Delete a range of text. */
+            kind: 'delete';
+        
+            /** Range of text to delete. */
+            range: CompactRange;
+        }
+    >
 }
 
 interface MoveCursorsArgs extends RepetitionDelayOptions {
-
-    /**
-     * Direction to move the cursors in.
-     */
     direction: 'up' | 'down' | 'left' | 'right';
 }
 
 interface SetCursorsArgs extends RepetitionDelayOptions {
-
-    /**
-     * Set all the cursors in the active text editor to this.
-     */
     cursors: CompactCursors;
 }
 
 interface InsertSnippetArgs extends RepetitionDelayOptions {
-
-    /**
-     * Insert this snippet into the active text editor.
-     * 
-     * The snippet will be inserted at the cursors.
-     */
     snippet: SnippetString;
+}
+
+interface OpenFileArgs extends RepetitionDelayOptions {
+
+    /** 
+     * The path of the file relative to the root of the workspace. 
+     */
+    rel: string, 
+
+    /** 
+     * How to show the opened file. 
+     */
+    showOptions?: TextDocumentShowOptions, 
+}
+
+interface OpenNewTextEditorArgs extends RepetitionDelayOptions {
+
+    /** 
+     * The language of the opened text document.
+     * 
+     * Defaults to `'typescript'`.
+     */
+    languageId?: string,
+
+    /** 
+     * How to show the opened file.
+     */
+    showOptions?: TextDocumentShowOptions
 }
