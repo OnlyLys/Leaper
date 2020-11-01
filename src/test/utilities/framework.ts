@@ -1,9 +1,9 @@
 //! The following module defines the test framework for this extension.
 
-import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, extensions, window, ConfigurationTarget } from 'vscode';
+import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, extensions, window, ConfigurationTarget, ViewColumn } from 'vscode';
 import * as assert from 'assert';
 import * as path from 'path';
-import { TestAPI } from '../../engine/test-api';
+import { Snapshot, TestAPI } from '../../engine/test-api';
 import { CompactCursors, CompactClusters, CompactRange, CompactPosition } from './compact';
 import { pickRandom, waitFor, zip } from './other';
 
@@ -160,7 +160,7 @@ export class Executor {
         type PairFull = { open: [number, number], close: [number, number], isDecorated: boolean };
 
         // The actual pairs (including decorations) but in a more print friendly form.
-        const actualFull: PairFull[][] = getHandle().activeSnapshot().map((cluster) => 
+        const actualFull: PairFull[][] = getSnapshot().map((cluster) => 
             cluster.map(({ open, close, isDecorated }) =>
                 ({ 
                     open:  [open.line,  open.character], 
@@ -214,7 +214,7 @@ export class Executor {
      * Assert the positions of the cursors within the active text editor.
      */
     public assertCursors(expected: CompactCursors): void {
-        const actual: CompactCursors = getActiveEditor().selections.map(({ active, anchor }) =>
+        const actual: CompactCursors = getVisibleTextEditor().selections.map(({ active, anchor }) =>
             ({ anchor: [anchor.line, anchor.character], active: [active.line, active.character] })
         );
         const _expected: CompactCursors = expected.map((cursor) => 
@@ -226,10 +226,12 @@ export class Executor {
     }
 
     /**
-     * Get the cursors in the active text editor.
+     * Get the cursors of a visible text editor.
+     * 
+     * Defaults to the visible text editor if `viewColumn is `undefined`.
      */
-    public getCursors(): CompactCursors {
-        return getActiveEditor().selections.map((selection) => {
+    public getCursors(viewColumn?: ViewColumn): CompactCursors {
+        return getVisibleTextEditor(viewColumn).selections.map((selection) => {
             const anchorLine = selection.anchor.line;
             const anchorChar = selection.anchor.character;
             const activeLine = selection.active.line;
@@ -299,9 +301,7 @@ export class Executor {
     }
 
     /**
-     * Edit text in the active text document. 
-     * 
-     * All the edits made for each call of this method will be done simultaneously.
+     * Apply text edits to a visible text document. 
      */
     public async editText(args: EditTextArgs): Promise<void> {
         const applyAllEdits = (builder: TextEditorEdit) => {
@@ -318,7 +318,7 @@ export class Executor {
             }
         };
         return executeWithRepetitionDelay(async () => {
-            return getActiveEditor().edit(applyAllEdits);
+            return getVisibleTextEditor(args.viewColumn).edit(applyAllEdits);
         }, args);
     }
 
@@ -338,11 +338,11 @@ export class Executor {
     }
 
     /**
-     * Set the cursors in the active text editor to specific positions in the document.
+     * Set the cursors in a visible text editor to specific positions in the document.
      */
     public async setCursors(args: SetCursorsArgs): Promise<void> {
         return executeWithRepetitionDelay(async () => {
-            getActiveEditor().selections = args.to.map((cursor) => {
+            getVisibleTextEditor(args.viewColumn).selections = args.to.map((cursor) => {
                 const anchorLine = Array.isArray(cursor) ? cursor[0] : cursor.anchor[0];
                 const anchorChar = Array.isArray(cursor) ? cursor[1] : cursor.anchor[1];
                 const activeLine = Array.isArray(cursor) ? cursor[0] : cursor.active[0];
@@ -371,7 +371,7 @@ export class Executor {
     }
 
     /** 
-     * Call the command to backspace a character.
+     * Backspace a character in the active text editor.
      */
     public async backspace(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -380,7 +380,7 @@ export class Executor {
     }
 
     /**
-     * Call the command to backspace a word.
+     * Backspace a word in the active text editor.
      */
     public async backspaceWord(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -389,7 +389,7 @@ export class Executor {
     }
 
     /**
-     * Call the command to delete a character to the right.
+     * Delete right a character in the active text editor.
      */
     public async deleteRight(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -398,18 +398,18 @@ export class Executor {
     }
 
     /**
-     * Insert a snippet into the active text editor.
+     * Insert a snippet into a visible text editor.
      * 
      * The snippet will be inserted at cursor position.
      */
     public async insertSnippet(args: InsertSnippetArgs): Promise<void> {
         return executeWithRepetitionDelay(async () => { 
-            return getActiveEditor().insertSnippet(args.snippet);
+            return getVisibleTextEditor(args.viewColumn).insertSnippet(args.snippet);
         }, args);
     }
 
     /**
-     * Call the command to jump to the next tabstop in the current snippet. 
+     * Jump to the next tabstop in the current snippet in the active text editor. 
      */
     public async jumpToNextTabstop(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -418,7 +418,7 @@ export class Executor {
     }
 
     /** 
-     * Call the command to jump to the previous tabstop in the current snippet.
+     * Jump to the previous tabstop in the current snippet in the active text editor.
      */
     public async jumpToPrevTabstop(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -427,8 +427,7 @@ export class Executor {
     }
 
     /**
-     * Call the command to trigger an autocomplete suggestion, then call another command to accept 
-     * the first suggestion.
+     * Trigger an autocomplete suggestion then accept the first one in the active text editor.
      */
     public async triggerAndAcceptSuggestion(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -439,7 +438,7 @@ export class Executor {
     }
 
     /**
-     * Call the command to perform an undo.
+     * Perform an undo in the active text editor.
      */
     public async undo(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -448,7 +447,7 @@ export class Executor {
     }
 
     /**
-     * Call the command to move the cursors to the start of their respective lines.
+     * Move the cursors in the active text editor to the start of their respective lines.
      */
     public async home(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -457,7 +456,7 @@ export class Executor {
     }
 
     /**
-     * Call the command to move the cursors to the end of their respective lines.
+     * Move the cursors in the active text editor to the end of their respective lines.
      */
     public async end(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -466,7 +465,7 @@ export class Executor {
     }
 
     /**
-     * Call the command to move the cursors to the end of the active text document.
+     * Move the cursors in the active text editor to the end of the document.
      */
     public async cursorBottom(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -475,7 +474,7 @@ export class Executor {
     }
 
     /**
-     * Open an existing file in the testing workspace.
+     * Open a file in the test workspace.
      */
     public async openFile(args: OpenFileArgs): Promise<void> {
         const { rel, showOptions } = args;
@@ -499,7 +498,7 @@ export class Executor {
     }
 
     /**
-     * Call the command to move the active text editor one tab group to the right.
+     * Move the active text editor one tab group to the right.
      */
     public async moveEditorToRight(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -508,7 +507,7 @@ export class Executor {
     }
 
     /**
-     * Call the command to move the active text editor one tab group to the left.
+     * Move the active text editor one tab group to the left.
      */
     public async moveEditorToLeft(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -517,7 +516,7 @@ export class Executor {
     }
 
     /**
-     * Call the command to switch focus to the text editor tab group to the right.
+     * Switch focus to the text editor tab group on the right.
      */
     public async focusRightEditorGroup(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -526,7 +525,7 @@ export class Executor {
     }
 
     /**
-     * Call the command to switch focus to the text editor tab group to the left. 
+     * Switch focus to the text editor tab group on the left. 
      */
     public async focusLeftEditorGroup(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -535,7 +534,7 @@ export class Executor {
     }
 
     /**
-     * Call the command to close the active text editor.
+     * Close the active text editor.
      */
     public async closeActiveEditor(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -544,7 +543,7 @@ export class Executor {
     }
 
     /**
-     * Call the command to close all text editors.
+     * Close all text editors.
      */
     public async closeAllEditors(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -590,7 +589,8 @@ export class Executor {
             const prevValue = configuration.get<T>(partialName);    
 
             // Scope to set the configuration in.
-            const targetScope = targetWorkspaceFolder ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
+            const targetScope = targetWorkspaceFolder ? ConfigurationTarget.WorkspaceFolder 
+                                                      : ConfigurationTarget.Workspace;
             
             // Set the configuration.
             await configuration.update(partialName, value, targetScope, !!targetLanguage);
@@ -636,28 +636,49 @@ class ExecutorExtended extends Executor {
 }
 
 /**
- * Get a handle to the extension.
+ * Get a handle to the running extension instance.
  * 
- * @throws Will throw an error if the extension API cannot be reached.
+ * @throws Will throw an error if the API for this extension cannot be reached.
  */
 function getHandle(): TestAPI {
     const handle = extensions.getExtension<TestAPI>(`OnlyLys.leaper`)?.exports;
     if (!handle) {
-        throw new Error('Unable to access Leaper API for testing!');
+        throw new Error("Unable to access Leaper's API for testing!");
     }
     return handle;
 }
 
-/**
- * Get a reference to the active editor.
- * 
- * @throws Will throw an error if there is no active text editor.
- */
-function getActiveEditor(): TextEditor {
-    if (!window.activeTextEditor) {
-        throw new Error('Unable to obtain active text editor!');
+// Get the snapshot for the visible text editor at view column `viewColumn`.
+// 
+// Defaults to the active text editor if `viewColumn` is `undefined`.
+function getSnapshot(viewColumn: ViewColumn = ViewColumn.Active): Snapshot {
+    if (viewColumn === ViewColumn.Active) {
+        if (!window.activeTextEditor || window.activeTextEditor.viewColumn === undefined) {
+            throw new Error("Unable to obtain snapshot of active text editor!");
+        }
+        viewColumn = window.activeTextEditor.viewColumn;
     }
-    return window.activeTextEditor;
+    const snapshot = getHandle().snapshots().get(viewColumn);
+    if (!snapshot) {
+        throw new Error('Unable to obtain requested snapshot!');
+    }
+    return snapshot;
+}
+
+/**
+ * Get a reference to the visible text editor at view column `viewColumn`.
+ * 
+ * Defaults to the active text editor if `viewColumn` is `undefined`.
+ * 
+ * @throws Will throw an error if the requested text editor cannot be found.
+ */
+function getVisibleTextEditor(viewColumn: ViewColumn = ViewColumn.Active): TextEditor {
+    const textEditor = viewColumn === ViewColumn.Active ? window.activeTextEditor 
+                       : window.visibleTextEditors.find((v) => v.viewColumn === viewColumn);
+    if (!textEditor) {
+        throw new Error('Unable to obtain requested text editor!');
+    }
+    return textEditor;
 }
 
 /**
@@ -713,6 +734,10 @@ interface TypeTextArgs extends RepetitionDelayOptions {
     text: string;
 }
 
+interface MoveCursorsArgs extends RepetitionDelayOptions {
+    direction: 'up' | 'down' | 'left' | 'right';
+}
+
 interface EditTextArgs extends RepetitionDelayOptions {
 
     /** 
@@ -746,19 +771,36 @@ interface EditTextArgs extends RepetitionDelayOptions {
             /** Range of text to delete. */
             range: CompactRange;
         }
-    >
-}
+    >,
 
-interface MoveCursorsArgs extends RepetitionDelayOptions {
-    direction: 'up' | 'down' | 'left' | 'right';
+    /**
+     * View column of the text editor to perform the edits in.
+     * 
+     * Defaults to `ViewColumn.Active`.
+     */
+    viewColumn?: ViewColumn
 }
 
 interface SetCursorsArgs extends RepetitionDelayOptions {
     to: CompactCursors;
+
+    /**
+     * View column of the text editor to set the cursors of.
+     * 
+     * Defaults to `ViewColumn.Active`.
+     */
+    viewColumn?: ViewColumn
 }
 
 interface InsertSnippetArgs extends RepetitionDelayOptions {
     snippet: SnippetString;
+
+    /**
+     * View column of the text editor to insert the snippet in.
+     * 
+     * Defaults to `ViewColumn.Active`.
+     */
+    viewColumn?: ViewColumn
 }
 
 interface OpenFileArgs extends RepetitionDelayOptions {
