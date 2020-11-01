@@ -274,9 +274,9 @@ export class Executor {
     // extension to acknowledge those changes, since this extension receives input asynchronously.
 
     /**
-     * Type an autoclosing pair into the document.
+     * Call the command to type an autoclosing pair into the document.
      * 
-     * Which kind of autoclosing pair is typed in is randomly picked between `{}`, `[]` and `()`. 
+     * Which kind of pair is typed in is randomly picked between `{}`, `[]` and `()`. 
      */
     public async typePair(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -287,6 +287,8 @@ export class Executor {
 
     /**
      * Type text into the document, codepoint by codepoint.
+     * 
+     * Each codepoint is typed in via a `default:type` command call.
      */
     public async typeText(args: TypeTextArgs): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -297,7 +299,7 @@ export class Executor {
     }
 
     /**
-     * Edit text in the document. 
+     * Edit text in the active text document. 
      * 
      * All the edits made for each call of this method will be done simultaneously.
      */
@@ -321,7 +323,7 @@ export class Executor {
     }
 
     /**
-     * Move all the cursors in a specific direction once.
+     * Call the command to move all the cursors once in a specific direction.
      */
     public async moveCursors(args: MoveCursorsArgs): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -336,7 +338,7 @@ export class Executor {
     }
 
     /**
-     * Set the cursors to specific positions in the document.
+     * Set the cursors in the active text editor to specific positions in the document.
      */
     public async setCursors(args: SetCursorsArgs): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -369,7 +371,7 @@ export class Executor {
     }
 
     /** 
-     * Backspace once.
+     * Call the command to backspace a character.
      */
     public async backspace(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -378,7 +380,7 @@ export class Executor {
     }
 
     /**
-     * Backspace a word (i.e. press 'ctrl + backspace').
+     * Call the command to backspace a word.
      */
     public async backspaceWord(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -387,7 +389,7 @@ export class Executor {
     }
 
     /**
-     * Delete right once (i.e. press the 'delete' key).
+     * Call the command to delete a character to the right.
      */
     public async deleteRight(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -406,8 +408,8 @@ export class Executor {
         }, args);
     }
 
-    /** 
-     * Jump to the next tabstop in the current snippet.
+    /**
+     * Call the command to jump to the next tabstop in the current snippet. 
      */
     public async jumpToNextTabstop(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -416,7 +418,7 @@ export class Executor {
     }
 
     /** 
-     * Jump to the previous tabstop in the current snippet.
+     * Call the command to jump to the previous tabstop in the current snippet.
      */
     public async jumpToPrevTabstop(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -425,7 +427,8 @@ export class Executor {
     }
 
     /**
-     * Trigger an autocomplete suggestion then accept the first suggestion.
+     * Call the command to trigger an autocomplete suggestion, then call another command to accept 
+     * the first suggestion.
      */
     public async triggerAndAcceptSuggestion(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -436,7 +439,7 @@ export class Executor {
     }
 
     /**
-     * Perform an 'Undo' (i.e. press 'ctrl + z').
+     * Call the command to perform an undo.
      */
     public async undo(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -445,7 +448,7 @@ export class Executor {
     }
 
     /**
-     * Press the 'Home' key.
+     * Call the command to move the cursors to the start of their respective lines.
      */
     public async home(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -454,7 +457,7 @@ export class Executor {
     }
 
     /**
-     * Press the 'End' key.
+     * Call the command to move the cursors to the end of their respective lines.
      */
     public async end(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -463,7 +466,7 @@ export class Executor {
     }
 
     /**
-     * Move the cursor to the end of the document.
+     * Call the command to move the cursors to the end of the active text document.
      */
     public async cursorBottom(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -510,7 +513,7 @@ export class Executor {
     }
 
     /**
-     * Move the active text editor to the right tab group.
+     * Call the command to move the active text editor one tab group to the right.
      */
     public async moveEditorToRight(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -519,7 +522,7 @@ export class Executor {
     }
 
     /**
-     * Move the active text editor to the left tab group.
+     * Call the command to move the active text editor one tab group to the left.
      */
     public async moveEditorToLeft(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -528,7 +531,7 @@ export class Executor {
     }
 
     /**
-     * Switch focus to the text editor tab group to the right.
+     * Call the command to switch focus to the text editor tab group to the right.
      */
     public async focusRightEditorGroup(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -536,8 +539,8 @@ export class Executor {
         }, options);
     }
 
-    /** 
-     * Switch focus to the text editor tab group to the left. 
+    /**
+     * Call the command to switch focus to the text editor tab group to the left. 
      */
     public async focusLeftEditorGroup(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -546,7 +549,7 @@ export class Executor {
     }
 
     /**
-     * Close the active text editor.
+     * Call the command to close the active text editor.
      */
     public async closeActiveEditor(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -555,7 +558,7 @@ export class Executor {
     }
 
     /**
-     * Close all text editors.
+     * Call the command to close all text editors.
      */
     public async closeAllEditors(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
