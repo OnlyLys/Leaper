@@ -771,17 +771,18 @@ interface EditTextArgs extends RepetitionDelayOptions {
             /** Range of text to delete. */
             range: CompactRange;
         }
-    >,
+    >;
 
     /**
      * View column of the text editor to perform the edits in.
      * 
      * Defaults to `ViewColumn.Active`.
      */
-    viewColumn?: ViewColumn
+    viewColumn?: ViewColumn;
 }
 
 interface SetCursorsArgs extends RepetitionDelayOptions {
+
     to: CompactCursors;
 
     /**
@@ -789,10 +790,11 @@ interface SetCursorsArgs extends RepetitionDelayOptions {
      * 
      * Defaults to `ViewColumn.Active`.
      */
-    viewColumn?: ViewColumn
+    viewColumn?: ViewColumn;
 }
 
 interface InsertSnippetArgs extends RepetitionDelayOptions {
+    
     snippet: SnippetString;
 
     /**
@@ -800,7 +802,7 @@ interface InsertSnippetArgs extends RepetitionDelayOptions {
      * 
      * Defaults to `ViewColumn.Active`.
      */
-    viewColumn?: ViewColumn
+    viewColumn?: ViewColumn;
 }
 
 interface OpenFileArgs extends RepetitionDelayOptions {
@@ -808,12 +810,12 @@ interface OpenFileArgs extends RepetitionDelayOptions {
     /** 
      * The path of the file relative to the root of the workspace. 
      */
-    rel: string, 
+    rel: string;
 
     /** 
      * How to show the opened file. 
      */
-    showOptions?: TextDocumentShowOptions, 
+    showOptions?: TextDocumentShowOptions;
 }
 
 interface OpenNewTextEditorArgs extends RepetitionDelayOptions {
@@ -823,10 +825,10 @@ interface OpenNewTextEditorArgs extends RepetitionDelayOptions {
      * 
      * Defaults to `'typescript'`.
      */
-    languageId?: string,
+    languageId?: string;
 
     /** 
      * How to show the opened file.
      */
-    showOptions?: TextDocumentShowOptions
+    showOptions?: TextDocumentShowOptions;
 }
