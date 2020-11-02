@@ -34,8 +34,8 @@ async function sharedPrelude(executor: Executor, decorateAll: boolean): Promise<
         ]
     }); 
     await executor.setCursors({ to: [ [7, 10] ] });
-    executor.assertPairs([ 'None' ]);
-    executor.assertCursors([ [7, 10] ]); 
+    executor.assertPairs({   expect: [ 'None' ]  });
+    executor.assertCursors({ expect: [ [7, 10] ] });
 
     // Then set the `leaper.decorateAll` configuration in the test workspace to `decorateAll`.
     await executor.setConfiguration({
@@ -48,7 +48,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
 
     // So that we do not forget to pass `expectDecorations` to  `executor.assertPairs`.
     function assertPairsAndDecorations(pairs: CompactClusters): void {
-        executor.assertPairs(pairs, expectDecorations);
+        executor.assertPairs({ expect: pairs, decorations: expectDecorations });
     }
 
     // Document state after:
@@ -66,7 +66,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```   
     await executor.typeText({ text: '(' });
     assertPairsAndDecorations([ { line: 7, sides: [10, 11] } ]);
-    executor.assertCursors([ [7, 11] ]);
+    executor.assertCursors({ expect: [ [7, 11] ] });
 
     // Document state after:
     //
@@ -83,7 +83,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```   
     await executor.typeText({ text: 'async (' });
     assertPairsAndDecorations([ { line: 7, sides: [10, 17, 18, 19] } ]);
-    executor.assertCursors([ [7, 18] ]);
+    executor.assertCursors({ expect: [ [7, 18] ] });
 
     // Document state after:
     //
@@ -100,7 +100,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```   
     await executor.leap();
     assertPairsAndDecorations([ { line: 7, sides: [10, 19] } ]);
-    executor.assertCursors([ [7, 19] ]);
+    executor.assertCursors({ expect: [ [7, 19] ] });
 
     // Document state after:
     //
@@ -117,7 +117,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```   
     await executor.typeText({ text: ' => {' });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 24, 25] } ]);
-    executor.assertCursors([ [7, 24] ]);
+    executor.assertCursors({ expect: [ [7, 24] ] });
 
     // Document state after:
     //
@@ -134,7 +134,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```   
     await executor.typeText({ text: ' ', repetitions: 2 });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 26, 27] } ]);
-    executor.assertCursors([ [7, 26] ]);
+    executor.assertCursors({ expect: [ [7, 26] ] });
 
     // Document state after:
     //
@@ -151,7 +151,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```   
     await executor.moveCursors({ direction: 'left' });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 26, 27] } ]);
-    executor.assertCursors([ [7, 25] ]);
+    executor.assertCursors({ expect: [ [7, 25] ] });
 
     // Document state after:
     //
@@ -168,7 +168,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```   
     await executor.typeText({ text: 'console.log(' });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 39, 40] } ]);
-    executor.assertCursors([ [7, 37] ]);
+    executor.assertCursors({ expect: [ [7, 37] ] });
 
     // Document state after:
     //
@@ -185,7 +185,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```   
     await executor.typeText({ text: '{' });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 38, 39, 41, 42] } ]);
-    executor.assertCursors([ [7, 38] ]);
+    executor.assertCursors({ expect: [ [7, 38] ] });
 
     // Document state after:
     //
@@ -202,7 +202,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```   
     await executor.typeText({ text: ' ', repetitions: 2 });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 40, 41, 43, 44] } ]);
-    executor.assertCursors([ [7, 40] ]);
+    executor.assertCursors({ expect: [ [7, 40] ] });
 
     // Document state after:
     //
@@ -219,7 +219,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```   
     await executor.moveCursors({ direction: 'left' });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 40, 41, 43, 44] } ]);
-    executor.assertCursors([ [7, 39] ]);
+    executor.assertCursors({ expect: [ [7, 39] ] });
 
     // Document state after:
     //
@@ -236,7 +236,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```
     await executor.typeText({ text: 'hey: [' });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 45, 47, 48, 50, 51] } ]);
-    executor.assertCursors([ [7, 45] ]);
+    executor.assertCursors({ expect: [ [7, 45] ] });
     
     // Document state after:
     //
@@ -253,7 +253,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```
     await executor.typeText({ text: ' ', repetitions: 2 });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 47, 49, 50, 52, 53] } ]);
-    executor.assertCursors([ [7, 47] ]);
+    executor.assertCursors({ expect: [ [7, 47] ] });
 
     // Document state after:
     //
@@ -270,7 +270,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```
     await executor.moveCursors({ direction: 'left' });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 47, 49, 50, 52, 53] } ]);
-    executor.assertCursors([ [7, 46] ]);
+    executor.assertCursors({ expect: [ [7, 46] ] });
 
     // Document state after:
     //
@@ -287,7 +287,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```
     await executor.typeText({ text: '\'' });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 46, 47, 49, 51, 52, 54, 55] } ]);
-    executor.assertCursors([ [7, 47] ]);
+    executor.assertCursors({ expect: [ [7, 47] ] });
 
     // Document state after:
     //
@@ -304,7 +304,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```
     await executor.typeText({ text: '😎' });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 46, 49, 51, 53, 54, 56, 57] } ]);
-    executor.assertCursors([ [7, 49] ]);
+    executor.assertCursors({ expect: [ [7, 49] ] });
 
     // Document state after:
     //
@@ -321,7 +321,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```
     await executor.leap();
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 51, 53, 54, 56, 57] } ]);
-    executor.assertCursors([ [7, 50] ]);
+    executor.assertCursors({ expect: [ [7, 50] ] });
 
     // Document state after:
     //
@@ -342,7 +342,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
         ]
     });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 69, 71, 72, 74, 75] } ]);
-    executor.assertCursors([ [7, 68] ]);
+    executor.assertCursors({ expect: [ [7, 68] ] });
 
     // Document state after:
     //
@@ -359,7 +359,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```
     await executor.typeText({ text: '(' });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 68, 69, 71, 73, 74, 76, 77] } ]);
-    executor.assertCursors([ [7, 69] ]);
+    executor.assertCursors({ expect: [ [7, 69] ] });
 
     // Document state after:
     //
@@ -381,7 +381,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
         ]
     });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 68, 69, 71, 73, 74, 77, 78] } ]);
-    executor.assertCursors([ [7, 69] ]);
+    executor.assertCursors({ expect: [ [7, 69] ] });
 
     // Document state after:
     //
@@ -409,7 +409,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
         ]
     });
     assertPairsAndDecorations([ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ]);
-    executor.assertCursors([ [9, 56] ]);
+    executor.assertCursors({ expect: [ [9, 56] ] });
 };
 
 

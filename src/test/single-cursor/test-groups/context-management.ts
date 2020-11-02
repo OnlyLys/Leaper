@@ -11,8 +11,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // expect this extension to have initially disabled both keybinding contexts.
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [0, 0] ]);
+        executor.assertPairs(  { expect: [ 'None' ] });
+        executor.assertCursors({ expect: [ [0, 0] ] });
     },
     task: async (executor) => {
 
@@ -33,8 +33,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.typeText({ text: 'const ARR = ' });
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [0, 12] ]);
+        executor.assertPairs(  { expect: [ 'None' ]  });
+        executor.assertCursors({ expect: [ [0, 12] ] });
 
         // Now type in a square bracket pair.
         //
@@ -52,8 +52,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.typeText({ text: '[' });
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
-        executor.assertPairs([ { line: 0, sides: [12, 13] }]);
-        executor.assertCursors([ [0, 13] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 13] } ] });
+        executor.assertCursors({ expect: [ [0, 13] ]                      });
 
         // Type in some spacing for simulate the user performing some formatting on the code.
         //
@@ -71,8 +71,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.typeText({ text: ' ', repetitions: 2 });
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
-        executor.assertPairs([ { line: 0, sides: [12, 15] }]);
-        executor.assertCursors([ [0, 15] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 15] } ] });
+        executor.assertCursors({ expect: [ [0, 15] ]                      });
 
         // Move the cursor back by one unit.
         //
@@ -89,8 +89,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.moveCursors({ direction: 'left' });
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
-        executor.assertPairs([ { line: 0, sides: [12, 15] }]);
-        executor.assertCursors([ [0, 14] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 15] } ] });
+        executor.assertCursors({ expect: [ [0, 14] ]                      });
 
         // Type in a single quote pair.
         //
@@ -108,8 +108,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.typeText({ text: '\'' });
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
-        executor.assertPairs([ { line: 0, sides: [12, 14, 15, 17] }]);
-        executor.assertCursors([ [0, 15] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 14, 15, 17] } ] });
+        executor.assertCursors({ expect: [ [0, 15] ]                              });
 
         // Fill in the string.
         //
@@ -126,8 +126,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.typeText({ text: 'World' });
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
-        executor.assertPairs([ { line: 0, sides: [12, 14, 20, 22] }]);
-        executor.assertCursors([ [0, 20] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 14, 20, 22] } ] });
+        executor.assertCursors({ expect: [ [0, 20] ]                              });
 
         // Begin moving to the left.
         // 
@@ -145,8 +145,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.moveCursors({ direction: 'left' });
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(false);
-        executor.assertPairs([ { line: 0, sides: [12, 14, 20, 22] }]);
-        executor.assertCursors([ [0, 19] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 14, 20, 22] } ] });
+        executor.assertCursors({ expect: [ [0, 19] ]                              });
 
         // Move to the left boundary of the nearest pair.
         //
@@ -164,8 +164,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.moveCursors({ direction: 'left', repetitions: 4 });
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(false);
-        executor.assertPairs([ { line: 0, sides: [12, 14, 20, 22] }]);
-        executor.assertCursors([ [0, 15] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 14, 20, 22] } ] });
+        executor.assertCursors({ expect: [ [0, 15] ]                              });
 
         // Move out of the nearest pair.
         //
@@ -185,8 +185,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.moveCursors({ direction: 'left' });
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(false);
-        executor.assertPairs([ { line: 0, sides: [12, 22] }]);
-        executor.assertCursors([ [0, 14] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 22] } ] });
+        executor.assertCursors({ expect: [ [0, 14] ]                      });
 
         // Move to the left boundary of the remaining pair.
         //
@@ -204,8 +204,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.moveCursors({ direction: 'left' });
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(false);
-        executor.assertPairs([ { line: 0, sides: [12, 22] }]);
-        executor.assertCursors([ [0, 13] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 22] } ] });
+        executor.assertCursors({ expect: [ [0, 13] ]                      });
 
         // Insert a single quote pair as part of inserting a new array element.
         //
@@ -223,8 +223,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.typeText({ text: ' \'' });
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
-        executor.assertPairs([ { line: 0, sides: [12, 14, 15, 25] }]);
-        executor.assertCursors([ [0, 15] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 14, 15, 25] } ] });
+        executor.assertCursors({ expect: [ [0, 15] ]                              });
 
         // Fill in the new array element.
         // 
@@ -242,8 +242,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.typeText({ text: 'Hello' });
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
-        executor.assertPairs([ { line: 0, sides: [12, 14, 20, 30] }]);
-        executor.assertCursors([ [0, 20] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 14, 20, 30] } ] });
+        executor.assertCursors({ expect: [ [0, 20] ]                              });
 
         // Since both keybinding contexts are enabled, the user is able to press the Leap keybinding 
         // to move the cursor out of the new array element.
@@ -262,8 +262,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.leap();
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(false);
-        executor.assertPairs([ { line: 0, sides: [12, 30] }]);
-        executor.assertCursors([ [0, 21] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 30] } ] });
+        executor.assertCursors({ expect: [ [0, 21] ]                      });
 
         // Add the necessary comma in between the two array elements.
         //
@@ -281,8 +281,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.typeText({ text: ',' });
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(false);
-        executor.assertPairs([ { line: 0, sides: [12, 31] }]);
-        executor.assertCursors([ [0, 22] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 31] } ] });
+        executor.assertCursors({ expect: [ [0, 22] ]                      });
 
         // Move to just past the second array element in preparation for a leap out of the enclosing
         // square brackets.
@@ -301,8 +301,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.moveCursors({ direction: 'right', repetitions: 8 });
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
-        executor.assertPairs([ { line: 0, sides: [12, 31] }]);
-        executor.assertCursors([ [0, 30] ]);
+        executor.assertPairs(  { expect: [ { line: 0, sides: [12, 31] } ] });
+        executor.assertCursors({ expect: [ [0, 30] ]                      });
 
         // Since both keybinding contexts are enabled, the user is able to press the Leap keybinding 
         // to leap out of the enclosing square brackets.
@@ -320,8 +320,8 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.leap();
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [0, 32] ]);
+        executor.assertPairs(  { expect: [ 'None' ]  });
+        executor.assertCursors({ expect: [ [0, 32] ] });
     }
 });
 

@@ -31,8 +31,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
     prelude: async (executor) => {
         await executor.typeText({ text: 'function main() {\n' });
         await executor.typePair({ repetitions: 10 });
-        executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
-        executor.assertCursors([ [1, 14] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ] });
+        executor.assertCursors({ expect: [ [1, 14] ]                          });
     },
 
     task: async (executor) => {
@@ -51,8 +51,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 { kind: 'insert', at: [1, 4], text: 'const x = ' } 
             ]
         });
-        executor.assertPairs([ { line: 1, sides: range(14, 34) } ]);
-        executor.assertCursors([ [1, 24] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: range(14, 34) } ] });
+        executor.assertCursors({ expect: [ [1, 24] ]                           });
 
         // 2. Insert multi-line text on the same line before the pairs.
         //
@@ -74,8 +74,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 }
             ]
         });
-        executor.assertPairs([ { line: 3, sides: range(21, 41) } ]);
-        executor.assertCursors([ [3, 31] ]);
+        executor.assertPairs({   expect: [ { line: 3, sides: range(21, 41) } ] });
+        executor.assertCursors({ expect: [ [3, 31] ]                           });
 
         // 3. Delete single-line text on the same line before the pairs.
         //
@@ -93,8 +93,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 { kind: 'delete', range: { start: [3, 13], end: [3, 18] } }
             ]
         });
-        executor.assertPairs([ { line: 3, sides: range(16, 36) } ]);
-        executor.assertCursors([ [3, 26] ]);
+        executor.assertPairs({   expect: [ { line: 3, sides: range(16, 36) } ] });
+        executor.assertCursors({ expect: [ [3, 26] ]                           });
 
         // 4. Delete multi-line text starting from a line above and ending on the same line before 
         //    the pairs.
@@ -112,8 +112,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 { kind: 'delete', range: { start: [2, 10], end: [3, 14] } }
             ]
         });
-        executor.assertPairs([ { line: 2, sides: range(12, 32) } ]);
-        executor.assertCursors([ [2, 22] ]);
+        executor.assertPairs({   expect: [ { line: 2, sides: range(12, 32) } ] });
+        executor.assertCursors({ expect: [ [2, 22] ]                           });
 
         // 5. Replace single-line text on the same line before the pairs with single-line text.
         //
@@ -134,8 +134,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 }
             ]
         });
-        executor.assertPairs([ { line: 2, sides: range(33, 53) } ]);
-        executor.assertCursors([ [2, 43] ]);
+        executor.assertPairs({   expect: [ { line: 2, sides: range(33, 53) } ] });
+        executor.assertCursors({ expect: [ [2, 43] ]                           });
 
         // 6. Replace single-line text on the same line before the pairs with multi-line text.
         //
@@ -163,8 +163,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 }
             ]
         });
-        executor.assertPairs([ { line: 9, sides: range(14, 34) } ]);
-        executor.assertCursors([ [9, 24] ]);
+        executor.assertPairs({   expect: [ { line: 9, sides: range(14, 34) } ] });
+        executor.assertCursors({ expect: [ [9, 24] ]                           });
 
         // 7. Replace multi-line text starting from a line above and ending on the same line before 
         //    the pairs with single-line text.
@@ -186,8 +186,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 }
             ]
         });
-        executor.assertPairs([ { line: 2, sides: range(48, 68) } ]);
-        executor.assertCursors([ [2, 58] ]);
+        executor.assertPairs({   expect: [ { line: 2, sides: range(48, 68) } ] });
+        executor.assertCursors({ expect: [ [2, 58] ]                           });
 
         // 8. Replace multi-line text starting from a line above and ending on the same line before 
         //    the pairs with multi-line text.
@@ -216,8 +216,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 }
             ]
         });
-        executor.assertPairs([ { line: 5, sides: range(28, 48) } ]);
-        executor.assertCursors([ [5, 38] ]);
+        executor.assertPairs({   expect: [ { line: 5, sides: range(28, 48) } ] });
+        executor.assertCursors({ expect: [ [5, 38] ]                           });
 
         // 9. Insert single-line text on a line above the pairs.
         //
@@ -241,8 +241,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 }
             ]
         });
-        executor.assertPairs([ { line: 5, sides: range(28, 48) } ]);
-        executor.assertCursors([ [5, 38] ]);
+        executor.assertPairs({   expect: [ { line: 5, sides: range(28, 48) } ] });
+        executor.assertCursors({ expect: [ [5, 38] ]                           });
 
         // 10. Insert multi-line text on a line above the pairs.
         //
@@ -281,8 +281,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 }
             ]
         });
-        executor.assertPairs([ { line: 12, sides: range(28, 48) } ]);
-        executor.assertCursors([ [12, 38] ]);
+        executor.assertPairs({   expect: [ { line: 12, sides: range(28, 48) } ] });
+        executor.assertCursors({ expect: [ [12, 38] ]                           });
 
         // 11. Delete single-line text on a line above the pairs.
         //
@@ -309,8 +309,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 { kind: 'delete', range: { start: [10, 8], end: [10, 94] } }
             ]
         });
-        executor.assertPairs([ { line: 12, sides: range(28, 48) } ]);
-        executor.assertCursors([ [12, 38] ]);
+        executor.assertPairs({   expect: [ { line: 12, sides: range(28, 48) } ] });
+        executor.assertCursors({ expect: [ [12, 38] ]                           });
 
         // 12. Delete multi-line text on lines above the pairs.
         //
@@ -335,8 +335,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 { kind: 'delete', range: { start: [1, 15], end: [3, 36] } }
             ]
         });
-        executor.assertPairs([ { line: 10, sides: range(28, 48) } ]);
-        executor.assertCursors([ [10, 38] ]);
+        executor.assertPairs({   expect: [ { line: 10, sides: range(28, 48) } ] });
+        executor.assertCursors({ expect: [ [10, 38] ]                           });
 
         // 13. Replace single-line text on a line above the pairs with single-line text.
         //
@@ -361,8 +361,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 { kind: 'replace', range: { start: [0, 9], end: [0, 13] }, with: 'primary' }
             ]
         });
-        executor.assertPairs([ { line: 10, sides: range(28, 48) } ]);
-        executor.assertCursors([ [10, 38] ]);
+        executor.assertPairs({   expect: [ { line: 10, sides: range(28, 48) } ] });
+        executor.assertCursors({ expect: [ [10, 38] ]                           });
 
         // 14. Replace single-line text on a line above the pairs with multi-line text.
         //
@@ -395,8 +395,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 }
             ]
         });
-        executor.assertPairs([ { line: 12, sides: range(28, 48) } ]);
-        executor.assertCursors([ [12, 38] ]);
+        executor.assertPairs({   expect: [ { line: 12, sides: range(28, 48) } ] });
+        executor.assertCursors({ expect: [ [12, 38] ]                           });
 
         // 15. Replace multi-line text on lines above the pairs with single-line text.
         //  
@@ -419,8 +419,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 }
             ]
         });
-        executor.assertPairs([ { line: 4, sides: range(28, 48) } ]);
-        executor.assertCursors([ [4, 38] ]);
+        executor.assertPairs({   expect: [ { line: 4, sides: range(28, 48) } ] });
+        executor.assertCursors({ expect: [ [4, 38] ]                           });
 
         // 16. Replace multi-line text on lines above the pairs with multi-line text.
         //
@@ -449,8 +449,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 }
             ]
         });
-        executor.assertPairs([ { line: 6, sides: range(28, 48) } ]);
-        executor.assertCursors([ [6, 38] ]);
+        executor.assertPairs({   expect: [ { line: 6, sides: range(28, 48) } ] });
+        executor.assertCursors({ expect: [ [6, 38] ]                           });
 
         // 17. Simultaneous text modifications before the pairs - Part 1.
         //
@@ -513,8 +513,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 }
             ]
         });
-        executor.assertPairs([ { line: 16, sides: range(28, 48) } ]);
-        executor.assertCursors([ [16, 38] ]);
+        executor.assertPairs({   expect: [ { line: 16, sides: range(28, 48) } ] });
+        executor.assertCursors({ expect: [ [16, 38] ]                           });
 
         // 18. Simultaneous text modifications before the pairs - Part 2.
         //
@@ -576,8 +576,8 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
                 }
             ]
         });
-        executor.assertPairs([ { line: 13, sides: range(42, 62) } ]);
-        executor.assertCursors([ [13, 52] ]);
+        executor.assertPairs({   expect: [ { line: 13, sides: range(42, 62) } ] });
+        executor.assertCursors({ expect: [ [13, 52] ]                           });
     }
 });
 
@@ -606,8 +606,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         await executor.moveCursors({ direction: 'up' });
         await executor.end();
         await executor.typePair({ repetitions: 10 });
-        executor.assertPairs([ { line: 1, sides: range(9, 29) } ]);
-        executor.assertCursors([ [1, 19] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: range(9, 29) } ] });
+        executor.assertCursors({ expect: [ [1, 19] ]                          });
     },
 
     task: async (executor) => {
@@ -632,8 +632,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceAdd(pairs[0].sides, 1, 20, 17);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 36] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 36] ] });
 
         // 2. Insert 11 code units in between the closing sides of the fourth and fifth pairs.
         //
@@ -654,8 +654,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceAdd(pairs[0].sides, 16, 20, 11);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 36] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 36] ] });
 
         // 3. Type 10 code units at the cursor.
         //
@@ -672,8 +672,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.typeText({ text: 'Pretzel 🥨' });
         sliceAdd(pairs[0].sides, 10, 20, 10);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 46] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 46] ] });
 
         // 4. Type 20 code units at the cursor.
         //
@@ -690,8 +690,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.typeText({ text: '蒹葭蒼蒼、白露為霜。所謂伊人、在水一方。' });
         sliceAdd(pairs[0].sides, 10, 20, 20);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 66] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 66] ] });
 
         // 5. Insert 8 code units at the cursor (simulating a paste action).
         //
@@ -712,8 +712,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceAdd(pairs[0].sides, 10, 20, 8);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 74] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 74] ] });
 
         // 6. Backspace 2 times, deleting 4 code units at the cursor.
         //
@@ -730,8 +730,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.backspace({ repetitions: 2 });
         sliceSub(pairs[0].sides, 10, 20, 4);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 70] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 70] ] });
 
         // 7. Insert 12 code units between the opening sides of the seventh and eighth pairs.
         //
@@ -752,8 +752,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceAdd(pairs[0].sides, 7, 20, 12);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 82] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 82] ] });
 
         // 8. Insert 10 code units between the closing sides of the eighth and ninth pairs.
         //
@@ -774,8 +774,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceAdd(pairs[0].sides, 12, 20, 10);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 82] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 82] ] });
 
         // 9. Delete 9 code units between the opening sides of the seventh and eighth pairs.
         //
@@ -796,8 +796,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceSub(pairs[0].sides, 7, 20, 9);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 73] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 73] ] });
 
         // 10. Insert 8 code units between the closing sides of the ninth and tenth pairs.
         //
@@ -818,8 +818,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceAdd(pairs[0].sides, 11, 20, 8);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 73] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 73] ] });
 
         // 11. Insert 13 code units between the opening sides of the ninth and tenth pairs.
         //
@@ -840,8 +840,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceAdd(pairs[0].sides, 9, 20, 13);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 86] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 86] ] });
         
         // 12. Delete 11 code units between the closing side of the fourth and fifth pairs.
         //
@@ -862,8 +862,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceSub(pairs[0].sides, 16, 20, 11);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 86] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 86] ] });
 
         // 13. Delete 7 code units between the opening sides of the ninth and tenth pairs.
         //
@@ -884,8 +884,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceSub(pairs[0].sides, 9, 20, 7);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 79] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 79] ] });
 
         // 14. Backspace 6 times, deleting 8 code units at the cursor.
         //
@@ -902,8 +902,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.backspace({ repetitions: 6 });
         sliceSub(pairs[0].sides, 10, 20, 8);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 71] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 71] ] });
 
         // 15a. Move the cursor back 3 times, moving back 3 code units.
         //
@@ -919,8 +919,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         //                                                                               ^(cursor position)
         // ```
         await executor.moveCursors({ direction: 'left', repetitions: 3 });
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 68] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 68] ] });
 
         // 15b. Type in 7 code units.
         //
@@ -937,8 +937,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.typeText({ text: 'Fire 🔥' });
         sliceAdd(pairs[0].sides, 10, 20, 7);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 75] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 75] ] });
 
         // 16. Insert 10 code units between the closing sides of the third and fourth pairs.
         //
@@ -959,8 +959,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceAdd(pairs[0].sides, 17, 20, 10);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 75] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 75] ] });
 
         // 17. Insert 10 code units between the opening sides of the second and third pairs.
         //
@@ -981,8 +981,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceAdd(pairs[0].sides, 2, 20, 10);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 85] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 85] ] });
 
         // 18. Replace 8 code units between the opening sides of the first and second pairs with 2 
         //     code units.
@@ -1004,8 +1004,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceSub(pairs[0].sides, 1, 20, 6);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 79] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 79] ] });
 
         // 19. Delete 6 code units between the closing sides of the eighth and ninth pairs.
         //
@@ -1026,8 +1026,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
             ]
         });
         sliceSub(pairs[0].sides, 12, 20, 6);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 79] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 79] ] });
 
         // 20a. Move the cursor back 6 times, moving back 7 code units.
         //
@@ -1043,8 +1043,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         //                                                                                   ^(cursor position)
         // ```
         await executor.moveCursors({ direction: 'left', repetitions: 6 });
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 72] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 72] ] });
 
         // 20b. Delete right 5 code units.
         //
@@ -1061,8 +1061,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // ```
         await executor.deleteRight({ repetitions: 5 });
         sliceSub(pairs[0].sides, 10, 20, 5);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [1, 72] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [1, 72] ] });
 
         // 21. Simultaneous single-line text modifications between the pairs - Part 1.
         //
@@ -1114,16 +1114,18 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
                 }
             ]
         });
-        executor.assertPairs([ 
-            { 
-                line:  1, 
-                sides: [
-                     29,  49,  60,  61,  62,  63,  64,  68,  69,  77,
-                    108, 109, 114, 115, 116, 117, 118, 129, 130, 131
-                ]
-            }
-        ]);
-        executor.assertCursors([ [1, 88] ]);
+        executor.assertPairs({ 
+            expect: [
+                { 
+                    line:  1, 
+                    sides: [
+                         29,  49,  60,  61,  62,  63,  64,  68,  69,  77,
+                        108, 109, 114, 115, 116, 117, 118, 129, 130, 131
+                    ]
+                }
+            ]
+        });
+        executor.assertCursors({ expect: [ [1, 88] ] });
 
         // 22. Simultaneous single-line text modifications between the pairs - Part 2.
         //
@@ -1150,8 +1152,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
                 { kind: 'delete', range: { start: [1,   0], end: [1,  29] } },
             ]
         });
-        executor.assertPairs([ { line: 1, sides: range(0, 20) }]);
-        executor.assertCursors([ [1, 10] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: range(0, 20) }] });
+        executor.assertCursors({ expect: [ [1, 10] ]                         });
     }
 });
 
@@ -1187,8 +1189,8 @@ const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
         });
         await executor.setCursors({ to: [ [2, 4] ] });
         await executor.typePair({ repetitions: 10 });
-        executor.assertPairs([ { line: 2, sides: range(4, 24) } ]);
-        executor.assertCursors([ [2, 14] ]);
+        executor.assertPairs({   expect: [ { line: 2, sides: range(4, 24) } ] });
+        executor.assertCursors({ expect: [ [2, 14] ]                          });
     },
 
     task: async (executor) => {
@@ -1207,8 +1209,8 @@ const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
         await executor.typeText({ text: 'really' });
         await executor.triggerAndAcceptSuggestion();
         sliceAdd(pairs[0].sides, 10, 20, 22);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [2, 36] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [2, 36] ] });
 
         // As an additional check, perform another autocompletion.
         //
@@ -1226,8 +1228,8 @@ const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
         await executor.typeText({ text: 'really' });
         await executor.triggerAndAcceptSuggestion();
         sliceAdd(pairs[0].sides, 10, 20, 23);
-        executor.assertPairs(pairs);
-        executor.assertCursors([ [2, 36] ]);
+        executor.assertPairs({   expect: pairs       });
+        executor.assertCursors({ expect: [ [2, 36] ] });
     }
 });
 
@@ -1252,8 +1254,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         await executor.typeText({ text: 'function main() {\nconst x = ' });
         await executor.setCursors({ to: [ [1, 14] ] });
         await executor.typeText({ text: 'someFn({ outer: { inner: ' });
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 39, 40, 41] } ]);
-        executor.assertCursors([ [1, 39] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 39, 40, 41] } ] });
+        executor.assertCursors({ expect: [ [1, 39] ]                                      });
     },
     task: async (executor) => {
 
@@ -1269,8 +1271,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         await executor.insertSnippet({
             snippet: new SnippetString('fn1({ arg1: `$3`, arg2: fn2(${1:float}, ${2:binary}), arg3: $4 })$0')
         });
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 90, 91, 92] } ]);
-        executor.assertCursors([ { anchor: [1, 65], active: [1, 70] } ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 90, 91, 92] } ] });
+        executor.assertCursors({ expect: [ { anchor: [1, 65], active: [1, 70] } ]         });
     
         // Insert a floating point number at the first tabstop.
         //
@@ -1282,8 +1284,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                             ^(cursor position)
         // ```
         await executor.typeText({ text: '3.14159265359' });
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 98, 99, 100] } ]);
-        executor.assertCursors([ [1, 78] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 98, 99, 100] } ] });
+        executor.assertCursors({ expect: [ [1, 78] ]                                       });
 
         // (User presses Tab)
         //
@@ -1300,8 +1302,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                               |-----^(cursor position)
         // ```
         await executor.jumpToNextTabstop();
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 98, 99, 100] } ]);
-        executor.assertCursors([ { anchor: [1, 80], active: [1, 86]} ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 98, 99, 100] } ] });
+        executor.assertCursors({ expect: [ { anchor: [1, 80], active: [1, 86]} ]           });
 
         // Insert a binary number at the second tabstop.
         //
@@ -1313,8 +1315,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                       ^(cursor position)
         // ```
         await executor.typeText({ text: '0b101010' });
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 100, 101, 102] } ]);
-        executor.assertCursors([ [1, 88] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 100, 101, 102] } ] });
+        executor.assertCursors({ expect: [ [1, 88] ]                                         });
 
         // (User presses Tab) 
         //
@@ -1331,8 +1333,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                   ^(cursor position)
         // ```
         await executor.jumpToNextTabstop();
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 100, 101, 102] } ]);
-        executor.assertCursors([ [1, 52] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 100, 101, 102] } ] });
+        executor.assertCursors({ expect: [ [1, 52] ]                                         });
 
         // (User presses Tab) 
         //
@@ -1349,8 +1351,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                ^(cursor position)
         // ```
         await executor.jumpToNextTabstop();
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 100, 101, 102] } ]);
-        executor.assertCursors([ [1, 97] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 100, 101, 102] } ] });
+        executor.assertCursors({ expect: [ [1, 97] ]                                         });
 
         // Insert a single-element array at the fourth tabstop.
         //
@@ -1362,8 +1364,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                       ^(cursor position)
         // ```
         await executor.typeText({ text: "['hello" });
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 97, 98, 104, 105, 109, 110, 111] } ]);
-        executor.assertCursors([ [1, 104] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 97, 98, 104, 105, 109, 110, 111] } ] });
+        executor.assertCursors({ expect: [ [1, 104] ]                                                          });
 
         // (User presses Tab) 
         //
@@ -1383,8 +1385,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                        ^(cursor position)
         // ```
         await executor.leap();
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 97, 105, 109, 110, 111] } ]);
-        executor.assertCursors([ [1, 105] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 97, 105, 109, 110, 111] } ] });
+        executor.assertCursors({ expect: [ [1, 105] ]                                                 });
 
         // Insert another array element.
         //
@@ -1396,8 +1398,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                                ^(cursor position)
         // ```
         await executor.typeText({ text: ", 'world" });
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 97, 107, 113, 114, 118, 119, 120] } ]);
-        executor.assertCursors([ [1, 113] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 97, 107, 113, 114, 118, 119, 120] } ] });
+        executor.assertCursors({ expect: [ [1, 113] ]                                                           });
 
         // (User presses Shift+Tab) 
         //
@@ -1411,8 +1413,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                   ^(cursor position)
         // ```
         await executor.jumpToPrevTabstop();
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 118, 119, 120] } ]);
-        executor.assertCursors([ [1, 52] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 118, 119, 120] } ] });
+        executor.assertCursors({ expect: [ [1, 52] ]                                         });
 
         // Fill in the template string at the third tabstop.
         //
@@ -1424,8 +1426,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                            ^(cursor position)
         // ```
         await executor.typeText({ text: '${168 / 4' });
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 53, 61, 128, 129, 130] } ]);
-        executor.assertCursors([ [1, 61] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 53, 61, 128, 129, 130] } ] });
+        executor.assertCursors({ expect: [ [1, 61] ]                                                 });
 
         // (User presses Tab) 
         //
@@ -1445,8 +1447,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                             ^(cursor position)
         // ```
         await executor.leap();
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 128, 129, 130] } ]);
-        executor.assertCursors([ [1, 62] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 128, 129, 130] } ] });
+        executor.assertCursors({ expect: [ [1, 62] ]                                         });
 
         // (User presses Tab) 
         //
@@ -1463,8 +1465,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                          |-----------------^(cursor selection)
         // ```
         await executor.jumpToNextTabstop();
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 128, 129, 130] } ]);
-        executor.assertCursors([ { anchor: [1, 107], active: [1, 125] } ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 128, 129, 130] } ] });
+        executor.assertCursors({ expect: [ { anchor: [1, 107], active: [1, 125] } ]          });
 
         // (User presses Tab) 
         //
@@ -1481,8 +1483,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                                               ^(cursor position)
         // ```
         await executor.jumpToNextTabstop();
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 128, 129, 130] } ]);
-        executor.assertCursors([ [1, 128] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 128, 129, 130] } ] });
+        executor.assertCursors({ expect: [ [1, 128] ]                                        });
 
         // Add spacing.
         //
@@ -1494,8 +1496,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                                                ^(cursor position)
         // ```
         await executor.typeText({ text: ' ' });
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 129, 130, 131] } ]);
-        executor.assertCursors([ [1, 129] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 129, 130, 131] } ] });
+        executor.assertCursors({ expect: [ [1, 129] ]                                        });
 
         // (User presses Tab)
         // 
@@ -1509,8 +1511,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                                                 ^(cursor position)
         // ```
         await executor.leap();
-        executor.assertPairs([ { line: 1, sides: [20, 21, 130, 131] } ]);
-        executor.assertCursors([ [1, 130] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 130, 131] } ] });
+        executor.assertCursors({ expect: [ [1, 130] ]                               });
 
         // Add more spacing.
         //
@@ -1522,8 +1524,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                                                  ^(cursor position)
         // ```
         await executor.typeText({ text: ' ' });
-        executor.assertPairs([ { line: 1, sides: [20, 21, 131, 132] } ]);
-        executor.assertCursors([ [1, 131] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 131, 132] } ] });
+        executor.assertCursors({ expect: [ [1, 131] ]                               });
 
         // (User presses Tab)
         // 
@@ -1537,8 +1539,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                                                   ^(cursor position)
         // ```
         await executor.leap();
-        executor.assertPairs([ { line: 1, sides: [20, 132] } ]);
-        executor.assertCursors([ [1, 132] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 132] } ] });
+        executor.assertCursors({ expect: [ [1, 132] ]                      });
 
         // (User presses Tab)
         // 
@@ -1552,8 +1554,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                                                    ^(cursor position)
         // ```
         await executor.leap();
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [1, 133] ]);
+        executor.assertPairs({   expect: [ 'None' ]   });
+        executor.assertCursors({ expect: [ [1, 133] ] });
 
         // Complete the line with a semicolon at the end.
         //
@@ -1565,8 +1567,8 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
         // }                                                                                                                                     ^(cursor position)
         // ```
         await executor.typeText({ text: ';' });
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [1, 134] ]);
+        executor.assertPairs({   expect: [ 'None' ]   });
+        executor.assertCursors({ expect: [ [1, 134] ] });
     }
 });
 
@@ -1594,8 +1596,8 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
     prelude: async (executor) => {
         await executor.typeText({ text: 'function main() {\n' });
         await executor.typePair({ repetitions: 10 });
-        executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
-        executor.assertCursors([ [1, 14] ]);
+        executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ] });
+        executor.assertCursors({ expect: [ [1, 14] ]                          });
     },
 
     task: async (executor) => {
@@ -1603,8 +1605,8 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // Because the pairs and cursors are not expected to change due to text modification 
         // occurring after them, this convenience method allows us to cut down on boilerplate.
         const check = () => {
-            executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
-            executor.assertCursors([ [1, 14] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ] });
+            executor.assertCursors({ expect: [ [1, 14] ]                          });
         };
 
         // 1. Insert single-line text on the same line after the pairs. 

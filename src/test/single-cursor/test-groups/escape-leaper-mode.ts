@@ -18,8 +18,8 @@ const TEST_CASES: TestCase[] = [
             await executor.moveCursors({ direction: 'up' });
             await executor.moveCursors({ direction: 'left', repetitions: 10 });
             await executor.typePair({ repetitions: 10 });
-            executor.assertPairs([ { line: 5, sides: range(79, 99) } ]);
-            executor.assertCursors([ [5, 89] ]);
+            executor.assertPairs({   expect: [ { line: 5, sides: range(79, 99) } ] });
+            executor.assertCursors({ expect: [ [5, 89] ]                           });
         },
         task: async (executor) => {
 
@@ -28,8 +28,8 @@ const TEST_CASES: TestCase[] = [
 
             // This should remove all pairs from being tracked.
             await executor.escapeLeaperMode();
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [5, 90] ]);
+            executor.assertPairs({   expect: [ 'None' ]  });
+            executor.assertCursors({ expect: [ [5, 90] ] });
         }
     }),
 
@@ -56,15 +56,15 @@ const TEST_CASES: TestCase[] = [
                     +     'function inner() {\n'
                     +         'return [ { a: { b: ['
             });
-            executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ]);
-            executor.assertCursors([ [2, 28] ]);
+            executor.assertPairs({   expect: [ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ] });
+            executor.assertCursors({ expect: [ [2, 28] ]                                              });
         },
         task: async (executor) => {
 
             // This should remove all pairs from being tracked and do nothing else.
             await executor.escapeLeaperMode({ delay: 0, repetitions: 50 }); 
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [2, 28] ]);
+            executor.assertPairs({   expect: [ 'None' ]  });
+            executor.assertCursors({ expect: [ [2, 28] ] });
         }
     })
 ];

@@ -28,14 +28,14 @@ async function testDetectedPairs(
 
     /**
      * Type in the opening side of each pair in `pairs`, let vscode autoclose the pair, then 
-     * depending on `expect`:
+     * depending on `expectTrack`:
      *  
      *  - If `true`, will assert that each inserted pair is tracked by the extension.
      *  - If `false`, will assert that each inserted pair is not tracked by the extension. 
      */
     async function check(
         pairs: ("{}" | "[]" | "()" | "''" | "\"\"" | "``" | "<>")[],
-        expect: boolean
+        expectTrack: boolean
     ): Promise<void> {
         for (const pair of pairs) {
 
@@ -43,17 +43,19 @@ async function testDetectedPairs(
             await executor.typeText({ text: pair[0] });
 
             // Check that the pair is being tracked (or not tracked, depending on `expect`).
-            executor.assertPairs([ 
-                expect ? { line: cursor[0], sides: [ cursor[1], cursor[1] + 1 ] } : 'None'
-            ]);
-            executor.assertCursors([ [cursor[0], cursor[1] + 1] ]);
+            executor.assertPairs({
+                expect: [
+                    expectTrack ? { line: cursor[0], sides: [ cursor[1], cursor[1] + 1 ] } : 'None'
+                ]
+            });
+            executor.assertCursors({ expect: [ [cursor[0], cursor[1] + 1] ] });
 
             // Remove the inserted pair.
             await executor.undo();
 
             // Check that the inserted pair was removed.
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ cursor ]);
+            executor.assertPairs({   expect: [ 'None' ] });
+            executor.assertCursors({ expect: [ cursor ] });
         }
     }
 }

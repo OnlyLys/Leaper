@@ -4,7 +4,7 @@ import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, Te
 import * as assert from 'assert';
 import * as path from 'path';
 import { Snapshot, TestAPI } from '../../engine/test-api';
-import { CompactCursors, CompactClusters, CompactRange, CompactPosition } from './compact';
+import { CompactCursors, CompactCluster, CompactClusters, CompactRange, CompactPosition } from './compact';
 import { pickRandom, waitFor, zip } from './other';
 
 /**
@@ -139,90 +139,82 @@ export class Executor {
 
     /**
      * Assert the position of pairs being tracked within the active text editor.
-     * 
-     * # Decorations
-     * 
-     * The value of `expectDecorations` determines if decorations are checked:
-     * 
-     *  - `'all'`: Assert that all pairs are decorated.
-     *  - `'nearest'`: Assert that only the pairs nearest to each cursor are decorated.
-     *  - `undefined`: Will not check the decorations.
      */
-    public assertPairs(
-        expected:           CompactClusters, 
-        expectDecorations?: 'all' | 'nearest'
-    ): void {
+    public assertPairs(args: AssertPairsArgs): void {
 
-        // Representation of a pair that displays better during assertion failures.
-        type PairPartial = { open: [number, number], close: [number, number] };
+        // The form pairs obtained from a snapshot.
+        type Pair = { open: Position, close: Position, isDecorated: boolean };
 
-        // Is `Pair` but with information about whether the pair is decorated.
-        type PairFull = { open: [number, number], close: [number, number], isDecorated: boolean };
+        // Print friendly representation of a pair.
+        type Friendly = { open: [number, number], close: [number, number] }
 
-        // The actual pairs (including decorations) but in a more print friendly form.
-        const actualFull: PairFull[][] = getSnapshot().map((cluster) => 
-            cluster.map(({ open, close, isDecorated }) =>
-                ({ 
-                    open:  [open.line,  open.character], 
-                    close: [close.line, close.character],
-                    isDecorated
-                })
-            )
-        );
+        // Print friendly representation of a pair including decoration flag.
+        //
+        // This form is used when we are asked to assert pairs.
+        type FriendlyFull = { open: [number, number], close: [number, number], isDecorated: boolean };
 
-        // The expected pairs (including decorations) but in a more print friendly form.
-        const expectedFull: PairFull[][] = expected.map((cluster) => {
-            if (cluster === 'None') {
-                return [];
-            } else {
-                const line    = cluster.line;
-                const openers = cluster.sides.slice(0, cluster.sides.length / 2);
-                const closers = cluster.sides.slice(cluster.sides.length / 2).reverse();
-                const pairs: PairFull[] = [...zip(openers, closers)].map(([opener, closer]) => 
-                    ({ open: [line, opener], close: [line, closer], isDecorated: false })
-                );
-                if (expectDecorations === 'all') {
-                    pairs.forEach(pair => pair.isDecorated = true);
-                } else if (expectDecorations === 'nearest' && pairs.length > 0) {
-                    pairs[pairs.length - 1].isDecorated = true;
-                }
-                return pairs;
-            }
-        });
-
-        // The message to show on assertion failure.
-        const errMsg = this.assertFailMsgHeader + 'Pairs Mismatch';
-
-        if (expectDecorations) {
-            assert.deepStrictEqual(actualFull, expectedFull, errMsg);
-        } else {
-
-            function strip(full: PairFull[][]): PairPartial[][] {
-                return full.map((cluster) => cluster.map(({ open, close}) => ({ open, close })));
-            }
-
-            // Since `expectDecorations` was not specified, we strip the `isDecorated` flag before
-            // performing assertions.
-            const actualPartial   = strip(actualFull);
-            const expectedPartial = strip(expectedFull);
-
-            assert.deepStrictEqual(actualPartial, expectedPartial, errMsg);
+        // Convert a cluster obtained from a snapshot to a print friendly form.
+        function makeFriendly(cluster: Pair[]): (Friendly | FriendlyFull)[] {
+            return cluster.map(({ open: _open, close: _close, isDecorated }) => {
+                const open:  [number, number] = [ _open.line,  _open.character];
+                const close: [number, number] = [_close.line, _close.character];
+                return args.decorations ? { open, close, isDecorated } : { open, close };
+            });
         }
+
+        // Convert the `CompactCluster` form of an expected cluster to a print friendly form.
+        function uncompact({ line, sides }: CompactCluster): (Friendly | FriendlyFull)[] {
+            const openers  = sides.slice(0, sides.length / 2);
+            const closers  = sides.slice(sides.length / 2).reverse();
+            const friendly = [...zip(openers, closers)].map(([opener, closer]) => {
+                return ({ open: [line, opener], close: [line, closer] }) as Friendly;
+            });
+            if (!args.decorations) {
+                return friendly;
+            } else {
+                const full = friendly.map(({ open, close }) => {
+                    return { open, close, isDecorated: args.decorations === 'all' };
+                });
+                if (args.decorations === 'nearest' && full.length > 0) {
+                    full[full.length - 1].isDecorated = true;
+                }
+                return full;
+            }
+        }
+
+        // The actual pairs in a print friendly form.
+        const actual = getSnapshot(args.viewColumn).map((cluster) => makeFriendly(cluster));
+
+        // The expected pairs in a print friendly form.
+        const expect = args.expect.map((cluster) => cluster === 'None' ? [] : uncompact(cluster));
+
+        assert.deepStrictEqual(actual, expect, this.assertFailMsgHeader + 'Pairs Mismatch');
     }
 
     /**
-     * Assert the positions of the cursors within the active text editor.
+     * Assert the positions of the cursors within a text editor.
      */
-    public assertCursors(expected: CompactCursors): void {
-        const actual: CompactCursors = getVisibleTextEditor().selections.map(({ active, anchor }) =>
-            ({ anchor: [anchor.line, anchor.character], active: [active.line, active.character] })
+    public assertCursors(args: AssertCursorsArgs): void {
+
+        // Standardized form that we will convert cursors to before the assertion.
+        type Standard = { anchor: [number, number], active: [number, number] };
+
+        // Convert a `Position` to a duple.
+        function toDuple(pos: Position): [number, number] {
+            return [pos.line, pos.character];
+        }
+
+        // Convert the actual cursors to the standardized form.
+        const actual: Standard[] = getVisibleTextEditor(args.viewColumn).selections.map((cursor) => 
+            ({ anchor: toDuple(cursor.anchor), active: toDuple(cursor.active) })
         );
-        const _expected: CompactCursors = expected.map((cursor) => 
-            Array.isArray(cursor) ? { anchor: [cursor[0], cursor[1]], active: [cursor[0], cursor[1]] }
-                                  : cursor
+        
+        // Convert the expected cursors to the standardized form.
+        const expect: Standard[] = args.expect.map((cursor) => 
+            Array.isArray(cursor) ? { anchor: cursor, active: cursor } : cursor
         );
-            
-        assert.deepStrictEqual(actual, _expected, this.assertFailMsgHeader + 'Cursors Mismatch');
+        
+        assert.deepStrictEqual(actual, expect, this.assertFailMsgHeader + 'Cursors Mismatch');
     }
 
     /**
@@ -707,6 +699,40 @@ async function executeWithRepetitionDelay(
     }
 }
 
+
+interface AssertPairsArgs {
+
+    expect: CompactClusters,
+
+    /**
+     * The value of this determines if decorations are checked.
+     * 
+     *  - `'all'`:     Assert that all pairs are decorated.
+     *  - `'nearest'`: Assert that only the pairs nearest to each cursor are decorated.
+     *  - `undefined`: Will not check the decorations.
+     */
+    decorations?: 'all' | 'nearest';
+
+    /**
+     * The view column of the text editor that we will be checking the pairs of.
+     * 
+     * Defaults to `ViewColumn.Active`.
+     */
+    viewColumn?: ViewColumn;
+}
+
+interface AssertCursorsArgs {
+    
+    expect: CompactCursors
+
+    /**
+     * The view column of the text editor that we will be checking the cursors of.
+     * 
+     * Defaults to `ViewColumn.Active`.
+     */
+    viewColumn?: ViewColumn;
+}
+
 interface RepetitionDelayOptions {
 
     /** 
@@ -794,7 +820,7 @@ interface SetCursorsArgs extends RepetitionDelayOptions {
 }
 
 interface InsertSnippetArgs extends RepetitionDelayOptions {
-    
+
     snippet: SnippetString;
 
     /**

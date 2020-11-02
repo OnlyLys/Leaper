@@ -31,8 +31,12 @@ const SHARED_PRELUDE = async (executor: Executor) => {
     await executor.typeText({ text: '{  ' });
     await executor.moveCursors({ direction: 'left', });
     await executor.typeText({ text: 'prop: someFn(1, 20' });
-    executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ]); 
-    executor.assertCursors([ [1, 52] ]);
+    executor.assertPairs({
+        expect: [ 
+            { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } 
+        ] 
+    }); 
+    executor.assertCursors({ expect: [ [1, 52] ] });
 };
 
 const TEST_CASES: TestCase[] = [
@@ -55,8 +59,12 @@ const TEST_CASES: TestCase[] = [
             // }                                                    ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'right' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
-            executor.assertCursors([ [1, 53] ]);
+            executor.assertPairs({ 
+                expect: [ 
+                    { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } 
+                ] 
+            });
+            executor.assertCursors({ expect: [ [1, 53] ] });
 
             // Move to the boundary of the next nearest pair.
             //
@@ -68,8 +76,12 @@ const TEST_CASES: TestCase[] = [
             // }                                                     ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'right' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
-            executor.assertCursors([ [1, 54] ]);
+            executor.assertPairs({ 
+                expect: [ 
+                    { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } 
+                ] 
+            });
+            executor.assertCursors({ expect: [ [1, 54] ] });
 
             // Move out of the nearest pair.
             //
@@ -81,8 +93,12 @@ const TEST_CASES: TestCase[] = [
             // }                                                      ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'right' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
-            executor.assertCursors([ [1, 55] ]);
+            executor.assertPairs({
+                expect: [ 
+                    { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } 
+                ] 
+            });
+            executor.assertCursors({ expect: [ [1, 55] ] });
 
             // Move to the boundary of the next nearest pair.
             //
@@ -94,8 +110,12 @@ const TEST_CASES: TestCase[] = [
             // }                                                       ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'right' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
-            executor.assertCursors([ [1, 56] ]);
+            executor.assertPairs({
+                expect: [ 
+                    { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } 
+                ] 
+            });
+            executor.assertCursors({ expect: [ [1, 56] ] });
 
             // Move out of the nearest pair.
             //
@@ -107,8 +127,8 @@ const TEST_CASES: TestCase[] = [
             // }                                                        ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'right' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
-            executor.assertCursors([ [1, 57] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ] });
+            executor.assertCursors({ expect: [ [1, 57] ]                                      });
 
             // Move to the boundary of the next nearest pair.
             //
@@ -120,8 +140,8 @@ const TEST_CASES: TestCase[] = [
             // }                                                         ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'right' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
-            executor.assertCursors([ [1, 58] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ] });
+            executor.assertCursors({ expect: [ [1, 58] ]                                      });
 
             // Move out of the nearest pair.
             //
@@ -133,8 +153,8 @@ const TEST_CASES: TestCase[] = [
             // }                                                          ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'right' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
-            executor.assertCursors([ [1, 59] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [15, 16, 60, 61] } ] });
+            executor.assertCursors({ expect: [ [1, 59] ]                              });
 
             // Move to the boundary of the next nearest pair.
             //
@@ -146,8 +166,8 @@ const TEST_CASES: TestCase[] = [
             // }                                                           ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'right' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
-            executor.assertCursors([ [1, 60] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [15, 16, 60, 61] } ] });
+            executor.assertCursors({ expect: [ [1, 60] ]                              });
          
             // Move out of the nearest pair.
             //
@@ -159,8 +179,8 @@ const TEST_CASES: TestCase[] = [
             // }                                                            ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'right' });
-            executor.assertPairs([ { line: 1, sides: [15, 61] } ]);
-            executor.assertCursors([ [1, 61] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [15, 61] } ] });
+            executor.assertCursors({ expect: [ [1, 61] ]                      });
 
             // Move out of the last pair.
             //
@@ -172,8 +192,8 @@ const TEST_CASES: TestCase[] = [
             // }                                                             ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'right' });
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [1, 62] ]);
+            executor.assertPairs({   expect: [ 'None' ]  });
+            executor.assertCursors({ expect: [ [1, 62] ] });
         }
     }),
     new TestCase({
@@ -189,8 +209,8 @@ const TEST_CASES: TestCase[] = [
             // }                                                             ^(cursor position)
             // ```
             await executor.setCursors({ to: [ [1, 62] ] });
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [1, 62] ]);
+            executor.assertPairs({   expect: [ 'None' ]  });
+            executor.assertCursors({ expect: [ [1, 62] ] });
         }
     }),
     new TestCase({
@@ -206,8 +226,8 @@ const TEST_CASES: TestCase[] = [
             // }                                                                                        ^(cursor position)
             // ```
             await executor.end();
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [1, 89] ]);
+            executor.assertPairs({   expect: [ 'None' ]  });
+            executor.assertCursors({ expect: [ [1, 89] ] });
         }
     }),
     new TestCase({
@@ -225,8 +245,12 @@ const TEST_CASES: TestCase[] = [
             // }                                              ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'left', repetitions: 5 });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ]); 
-            executor.assertCursors([ [1, 47] ]);
+            executor.assertPairs({ 
+                expect: [ 
+                    { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } 
+                ] 
+            }); 
+            executor.assertCursors({ expect: [ [1, 47] ] });
 
             // Move out of the nearest pair.
             //
@@ -238,8 +262,12 @@ const TEST_CASES: TestCase[] = [
             // }                                             ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'left' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
-            executor.assertCursors([ [1, 46] ]);
+            executor.assertPairs({   
+                expect: [ 
+                    { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } 
+                ] 
+            });
+            executor.assertCursors({ expect: [ [1, 46] ] });
 
             // Move to the boundary of the next nearest pair.
             //
@@ -251,8 +279,12 @@ const TEST_CASES: TestCase[] = [
             // }                                ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'left', repetitions: 13 });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
-            executor.assertCursors([ [1, 33] ]);
+            executor.assertPairs({
+                expect: [ 
+                    { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } 
+                ] 
+            });
+            executor.assertCursors({ expect: [ [1, 33] ] });
 
             // Move out of the nearest pair.
             //
@@ -264,8 +296,12 @@ const TEST_CASES: TestCase[] = [
             // }                               ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'left' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
-            executor.assertCursors([ [1, 32] ]);
+            executor.assertPairs({ 
+                expect: [ 
+                    { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } 
+                ] 
+            });
+            executor.assertCursors({ expect: [ [1, 32] ] });
 
             // Move to the boundary of the next nearest pair.
             //
@@ -277,8 +313,12 @@ const TEST_CASES: TestCase[] = [
             // }                              ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'left' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
-            executor.assertCursors([ [1, 31] ]);
+            executor.assertPairs({ 
+                expect: [ 
+                    { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } 
+                ] 
+            });
+            executor.assertCursors({ expect: [ [1, 31] ] });
 
             // Move out of the nearest pair.
             //
@@ -290,8 +330,8 @@ const TEST_CASES: TestCase[] = [
             // }                             ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'left' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
-            executor.assertCursors([ [1, 30] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ] });
+            executor.assertCursors({ expect: [ [1, 30] ]                                      });
 
             // Move to the boundary of the next nearest pair.
             //
@@ -303,8 +343,8 @@ const TEST_CASES: TestCase[] = [
             // }                       ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'left', repetitions: 6 });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
-            executor.assertCursors([ [1, 24] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ] });
+            executor.assertCursors({ expect: [ [1, 24] ]                                      });
                 
             // Move out of the nearest pair.
             //
@@ -316,8 +356,8 @@ const TEST_CASES: TestCase[] = [
             // }                      ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'left' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
-            executor.assertCursors([ [1, 23] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [15, 16, 60, 61] } ] });
+            executor.assertCursors({ expect: [ [1, 23] ]                              });
 
             // Move to the boundary of the next nearest pair.
             //
@@ -329,8 +369,8 @@ const TEST_CASES: TestCase[] = [
             // }                ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'left', repetitions: 6 });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
-            executor.assertCursors([ [1, 17] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [15, 16, 60, 61] } ] });
+            executor.assertCursors({ expect: [ [1, 17] ]                              });
  
             // Move out of the nearest pair.
             //
@@ -342,8 +382,8 @@ const TEST_CASES: TestCase[] = [
             // }               ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'left' });
-            executor.assertPairs([ { line: 1, sides: [15, 61] } ]);
-            executor.assertCursors([ [1, 16] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [15, 61] } ] });
+            executor.assertCursors({ expect: [ [1, 16] ]                      });
 
             // Move out of the last pair.
             //
@@ -355,8 +395,8 @@ const TEST_CASES: TestCase[] = [
             // }              ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'left' });
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [1, 15] ]);
+            executor.assertPairs({   expect: [ 'None' ]  });
+            executor.assertCursors({ expect: [ [1, 15] ] });
         }
     }),
     new TestCase({
@@ -372,8 +412,8 @@ const TEST_CASES: TestCase[] = [
             // }              ^(cursor position)
             // ```
             await executor.setCursors({ to: [ [1, 15] ] });
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [1, 15] ]);
+            executor.assertPairs({   expect: [ 'None' ]  });
+            executor.assertCursors({ expect: [ [1, 15] ] });
         }
     }),
     new TestCase({
@@ -389,8 +429,8 @@ const TEST_CASES: TestCase[] = [
             // }   ^(cursor position)
             // ```
             await executor.home();
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [1, 4] ]);
+            executor.assertPairs({   expect: [ 'None' ] });
+            executor.assertCursors({ expect: [ [1, 4] ] });
         }
     }),
     new TestCase({
@@ -407,8 +447,8 @@ const TEST_CASES: TestCase[] = [
             // }
             // ```
             await executor.moveCursors({ direction: 'up' });
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [0, 13] ]);
+            executor.assertPairs({   expect: [ 'None' ]  });
+            executor.assertCursors({ expect: [ [0, 13] ] });
         }
     }),
     new TestCase({
@@ -425,8 +465,8 @@ const TEST_CASES: TestCase[] = [
             //  ^(cursor position)
             // ```
             await executor.moveCursors({ direction: 'down' });
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [2, 1] ]);
+            executor.assertPairs({   expect: [ 'None' ] });
+            executor.assertCursors({ expect: [ [2, 1] ] });
         }
     }),
 
@@ -449,8 +489,12 @@ const TEST_CASES: TestCase[] = [
             // ```
             await executor.moveCursors({ direction: 'left', repetitions: 5 });
             await executor.backspace();
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } ]);
-            executor.assertCursors([ [1, 46] ]);
+            executor.assertPairs({ 
+                expect: [ 
+                    { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } 
+                ] 
+            });
+            executor.assertCursors({ expect: [ [1, 46] ] });
 
             // Overwrite text including the third and fourth of the remaining pairs.
             //
@@ -466,8 +510,8 @@ const TEST_CASES: TestCase[] = [
                     { kind: 'replace', range: { start: [1, 23], end: [1, 32] }, with: 'cheesecake' }
                 ]
             });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 33, 54, 60, 61] } ]);
-            executor.assertCursors([ [1, 47] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [15, 16, 33, 54, 60, 61] } ] });
+            executor.assertCursors({ expect: [ [1, 47] ]                                      });
 
             // Overwrite some text including the first of the remaining pairs. 
             //
@@ -483,8 +527,8 @@ const TEST_CASES: TestCase[] = [
                     { kind: 'delete', range: { start: [1, 4], end: [1, 16] } }
                 ]
             });
-            executor.assertPairs([ { line: 1, sides: [4, 21, 42, 48] } ]);
-            executor.assertCursors([ [1, 35] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [4, 21, 42, 48] } ] });
+            executor.assertCursors({ expect: [ [1, 35] ]                             });
 
             // Backspace until the second of the remaining pairs is deleted.
             //
@@ -496,8 +540,8 @@ const TEST_CASES: TestCase[] = [
             // }                    ^(cursor position)
             // ```
             await executor.backspace({ repetitions: 14 });
-            executor.assertPairs([ { line: 1, sides: [4, 34] } ]);
-            executor.assertCursors([ [1, 21] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [4, 34] } ] });
+            executor.assertCursors({ expect: [ [1, 21] ]                     });
 
             // Overwrite first pair.
             //
@@ -513,8 +557,8 @@ const TEST_CASES: TestCase[] = [
                     { kind: 'replace', range: { start: [1, 4], end: [1, 5] }, with: 'rabbit' }
                 ]
             });
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [1, 26] ]);
+            executor.assertPairs({   expect: [ 'None' ]  });
+            executor.assertCursors({ expect: [ [1, 26] ] });
         }
     }),
     new TestCase({
@@ -532,8 +576,12 @@ const TEST_CASES: TestCase[] = [
             // }                                                   ^(cursor position)
             // ```
             await executor.deleteRight();
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } ]);
-            executor.assertCursors([ [1, 52] ]);
+            executor.assertPairs({ 
+                expect: [ 
+                    { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } 
+                ]
+            });
+            executor.assertCursors({ expect: [ [1, 52] ] });
 
             // Overwrite text including the third and fourth of the remaining pairs.
             //
@@ -549,8 +597,8 @@ const TEST_CASES: TestCase[] = [
                     { kind: 'replace', range: { start: [1, 55], end: [1, 59] }, with: 'cheesecake' }
                 ]
             });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 32, 53, 65, 66] } ]);
-            executor.assertCursors([ [1, 52] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [15, 16, 32, 53, 65, 66] } ] });
+            executor.assertCursors({ expect: [ [1, 52] ]                                      });
 
             // Overwrite some text including the first of the remaining pairs.
             //
@@ -566,8 +614,8 @@ const TEST_CASES: TestCase[] = [
                     { kind: 'delete', range: { start: [1, 66], end: [1, 94] } }
                 ]
             });
-            executor.assertPairs([ { line: 1, sides: [16, 32, 53, 65] } ]);
-            executor.assertCursors([ [1, 52] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [16, 32, 53, 65] } ] });
+            executor.assertCursors({ expect: [ [1, 52] ]                              });
             
             // Delete right until the second of the remaining pairs is deleted.
             //
@@ -579,8 +627,8 @@ const TEST_CASES: TestCase[] = [
             // }                                                   ^(cursor position)
             // ```
             await executor.deleteRight({ repetitions: 2 });
-            executor.assertPairs([ { line: 1, sides: [16, 63] } ]);
-            executor.assertCursors([ [1, 52] ]);
+            executor.assertPairs({   expect: [ { line: 1, sides: [16, 63] } ] });
+            executor.assertCursors({ expect: [ [1, 52] ]                      });
             
             // Overwrite text including the final pair.
             //
@@ -596,8 +644,8 @@ const TEST_CASES: TestCase[] = [
                     { kind: 'replace', range: { start: [1, 17], end: [1, 64] }, with: 'rabbit' }
                 ]
             });
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [1, 23] ]);
+            executor.assertPairs({   expect: [ 'None' ]  });
+            executor.assertCursors({ expect: [ [1, 23] ] });
         }
     }),
 
@@ -624,8 +672,12 @@ const TEST_CASES: TestCase[] = [
                     { kind: 'insert', at: [1, 16], text: '\n        ' }
                 ]
             });
-            executor.assertPairs([ { line: 2, sides: [8, 15, 22, 24, 38, 44, 46, 48, 50, 52] } ]);
-            executor.assertCursors( [ [2, 44] ]);
+            executor.assertPairs({ 
+                expect: [ 
+                    { line: 2, sides: [8, 15, 22, 24, 38, 44, 46, 48, 50, 52] } 
+                ] 
+            });
+            executor.assertCursors({ expect: [ [2, 44] ] });
 
             // Replace the text between the second and third remaining pairs with multiline text.
             //
@@ -656,8 +708,8 @@ const TEST_CASES: TestCase[] = [
                     }
                 ]
             });
-            executor.assertPairs([ { line: 7, sides: [17, 19, 33, 39, 41, 43] } ]);
-            executor.assertCursors([ [7, 39] ]);
+            executor.assertPairs({   expect: [ { line: 7, sides: [17, 19, 33, 39, 41, 43] } ] });
+            executor.assertCursors({ expect: [ [7, 39] ]                                      });
 
             // Type in a newline at the cursor position.
             //
@@ -678,8 +730,8 @@ const TEST_CASES: TestCase[] = [
             //
             // (Note that auto-indentation of Typescript applies).
             await executor.typeText({ text: '\n' });
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [8, 16] ]);
+            executor.assertPairs({   expect: [ 'None' ]  });
+            executor.assertCursors({ expect: [ [8, 16] ] });
         }
     }),
     new TestCase({
@@ -697,8 +749,12 @@ const TEST_CASES: TestCase[] = [
             // }                                                 ^(cursor position)
             // ```
             await executor.backspace({ repetitions: 2 });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 50, 52, 54, 56, 58, 59] } ]);
-            executor.assertCursors([ [1, 50] ]);
+            executor.assertPairs({ 
+                expect: [ 
+                    { line: 1, sides: [15, 16, 23, 30, 32, 46, 50, 52, 54, 56, 58, 59] } 
+                ] 
+            });
+            executor.assertCursors({ expect: [ [1, 50] ] });
 
             // Type in an array of numbers.
             //
@@ -710,8 +766,12 @@ const TEST_CASES: TestCase[] = [
             // }                                                             ^(cursor position)
             // ```
             await executor.typeText({ text: '[-1, -2, -3]' });
-            executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 62, 64, 66, 68, 70, 71] } ]);
-            executor.assertCursors([ [1, 62] ]);
+            executor.assertPairs({ 
+                expect: [ 
+                    { line: 1, sides: [15, 16, 23, 30, 32, 46, 62, 64, 66, 68, 70, 71] } 
+                ] 
+            });
+            executor.assertCursors({ expect: [ [1, 62] ] });
 
             // Insert a multi-line snippet.
             // 
@@ -727,8 +787,8 @@ const TEST_CASES: TestCase[] = [
             await executor.insertSnippet({ 
                 snippet: new SnippetString('.reduce((${1:acc}, ${2:prev}) => {\n    $3\n}, ${4:init})$0') 
             });
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ { anchor: [1, 71], active: [1, 74] } ]);
+            executor.assertPairs({   expect: [ 'None' ]                               });
+            executor.assertCursors({ expect: [ { anchor: [1, 71], active: [1, 74] } ] });
 
             // Make sure that the snippet still works by jumping to the second tabstop.
             // 
@@ -742,8 +802,8 @@ const TEST_CASES: TestCase[] = [
             // }                                                            
             // ```
             await executor.jumpToNextTabstop();
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ { anchor: [1, 76], active: [1, 80] } ]);
+            executor.assertPairs({   expect: [ 'None' ]                               });
+            executor.assertCursors({ expect: [ { anchor: [1, 76], active: [1, 80] } ] });
 
             // Make sure that the snippet still works by jumping to the third tabstop.
             // 
@@ -758,8 +818,8 @@ const TEST_CASES: TestCase[] = [
             // }                                                            
             // ```
             await executor.jumpToNextTabstop();
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [2, 8] ]);
+            executor.assertPairs({   expect: [ 'None' ] });
+            executor.assertCursors({ expect: [ [2, 8] ] });
 
             // Make sure that the snippet still works by jumping to the fourth tabstop.
             //
@@ -773,8 +833,8 @@ const TEST_CASES: TestCase[] = [
             // }      |---^(cursor selection)
             // ```
             await executor.jumpToNextTabstop();
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ { anchor: [3, 7], active: [3, 11] } ]);
+            executor.assertPairs({   expect: [ 'None' ]                              });
+            executor.assertCursors({ expect: [ { anchor: [3, 7], active: [3, 11] } ] });
 
             // Make sure that the snippet still works by jumping to the final tabstop.
             //
@@ -788,8 +848,8 @@ const TEST_CASES: TestCase[] = [
             // }           ^(cursor position)
             // ```
             await executor.jumpToNextTabstop();
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [3, 12] ]);
+            executor.assertPairs({   expect: [ 'None' ]  });
+            executor.assertCursors({ expect: [ [3, 12] ] });
         }
     })
 ];
