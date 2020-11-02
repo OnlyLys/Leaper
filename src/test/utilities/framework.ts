@@ -226,7 +226,7 @@ export class Executor {
     }
 
     /**
-     * Get the cursors of a visible text editor.
+     * Get the cursors of the visible text editor at view column `viewColumn`.
      * 
      * Defaults to the visible text editor if `viewColumn is `undefined`.
      */
