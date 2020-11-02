@@ -247,10 +247,10 @@ export class Executor {
     /**
      * Assert the most recently broadcasted value of `leaper.inLeaperMode` keybinding context.
      */
-    public assertMRBInLeaperModeContext(expected: boolean): void {
+    public assertMRBInLeaperModeContext(expect: boolean): void {
         assert.deepStrictEqual(
             getHandle().MRBInLeaperModeContext, 
-            expected,
+            expect,
             this.assertFailMsgHeader + 'Most Recently Broadcasted `leaper.inLeaperMode` Context Mismatch'
         );
     }
@@ -258,10 +258,10 @@ export class Executor {
     /**
      * Assert the most recently broadcasted value of `leaper.hasLineOfSight` keybinding context.
      */
-    public assertMRBHasLineOfSightContext(expected: boolean): void {
+    public assertMRBHasLineOfSightContext(expect: boolean): void {
         assert.deepStrictEqual(
             getHandle().MRBHasLineOfSightContext, 
-            expected,
+            expect,
             this.assertFailMsgHeader + 'Most Recently Broadcasted `leaper.hasLineOfSight` Context Mismatch'
         );
     }
