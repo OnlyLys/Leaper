@@ -490,6 +490,24 @@ export class Executor {
     }
 
     /**
+     * Switch to the next text editor in the current tab group.
+     */
+    public async openNextEditorInGroup(options?: RepetitionDelayOptions): Promise<void> {
+        return executeWithRepetitionDelay(async () => {
+            await commands.executeCommand('workbench.action.nextEditorInGroup');
+        }, options);
+    }
+
+    /**
+     * Switch to the previous text editor in the current tab group.
+     */
+    public async openPrevEditorInGroup(options?: RepetitionDelayOptions): Promise<void> {
+        return executeWithRepetitionDelay(async () => {
+            await commands.executeCommand('workbench.action.previousEditorInGroup');
+        }, options);
+    }
+
+    /**
      * Move the active text editor one tab group to the right.
      */
     public async moveEditorToRight(options?: RepetitionDelayOptions): Promise<void> {
