@@ -64,7 +64,7 @@ export class Tracker {
 
 
     /** 
-     * Keybinding context that represents whether the path from the cursor to the closing side of 
+     * Keybinding context that represents whether the path from each cursor to the closing side of 
      * its nearest tracked pair is unobstructed.
      */
     public get hasLineOfSightContext(): PrivateContext {
