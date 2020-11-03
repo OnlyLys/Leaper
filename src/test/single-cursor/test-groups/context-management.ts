@@ -1,4 +1,6 @@
+import { ViewColumn } from 'vscode';
 import { TestCase, TestGroup } from '../../utilities/framework';
+import { range } from '../../utilities/other';
 
 /**
  * Test whether the keybinding contexts are correctly toggled while using a given text editor.
@@ -324,12 +326,547 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
 });
 
 /**
+ * Test whether the keybinding contexts are correctly set when switching between text editors.
+ */
+const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
+    name: 'Context Switching Between Text Editors',
+    prelude: async (executor) => {
+
+        // 0a. This test case begins with an empty Typescript text editor being provided to it.
+        //
+        // State of initially visible text editors:
+        // 
+        //     View Column     | 1 (active)  |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    |
+        //     Language        | Typescript  |
+        //     Number of Pairs | 0           |
+        //     Cursor Position | [0, 0]      |
+        //     Line of Sight   | No          |
+        //                     | (in Focus)  |
+        //
+        executor.assertPairs(  { expect: [ 'None' ] });
+        executor.assertCursors({ expect: [ [0, 0] ] });
+
+        // 0b. Since the provided text document is empty, this extension should have disabled both 
+        //     of the keybinding contexts when the provided text editor takes focus.
+        executor.assertMRBInLeaperModeContext(false);
+        executor.assertMRBHasLineOfSightContext(false);
+
+    },
+    task: async (executor) => {
+
+        // 1a. Now type a few pairs into the Typescript text editor provided to this test case.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1 (active)  |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    |
+        //     Language        | Typescript  |
+        //     Number of Pairs | 10          |
+        //     Cursor Position | [0, 10]     |
+        //     Line of Sight   | Yes         |
+        // 
+        await executor.typePair({ repetitions: 10 });
+        executor.assertPairs(  { expect: [ { line: 0, sides: range(0, 20) } ] });
+        executor.assertCursors({ expect: [ [0, 10] ] });
+
+        // 1b. We expect both keybinding contexts to be enabled since the provided text editor is in 
+        //     focus.
+        executor.assertMRBInLeaperModeContext(true);
+        executor.assertMRBHasLineOfSightContext(true);
+
+        // 2a. Now open the Plaintext file in Workspace 1.
+        //
+        // The opened file immediately takes focus.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1           | 2 (active)  |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 |
+        //     Language        | Typescript  | Plaintext   |
+        //     Number of Pairs | 10          | 0           |
+        //     Cursor Position | [0, 10]     | [0, 0]      |
+        //     Line of Sight   | Yes         | No          |
+        //
+        await executor.openFile({ 
+            rel:         './workspace-1/text.txt', 
+            showOptions: { viewColumn: ViewColumn.Two }
+        });
+        executor.assertPairs(  { expect: [ 'None' ] });
+        executor.assertCursors({ expect: [ [0, 0] ] });
+
+        // 2b. Because the opened text editor has no pairs being tracked for it, we expect both 
+        //     contexts to be disabled when it takes focus.
+        executor.assertMRBInLeaperModeContext(false);
+        executor.assertMRBHasLineOfSightContext(false);
+
+        // 3a. Attempt to insert some pairs into Workspace 1's Plaintext file.
+        //
+        // However, because pair detection is disabled (since `leaper.detectedPairs` was set to `[]`
+        // for Plaintext in the test workspace), we would not expect any of the inserted pairs to be 
+        // detected. 
+        // 
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1           | 2 (active)  |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 |
+        //     Language        | Typescript  | Plaintext   |
+        //     Number of Pairs | 10          | 0           |
+        //     Cursor Position | [0, 10]     | [2, 10]     |
+        //     Line of Sight   | Yes         | No          |
+        //
+        await executor.cursorBottom();
+        await executor.typePair({ repetitions: 10 });
+        executor.assertPairs(  { expect: [ 'None' ] });
+        executor.assertCursors({ expect: [ [2, 10] ] });
+
+        // 3b. Since none of the inserted pairs were tracked, both keybinding contexts should remain 
+        ///    disabled.
+        executor.assertMRBInLeaperModeContext(false);
+        executor.assertMRBHasLineOfSightContext(false);
+
+        // 4a. Now open the Typescript file in Workspace 2.
+        //
+        // The opened file immediately takes focus.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1           | 2           | 3 (active)  |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
+        //     Language        | Typescript  | Plaintext   | Typescript  |
+        //     Number of Pairs | 10          | 0           | 0           |
+        //     Cursor Position | [0, 10]     | [2, 10]     | [0, 0]      |
+        //     Line of Sight   | Yes         | No          | No          |
+        //
+        await executor.openFile({
+            rel:         './workspace-2/text.ts', 
+            showOptions: { viewColumn: ViewColumn.Three }
+        });
+        executor.assertPairs(  { expect: [ 'None' ] });
+        executor.assertCursors({ expect: [ [0, 0] ] });
+
+        // 4b. Because the opened text editor has no pairs being tracked for it, we expect both 
+        //     keybinding contexts to be disabled when it takes focus.
+        executor.assertMRBInLeaperModeContext(false);
+        executor.assertMRBHasLineOfSightContext(false);
+
+        // 5a. Insert some pairs into Workspace 2's Typescript file. 
+        //
+        // We only insert `()` pairs as `leaper.detectedPairs` was set to `[ "()" ]` in the second
+        // workspace folder.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1           | 2           | 3 (active)  |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
+        //     Language        | Typescript  | Plaintext   | Typescript  |
+        //     Number of Pairs | 10          | 0           | 10          |
+        //     Cursor Position | [0, 10]     | [2, 10]     | [2, 10]     |
+        //     Line of Sight   | Yes         | No          | Yes         |
+        //
+        await executor.cursorBottom();
+        await executor.typeText({ text: '(', repetitions: 10 });
+        executor.assertPairs(  { expect: [ { line: 2, sides: range(0, 20) } ] });
+        executor.assertCursors({ expect: [ [2, 10] ] });
+
+        // 5b. The inserted pairs are tracked, causing both keybinding contexts to be enabled.
+        executor.assertMRBInLeaperModeContext(true);
+        executor.assertMRBHasLineOfSightContext(true);
+
+        // 6a. Switch to view column 2.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1           | 2 (active)  | 3           |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
+        //     Language        | Typescript  | Plaintext   | Typescript  |
+        //     Number of Pairs | 10          | 0           | 10          |
+        //     Cursor Position | [0, 10]     | [2, 10]     | [2, 10]     |
+        //     Line of Sight   | Yes         | No          | Yes         |
+        //
+        await executor.focusLeftEditorGroup();
+        executor.assertPairs(  { expect: [ 'None' ] });
+        executor.assertCursors({ expect: [ [2, 10] ] });
+
+        // 6b. We expect both keybinding contexts to be disabled upon switching to it, since there 
+        //     are no pairs being tracked for Workspace 1's text editor.
+        executor.assertMRBInLeaperModeContext(false);
+        executor.assertMRBHasLineOfSightContext(false);
+
+        // 7a. Switch to view column 1.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1           | 2 (active)  | 3           |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
+        //     Language        | Typescript  | Plaintext   | Typescript  |
+        //     Number of Pairs | 10          | 0           | 10          |
+        //     Cursor Position | [0, 10]     | [2, 10]     | [2, 10]     |
+        //     Line of Sight   | Yes         | No          | Yes         |
+        //
+        await executor.focusLeftEditorGroup();
+        executor.assertPairs(  { expect: [ { line: 0, sides: range(0, 20) } ] });
+        executor.assertCursors({ expect: [ [0, 10] ] });
+
+        // 7b. We expect both keybinding contexts to be enabled upon returning to view column 1, 
+        //     since there are 10 pairs being tracked for the text editor in it.
+        executor.assertMRBInLeaperModeContext(true);
+        executor.assertMRBHasLineOfSightContext(true);
+
+        // 8a. Simulate the user triggering the 'Leap' command a few times.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1 (active)  | 2           | 3           |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
+        //     Language        | Typescript  | Plaintext   | Typescript  |
+        //     Number of Pairs | 5           | 0           | 10          |
+        //     Cursor Position | [0, 15]     | [2, 10]     | [2, 10]     |
+        //     Line of Sight   | Yes         | No          | Yes         |
+        //
+        await executor.leap({ repetitions: 5 });
+        executor.assertPairs(  { expect: [ { line: 0, sides: [0, 1, 2, 3, 4, 15, 16, 17, 18, 19] } ] });
+        executor.assertCursors({ expect: [ [0, 15] ] });
+
+        // 8b. No change in keybinding contexts is expected since there are still 5 pairs remaining.
+        executor.assertMRBInLeaperModeContext(true);
+        executor.assertMRBHasLineOfSightContext(true);
+
+        // 9a. Open a new empty text document in view column 1.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1 (active)  | 2           | 3           |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | New Empty   | Workspace 1 | Workspace 2 |
+        //     Language        | Typescript  | Plaintext   | Typescript  |
+        //     Number of Pairs | 0           | 0           | 10          |
+        //     Cursor Position | [0, 0]      | [2, 10]     | [2, 10]     |
+        //     Line of Sight   | No          | No          | Yes         |
+        //
+        await executor.openNewTextEditor({ 
+            languageId:  'typescript',
+            showOptions: { viewColumn: ViewColumn.One } 
+        });
+        executor.assertPairs(  { expect: [ 'None' ] });
+        executor.assertCursors({ expect: [ [0, 0] ] });
+
+        // 9b. The above should cause both keybinding contexts to be disabled, since the new text 
+        //     editor does not have any pairs within it. 
+        executor.assertMRBInLeaperModeContext(false);
+        executor.assertMRBHasLineOfSightContext(false);
+
+        // 10a. Switch view column 1 back to the provided text editor.
+        //
+        // Since the pairs being tracked for the provided text editor were cleared when we first 
+        // switched away from it, switching back to it will show that there are no pairs being 
+        // tracked.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1 (active)  | 2           | 3           |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
+        //     Language        | Typescript  | Plaintext   | Typescript  |
+        //     Number of Pairs | 0           | 0           | 10          |
+        //     Cursor Position | [0, 15]     | [2, 10]     | [2, 10]     |
+        //     Line of Sight   | No          | No          | Yes         |
+        //
+        await executor.openPrevEditorInGroup();
+        executor.assertPairs(  { expect: [ 'None' ] });
+        executor.assertCursors({ expect: [ [0, 15] ] });
+
+        // 10b. Since there are no pairs for the active text editor (the provided text editor), both 
+        //      keybinding contexts should remain disabled.
+        executor.assertMRBInLeaperModeContext(false);
+        executor.assertMRBHasLineOfSightContext(false);
+
+        // 11a. Type a few pairs into the provided text editor.
+        //
+        // This tests that context broadcasts still work correctly even after we switched between 
+        // text editors within a tab group. 
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1 (active)  | 2           | 3           |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
+        //     Language        | Typescript  | Plaintext   | Typescript  |
+        //     Number of Pairs | 3           | 0           | 10          |
+        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 10]     |
+        //     Line of Sight   | Yes         | No          | Yes         |
+        //
+        await executor.end();
+        await executor.typePair({ repetitions: 3 });
+        executor.assertPairs(  { expect: [ { line: 0, sides: range(20, 26) } ] });
+        executor.assertCursors({ expect: [ [0, 23] ] });
+
+        // 11b. Now that there are pairs (and line of sight), both keybinding contexts should be 
+        //      enabled.
+        executor.assertMRBInLeaperModeContext(true);
+        executor.assertMRBHasLineOfSightContext(true);
+
+        // 12a. Delete the pairs in Workspace 2's text document without view column 3 being in focus.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1 (active)  | 2           | 3           |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
+        //     Language        | Typescript  | Plaintext   | Typescript  |
+        //     Number of Pairs | 3           | 0           | 0           |
+        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 0]      |
+        //     Line of Sight   | Yes         | No          | No          |
+        //
+        await executor.editText({
+            edits: [
+                { kind: 'delete', range: { start: [2, 0], end: [2, 20] } }
+            ],
+            viewColumn: ViewColumn.Three
+        });
+        executor.assertPairs(  { expect: [ 'None' ] , viewColumn: ViewColumn.Three });
+        executor.assertCursors({ expect: [ [2, 0] ] , viewColumn: ViewColumn.Three });
+
+        // 12b. Since view column 3 is not in focus, the fact that there are no longer any pairs in 
+        //      view column 3 does not affect the keybinding contexts.
+        executor.assertMRBInLeaperModeContext(true);
+        executor.assertMRBHasLineOfSightContext(true);
+
+        // 13a. Switch to view column 3.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1           | 2           | 3 (active)  |
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
+        //     Language        | Typescript  | Plaintext   | Typescript  |
+        //     Number of Pairs | 3           | 0           | 0           |
+        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 0]      |
+        //     Line of Sight   | Yes         | No          | No          |
+        //
+        await executor.focusThirdEditorGroup();
+        executor.assertPairs(  { expect: [ 'None' ] });
+        executor.assertCursors({ expect: [ [2, 0] ] });
+
+        // 13b. Since we deleted the pairs in view column 3 in the previous step, switching to it 
+        //      now means we are switching to a text editor without pairs.
+        executor.assertMRBInLeaperModeContext(false);
+        executor.assertMRBHasLineOfSightContext(false);
+
+        // 14a. Now open the Markdown file in Workspace 3.
+        //
+        // The opened file immediately takes focus.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1           | 2           | 3           | 4 (active)  | 
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
+        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
+        //     Number of Pairs | 3           | 0           | 0           | 0           |
+        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 0]      | [0, 0]      |
+        //     Line of Sight   | Yes         | No          | No          | No          |
+        //
+        await executor.openFile({ 
+            rel:         './workspace-3/text.md', 
+            showOptions: { viewColumn: ViewColumn.Four } 
+        });
+        executor.assertPairs(  { expect: [ 'None' ] });
+        executor.assertCursors({ expect: [ [0, 0] ] });
+
+        // 14b. Clearly the newly opened text editor has no pairs within it, so both keybinding 
+        //      contexts should remain disabled.
+        executor.assertMRBInLeaperModeContext(false);
+        executor.assertMRBHasLineOfSightContext(false);
+
+        // 15a. Type a few pairs into Workspace 3's text document.
+        //
+        // Note that we only type in `{}` and `<>` pairs because `leaper.detectedPairs` was set to
+        // `[ "{}", "<>" ]` for Markdown in Workspace 3.
+        // 
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1           | 2           | 3           | 4 (active)  | 
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
+        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
+        //     Number of Pairs | 3           | 0           | 0           | 10          |
+        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 0]      | [2, 10]     |
+        //     Line of Sight   | Yes         | No          | No          | Yes         |
+        //
+        await executor.cursorBottom();
+        await executor.typeText({ text: '{<{<{<<{{<' });
+        executor.assertPairs(  { expect: [ { line: 2, sides: range(0, 20) } ] });
+        executor.assertCursors({ expect: [ [2, 10] ] });
+
+        // 15b. Both keybinding contexts should be enabled, now that Workspace 3's text document has 
+        //      pairs and line of sight.
+        executor.assertMRBInLeaperModeContext(true);
+        executor.assertMRBHasLineOfSightContext(true);
+
+        // 16a. Type some text in between the pairs in Workspace 3's text document.
+        // 
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1           | 2           | 3           | 4 (active)  | 
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
+        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
+        //     Number of Pairs | 3           | 0           | 0           | 10          |
+        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 0]      | [2, 22]     |
+        //     Line of Sight   | Yes         | No          | No          | Yes         |
+        //
+        await executor.typeText({ text: `Hello World!` });
+        executor.assertPairs(  { expect: [ { line: 2, sides: [ ...range(0, 10), ...range(22, 32)] } ] });
+        executor.assertCursors({ expect: [ [2, 22] ] });
+
+        // 16b. Line of sight is still maintained.
+        executor.assertMRBInLeaperModeContext(true);
+        executor.assertMRBHasLineOfSightContext(true);
+
+        // 17a. Move the cursor back a little bit to break line of sight.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1           | 2           | 3           | 4 (active)  | 
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
+        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
+        //     Number of Pairs | 3           | 0           | 0           | 10          |
+        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 0]      | [2, 17]     |
+        //     Line of Sight   | Yes         | No          | No          | No          |
+        //
+        await executor.moveCursors({ direction: 'left', repetitions: 5 });
+        executor.assertPairs(  { expect: [ { line: 2, sides: [ ...range(0, 10), ...range(22, 32)] } ] });
+        executor.assertCursors({ expect: [ [2, 17] ] });
+
+        // 17b. Since line of sight was broken, but there are still pairs, we expect only the line 
+        //      of sight keybinding context to be disabled.
+        executor.assertMRBInLeaperModeContext(true);
+        executor.assertMRBHasLineOfSightContext(false);
+
+        // 18a. Insert some text into the provided text document without view column 1 being in 
+        //      focus. 
+        //
+        // The text is inserted before the pairs in order to shift the position of the pairs and 
+        // cursors.
+        //
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1           | 2           | 3           | 4 (active)  | 
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
+        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
+        //     Number of Pairs | 3           | 0           | 0           | 10          |
+        //     Cursor Position | [5, 79]     | [2, 10]     | [2, 0]      | [2, 17]     |
+        //     Line of Sight   | Yes         | No          | No          | No          |
+        //
+        await executor.editText({
+            edits: [
+                { 
+                    kind: 'insert', 
+                    at:   [0, 0], 
+                    text: '// Filler text...\n'
+                        + '// Filler text...\n'
+                        + '// Filler text...\n'
+                        + '// Filler text...\n'
+                        + '// Filler text...\n'
+                        + '// Filler text..........................................'
+                },
+            ],
+            viewColumn: ViewColumn.One
+        });
+        executor.assertPairs({ 
+            expect:     [ { line: 5, sides: range(76, 82) } ], 
+            viewColumn: ViewColumn.One 
+        });
+        executor.assertCursors({ 
+            expect:     [ [5, 79] ],
+            viewColumn: ViewColumn.One 
+        });
+
+        // 18b. Since the text was inserted into a view column that is not in focus, it should not
+        //      affect the keybinding contexts, since the (global) keybinding contexts are only
+        //      synchronized to the active text editor.
+        executor.assertMRBInLeaperModeContext(true);
+        executor.assertMRBHasLineOfSightContext(false);
+
+        // 19a. Switch to view column 1.
+        //
+        // This tests whether this extension can handle switching back to a text editor that 
+        // previously had pairs and enabled keybinding contexts, but has since had text edits that 
+        // translated the pairs.
+        // 
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1 (active)  | 2           | 3           | 4           | 
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
+        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
+        //     Number of Pairs | 3           | 0           | 0           | 10          |
+        //     Cursor Position | [5, 79]     | [2, 10]     | [2, 0]      | [2, 17]     |
+        //     Line of Sight   | Yes         | No          | No          | No          |
+        //
+        await executor.focusFirstEditorGroup(); 
+        executor.assertPairs(  { expect: [ { line: 5, sides: range(76, 82) } ] });
+        executor.assertCursors({ expect: [ [5, 79] ] });
+
+        // 19b. Since the text edit applied to the provided text document only translated the pairs 
+        //      and cursor, line of sight is still maintained within the provided text editor. Thus
+        //      we expect truthy values for both keybinding contexts to be broadcasted upon focusing
+        //      back on view column 1.
+        executor.assertMRBInLeaperModeContext(true);
+        executor.assertMRBHasLineOfSightContext(true);
+
+        // 20a. Switch back to view column 4.
+        //
+        // This tests whether this extension can handle switching from one text editor where both
+        // context values are enabled to one where only one of them is disabled.
+        // 
+        // State of visible text editors after this step:
+        //
+        //     View Column     | 1           | 2           | 3           | 4 (active)  | 
+        //     -----------------------------------------------------------------------------
+        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
+        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
+        //     Number of Pairs | 3           | 0           | 0           | 10          |
+        //     Cursor Position | [5, 79]     | [2, 10]     | [2, 0]      | [2, 17]     |
+        //     Line of Sight   | Yes         | No          | No          | No          |
+        //
+        await executor.focusFourthEditorGroup();
+        executor.assertPairs(  { expect: [ { line: 2, sides: [ ...range(0, 10), ...range(22, 32)] } ] });
+        executor.assertCursors({ expect: [ [2, 17] ] });
+
+        // 20b. Since as before, the path from the cursor to the closing side of the nearest pair in
+        //      Workspace 3's text editor is obstructed, we expect `leaper.hasLineOfSight` to be
+        //      disabled upon switching to view column 3. 
+        //
+        //      Meanwhile, since there are still pairs, we expect the `leaper.inLeaperMode` to
+        //      remain enabled.
+        executor.assertMRBInLeaperModeContext(true);
+        executor.assertMRBHasLineOfSightContext(false);
+
+    }
+});
+
+/**
+ * 
  * This test group tests whether the keybinding context values are being appropriately managed for
  * single cursor situations.
  */
 export const SINGLE_CURSOR_CONTEXT_MANAGEMENT_TEST_GROUP = new TestGroup({
     name: 'Context Management',
     testCases: [
-        CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE
+        CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE,
+        CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE
     ]
 });
