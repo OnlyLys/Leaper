@@ -62,8 +62,6 @@ async function testDetectedPairs(
 
 /**
  * Test whether this extension is correctly reading configuration values.
- * 
- * This extension should be reading configuration values scoped to the text document of the 
  */
 const CAN_READ_VALUES_TEST_CASE = new TestCase({
     name: 'Can Read Values',
@@ -173,7 +171,7 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
 });
 
 /**
- * Test whether the extension reloads configuration values when a change in them is detected.
+ * Test whether this extension reloads configuration values when a change in them is detected.
  */
 const RELOAD_ON_CHANGE_TEST_CASE = new TestCase({
     name: 'Reload on Change',
