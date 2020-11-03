@@ -673,10 +673,29 @@ class ExecutorExtended extends Executor {
      *  2. Restoring configuration values that were changed.
      */
     public async dispose(): Promise<void> {
+
+        // Restore all configuration values.
         for (const restorer of this.configurationRestorers.reverse()) {
             await restorer();
         }
-        await this.closeAllEditors();
+
+        // Undo all changes before closing all opened text editors. 
+        //
+        // This step is required because vscode only discards unsaved changes when the test instance 
+        // is closed. This means if we are retrying tests, we could be reopening text documents with
+        // unsaved changes in them. By undoing all changes before closing them, we prevent such a 
+        // thing from happening.
+        //
+        // Note that we only perform this step for titled documents, since untitled ones immediately
+        // discard their values on close.
+        for (const document of workspace.textDocuments.filter((document) => !document.isUntitled)) {
+            await window.showTextDocument(document);
+            while (document.isDirty) {
+                await commands.executeCommand('undo');
+            }
+        }
+
+        await commands.executeCommand('workbench.action.closeAllEditors');
     }
 
 }
