@@ -2,14 +2,14 @@ import { TestCase, TestGroup } from '../../utilities/framework';
 import { range } from '../../utilities/other';
 import { ALICE_TEXT_1 } from '../../utilities/placeholder-texts';
 
-const TEST_CASES: TestCase[] = [
-
-    // Test the 'Escape Leaper Mode' command.
-    //
-    // Note that the command is directly called instead of being triggered by a keypress. The 
-    // keybinding (and its 'when' context) are not being tested here.
-    new TestCase({
-        name: 'Command Works',
+/**
+ * Make sure the command works.
+ * 
+ * Note that the command is directly called instead of being triggered by a keypress. The 
+ * keybinding (and its 'when' context) are not being tested here.
+ */
+const IT_WORKS_TEST_CASE = new TestCase({
+    name: 'It Works',
         editorLanguageId: 'markdown',
         prelude: async (executor) => {
             
@@ -31,15 +31,17 @@ const TEST_CASES: TestCase[] = [
             executor.assertPairs({   expect: [ 'None' ]  });
             executor.assertCursors({ expect: [ [5, 90] ] });
         }
-    }),
+});
 
-    // Check if the 'Escape Leaper Mode' command can handle being called multiple times in one event 
-    // loop cycle.
-    //
-    // Such a scenario could occur when the user presses and holds down the keybinding for the
-    // command.
-    new TestCase({
-        name: 'Can Handle Being Rapidly Called',
+/**
+ * Check if the 'Escape Leaper Mode' command can handle being called multiple times in one event 
+ * loop cycle.
+ * 
+ * Such a scenario could occur when the user presses and holds down the keybinding for the
+ * command.
+ */
+const CAN_HANDLE_RAPID_CALLS = new TestCase({
+    name: 'Can Handle Rapid Calls',
         prelude: async (executor) => {
 
             // Type the following text into the editor:
@@ -66,10 +68,12 @@ const TEST_CASES: TestCase[] = [
             executor.assertPairs({   expect: [ 'None' ]  });
             executor.assertCursors({ expect: [ [2, 28] ] });
         }
-    })
-];
+});
 
 export const SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP = new TestGroup({
     name: 'Escape Leaper Mode Command',
-    testCases: TEST_CASES
+    testCases: [
+        IT_WORKS_TEST_CASE,
+        CAN_HANDLE_RAPID_CALLS
+    ]
 });
