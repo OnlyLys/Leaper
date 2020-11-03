@@ -28,7 +28,7 @@ const IT_WORKS_TEST_CASE = new TestCase({
     prelude: async (executor) => {
         await executor.typeText({ text: SHARED_TEXT });
         executor.assertPairs({   expect: [ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ] });
-        executor.assertCursors({ expect: [ [2, 28] ]                                              });
+        executor.assertCursors({ expect: [ [2, 28] ] });
     },
     task: async (executor) => {
 
@@ -39,7 +39,7 @@ const IT_WORKS_TEST_CASE = new TestCase({
 
         // This should remove all pairs from being tracked.
         await executor.escapeLeaperMode();
-        executor.assertPairs({   expect: [ 'None' ]  });
+        executor.assertPairs({   expect: [ 'None' ] });
         executor.assertCursors({ expect: [ [2, 29] ] });
     }
 });
@@ -56,13 +56,13 @@ const CAN_HANDLE_RAPID_CALLS = new TestCase({
     prelude: async (executor) => {
         await executor.typeText({ text: SHARED_TEXT });
         executor.assertPairs({   expect: [ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ] });
-        executor.assertCursors({ expect: [ [2, 28] ]                                              });
+        executor.assertCursors({ expect: [ [2, 28] ] });
     },
     task: async (executor) => {
 
         // This should remove all pairs from being tracked and do nothing else.
         await executor.escapeLeaperMode({ delay: 0, repetitions: 50 }); 
-        executor.assertPairs({   expect: [ 'None' ]  });
+        executor.assertPairs({   expect: [ 'None' ] });
         executor.assertCursors({ expect: [ [2, 28] ] });
     }
 });
