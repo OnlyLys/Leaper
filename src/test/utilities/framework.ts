@@ -526,6 +526,42 @@ export class Executor {
     }
 
     /**
+     * Switch focus to the first text editor tab group.
+     */
+    public async focusFirstEditorGroup(options?: RepetitionDelayOptions): Promise<void> {
+        return executeWithRepetitionDelay(async () => {
+            await commands.executeCommand('workbench.action.focusFirstEditorGroup');
+        }, options);
+    }
+
+    /**
+     * Switch focus to the second text editor tab group.
+     */
+    public async focusSecondEditorGroup(options?: RepetitionDelayOptions): Promise<void> {
+        return executeWithRepetitionDelay(async () => {
+            await commands.executeCommand('workbench.action.focusSecondEditorGroup');
+        }, options);
+    }
+
+    /**
+     * Switch focus to the third text editor tab group.
+     */
+    public async focusThirdEditorGroup(options?: RepetitionDelayOptions): Promise<void> {
+        return executeWithRepetitionDelay(async () => {
+            await commands.executeCommand('workbench.action.focusThirdEditorGroup');
+        }, options);
+    }
+
+    /**
+     * Switch focus to the fourth text editor tab group.
+     */
+    public async focusFourthEditorGroup(options?: RepetitionDelayOptions): Promise<void> {
+        return executeWithRepetitionDelay(async () => {
+            await commands.executeCommand('workbench.action.focusFourthEditorGroup');
+        }, options);
+    }
+
+    /**
      * Close the active text editor.
      */
     public async closeActiveEditor(options?: RepetitionDelayOptions): Promise<void> {
