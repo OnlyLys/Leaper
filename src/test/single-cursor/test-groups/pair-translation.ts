@@ -2130,11 +2130,16 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
 });
 
 /**
- * Test whether the position of pairs are correctly tracked following text insertions between or 
- * before them that do not involve deleting them.
+ * Test whether the position of pairs are correctly tracked following non-deleting text edits¹ that 
+ * cause them to be translated².
+ * 
+ * 1 - Meaning text edits that do not delete either side of a pair. Text edits that delete pairs are 
+ *     instead tested in the `pair-invalidation.ts` module.
+ * 2 - Meaning a shift in position of either side of a pair due to non-deleting text edits that 
+ *     occurred between or before it.
  */
-export const SINGLE_CURSOR_PAIR_POSITION_TRACKING_TEST_GROUP = new TestGroup({
-    name: 'Pair Position Tracking',
+export const SINGLE_CURSOR_PAIR_TRANSLATION_TEST_GROUP = new TestGroup({
+    name: 'Pair Translation',
     testCases: [
         TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE,
         SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE,
