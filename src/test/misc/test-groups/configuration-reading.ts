@@ -1,10 +1,10 @@
 import { Executor, TestCase, TestGroup } from '../../utilities/framework';
 
 /**
- * Tests the effective `detectedPairs` configuration by asserting that:
+ * Tests the effective `detectedPairs` configuration in the active text editor by asserting that:
  * 
- *  - The autoclosing pairs in `should` are appropriately detected.
- *  - The autoclosing pairs in` shouldNot` are not detected by this extension.
+ *  - The autoclosing pairs in `should` are detected.
+ *  - The autoclosing pairs in` shouldNot` are not detected.
  * 
  * Please make sure that the pairs provided are actual autoclosing pairs in the language of the
  * active text editor. For instance, `<>`, even though it is a commonly used pair in languages with
@@ -62,6 +62,10 @@ async function testDetectedPairs(
 
 /**
  * Test whether this extension is correctly reading configuration values.
+ * 
+ * We use the `leaper.detectedPairs` configuration to perform the tests, by first configuring it to
+ * different values at different scopes throughout the test workspace, then checking if this
+ * extension is able to correctly behave based on the effective configuration value.
  */
 const CAN_READ_VALUES_TEST_CASE = new TestCase({
     name: 'Can Read Values',
@@ -172,6 +176,10 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
 
 /**
  * Test whether this extension reloads configuration values when a change in them is detected.
+ * 
+ * Note that we will not be testing whether this extension will automatically reload configuration 
+ * values when deprecated configurations are changed, as deprecated configurations are not supposed 
+ * to be used going forward.
  */
 const RELOAD_ON_CHANGE_TEST_CASE = new TestCase({
     name: 'Reload on Change',
