@@ -1,0 +1,8 @@
+{
+    "leaper.detectedPairs": [],
+    "[typescript]": {
+        "leaper.additionalTriggerPairs": [
+            { "open": "*", "close": "*" }
+        ]
+    }
+}
