@@ -8,6 +8,15 @@
 		},
 		{
 			"path": "workspace-3"
+		},
+		{
+			"path": "workspace-4-for-depr-config"
+		},
+		{
+			"path": "workspace-5-for-depr-config"
+		},
+		{
+			"path": "workspace-6-for-depr-config"
 		}
 	],
 	"settings": {
@@ -37,5 +46,7 @@
 		},
 		// Reduce the overhead in the test instance by disabling git.
 		"git.enabled": false,
+		// Some test cases rely on this being set to "auto".
+		"editor.autoClosingOvertype": "auto"
 	}
 }
