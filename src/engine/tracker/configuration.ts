@@ -65,7 +65,16 @@ export class Configuration {
                     && elem.close.length === 1;
             } 
         },
-        normalize:   deprValue => deprValue.map(({ open, close }) => `${open}${close}`)
+        normalize:   (deprValue) => {
+
+            // Prior to version 0.7.0, `leaper.additionalTriggerPairs` was the only way to configure
+            // which pair was to be tracked. However, that configuration only allowed the user to 
+            // specify _additional_ pairs to be tracked. There was a base set of pairs that could 
+            // not be changed; This is that set.
+            const BASE: ReadonlyArray<string> = [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ];
+
+            return BASE.concat(deprValue.map(({ open, close }) => `${open}${close}`));
+        }
 
     });
     
