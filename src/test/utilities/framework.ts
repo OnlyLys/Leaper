@@ -46,7 +46,10 @@ export class TestGroup {
 }
 
 /**
- * Each test case is given its own empty editor.  
+ * Represents a task to be executed in order to verify a behavior of this extension.
+ * 
+ * Each test case is provided a fresh text editor. Additional text editors can be opened by calling
+ * the appropriate `Executor` methods.
  */
 export class TestCase {
 
@@ -55,19 +58,21 @@ export class TestCase {
         readonly name: string,
 
         /** 
-         * The language of the editor that is provided to this test case.
+         * The language of the text editor that is provided to this test case.
          * 
          * Defaults to 'typescript'.
          */
         readonly editorLanguageId?: string,
 
         /**
-         *  Callback to setup the editor before running the test case.
+         *  Callback to setup the provided text editor before running the test case.
          */
         readonly prelude?: (executor: Executor) => Promise<void>,
 
         /** 
          * Callback to execute as part of the test case. 
+         * 
+         * The `executor` parameter provides the necessary facilities for test execution.
          */
         readonly task: (executor: Executor) => Promise<void>
 
@@ -77,7 +82,7 @@ export class TestCase {
         const { name, editorLanguageId, prelude, task } = this.args;
         it(name, async function () {
 
-            // Sometimes tests can fail due to the editor lagging.
+            // Sometimes tests can fail due to vscode lagging.
             this.retries(1);
 
             // To allow test cases to modify and check the state of the running vscode instance.
@@ -113,7 +118,7 @@ export class TestCase {
  * A convenience class that allows a test case to:
  * 
  *  1. Call commands.
- *  2. Modify the state of the active text editor.
+ *  2. Modify the state of visible text editors.
  *  3. Assert the state of the extension.
  *  4. Temporarily change configuration values of the test workspace and the folders within it.
  *  5. Open documents in the test workspace.
