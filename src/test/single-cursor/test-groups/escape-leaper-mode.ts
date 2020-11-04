@@ -1,4 +1,6 @@
+import { ViewColumn } from 'vscode';
 import { TestCase, TestGroup } from '../../utilities/framework';
+import { range } from '../../utilities/other';
 
 /**
  * Text that is typed in by each of the test case preludes.
@@ -67,10 +69,71 @@ const CAN_HANDLE_RAPID_CALLS = new TestCase({
     }
 });
 
+/**
+ * Make sure the command only clears pairs in the active text editor.
+ */
+const ONLY_CLEARS_ACTIVE_TEXT_EDITOR = new TestCase({
+    name: 'Only Clears Active Text Editor',
+    prelude: async (executor) => {
+
+        // Insert some text and then type in some pairs into the active text editor.
+        async function action(): Promise<void> {
+            await executor.editText({
+                edits: [
+                    { kind: 'insert', at: [0, 0], text: 'function main(): void {\n    \n}' }
+                ],
+            });
+            await executor.setCursors({ to: [ [1, 4] ] });
+            await executor.typePair({ repetitions: 10 });
+            executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ] });
+            executor.assertCursors({ expect: [ [1, 14] ] });
+        }
+
+        // Open three additional text editors in exclusive view columns.
+        //
+        // After this step, there will be four empty Typescript text editors, one in each of four 
+        // visible view columns.
+        //
+        // View column 4 will be in focus after this step.
+        await executor.openNewTextEditor({ showOptions: { viewColumn: ViewColumn.Two   }});
+        await executor.openNewTextEditor({ showOptions: { viewColumn: ViewColumn.Three }});
+        await executor.openNewTextEditor({ showOptions: { viewColumn: ViewColumn.Four  }});
+
+        // Set up all four text editors to the same state.
+        //
+        // View column 1 will be in focus after this step.
+        await action();
+        await executor.focusLeftEditorGroup();
+        await action();
+        await executor.focusLeftEditorGroup();
+        await action();
+        await executor.focusLeftEditorGroup();
+        await action();
+    },
+    task: async (executor) => {
+
+        // Execute 'Escape Leaper Mode' in the active text editor, which is the provided text editor 
+        // in view column 1.
+        await executor.escapeLeaperMode();
+
+        // Verify that only the pairs in the active text editor were cleared.
+        executor.assertPairs({   expect: [ 'None' ] });
+        executor.assertCursors({ expect: [ [1, 14] ] });
+        executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ], viewColumn: ViewColumn.Two   });
+        executor.assertCursors({ expect: [ [1, 14] ],                          viewColumn: ViewColumn.Two   });
+        executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ], viewColumn: ViewColumn.Three });
+        executor.assertCursors({ expect: [ [1, 14] ],                          viewColumn: ViewColumn.Three });
+        executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ], viewColumn: ViewColumn.Four  });
+        executor.assertCursors({ expect: [ [1, 14] ],                          viewColumn: ViewColumn.Four  });
+    }
+
+});
+
 export const SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP = new TestGroup({
     name: 'Escape Leaper Mode Command',
     testCases: [
         IT_WORKS_TEST_CASE,
-        CAN_HANDLE_RAPID_CALLS
+        CAN_HANDLE_RAPID_CALLS,
+        ONLY_CLEARS_ACTIVE_TEXT_EDITOR
     ]
 });
