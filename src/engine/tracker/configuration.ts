@@ -37,7 +37,7 @@ export class Configuration {
 
         deprName:     `leaper.decorateOnlyNearestPair`,
         deprValidate: (value: any): value is boolean => typeof value === 'boolean',
-        normalize:    deprValue => !deprValue,
+        normalize:    (deprValue) => !deprValue,
 
     });
     
