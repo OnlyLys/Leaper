@@ -1,4 +1,6 @@
+import { ViewColumn } from 'vscode';
 import { Executor, TestCase, TestGroup } from '../../utilities/framework';
+import { range } from '../../utilities/other';
 
 /**
  * Tests the effective `detectedPairs` configuration in the active text editor by asserting that:
@@ -395,6 +397,98 @@ const RELOAD_ON_CHANGE_TEST_CASE = new TestCase({
 });
 
 /**
+ * Test whether the pairs in a text editor are cleared when its configuration values have changed.
+ */
+export const PAIRS_CLEARED_ON_CHANGE_TEST_CASE = new TestCase({
+    name: 'Pairs Cleared on Change',
+    prelude: async (executor) => {
+        
+        // First type some pairs into the provided text editor (which will be in view column 1).
+        await executor.typePair({ repetitions: 10 });
+        executor.assertPairs({   expect: [ { line: 0, sides: range(0, 20) } ] });
+        executor.assertCursors({ expect: [ [0, 10] ] });
+
+        // Open the Typescript file in Workspace 2 in another view column (view column 2).
+        //
+        // Note that we only type in `()` pairs because that is the only pair that is configured to 
+        // be detected in Workspace 2.
+        await executor.openFile({
+            rel:         './workspace-2/text.ts',
+            showOptions: { viewColumn: ViewColumn.Two }
+        });
+        await executor.cursorBottom();
+        await executor.typeText({ text: '(', repetitions: 10 });
+        executor.assertPairs({   expect: [ { line: 2, sides: range(0, 20) } ] });
+        executor.assertCursors({ expect: [ [2, 10] ] });
+
+        // Open the Markdown file in Workspace 3 in another view column (view column 3).
+        //
+        // Note that we only type in `{}` and `<>` pairs because those are the only two pairs that 
+        // were configured to be detected in the Markdown file in Workspace 3.
+        await executor.openFile({
+            rel:         './workspace-3/text.md',
+            showOptions: { viewColumn: ViewColumn.Three }
+        });
+        await executor.cursorBottom();
+        await executor.typeText({ text: '{<{<<<{{{<' });
+        executor.assertPairs({   expect: [ { line: 2, sides: range(0, 20) } ] });
+        executor.assertCursors({ expect: [ [2, 10] ] });
+
+        // View column 3 will be in focus by the end of the prelude.
+    }, 
+    task: async (executor) => {
+
+        // 1a. Change the configuration value in Workspace 3, scoped to Markdown.
+        await executor.setConfiguration({
+            partialName:           'detectedPairs',
+            value:                 [ "{}", "[]", "()" ],
+            targetWorkspaceFolder: 'workspace-3',
+            targetLanguage:        'markdown'
+        });
+
+        // 1b. Check that pairs are cleared when the effective configuration value has changed for 
+        //     the active text document. 
+        executor.assertPairs({   expect: [ 'None' ] });
+        executor.assertCursors({ expect: [ [2, 10] ] });
+
+        // 1c. Ensure that unaffected text documents do not have their pairs cleared.
+        executor.assertPairs({   expect: [ { line: 0, sides: range(0, 20) } ], viewColumn: ViewColumn.One });
+        executor.assertCursors({ expect: [ [0, 10] ],                          viewColumn: ViewColumn.One });
+        executor.assertPairs({   expect: [ { line: 2, sides: range(0, 20) } ], viewColumn: ViewColumn.Two });
+        executor.assertCursors({ expect: [ [2, 10] ],                          viewColumn: ViewColumn.Two });
+
+        // Type some pairs back into Workspace 3's Markdown file in preparation for the next step.
+        await executor.end();
+        await executor.typePair({ repetitions: 10 });
+        executor.assertPairs({   expect: [ { line: 2, sides: range(20, 40) } ] });
+        executor.assertCursors({ expect: [ [2, 30] ] });
+
+        // 2a. Switch focus to Workspace 2's text file, then change the configuration value in the 
+        //     workspace root scope.
+        await executor.focusLeftEditorGroup();
+        await executor.setConfiguration({
+            partialName:           'detectedPairs',
+            value:                 [ "[]" ],
+        });
+        
+        // 2b. Check that pairs are not cleared when a configuration change does not affect the 
+        //     effective value for the active text document.
+        //
+        // Note that the effective value for Workspace 2's text file is not expected to change since 
+        // the configuration is being overridden in Workspace 2's `settings.json` file.
+        executor.assertPairs({   expect: [ { line: 2, sides: range(0, 20) } ] });
+        executor.assertCursors({ expect: [ [2, 10] ] });
+
+        // 2c. Check that the desired behavior also holds for text documents that are not in focus.
+        executor.assertPairs({   expect: [ 'None' ],                             viewColumn: ViewColumn.One });
+        executor.assertCursors({ expect: [ [0, 10] ],                            viewColumn: ViewColumn.One });
+        executor.assertPairs({   expect: [ { line: 2, sides: range(20, 40) } ],  viewColumn: ViewColumn.Three });
+        executor.assertCursors({ expect: [ [2, 30] ],                            viewColumn: ViewColumn.Three });
+    }
+
+});
+
+/**
  * This test group tests whether this extension can correctly read configuration values.
  *
  * Within this group, the `leaper.detectedPairs` configuration will be modified in the workspace and 
@@ -405,6 +499,7 @@ export const CONFIGURATION_READING_TEST_GROUP = new TestGroup({
     name: 'Configuration Reading',
     testCases: [
         CAN_READ_VALUES_TEST_CASE,
-        RELOAD_ON_CHANGE_TEST_CASE
+        RELOAD_ON_CHANGE_TEST_CASE,
+        PAIRS_CLEARED_ON_CHANGE_TEST_CASE,
     ]
 });
