@@ -8,8 +8,8 @@ import { range } from '../../utilities/other';
  *  - The autoclosing pairs in `should` are detected.
  *  - The autoclosing pairs in` shouldNot` are not detected.
  * 
- * Please make sure that the pairs provided are actual autoclosing pairs in the language of the
- * active text editor. For instance, `<>`, even though it is a commonly used pair in languages with
+ * **Please make sure that the pairs provided are actual autoclosing pairs in the language of the
+ * active text editor**. For instance, `<>`, even though it is a commonly used pair in languages with
  * generics like Rust or Typescript, is not autoclosed in either language. 
  */
 async function testDetectedPairs(
