@@ -20,8 +20,6 @@ async function testDetectedPairs(
 
     // Move cursor to the end of document.
     await executor.cursorBottom();
-
-    // Get the cursor position.
     const cursor = executor.getCursors()[0] as [number, number];
 
     // Perform the checks.
