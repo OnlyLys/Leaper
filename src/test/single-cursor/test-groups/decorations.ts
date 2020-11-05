@@ -2,23 +2,22 @@ import { CompactClusters } from '../../utilities/compact';
 import { Executor, TestCase, TestGroup } from '../../utilities/framework';
 
 /**
- * Prelude step where some text is typed into the active text editor.
+ * Prelude where the active text document is overwritten with the following text: 
+ * 
+ * ```
+ * async function helloWorld(): Promise<string> {
+ *     return new Promise((resolve) => {
+ *         setTimeout(() => resolve('Hello World'), 1000);
+ *     });
+ * };
+ *
+ * async function main(): Promise<void> {
+ *     await 
+ * }         ^(cursor position)
+ * ```
  */
 async function preludeSetup(executor: Executor): Promise<void> {
-
-    // First create the following initial document:
-    // 
-    // ```
-    // async function helloWorld(): Promise<string> {
-    //     return new Promise((resolve) => {
-    //         setTimeout(() => resolve('Hello World'), 1000);
-    //     });
-    // };
-    //
-    // async function main(): Promise<void> {
-    //     await 
-    // }         ^(cursor position)
-    // ```
+    await executor.clearDocument();
     await executor.editText({
         edits: [
             { 
@@ -39,7 +38,6 @@ async function preludeSetup(executor: Executor): Promise<void> {
     await executor.setCursors({ to: [ [7, 10] ] });
     executor.assertPairs({   expect: [ 'None' ] });
     executor.assertCursors({ expect: [ [7, 10] ] });
-
 };
 
 /**
