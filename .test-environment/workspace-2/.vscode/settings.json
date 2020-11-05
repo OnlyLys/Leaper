@@ -1,3 +1,4 @@
 {
-    "leaper.detectedPairs": [ "()" ]
+    "leaper.detectedPairs": [ "()" ],
+    "leaper.decorateAll": true
 }
