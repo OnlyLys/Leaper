@@ -44,6 +44,8 @@
 		// Reduce the overhead in the test instance by disabling git.
 		"git.enabled": false,
 		// Some test cases rely on this being set to "auto".
-		"editor.autoClosingOvertype": "auto"
+		"editor.autoClosingOvertype": "auto",
+		// Test cases rely on this being the default value in the test workspace.
+		"leaper.decorateAll": false
 	}
 }
