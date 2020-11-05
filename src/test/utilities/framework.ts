@@ -395,6 +395,16 @@ export class Executor {
     }
 
     /**
+     * Delete all text in the active text editor.
+     */
+    public async clearDocument(options?: RepetitionDelayOptions): Promise<void> {
+        return executeWithRepetitionDelay(async () => {
+            await commands.executeCommand('editor.action.selectAll');
+            await commands.executeCommand('deleteLeft');
+        }, options); 
+    }
+
+    /**
      * Insert a snippet into a visible text editor.
      * 
      * The snippet will be inserted at cursor position.
