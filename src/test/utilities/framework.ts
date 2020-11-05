@@ -604,15 +604,6 @@ export class Executor {
     }
 
     /**
-     * Close all text editors.
-     */
-    public async closeAllEditors(options?: RepetitionDelayOptions): Promise<void> {
-        return executeWithRepetitionDelay(async () => {
-            await commands.executeCommand('workbench.action.closeAllEditors');
-        }, options);
-    }
-
-    /**
      * Set a configuration value scoped to the text document of a visible text editor.
      * 
      * @param partialName The name of the configuration after the `leaper.` prefix.
