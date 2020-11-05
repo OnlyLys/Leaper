@@ -1,6 +1,8 @@
 {
     "leaper.additionalTriggerPairs": [
-        { "open": "|", "close": "|" }
+        { "open": "|", "close": "|" },
+        { "open": ":", "close": ":" },
+        { "open": "#", "close": "#" }
     ],
     "[markdown]": {
         "leaper.detectedPairs": [ "{}" ]
