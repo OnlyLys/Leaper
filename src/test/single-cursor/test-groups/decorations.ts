@@ -22,14 +22,14 @@ async function sharedPrelude(executor: Executor, decorateAll: boolean): Promise<
                 kind: 'insert', 
                 at:   [0, 0],
                 text: 'async function helloWorld(): Promise<string> {\n' 
-                +         '    return new Promise((resolve) => {\n'
-                +         `        setTimeout(() => resolve('Hello World'), 1000);\n`
-                +         '    });\n'
-                +         '};\n'
-                +         '\n'
-                +         'async function main(): Promise<void> {\n'
-                +         '    await \n'
-                +         '}'
+                +     '    return new Promise((resolve) => {\n'
+                +     `        setTimeout(() => resolve('Hello World'), 1000);\n`
+                +     '    });\n'
+                +     '};\n'
+                +     '\n'
+                +     'async function main(): Promise<void> {\n'
+                +     '    await \n'
+                +     '}'
             },
         ]
     }); 
