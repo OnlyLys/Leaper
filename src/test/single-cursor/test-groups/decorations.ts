@@ -1,7 +1,10 @@
 import { CompactClusters } from '../../utilities/compact';
 import { Executor, TestCase, TestGroup } from '../../utilities/framework';
 
-async function sharedPrelude(executor: Executor, decorateAll: boolean): Promise<void> {
+/**
+ * Prelude step where some text is typed into the active text editor.
+ */
+async function preludeSetup(executor: Executor): Promise<void> {
 
     // First create the following initial document:
     // 
@@ -37,13 +40,21 @@ async function sharedPrelude(executor: Executor, decorateAll: boolean): Promise<
     executor.assertPairs({   expect: [ 'None' ] });
     executor.assertCursors({ expect: [ [7, 10] ] });
 
-    // Then set the `leaper.decorateAll` configuration in the test workspace to `decorateAll`.
-    await executor.setConfiguration({
-        partialName: 'decorateAll',
-        value:       decorateAll
-    });
 };
 
+/**
+ * Type some pairs into the active text editor then assert that decorations were properly applied. 
+ * 
+ * If `expectDecorations` is `'all'`, then this function will check that decorations were applied to
+ * all pairs being tracked for the cursor. Otherwise if `expectDecorations` is `'nearest'`, then
+ * the check will be that decorations are only applied to the 'most nested' pair (i.e. the pair 
+ * nearest to the cursor).
+ * 
+ * Note that this task expects the active text editor to at least have an effective `leaper.detectedPairs` 
+ * value of:
+ *      
+ *     [ "()", "[]", "{}", "``", "''", "\"\"" ]
+ */
 async function sharedTask(executor: Executor, expectDecorations: 'all' | 'nearest'): Promise<void> {
 
     // So that we do not forget to pass `expectDecorations` to  `executor.assertPairs`.
@@ -419,9 +430,25 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
  * All pairs are expected to be decorated.
  */
 const DECORATE_ALL_PAIRS_TEST_CASE = new TestCase({
-    name:    'Decorate All Pairs',
-    prelude: async (executor) => sharedPrelude(executor, true),
-    task:    async (executor) => sharedTask(executor, 'all')
+    name: 'Decorate All Pairs',
+    prelude: async (executor) => {
+
+        // Instead of using the provided text editor (which will have an effective `leaper.decorateAll` 
+        // value of `false`), we open the text document in Workspace 2 which has that configuration 
+        // enabled instead.
+        await executor.openFile({ rel: './workspace-2/text.ts' });
+
+        // The `sharedTask` function used later on in this test case expects `leaper.detectedPairs` 
+        // to at least be enabled for these pairs.
+        await executor.setConfiguration({
+            partialName:           'detectedPairs',
+            value:                 [ "()", "[]", "{}", "``", "''", "\"\"" ],
+            targetWorkspaceFolder: 'workspace-2',
+        });
+
+        await preludeSetup(executor);
+    },
+    task: async (executor) => sharedTask(executor, 'all')
 });
 
 /**
@@ -430,14 +457,14 @@ const DECORATE_ALL_PAIRS_TEST_CASE = new TestCase({
  * Only the pairs nearest to each cursors are expected to be decorated.
  */
 const DECORATE_ONLY_NEAREST_PAIR_TEST_CASE = new TestCase({
-    name:    'Decorate Only Nearest Pair',
-    prelude: async (executor) => sharedPrelude(executor, false),
-    task:    async (executor) => sharedTask(executor, 'nearest')
+    name: 'Decorate Only Nearest Pair',
+    prelude: preludeSetup,
+    task: async (executor) => sharedTask(executor, 'nearest')
 });
 
 /**
- * The following test group tests whether decorations are properly applied for pairs around a single 
- * cursor.
+ * The following test group tests whether decorations are properly applied for pairs in single 
+ * cursor situation.
  */
 export const SINGLE_CURSOR_DECORATIONS_TEST_GROUP = new TestGroup({
     name: 'Decorations',
