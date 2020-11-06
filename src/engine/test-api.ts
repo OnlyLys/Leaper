@@ -7,11 +7,17 @@ export interface TestAPI {
 
     /**
      * The most recently broadcasted value of the `leaper.inLeaperMode` keybinding context.
+     * 
+     * This keybinding context is enabled whenever there are pairs being tracked in the active text
+     * editor.
      */
     readonly MRBInLeaperModeContext: boolean | undefined;
 
     /**
      * The most recently broadcasted value of the `leaper.hasLineOfSight` keybinding context.
+     * 
+     * This keybinding context is enabled whenever a leap is possible in the active text editor. For 
+     * more details, see `TrackerCore.hasLineOfSight`.
      */
     readonly MRBHasLineOfSightContext: boolean | undefined;
 
