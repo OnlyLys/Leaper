@@ -1,3 +1,14 @@
+//! Note that deprecated configuration values are not being tested in this module as:
+//! 
+//!  1. They are deprecated and should no longer be used going forward.
+//!  2. The old configurations `leaper.decorateOnlyNearestPair` and `leaper.customDecorationOptions`
+//!     are near identical to their new counterparts.
+//!  3. There is no feasible way to test `leaper.additionalTriggerPairs` as I could not think of a
+//!     programming language which autocloses pairs outside of the unchangeable base set:
+//!
+//!         [ "{}", "[]", "()" , "''" , "\"\"" , "``" , "<>" ]
+//! 
+
 import { ViewColumn } from 'vscode';
 import { Executor, TestCase, TestGroup } from '../../utilities/framework';
 import { range } from '../../utilities/other';
