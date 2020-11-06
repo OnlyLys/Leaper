@@ -61,7 +61,7 @@ async function testDetectedPairs(
 }
 
 /**
- * Test whether this extension is correctly reading configuration values.
+ * Test whether this extension is reading configuration values.
  * 
  * We use the `leaper.detectedPairs` configuration to perform the tests, by first configuring it to
  * different values at different scopes throughout the test workspace, then checking if this
