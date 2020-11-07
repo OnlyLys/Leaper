@@ -1317,8 +1317,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
 });
 
 /** 
+ * Single cursor integration tests.
+ *  
  * This test groups tests multiple features of the extension at once by simulating a real user 
- * interacting with the editor.
+ * interacting with vscode.
  */
 export const SINGLE_CURSOR_INTEGRATION_TEST_GROUP: TestGroup = new TestGroup({
     name: 'Integration',
