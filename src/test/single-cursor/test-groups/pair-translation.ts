@@ -17,6 +17,7 @@ import { ALICE_TEXT_1, ALICE_TEXT_2, LOREM_IPSUM_1 } from '../../utilities/place
  */
 const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
     name: 'Text Modifications Before Pairs',
+    prelude: async (executor) => {
 
     // This sets up the initial document as:
     //
@@ -26,9 +27,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
     // }
     // ```
     //
-    // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the pairs 
-    // are randomly selected. However for notational convenience, we use `[]` to represent pairs.
-    prelude: async (executor) => {
+        // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
+        // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
+        // pairs.
         await executor.typeText({ text: 'function main() {\n' });
         await executor.typePair({ repetitions: 10 });
         executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ] });
@@ -590,6 +591,7 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
 const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
     name: 'Single-line Text Modifications Between Pairs',
     editorLanguageId: 'markdown',
+    prelude: async (executor) => {
 
     // This sets up the initial document as:
     //
@@ -599,9 +601,9 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
     //                    ^(cursor position)
     // ```
     //
-    // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the pairs 
-    // are randomly selected. However for notational convenience, we use `[]` to represent pairs.
-    prelude: async (executor) => {
+        // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
+        // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
+        // pairs.
         await executor.typeText({ text: '\nblah-blah\n' });
         await executor.moveCursors({ direction: 'up' });
         await executor.end();
@@ -1162,6 +1164,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
  */
 const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
     name: 'Autocompletions OK',
+    prelude: async (executor) => {
 
     // This sets up the document:
     //
@@ -1172,9 +1175,9 @@ const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
     // }
     // ```
     //
-    // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the pairs 
-    // are randomly selected. However for notational convenience, we use `[]` to represent pairs.
-    prelude: async (executor) => {
+        // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
+        // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
+        // pairs.
         await executor.editText({
             edits: [
                 { 
@@ -1242,6 +1245,7 @@ const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
  */
 const SNIPPETS_OK_TEST_CASE = new TestCase({
     name: 'Snippets OK',
+    prelude: async (executor) => {
 
     // This sets up the initial document as:
     //
@@ -1250,7 +1254,6 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
     //     const x = someFn({ outer: { inner: }})
     // }                                      ^(cursor position)
     // ```
-    prelude: async (executor) => {
         await executor.typeText({ text: 'function main() {\nconst x = ' });
         await executor.setCursors({ to: [ [1, 14] ] });
         await executor.typeText({ text: 'someFn({ outer: { inner: ' });
@@ -1581,6 +1584,7 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
  */
 const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
     name: 'Text Modifications After Pairs',
+    prelude: async (executor) => {
 
     // This sets up the initial document as:
     //
@@ -1593,7 +1597,6 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
     // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
     // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
     // pairs.
-    prelude: async (executor) => {
         await executor.typeText({ text: 'function main() {\n' });
         await executor.typePair({ repetitions: 10 });
         executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ] });
