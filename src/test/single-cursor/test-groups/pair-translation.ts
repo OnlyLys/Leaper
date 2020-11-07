@@ -1162,8 +1162,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
 /**
  * Test case to check whether this extension can handle autocompleted text insertions between pairs.
  */
-const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
-    name: 'Autocompletions OK',
+const AUTOCOMPLETIONS_TEST_CASE = new TestCase({
+    name: 'Autocompletions',
     prelude: async (executor) => {
 
         // This sets up the document:
@@ -1243,8 +1243,8 @@ const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
  * multi-line snippets also cause pairs to be untracked, and are therefore tested in the 
  * `pair-invalidation.ts` module.
  */
-const SNIPPETS_OK_TEST_CASE = new TestCase({
-    name: 'Snippets OK',
+const SNIPPET_INSERTIONS_TEST_CASE = new TestCase({
+    name: 'Snippet Insertions',
     prelude: async (executor) => {
 
         // This sets up the initial document as:
@@ -2321,8 +2321,8 @@ export const SINGLE_CURSOR_PAIR_TRANSLATION_TEST_GROUP = new TestGroup({
     testCases: [
         TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE,
         SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE,
-        AUTOCOMPLETIONS_OK_TEST_CASE,
-        SNIPPETS_OK_TEST_CASE,
+        AUTOCOMPLETIONS_TEST_CASE,
+        SNIPPET_INSERTIONS_TEST_CASE,
         TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE,
         ASSORTED_TEXT_MODIFICATIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE
     ]
