@@ -18,7 +18,7 @@ import { Executor, TestCase, TestGroup } from '../../utilities/framework';
  * ```
  */
 async function preludeSetup(executor: Executor): Promise<void> {
-    await executor.clearDocument();
+    await executor.clearActiveDocument();
     await executor.editText({
         edits: [
             { 

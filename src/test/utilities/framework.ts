@@ -397,7 +397,7 @@ export class Executor {
     /**
      * Delete all text in the active text editor.
      */
-    public async clearDocument(options?: RepetitionDelayOptions): Promise<void> {
+    public async clearActiveDocument(options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
             await commands.executeCommand('editor.action.selectAll');
             await commands.executeCommand('deleteLeft');
