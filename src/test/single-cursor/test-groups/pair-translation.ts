@@ -2075,6 +2075,8 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
 
         // 18. Simultaneous text modifications after the pairs - Part 2.
         //
+        // Document text after:
+        //
         // ```
         // function main() {
         //     [[[[[[[[[[]]]]]]]]]] Goodbye 😢!
