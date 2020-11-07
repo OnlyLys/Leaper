@@ -1262,7 +1262,7 @@ const SNIPPET_INSERTIONS_TEST_CASE = new TestCase({
     },
     task: async (executor) => {
 
-        // Insert the snippet.
+        // Insert a snippet.
         //
         // Document state after:
         //  
