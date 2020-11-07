@@ -5,7 +5,7 @@
 import { CompactCluster } from '../../utilities/compact';
 import { range, sliceAdd, sliceSub } from '../../utilities/other';
 import { TestCase, TestGroup } from '../../utilities/framework';
-import { SnippetString } from 'vscode';
+import { SnippetString, ViewColumn } from 'vscode';
 import { ALICE_TEXT_1, ALICE_TEXT_2, LOREM_IPSUM_1 } from '../../utilities/placeholder-texts';
 
 /**
@@ -19,14 +19,14 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
     name: 'Text Modifications Before Pairs',
     prelude: async (executor) => {
 
-    // This sets up the initial document as:
-    //
-    // ```
-    // function main() {
-    //     [[[[[[[[[[]]]]]]]]]]
-    // }
-    // ```
-    //
+        // This sets up the initial document as:
+        //
+        // ```
+        // function main() {
+        //     [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        //
         // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
         // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
         // pairs.
@@ -593,14 +593,14 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
     editorLanguageId: 'markdown',
     prelude: async (executor) => {
 
-    // This sets up the initial document as:
-    //
-    // ```
-    // 
-    // blah-blah[[[[[[[[[[]]]]]]]]]]
-    //                    ^(cursor position)
-    // ```
-    //
+        // This sets up the initial document as:
+        //
+        // ```
+        // 
+        // blah-blah[[[[[[[[[[]]]]]]]]]]
+        //                    ^(cursor position)
+        // ```
+        //
         // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
         // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
         // pairs.
@@ -1166,15 +1166,15 @@ const AUTOCOMPLETIONS_OK_TEST_CASE = new TestCase({
     name: 'Autocompletions OK',
     prelude: async (executor) => {
 
-    // This sets up the document:
-    //
-    // ```
-    // function main(){
-    //     const reallyLongVariableName = 10;
-    //     [[[[[[[[[[]]]]]]]]]]
-    // }
-    // ```
-    //
+        // This sets up the document:
+        //
+        // ```
+        // function main(){
+        //     const reallyLongVariableName = 10;
+        //     [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        //
         // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
         // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
         // pairs.
@@ -1247,13 +1247,13 @@ const SNIPPETS_OK_TEST_CASE = new TestCase({
     name: 'Snippets OK',
     prelude: async (executor) => {
 
-    // This sets up the initial document as:
-    //
-    // ```
-    // function main() {
-    //     const x = someFn({ outer: { inner: }})
-    // }                                      ^(cursor position)
-    // ```
+        // This sets up the initial document as:
+        //
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: }})
+        // }                                      ^(cursor position)
+        // ```
         await executor.typeText({ text: 'function main() {\nconst x = ' });
         await executor.setCursors({ to: [ [1, 14] ] });
         await executor.typeText({ text: 'someFn({ outer: { inner: ' });
@@ -1586,17 +1586,17 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
     name: 'Text Modifications After Pairs',
     prelude: async (executor) => {
 
-    // This sets up the initial document as:
-    //
-    // ```
-    // function main() {
-    //     [[[[[[[[[[]]]]]]]]]]
-    // }
-    // ```
-    //
-    // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
-    // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
-    // pairs.
+        // This sets up the initial document as:
+        //
+        // ```
+        // function main() {
+        //     [[[[[[[[[[]]]]]]]]]]
+        // }
+        // ```
+        //
+        // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
+        // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
+        // pairs.
         await executor.typeText({ text: 'function main() {\n' });
         await executor.typePair({ repetitions: 10 });
         executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ] });
@@ -2135,6 +2135,179 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
 });
 
 /**
+ * Test whether pairs in out-of-focus (but visible) text editors are properly translated after an
+ * assortment of text modifications.
+ * 
+ * Within this test case we will be performing text modifications before, between and after pairs
+ * in order to shift the positions of pairs. However, this test case will not be very thorough, as 
+ * it is not worth spending much time testing for text modifications in out-of-focus text editors, 
+ * as it is rare for them to occur in the first place.
+ */
+export const ASSORTED_TEXT_MODIFICATIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
+    name: 'Assorted Text Modifications in Out-of-Focus Text Editor',
+    prelude: async (executor) => {
+
+        // This sets up the initial text document as:
+        //
+        // ```
+        // function main() {
+        //     [[[[[[[[[[]]]]]]]]]]
+        // }             ^(cursor position)
+        // ```
+        await executor.typeText({ text: 'function main() {\n' });
+        await executor.typeText({ text: '[', repetitions: 10 });
+        executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ] });
+        executor.assertCursors({ expect: [ [1, 14] ] });
+
+        // Open another text editor (which will immediately take focus).
+        await executor.openNewTextEditor({ showOptions: { viewColumn: ViewColumn.Two }});
+    },
+    task: async (executor) => {
+
+        // Perform text modifications before, between and after pairs in the out-of-focus text 
+        // editor in view column 1.
+        //  
+        // Document state after:
+        //
+        // ```
+        // const main = () => {
+        //     function inner() {
+        //         function innerInner() {
+        //             return [[[[[[[[[[ 'Hello', 'World' ]]]]]]]]]];
+        //         }                                      ^(cursor position)
+        //         console.log(innerInner());
+        //     }
+        //     inner();
+        // };
+        // main();
+        // ```
+        await executor.editText({
+            edits: [
+                { 
+                    kind: 'insert', 
+                    at:   [2, 1], 
+                    text: ';\n'
+                        + 'main();' 
+                },
+                { 
+                    kind: 'insert', 
+                    at:   [1, 24], 
+                    text: ';\n'
+                        + '        }\n'
+                        + '        console.log(innerInner());\n'
+                        + '    }\n'
+                        + '    inner();'
+                },
+                {
+                    kind: 'insert',
+                    at:   [1, 14],
+                    text: ' \'Hello\', \'World\' '
+                },
+                {
+                    kind:  'replace',
+                    range: { start: [1, 0], end: [1, 4] },
+                    with:  '            return '
+                },
+                {
+                    kind: 'insert',
+                    at:   [0, 17],
+                    text: '\n'
+                        + '    function inner() {\n'
+                        + '        function innerInner() {'
+                },
+                {
+                    kind: 'insert',
+                    at:   [0, 16],
+                    text: '=> '
+                },
+                {
+                    kind:  'replace',
+                    range: { start: [0, 0], end: [0, 13] },
+                    with:  'const main = '
+                }
+            ],
+            viewColumn: ViewColumn.One
+        });
+        executor.assertPairs({ 
+            expect:     [ { line: 3, sides: [...range(19, 29), ...range(47, 57)] } ],
+            viewColumn: ViewColumn.One
+         });
+        executor.assertCursors({ 
+            expect:     [ [3, 47] ], 
+            viewColumn: ViewColumn.One 
+        });
+
+        // Perform more text modifications before, between and after pairs in the out-of-focus text 
+        // editor in view column 1.
+        //
+        // Document state after:
+        // 
+        // ```
+        // function f() {
+        //     function inner() {
+        //         return [[[[[[[[[[ 'Goodbye' ]]]]]]]]]];
+        //     }
+        //     return inner();
+        // }
+        //
+        // (() => { console.log(f()); })();
+        // ```
+        await executor.editText({
+            edits: [
+                {
+                    kind:  'replace',
+                    range: { start: [8, 1], end: [9, 7] },
+                    with:  '\n'
+                         + '\n'
+                         + '(() => { console.log(f()); })();' 
+                },
+                {
+                    kind: 'insert',
+                    at:   [7, 4],
+                    text: 'return '
+                },
+                {
+                    kind:  'delete',
+                    range: { start: [3, 58], end: [5, 34] },
+                },
+                { 
+                    kind:  'replace',
+                    range: { start: [3, 30], end: [3, 46] },
+                    with:  '\'Goodbye\''
+                },
+                {
+                    kind:  'delete',
+                    range: { start: [3, 0], end: [3, 4] },
+                },
+                {
+                    kind:  'delete',
+                    range: { start: [1, 22], end: [2, 31] },
+                },
+                {
+                    kind:  'delete',
+                    range: { start: [0, 15], end: [0, 18] },
+                },
+                {
+                    kind:  'replace',
+                    range: { start: [0, 0], end: [0, 13] },
+                    with:  'function f'
+                },
+            ],
+            viewColumn: ViewColumn.One
+        });
+        executor.assertPairs({ 
+            expect:     [ { line: 2, sides: [...range(15, 25), ...range(36, 46)] } ],
+            viewColumn: ViewColumn.One
+         });
+        executor.assertCursors({ 
+            expect:     [ [2, 36] ], 
+            viewColumn: ViewColumn.One 
+        });
+    }
+});
+
+
+/**
  * Test whether the position of pairs are correctly tracked following non-deleting text edits¹ that 
  * cause them to be translated².
  * 
@@ -2151,5 +2324,9 @@ export const SINGLE_CURSOR_PAIR_TRANSLATION_TEST_GROUP = new TestGroup({
         AUTOCOMPLETIONS_OK_TEST_CASE,
         SNIPPETS_OK_TEST_CASE,
         TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE,
+        ASSORTED_TEXT_MODIFICATIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE
     ]
 });
+
+
+// TODO: Repeat tests for an editor that is not focused?
