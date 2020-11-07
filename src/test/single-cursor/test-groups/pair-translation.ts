@@ -2306,6 +2306,58 @@ export const ASSORTED_TEXT_MODIFICATIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE =
     }
 });
 
+/**
+ * Insert a snippet into an out-of-focus text editor and make sure that pairs are still properly
+ * tracked afterwards.
+ * 
+ * Note that this test will be less detailed than the test for snippet insertions in the active text
+ * editor as snippet insertions in text editors other than the active one is very rare.
+ */
+export const SNIPPET_INSERTIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
+    name: 'Snippet Insertions in Out-of-Focus Text Editor',
+    prelude: async (executor) => {
+
+        // This sets up the initial document as:
+        //
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: }})
+        // }                                      ^(cursor position)
+        // ```
+        await executor.typeText({ text: 'function main() {\nconst x = ' });
+        await executor.setCursors({ to: [ [1, 14] ] });
+        await executor.typeText({ text: 'someFn({ outer: { inner: ' });
+        executor.assertPairs({   expect: [ { line: 1, sides: [20, 21, 30, 39, 40, 41] } ] });
+        executor.assertCursors({ expect: [ [1, 39] ] });
+
+        // Open another text editor (which will immediately take focus).
+        await executor.openNewTextEditor({ showOptions: { viewColumn: ViewColumn.Two }});
+    },
+    task: async (executor) => {
+
+        // Insert a snippet into the out-of-focus text editor.
+        //
+        // Document state after:
+        //  
+        // ```
+        // function main() {
+        //     const x = someFn({ outer: { inner: fn1({ arg1: ``, arg2: fn2(float, binary), arg3:  })}})
+        // }                                                                |----^(cursor selection)
+        // ```
+        await executor.insertSnippet({
+            snippet:    new SnippetString('fn1({ arg1: `$3`, arg2: fn2(${1:float}, ${2:binary}), arg3: $4 })$0'),
+            viewColumn: ViewColumn.One
+        });
+        executor.assertPairs({   
+            expect:     [ { line: 1, sides: [20, 21, 30, 90, 91, 92] } ],
+            viewColumn: ViewColumn.One
+        });
+        executor.assertCursors({ 
+            expect:     [ { anchor: [1, 65], active: [1, 70] } ],
+            viewColumn: ViewColumn.One
+        });
+    }
+});
 
 /**
  * Test whether the position of pairs are correctly tracked following non-deleting text edits¹ that 
@@ -2324,9 +2376,7 @@ export const SINGLE_CURSOR_PAIR_TRANSLATION_TEST_GROUP = new TestGroup({
         AUTOCOMPLETIONS_TEST_CASE,
         SNIPPET_INSERTIONS_TEST_CASE,
         TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE,
-        ASSORTED_TEXT_MODIFICATIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE
+        ASSORTED_TEXT_MODIFICATIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE,
+        SNIPPET_INSERTIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE
     ]
 });
-
-
-// TODO: Repeat tests for an editor that is not focused?
