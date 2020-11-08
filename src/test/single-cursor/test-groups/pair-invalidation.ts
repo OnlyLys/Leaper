@@ -1,4 +1,4 @@
-import { SnippetString } from 'vscode';
+import { SnippetString, ViewColumn } from 'vscode';
 import { Executor, TestCase, TestGroup } from '../../utilities/framework';
 
 // In this prelude that is shared across all the test cases in this module, we insert pairs in a way 
@@ -865,6 +865,217 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
 });
 
 /**
+ * Test whether pair invalidation works for an out-of-focus text editor.
+ * 
+ * Furthermore, note that because changes involving an out-of-focus text editor is quite rare, this 
+ * test case will not be as detailed as the other ones.
+ */
+export const ASSORTED_EXIT_OF_CURSOR_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
+    name: 'Assorted Exit of Cursor in Out-of-Focus Text Editor',
+    task: async (executor) => {
+
+        // Open another empty text editor in view column 2. 
+        // 
+        // We will be switching to this text editor in order to defocus the text editor in view 
+        // column 1. The text editor in view column 1 is the one which we will be performing the 
+        // tests on.
+        //
+        // Note that we set the language of the opened text editor in view column 2 to Plaintext, 
+        // but in actually it does not matter what its language is.
+        await executor.openNewTextEditor({ 
+            languageId:  'plaintext',
+            showOptions: { viewColumn: ViewColumn.Two, preserveFocus: true }
+        });
+
+        // Setup the text editor in view column 1, then switch focus to view column 2.
+        //
+        // Because we reuse `sharedPrelude` in this function, the text editor in view column 1 is
+        // set by this function to:
+        //
+        // ```
+        // function () {
+        //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+        // }                                                   ^(cursor position)
+        // ```
+        async function setup(executor: Executor): Promise<void> {
+            await executor.focusFirstEditorGroup();
+            await executor.clearActiveDocument();
+            await sharedPrelude(executor);
+            await executor.focusSecondEditorGroup();
+        }
+
+        // Test setting cursor out rightwards.
+        //
+        // Expected state of the text editor in view column 1 as a result:
+        //
+        // ```
+        // function () {
+        //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+        // }                                                            ^(cursor position)
+        // ```
+        await setup(executor);
+        await executor.setCursors({ to: [ [1, 61] ], viewColumn: ViewColumn.One });
+        executor.assertPairs({   expect: [ { line: 1, sides: [15, 61] } ], viewColumn: ViewColumn.One });
+        executor.assertCursors({ expect: [ [1, 61] ],                      viewColumn: ViewColumn.One });
+
+        // Test setting cursor out leftwards.
+        //
+        // Expected state of the text editor in view column 1 as a result:
+        //
+        // ```
+        // function () {
+        //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+        // }           |-----^(cursor selection)
+        // ```
+        await setup(executor);
+        await executor.setCursors({ to: [ { anchor: [1, 12], active: [1, 18] } ], viewColumn: ViewColumn.One });
+        executor.assertPairs({   expect: [ 'None' ],                               viewColumn: ViewColumn.One });
+        executor.assertCursors({ expect: [ { anchor: [1, 12], active: [1, 18] } ], viewColumn: ViewColumn.One });
+
+        // Test setting cursor out upwards.
+        //
+        // Expected state of the text editor in view column 1 as a result:
+        //
+        // ```       ⌄(cursor position)
+        // function () {
+        //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+        // }
+        // ```
+        await setup(executor);
+        await executor.setCursors({ to: [ [0, 10] ], viewColumn: ViewColumn.One });
+        executor.assertPairs({   expect: [ 'None' ],  viewColumn: ViewColumn.One });
+        executor.assertCursors({ expect: [ [0, 10] ], viewColumn: ViewColumn.One });
+
+        // Test setting cursor out downwards.
+        //
+        // Expected state of the text editor in view column 1 as a result:
+        //
+        // ```       
+        // function () {
+        //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+        // }
+        //  ^(cursor position)
+        // ```
+        await setup(executor);
+        await executor.setCursors({ to: [ [2, 1] ], viewColumn: ViewColumn.One });
+        executor.assertPairs({   expect: [ 'None' ], viewColumn: ViewColumn.One });
+        executor.assertCursors({ expect: [ [2, 1] ], viewColumn: ViewColumn.One });
+
+        // Test deletion of opening side.
+        //
+        // Expected state of the text editor in view column 1 as a result:
+        //
+        // ```       
+        // function () {
+        //     console.log     { obj:  arr: [  prop: someFn(1, 20) } ] } }); // Log object to console.
+        // }                                                     ^(cursor position)
+        // ```
+        await setup(executor);
+        await executor.editText({
+            edits: [
+                { kind: 'delete',  range: { start: [1, 32], end: [1, 33] } },
+                { kind: 'delete',  range: { start: [1, 23], end: [1, 24] } },
+                { kind: 'replace', range: { start: [1, 15], end: [1, 16] }, with: '     ' },
+            ],
+            viewColumn: ViewColumn.One
+        });
+        executor.assertPairs({  
+            expect:     [ { line: 1, sides: [20, 33, 48, 54, 58, 62] } ], 
+            viewColumn: ViewColumn.One 
+        });
+        executor.assertCursors({ 
+            expect:     [ [1, 54] ], 
+            viewColumn: ViewColumn.One 
+        });
+
+        // Test deletion of closing side.
+        //
+        // Expected state of the text editor in view column 1 as a result:
+        //
+        // ```       
+        // function () {
+        //     console.log({ obj: { arr: [ { prop: someFn( }  Woah!); // Log object to console.
+        // }                                              ^(cursor position)
+        // ```
+        await setup(executor);
+        await executor.editText({
+            edits: [
+                { kind: 'replace', range: { start: [1, 60], end: [1, 61] }, with: 'Woah!' },
+                { kind: 'delete',  range: { start: [1, 56], end: [1, 59] } },
+                { kind: 'delete',  range: { start: [1, 47], end: [1, 53] } },
+            ],
+            viewColumn: ViewColumn.One
+        });
+        executor.assertPairs({   
+            expect:     [ { line: 1, sides: [15, 32, 48, 56] } ], 
+            viewColumn: ViewColumn.One 
+        });
+        executor.assertCursors({ 
+            expect:     [ [1, 47] ], 
+            viewColumn: ViewColumn.One 
+        });
+
+        // Test that multi-line text insertion between pairs untracks them.
+        //
+        // Expected state of text editor in view column 1 as a result:
+        //
+        // ```
+        // function () {
+        //     console.log({ obj: { arr: [ { prop: someFn(
+        //             1, 
+        // (sel. start)^   20,
+        //                     300,
+        //                         4000,
+        //                             50000
+        //     ) } ] } }); // Log object to console.
+        // }   ^(selection end)
+        // ```
+        await setup(executor);
+        await executor.editText({
+            edits: [
+                { 
+                    kind:  'replace', 
+                    range: { start: [1, 47], end: [1, 52] },
+                    with:  '\n'
+                         + '            1,\n'
+                         + '                20,\n'
+                         + '                    300,\n'
+                         + '                        4000,\n'
+                         + '                            50000\n'
+                         + '    '
+                },
+            ],
+            viewColumn: ViewColumn.One
+        });
+        executor.assertPairs({   expect: [ 'None' ],                             viewColumn: ViewColumn.One });
+        executor.assertCursors({ expect: [ { anchor: [2, 4], active: [7, 4] } ], viewColumn: ViewColumn.One });
+
+        // Test that multi-line snippet insertion between pairs untracks them.
+        // 
+        // Expected state of text editor in view column 1 as a result:
+        //
+        // ```
+        // function () {
+        //     console.log({ obj: { arr: [ { prop: someFn(
+        //         [1, 20, 300, 4000, 50000].reduce((acc, curr) => )
+        //     ) } ] } }); // Log object to console.               ^(cursor position)
+        // }
+        // ```
+        await setup(executor);
+        await executor.insertSnippet({
+            snippet:    new SnippetString(
+                '\n'
+              + '    [1, 20, 300, 4000, 50000].reduce((acc, curr) => $1)$0\n'
+            ),
+            location:   { start: [1, 47], end: [1, 52] },
+            viewColumn: ViewColumn.One
+        });
+        executor.assertPairs({   expect: [ 'None' ],  viewColumn: ViewColumn.One });
+        executor.assertCursors({ expect: [ [2, 56] ], viewColumn: ViewColumn.One });
+    }
+});
+
+/**
  * Test pair invalidation due to:
  * 
  *  1. Cursor being moved out of them (also known as 'cursor escape' or 'cursor exit').
@@ -885,6 +1096,7 @@ export const SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP = new TestGroup({
         DELETION_OF_OPENING_SIDE_TEST_CASE,
         DELETION_OF_CLOSING_SIDE_TEST_CASE,
         MULTI_LINE_TEXT_INSERTED_BETWEEN_PAIRS_TEST_CASE,
-        MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE
+        MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE,
+        ASSORTED_EXIT_OF_CURSOR_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE
     ]
 });
