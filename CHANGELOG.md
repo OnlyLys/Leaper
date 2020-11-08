@@ -1,5 +1,9 @@
 # CHANGELOG
 
+### 0.9.1
+- Restructure some of the code to improve readability and robustness.
+- Expand the testing suite.
+
 ### 0.9.0
 - Add support for context switching (i.e. handle multiple visible text editors 
   at a time. Users can now insert pairs in one editor, switch to another editor, 
