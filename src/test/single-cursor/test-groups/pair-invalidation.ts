@@ -792,7 +792,11 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // }                                                            
         // ```
         await executor.insertSnippet({ 
-            snippet: new SnippetString('.reduce((${1:acc}, ${2:curr}) => {\n    $3\n}, ${4:init})$0') 
+            snippet: new SnippetString(
+                 '.reduce((${1:acc}, ${2:curr}) => {\n'
+               + '    $3\n'
+               + '}, ${4:init})$0'
+            ) 
         });
         executor.assertPairs({   expect: [ 'None' ] });
         executor.assertCursors({ expect: [ { anchor: [1, 71], active: [1, 74] } ] });
