@@ -411,7 +411,14 @@ export class Executor {
      */
     public async insertSnippet(args: InsertSnippetArgs): Promise<void> {
         return executeWithRepetitionDelay(async () => { 
-            return getVisibleTextEditor(args.viewColumn).insertSnippet(args.snippet);
+            let location: Position | Range | undefined;
+            if (Array.isArray(args.location)) {
+                location = new Position(args.location[0], args.location[1]);
+            } else if (typeof args.location === 'object') {
+                const { start: [startLine, startChar], end: [endLine, endChar] } = args.location;
+                location = new Range(startLine, startChar, endLine, endChar);
+            }
+            return getVisibleTextEditor(args.viewColumn).insertSnippet(args.snippet, location);
         }, args);
     }
 
@@ -908,6 +915,13 @@ interface InsertSnippetArgs extends RepetitionDelayOptions {
      * Defaults to `ViewColumn.Active`.
      */
     viewColumn?: ViewColumn;
+
+    /**
+     * Where to insert the snippet.
+     * 
+     * Defaults to the target text editor's current selection(s).
+     */
+    location?: CompactPosition | CompactRange;
 }
 
 interface OpenFileArgs extends RepetitionDelayOptions {
