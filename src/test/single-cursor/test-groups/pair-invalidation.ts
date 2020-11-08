@@ -786,13 +786,13 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // 
         // ```
         // function () {
-        //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, prev) => {
+        //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, curr) => {
         //                                                                        |--^(cursor selection)  
         //     }, init)) } ] } }); // Log object to console.
         // }                                                            
         // ```
         await executor.insertSnippet({ 
-            snippet: new SnippetString('.reduce((${1:acc}, ${2:prev}) => {\n    $3\n}, ${4:init})$0') 
+            snippet: new SnippetString('.reduce((${1:acc}, ${2:curr}) => {\n    $3\n}, ${4:init})$0') 
         });
         executor.assertPairs({   expect: [ 'None' ] });
         executor.assertCursors({ expect: [ { anchor: [1, 71], active: [1, 74] } ] });
@@ -803,7 +803,7 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // 
         // ```
         // function () {
-        //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, prev) => {
+        //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, curr) => {
         //                                                                             |---^(cursor selection)
         //     }, init)) } ] } }); // Log object to console.
         // }                                                            
@@ -818,7 +818,7 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // 
         // ```
         // function () {
-        //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, prev) => {
+        //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, curr) => {
         //                                                                              
         //         ^(cursor position)
         //     }, init)) } ] } }); // Log object to console.
@@ -834,7 +834,7 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // 
         // ```
         // function () {
-        //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, prev) => {
+        //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, curr) => {
         //         
         //     }, init)) } ] } }); // Log object to console.
         // }      |---^(cursor selection)
@@ -849,7 +849,7 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // 
         // ```
         // function () {
-        //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, prev) => {
+        //     console.log({ obj: { arr: [ { prop: someFn(1, [-1, -2, -3].reduce((acc, curr) => {
         //         
         //     }, init)) } ] } }); // Log object to console.
         // }           ^(cursor position)
