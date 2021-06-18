@@ -1,7 +1,7 @@
 /**
  * A timer to execute a callback at most once at the end of the current event loop cycle.
  * 
- * Unlike the regular `Immediate` timer afforded by vscode, this one is reusable.
+ * Unlike the regular `Immediate` timer afforded by Node.js, this one is reusable.
  */
 export class ImmediateReusable {
 

@@ -1,41 +1,51 @@
-//! The following module defines the 'starting point' class of the extension.
-
 import { commands, Disposable, TextEditor, ViewColumn, window } from 'vscode';
 import { Snapshot, TestAPI } from './test-api';
 import { ContextBroadcaster } from './context-broadcaster';
 import { Tracker } from './tracker/tracker';
 
 /**
- * The engine of this extension.
- * 
  * Creating an instance of this class starts the extension. 
  * 
- * # What This Class Does
+ * # Overview of What This Class Does
  * 
- * This class mainly acts as a coordinator. 
+ * This class tracks which text editors are currently visible and gives each visible text editor its
+ * own "state" such that each text editor can separately track the pairs within it. 
  * 
- * The primary responsbility of this class is to assign to each visible text editor a `Tracker` 
- * instance. The `Tracker` instance belonging to each class is then responsible for tracking and 
- * decorating the pairs in its owning text editor.
+ * Upon instantiation, this class also registers the extension's keybindings with vscode.
  * 
- * Furthermore, this class manages the keybindings of this extension by 'context switching', that is, 
- * by making sure that the context values within vscode are always synchronized with the context 
- * values of the active text editor's tracker.
+ * Finally, this class manages the toggling of the [keybinding contexts] for this extension's
+ * keybindings to make sure that the keybindings are only enabled when they need to be. For instance,
+ * this class ensures that the `Tab` keybinding to jump out of pairs is disabled when there is no
+ * pair to jump out of, and thus ensures that any `Tab` keypresses from the user is not intercepted 
+ * when they do not need to be. 
+ * 
+ * [keybinding contexts]: https://code.visualstudio.com/api/references/when-clause-contexts
  * 
  * # Safety
  * 
- * Only one instance of this class should be active at any time. And the created instance of this 
- * class must be disposed of when the extension is shut down.
+ * Only one instance of this class should be active at any time. 
+ * 
+ * All instances of this class must be disposed of when the extension is shut down.
  */
 export class Engine implements TestAPI {
 
     /**
-     * The trackers assigned to each visible text editor.
+     * The trackers paired to each visible text editor.
+     * 
+     * By giving each visible text editor its own `Tracker` instance, pairs within each visible
+     * text editor can be independently tracked. For instance, say there are 2 open tabs. With 
+     * independent tracking of pairs per text editor, the user can type in an autoclosed pair into
+     * the first tab (which will be tracked), switch to the second tab and do other stuff (maybe
+     * insert more pairs or jump out pairs in the second tab), then come back to the first tab with
+     * the pair previously inserted still being tracked, just as how it was when the user left it.
+     * 
+     * Note that as decorations are managed by `Tracker` instances, it follows that decorations are
+     * also managed on a per-text editor basis, which greatly simplifies decoration management. 
      */
     private trackers: Map<TextEditor, Tracker>;
 
     /**
-     * A pointer to the tracker assigned to the active text editor.
+     * A pointer to the tracker paired to the active text editor.
      * 
      * This is `undefined` if there is no active text editor.
      */
@@ -43,6 +53,8 @@ export class Engine implements TestAPI {
 
     /**
      * Keybinding to move the cursor in the active text editor past the nearest available pair.
+     * 
+     * This is the 'leap' or 'jump' out of pairs command.
      */
     private readonly leapCommand = commands.registerTextEditorCommand(
         'leaper.leap', 
@@ -58,14 +70,15 @@ export class Engine implements TestAPI {
     );
 
     /**
-     * Watcher to make sure that this engine follows the active text editor.
+     * Watcher to make sure that the engine is always aware of which text editor is currently active.
      */
     private readonly activeTextEditorChangeWatcher = window.onDidChangeActiveTextEditor(() => {
         this.rebindActiveTracker();
     });
 
     /**
-     * Watcher that keeps track of the visible text editors.
+     * Watcher to make sure that the engine can keep track of which text editors are currently 
+     * visible.
      */
     private readonly visibleTextEditorsChangeWatcher = window.onDidChangeVisibleTextEditors(
         (_visibleTextEditors) => {
