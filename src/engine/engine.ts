@@ -116,13 +116,6 @@ export class Engine implements TestAPI {
      */
     private activeInLeaperModeContextUpdateWatcher: Disposable | undefined;
 
-    /** 
-     * See `TestAPI` for more info. 
-     */
-    public get MRBInLeaperModeContext(): boolean | undefined {
-        return this.inLeaperModeContextBroadcaster.prevBroadcasted;
-    }
-
     /**
      * To broadcast the `leaper.hasLineOfSight` context of the active tracker to vscode.
      */
@@ -137,13 +130,6 @@ export class Engine implements TestAPI {
      */
     private activeHasLineOfSightContextUpdateWatcher: Disposable | undefined;
 
-    /** 
-     * See `TestAPI` for more info. 
-     */
-    public get MRBHasLineOfSightContext(): boolean | undefined {
-        return this.hasLineOfSightContextBroadcaster.prevBroadcasted;
-    }
-    
     public constructor() {
         
         // Assign to each text editor its own tracker.
@@ -183,19 +169,6 @@ export class Engine implements TestAPI {
     }
 
     /**
-     * See `TestAPI` for more info.
-     */
-    public snapshots(): Map<ViewColumn, Snapshot> {
-        const map = new Map<ViewColumn, Snapshot>();
-        for (const [visibleTextEditor, tracker] of this.trackers) {
-            if (visibleTextEditor.viewColumn !== undefined) {
-                map.set(visibleTextEditor.viewColumn, tracker.snapshot());
-            }
-        }
-        return map;
-    }
-
-    /**
      * Terminate the engine.
      * 
      * Calling this method does the following:
@@ -218,6 +191,29 @@ export class Engine implements TestAPI {
         this.activeInLeaperModeContextUpdateWatcher?.dispose();
         this.hasLineOfSightContextBroadcaster.dispose();
         this.activeHasLineOfSightContextUpdateWatcher?.dispose();
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Below this point are properties or functions exposed for testing purposes only.
+    //
+    // Please consult the `TestAPI` interface for more info.
+
+    public get MRBInLeaperModeContext(): boolean | undefined {
+        return this.inLeaperModeContextBroadcaster.prevBroadcasted;
+    }
+
+    public get MRBHasLineOfSightContext(): boolean | undefined {
+        return this.hasLineOfSightContextBroadcaster.prevBroadcasted;
+    }
+
+    public snapshots(): Map<ViewColumn, Snapshot> {
+        const map = new Map<ViewColumn, Snapshot>();
+        for (const [visibleTextEditor, tracker] of this.trackers) {
+            if (visibleTextEditor.viewColumn !== undefined) {
+                map.set(visibleTextEditor.viewColumn, tracker.snapshot());
+            }
+        }
+        return map;
     }
 
 }
