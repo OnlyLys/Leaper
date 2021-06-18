@@ -1,4 +1,4 @@
-import { Event } from "vscode";
+import { Event } from 'vscode';
 
 /**
  * Private [`when` keybinding context].
