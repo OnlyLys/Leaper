@@ -2,91 +2,80 @@ import { commands } from 'vscode';
 import { ImmediateReusable } from './tracker/immediate-reusable';
 
 /**
- * Class used to broadcast keybinding context values to vscode.
+ * Class used to broadcast [keybinding context] values to vscode.
  * 
- * Note that keybinding contexts are only obtained and broadcasted at the end of event loop cycles.
+ * # Efficiency
  * 
- * # Why We Only Broadcast Keybinding Contexts at the End of Event Loop Cycles
+ * To reduce overhead, this class does three things.
  * 
- * For keybinding contexts broadcasted to vscode (i.e. global keybinding contexts), we only broadcast 
- * them the end of event loop cycles since broadcasts received by vscode are only acknowledged during 
- * subsequent event loop cycles.
+ * First of all, context values are only broadcasted to vscode when they are different from the 
+ * value that was most recently broadcasted. This eliminates any unnecessary broadcasts.
  * 
- * For instance, consider a situation where a context value has changed 5 times during one event loop 
- * cycle. Had we broadcasted after each change, then that would have placed 5 context change commands 
- * into vscode's event queue. However, when it comes time for vscode to process the commands, only 
- * the last context value broadcasted matters, since it is the one that ends up being the effective 
- * value anyways. 
+ * Secondly, context values are only broadcasted at the end of [event loop cycles]. This is done 
+ * because vscode only processes context change requests once at the end of each event loop cycle. 
+ * When vscode processes context change requests, it makes the last one received the effective one 
+ * and discards any that have come before it. Thus, in a situation where in this extension, a context 
+ * value has changed 5 times during one event loop cycle, we can cut down on the wasteful broadcasts
+ * by only broadcasting the last one. 
  *
- * Therefore, by delaying broadcasts until the end of event loop cycles we can reduce the number of 
- * broadcasts we have to do. 
+ * Thirdly, to facilitate the second point, the value to broadcast is only calculated (by calling 
+ * the `getValue` callback) at the end of each event loop where a broadcast has been requested. This 
+ * way, the context value does not have to be calculated multiple times in the event of multiple 
+ * broadcast requests within an event loop cycle.
  * 
- * # Laziness
- * 
- * Another thing that we do to reduce the overhead of our extension is to only broadcast context
- * values when they are different from the context values that we most recently broadcasted.
+ * [keybinding context]: https://code.visualstudio.com/api/references/when-clause-contexts
+ * [event loop cycles]: https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/
  */
 export class ContextBroadcaster {
 
     private _prevBroadcasted: boolean | undefined;
 
-    /**
-     * The context value that was most recently broadcasted.
+    /** 
+     * The context value that was most recently broadcasted. 
      */
     public get prevBroadcasted(): boolean | undefined {
         return this._prevBroadcasted;
     }
 
-    /**
-     * Timer to broadcast at the end of the current event loop cycle.
+    /** 
+     * Timer to broadcast at the end of the current event loop cycle. 
      */
-    private endOfLoopTimer = new ImmediateReusable(() => {
-        
-        // Only broadcast a value if it was different from what we previously broadcasted.
-        const newValue = this.getValue();
-        if (newValue !== this.prevBroadcasted) {
-            this.broadcast(newValue);
+    private readonly endOfLoopTimer = new ImmediateReusable(() => {
+        const latestValue = this.getValue();
+        if (latestValue !== this.prevBroadcasted) {
+            commands.executeCommand('setContext', this.name, latestValue);
+            this._prevBroadcasted = latestValue;
         }
     });
 
     /**
-     * The context value is **not** broadcasted in this constructor.
+     * Note a broadcast is **not** automatically done upon instantiation. 
      * 
      * @param name The full name of the keybinding context.
-     * @param getValue Callback used to get the latest value of the keybinding context.
+     * @param getValue Callback used to calculate the value to broadcast.
      */
     public constructor(
         private readonly name: string,
         private getValue: () => boolean
-    ) {
-        this.getValue = getValue;
-    }
+    ) {}
 
-    /**
-     * Immediately broadcast a context value to vscode. 
-     */    
-    private broadcast(value: boolean): void {
-        commands.executeCommand('setContext', this.name, value);
-        this._prevBroadcasted = value;
-    }
-
-    /**
-     * Set this broadcaster to broadcast at the end of the current event loop cycle.
+    /** 
+     * Request for a broadcast to occur at the end of the current event loop cycle. 
      */
-    public set(): void {
+    public requestBroadcast(): void {
         this.endOfLoopTimer.set();
     }
 
-    /**
-     * Disable the keybinding context by **immediately** broadcasting `false`.
-     * 
-     * This broadcaster is then terminated, disabling it from any further use.
+    /** 
+     * Immediately broadcast `false`, then terminates this broadcaster instance. 
      */
     public dispose(): void {
-        this.broadcast(false);
-
-        // So that future calls to `endOfLoopTimer.set()` will no longer broadcast any more values.
+        this.endOfLoopTimer.clear();
+        commands.executeCommand('setContext', this.name, false);
+        
+        // So that future calls to `requestBroadcast` will no longer broadcast any more values.
         this.getValue = () => false;
+        this._prevBroadcasted = false;
     }
 
 }

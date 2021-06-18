@@ -156,15 +156,15 @@ export class Engine implements TestAPI {
 
         // Begin to watch the active tracker's context values.
         this.activeInLeaperModeContextUpdateWatcher = this.activeTracker?.inLeaperModeContext.onDidUpdate(() => {
-            this.inLeaperModeContextBroadcaster.set();
+            this.inLeaperModeContextBroadcaster.requestBroadcast();
         });
         this.activeHasLineOfSightContextUpdateWatcher = this.activeTracker?.hasLineOfSightContext.onDidUpdate(() => {
-            this.hasLineOfSightContextBroadcaster.set();
+            this.hasLineOfSightContextBroadcaster.requestBroadcast();
         });
             
         // Switch vscode's context to the active tracker's context.
-        this.inLeaperModeContextBroadcaster.set();
-        this.hasLineOfSightContextBroadcaster.set();
+        this.inLeaperModeContextBroadcaster.requestBroadcast();
+        this.hasLineOfSightContextBroadcaster.requestBroadcast();
     }
 
     /**
