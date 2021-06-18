@@ -192,10 +192,11 @@ export class Engine implements TestAPI {
         this.activeHasLineOfSightContextUpdateWatcher?.dispose();
     }
 
-    // -------------------------------------------------------------------------------------
-    // Below this point are properties or functions exposed for testing purposes only.
+    // ------------------------------------------------------------------------------
+    // TEST FUNCTIONS
     //
-    // Please consult the `TestAPI` interface for more info.
+    // What follows are properties or functions exposed for testing purposes only. Please consult 
+    // the `TestAPI` interface for more info.
 
     public get MRBInLeaperModeContext(): boolean | undefined {
         return this.inLeaperModeContextBroadcaster.prevBroadcasted;
