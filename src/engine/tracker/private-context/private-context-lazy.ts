@@ -2,35 +2,24 @@ import { Event, EventEmitter } from 'vscode';
 import { PrivateContext } from './private-context';
 
 /**
- * An implementation of the `PrivateContext` interface that lazily calculates context values.
+ * An implementation of the `PrivateContext` interface that lazily calculates the context value.
  * 
- * # Laziness
- * 
- * Context values are lazily updated via the `calc` callback provided in the constructor. 
- * 
- * Calculated values are cached and will only be recalculated if `get` is called on a context value
- * that was marked stale.
- * 
- * An existing context value can be marked as stale by calling `markStale`. 
+ * The context value is only recalculated when the `get` method is called on a private context that
+ * was marked as stale.
  */
 export class PrivateContextLazy implements PrivateContext {
 
     /**
-     * The cached value.
+     * The most recently calculated value.
      * 
      * The `stale` flag determines if the context value requires recalculation.
      */
     private readonly cached: { stale: boolean, value: boolean };
 
     /**
-     * Emitter to inform listeners this context value has been updated.
+     * Emitter to inform listeners that this context has been updated.
      * 
-     * Note that because context values are lazily recalculated, we actually emit this event when 
-     * the context values have been marked as stale, and not when they have been recalculated. 
-     * 
-     * However, that should not create any problems, since the laziness in recalculating context 
-     * values is transparent to users who are seeing this class through the `PrivateContext` 
-     * interface.
+     * For more info, please see the `onDidUpdate` method.
      */
     private readonly onDidUpdateEventEmitter = new EventEmitter<undefined>();
 
@@ -59,7 +48,7 @@ export class PrivateContextLazy implements PrivateContext {
     }
 
     /**
-     * Get the latest value.
+     * Get the latest value of this keybinding context.
      * 
      * A recalculation will occur if the cached value was marked as stale.
      */
@@ -72,20 +61,17 @@ export class PrivateContextLazy implements PrivateContext {
     }
 
     /**
-     * Subscribe to be notified when this context value is updated.
+     * Subscribe to be notified when this keybinding context has been updated.
      * 
-     * Note that because this class lazily calculates context values, we consider the context value
-     * updated when `markStale` is called. The actual value being calculated on-demand does not 
-     * change the fact that the context value has effectively changed for users of this class.
+     * Note that because the context value is lazily calculated, this event actually fires when the
+     * keybinding context has been marked stale, and not when it has been recalculated. 
      */
     public get onDidUpdate(): Event<undefined> {
         return this.onDidUpdateEventEmitter.event;
     }
 
     /**
-     * Permanently set the context value to `false`.
-     * 
-     * Furthermore, stop notifying listeners of `onDidUpdate` of any updates in the context value.
+     * Permanently set the context value to `false` and terminate the `onDidUpdate` event emitter.
      */
     public dispose(): void {
         this.calc         = () => false;
