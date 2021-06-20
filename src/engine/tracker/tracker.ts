@@ -16,63 +16,74 @@ import { TrackerCore } from './tracker-core/tracker-core';
  *  - Updates keybinding contexts which enable or disable the extension's keybindings.
  *  - Watches for changes in configuration values and reloads them when necessary.
  * 
- * # Binding
- * 
- * Each instance of this class is immutably bound to a text editor (called the 'owning' text editor)
- * during instantiation.
+ * The text editor that a tracker is assigned to is referred to as the owning text editor.
  * 
  * # Safety
  * 
- * Each instance of this class must be disposed of when the editor that owns it is closed.
+ * A tracker must be disposed of when the editor that owns it is closed or no longer visible.
  */
 export class Tracker {
 
     /** 
-     * Where most of the logic in this class is delegated to.
+     * Where a majority of the logic in this class is delegated to.
      */
     private readonly core: TrackerCore;
 
-    /**
-     * This value is used by the parent `Engine` to toggle all of this extension's keybindings.
-     */
     private readonly _inLeaperModeContext = new PrivateContextLazy(
         false, 
         () => !this.core.isEmpty,
     );
 
-    /** 
-     * Keybinding context that represents whether there are currently any pairs being tracked.
+    /**
+     * A keybinding context that is only `true` when there are currently pairs being tracked.
+     * 
+     * ## What This Keybinding Context is for
+     * 
+     * This keybinding context is used to disable all of this extension's keybindings when there are
+     * no pairs being tracked. 
      */
     public get inLeaperModeContext(): PrivateContext {
         return this._inLeaperModeContext;
     }
 
-    /**
-     * We need this context because the `Tab` key is very overloaded. This context is used by the
-     * parent `Engine` to enable the keybinding for the 'Leap' command when the cursor is at a 
-     * position where leaping is possible, and used to disable the keybinding when leaping is not 
-     * possible. 
-     * 
-     * Disabling the 'Leap' keybinding when it is not needed allows `Tab` keypresses to continue up 
-     * the keybinding heirarchy, preventing this extension from unnecessarily intercepting `Tab` 
-     * keypresses.
-     */
     private readonly _hasLineOfSightContext = new PrivateContextLazy(
         false,
         () => this.core.hasLineOfSight(this.owner.document),
     );
 
-
     /** 
-     * Keybinding context that represents whether the path from each cursor to the closing side of 
-     * its nearest tracked pair is unobstructed.
+     * A keybinding context that is only `true` under the following conditions:
+     * 
+     * 1. There are currently pairs being tracked.
+     * 2. None of the cursors have selections.
+     * 3. The path from each cursor to the closing side of its nearest available pair is unobstructed. 
+     * 
+     * Otherwise, this keybinding context is `false`.
+     * 
+     * ## What This Keybinding Context is for
+     * 
+     * We need this keybinding context because the `Tab` key is very overloaded. We want the `Tab` 
+     * keybinding bound to the 'leap' command to only be enabled when it is actually intended and 
+     * possible for a `Tab` keypress to trigger the command that causes the cursor to move out of 
+     * the nearest available pair.
+     * 
+     * Thus, we use the `leaper.hasLineOfSight` keybinding context to guard against the `Tab` 
+     * keybinding of this extension intercepting `Tab` keypresses unnecessarily. For instance, 
+     * suppose that between the nearest available pair and the cursor there is some text. When the 
+     * user presses `Tab`, what the user meant was to insert an indentation into the text and not
+     * to jump out of the nearest pair. So, having the `leaper.hasLineOfSight` keybinding context be
+     * disabled at this point prevents this extension from receiving the `Tab` keypress, and allows
+     * the `Tab` keypress to continue up the keybinding heirarchy.
+     * 
+     * See https://code.visualstudio.com/api/references/when-clause-contexts for more info about how
+     * keybinding contexts are used to toggle keybindings.
      */
     public get hasLineOfSightContext(): PrivateContext {
         return this._hasLineOfSightContext;
     }
 
     /**
-     * A timer to synchronize decorations at the end the current event loop cycle.
+     * A timer to synchronize decorations at the end of the current event loop cycle.
      * 
      * See `TrackerCore.syncDecorations` for why we do this.
      */
@@ -112,7 +123,7 @@ export class Tracker {
     });
 
     /** 
-     * @param owner The text editor to bind to (i.e. the owning text editor).
+     * @param owner The text editor that this tracker is assigned to (i.e. the owning text editor).
      */
     public constructor(private readonly owner: TextEditor) {
         this.core  = new TrackerCore(owner.selections, Configuration.read(owner.document));
