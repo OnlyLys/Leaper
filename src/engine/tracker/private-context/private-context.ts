@@ -1,48 +1,46 @@
 import { Event } from 'vscode';
 
 /**
- * Private [`when` keybinding context].
+ * A private keybinding context.
  * 
- * # Listening to Updates
+ * # Private vs Global Keybinding Contexts
  * 
- * Listeners can be notified of any updates in the context value through the `onDidUpdate` method.
+ * Within this extension, there are two kinds of keybinding contexts: 
  * 
- * # 'Private' vs 'Global' 
+ *  - 'Private' keybinding contexts which exist for each visible text editor. Such keybinding 
+ *    contexts are only a concept within this extension.
  * 
- * From the persepective of this extension, there are two values for a keybinding context.
+ *  - 'Global' keybinding contexts which are [the values used by vscode to determine whether 
+ *    keybindings are active]. Each instance of vscode has only one set of values that are 
+ *    effective at any time.
  * 
- * ## Private Keybinding Context
+ * Since in this extension, the tracking of context values are done on a per visible text editor 
+ * basis by assigning to each visible text editor its own `Tracker` instance, we do not want each
+ * `Tracker` instance to have to modify its behavior based on whether its owning text editor is 
+ * visible or not. Instead, we have architected it such that each `Tracker` instance assumes that 
+ * its owning text editor is visible and in focus, and exposes the keybinding context values it 
+ * thinks vscode should have to the main `Engine` instance. The keybinding contexts that each 
+ * `Tracker` exposes to the `Engine` is called the 'private' keybinding contexts.
  * 
- * Each `Tracker` (and therefore each owning editor) has its own private value for any given 
- * keybinding context. This class is a representation of that private value. 
+ * The main `Engine` instance of this extension is then responsible for actually broadcasting to 
+ * vscode the keybinding context values of the text editor that is in focus. Keybinding context 
+ * values broadcasted to vscode become the 'global' keybinding context value, and are the effective 
+ * values considered by a vscode instance when determining whether certain keybindings are active or 
+ * not. The main `Engine` instance always makes sure to synchronize the global keybinding context
+ * with the private keybinding context of the text editor that is in focus (i.e. the 'active' text
+ * editor), since that is the text editor that is expected to react to keypresses.
  * 
- * The current private value can be obtained via the `get` method. 
- * 
- * ## Global Keybinding Context
- * 
- * All `Tracker`s share the same global value for the same keybinding context. 
- * 
- * A global value is a value that was most recently broadcasted to and acknowledged by vscode, and 
- * is what is used by vscode to determine if a keybinding is active or not. 
- * 
- * An analogy can be drawn to multi-threading on PCs. Each thread can have its own values for what
- * should go onto the CPU registers, but only the active thread has its values loaded onto the CPU 
- * registers.
- * 
- * Note that this class does not handle the broadcasting of global context values. And note that 
- * while global values can be broadcasted to vscode, they cannot be retrieved. 
- * 
- * [`when` keybinding context]: https://code.visualstudio.com/docs/getstarted/keybindings#_when-clause-contexts
+ * [the values used by vscode to determine whether keybindings are active]: https://code.visualstudio.com/docs/getstarted/keybindings#_when-clause-contexts
  */
 export interface PrivateContext {
 
-    /**
-     * Get the current context value.
+    /** 
+     * Get the current value. 
      */
     get(): boolean;
 
-    /**
-     * Subscribe to be notified when this context value is updated.
+    /** 
+     * Subscribe to be notified when the value of this private context has been updated. 
      */
     readonly onDidUpdate: Event<undefined>;
 
