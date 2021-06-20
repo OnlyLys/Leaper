@@ -4,6 +4,9 @@ import { ImmediateReusable } from './tracker/immediate-reusable';
 /**
  * Class used to broadcast [keybinding context] values to vscode.
  * 
+ * Values broadcasted to vscode become the 'global' value of a keybinding context. For more info
+ * about 'global' or 'private' values, please see the `PrivateContext` type.
+ * 
  * # Efficiency
  * 
  * To reduce overhead, this class does three things.
