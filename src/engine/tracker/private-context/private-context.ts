@@ -26,9 +26,9 @@ import { Event } from 'vscode';
  * vscode the keybinding context values of the text editor that is in focus. Keybinding context 
  * values broadcasted to vscode become the 'global' keybinding context value, and are the effective 
  * values considered by a vscode instance when determining whether certain keybindings are active or 
- * not. The main `Engine` instance always makes sure to synchronize the global keybinding context
- * with the private keybinding context of the text editor that is in focus (i.e. the 'active' text
- * editor), since that is the text editor that is expected to react to keypresses.
+ * not. The main `Engine` instance always makes sure to synchronize the global keybinding context to 
+ * the private keybinding context of the text editor that is in focus (i.e. the 'active' text editor), 
+ * since that is the text editor that is expected to react to keypresses.
  * 
  * [the values used by vscode to determine whether keybindings are active]: https://code.visualstudio.com/docs/getstarted/keybindings#_when-clause-contexts
  */
