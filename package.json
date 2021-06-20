@@ -138,7 +138,7 @@
         ]
     },
     "engines": {
-        "vscode": "^1.48.0"
+        "vscode": "^1.57.1"
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
@@ -155,15 +155,15 @@
     },
     "devDependencies": {
         "@types/glob": "^7.1.3",
-        "@types/mocha": "^8.0.3",
-        "@types/node": "^14.14.6",
-        "@types/vscode": "^1.51.0",
-        "@typescript-eslint/eslint-plugin": "^4.6.1",
-        "@typescript-eslint/parser": "^4.6.1",
-        "eslint": "^7.13.0",
-        "glob": "^7.1.6",
-        "mocha": "^8.2.1",
-        "typescript": "^4.0.5",
-        "vscode-test": "^1.4.1"
+        "@types/mocha": "^8.2.2",
+        "@types/node": "^15.12.4",
+        "@types/vscode": "^1.57.0",
+        "@typescript-eslint/eslint-plugin": "^4.27.0",
+        "@typescript-eslint/parser": "^4.27.0",
+        "eslint": "^7.29.0",
+        "glob": "^7.1.7",
+        "mocha": "^9.0.1",
+        "typescript": "^4.3.2",
+        "vscode-test": "^1.5.2"
     }
 }
