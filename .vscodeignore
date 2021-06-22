@@ -5,13 +5,8 @@ out/**/*.map
 src/**
 .gitignore
 tsconfig.json
-vsc-extension-quickstart.md
-tslint.json
 **/*.ts
 contributing.md
-scripts
-.test-environment
 .eslintrc.json
-ignore
+.test-environment/
 DESIGN-NOTES.md
-.mypy_cache
