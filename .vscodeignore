@@ -10,3 +10,4 @@ contributing.md
 .eslintrc.json
 .test-environment/
 DESIGN-NOTES.md
+.eslintignore
