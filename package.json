@@ -141,14 +141,13 @@
         "vscode": "^1.57.1"
     },
     "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "npm run lint && tsc -p ./",
-        "fast-compile": "tsc -p ./ --allowUnusedLabels true --noUnusedParameters false --noUnusedLocals false",
+        "build-release": "npm run lint && npm run typecheck && esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --minify",
+        "build-dev": "tsc -p ./ --allowUnusedLabels true --noUnusedParameters false --noUnusedLocals false",
         "lint": "eslint src --ext ts",
-        "watch": "npm run lint && tsc -watch -p ./",
-        "pretest": "npm run compile && node ./out/test/gen-env.js",
-        "fast-pretest": "npm run fast-compile && node ./out/test/gen-env.js",
-        "test": "node ./out/test/run-tests.js"
+        "pretest": "npm run build-dev && node ./out/test/gen-env.js",
+        "test": "node ./out/test/run-tests.js",
+        "typecheck": "tsc -noEmit -p ./",
+        "vscode:prepublish": "npm run build-release"
     },
     "dependencies": {
         "@onlylys/vscode-validated-configuration-reader": "git://github.com/OnlyLys/vscode-validated-configuration-reader.git#semver:^0.4.0"
@@ -160,6 +159,7 @@
         "@types/vscode": "^1.57.0",
         "@typescript-eslint/eslint-plugin": "^4.27.0",
         "@typescript-eslint/parser": "^4.27.0",
+        "esbuild": "^0.12.9",
         "eslint": "^7.29.0",
         "glob": "^7.1.7",
         "mocha": "^9.0.1",

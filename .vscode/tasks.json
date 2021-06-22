@@ -4,9 +4,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "npm: compile",
+            "label": "npm: build-release",
             "type": "npm",
-            "script": "compile",
+            "script": "build-release",
             "problemMatcher": [
                 "$eslint-stylish",
                 "$tsc"
@@ -18,9 +18,9 @@
             "group": "build"
         },
         {
-            "label": "npm: fast-compile",
+            "label": "npm: build-dev",
             "type": "npm",
-            "script": "fast-compile",
+            "script": "build-dev",
             "problemMatcher": [
                 "$eslint-stylish",
                 "$tsc"
@@ -47,20 +47,6 @@
                 "reveal": "silent"
             },
             "group": "build"
-        },
-        {
-            "label": "npm: fast-pretest",
-            "type": "npm",
-            "script": "fast-pretest",
-            "problemMatcher": [
-                "$eslint-stylish",
-                "$tsc",
-            ],
-            "isBackground": false,
-            "presentation": {
-                "reveal": "silent"
-            },
-            "group": "build"
-        },
+        }
     ]
 }

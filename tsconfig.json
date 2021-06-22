@@ -8,12 +8,12 @@
         ],
         "sourceMap": true,
         "rootDir": "src",
-        "removeComments": true,
         "strict": true,
         "noUnusedLocals": true, 
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
-        "noUnusedParameters": true
+        "noUnusedParameters": true,
+        "isolatedModules": true     // Enabled because esbuild requires it.
     },
     "exclude": [
         "node_modules",

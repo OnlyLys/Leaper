@@ -6,7 +6,7 @@
 	"version": "0.2.0",
     "configurations": [
         {
-			"name": "Run Extension",
+			"name": "Run Release Build",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
@@ -16,10 +16,23 @@
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
 			],
-			"preLaunchTask": "npm: fast-compile"
+			"preLaunchTask": "npm: build-release"
+        },
+		{
+			"name": "Run Development Build",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"preLaunchTask": "npm: build-dev"
         },
         {
-            "name": "Extension Tests",
+            "name": "Run Tests",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -32,7 +45,7 @@
 			"outFiles": [
 				"${workspaceFolder}/out/test/**/*.js"
 			],
-			"preLaunchTask": "npm: fast-pretest"
+			"preLaunchTask": "npm: pretest"
         }
     ]
 }
