@@ -8,8 +8,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * Recursive copy.
- * 
  * `dest` will be overwritten if it already exists.
  * 
  * @param src Absolute path to the source.
@@ -33,7 +31,6 @@ function recursiveCopy(src: string, dest: string): void {
     }
 }
 
-// Create a fresh test environment.
 recursiveCopy(
     path.resolve('.test-environment'), 
     path.resolve('.test-environment-tmp')
