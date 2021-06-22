@@ -1,4 +1,4 @@
-// This script is called by the "Extension Tests" launch task.
+//! This script is called by the "Run Tests" launch task.
 
 import * as path from "path";
 import * as Mocha from "mocha";
