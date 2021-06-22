@@ -1,7 +1,5 @@
+.vscode-test/
+.test-environment-tmp/
 out
 node_modules
-.vscode-test/
 *.vsix
-ignore
-.mypy_cache
-.test-environment-tmp
