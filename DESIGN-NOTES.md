@@ -1,5 +1,8 @@
 # Design Notes
 
+The following document contains supplementary notes on important changes made to
+the code. 
+
 ## 0.8.0 -> 0.9.0
 
 In this update, the extension was rearchitected to be able to perform context
