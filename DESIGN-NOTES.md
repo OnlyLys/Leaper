@@ -3,6 +3,16 @@
 The following document contains supplementary notes on important changes made to
 the code. 
 
+## 0.9.1 -> 0.9.2
+
+[esbuild](https://code.visualstudio.com/api/working-with-extensions/bundling-extension#using-esbuild) 
+was added to the project to produce a bundled and minified output file. This 
+should make the extension load faster.
+
+Note that esbuild is only used in the release build. The development build (which 
+is the build used for running tests) is still only compiled with the TypeScript
+compiler (`tsc`).
+
 ## 0.8.0 -> 0.9.0
 
 In this update, the extension was rearchitected to be able to perform context

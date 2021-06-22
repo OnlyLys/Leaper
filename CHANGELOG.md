@@ -1,5 +1,10 @@
 # CHANGELOG
 
+### 0.9.2
+- Slightly simplify the code.
+- Use [esbuild](https://code.visualstudio.com/api/working-with-extensions/bundling-extension#using-esbuild) 
+  to reduce the extension's loading time.
+
 ### 0.9.1
 - Restructure some of the code to improve readability and robustness.
 - Expand the testing suite.
