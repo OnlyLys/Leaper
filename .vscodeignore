@@ -1,7 +1,5 @@
 .vscode/**
 .vscode-test/**
-out/test/**
-out/**/*.map
 src/**
 .gitignore
 tsconfig.json
@@ -9,10 +7,12 @@ tsconfig.json
 contributing.md
 .eslintrc.json
 .test-environment/
+.test-environment-tmp/
 DESIGN-NOTES.md
 .eslintignore
 
 # In release builds, the extension will be bundled into `out/extension.js`. All the other files in 
 # 'out' should therefore be ignored.
-out/**/!extension.js
+out/*
+!out/extension.js
 node_modules
