@@ -1,9 +1,12 @@
 # CHANGELOG
 
+### 0.9.3
+- Fix incorrect extension packaging. This should reduce the file size.
+
 ### 0.9.2
 - Slightly simplify the code.
 - Use [esbuild](https://code.visualstudio.com/api/working-with-extensions/bundling-extension#using-esbuild) 
-  to reduce the extension's loading time.
+  to reduce the extension's loading time and file size.
 
 ### 0.9.1
 - Restructure some of the code to improve readability and robustness.
