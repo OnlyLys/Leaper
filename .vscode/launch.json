@@ -6,7 +6,7 @@
 	"version": "0.2.0",
     "configurations": [
         {
-			"name": "Run Release Build",
+			"name": "Release Build",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
@@ -19,7 +19,7 @@
 			"preLaunchTask": "npm: build-release"
         },
 		{
-			"name": "Run Development Build",
+			"name": "Development Build",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
@@ -32,7 +32,7 @@
 			"preLaunchTask": "npm: build-dev"
         },
         {
-            "name": "Run Tests",
+            "name": "Tests",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",

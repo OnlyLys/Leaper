@@ -16,10 +16,10 @@ Steps:
 1. Make sure the extension has been [built](#Building-the-Extension).
 2. Open the project workspace in vscode.
 3. Open the "Run and Debug" panel.
-4. Select `Run Development Build`.
+4. Select and run `Development Build`.
 
 If you wish to run the release build of this extension, which contains bundled
-and minified code, select `Run Release Build` during step 4. You do not need to
+and minified code, select `Release Build` during step 4. You do not need to
 rebuild the extension for this, as the project has been configured to recompile
 the code before each run. 
 
@@ -33,7 +33,7 @@ Steps:
 1. Make sure the extension has been [built](#Building-the-Extension).
 2. Open the project workspace in vscode.
 3. Open the "Run and Debug" panel.
-4. Select `Run Tests`.
+4. Select and run `Tests`.
 
 Alternatively, after the extension has been built, instead of performing steps 
 2 to 4, the tests can be run from the command line by calling `npm test` in the 
