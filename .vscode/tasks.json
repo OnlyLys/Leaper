@@ -13,7 +13,7 @@
             ],
             "isBackground": false,
             "presentation": {
-                "reveal": "silent"
+                "reveal": "always"
             },
             "group": "build"
         },
@@ -27,7 +27,7 @@
             ],
             "isBackground": false,
             "presentation": {
-                "reveal": "silent"
+                "reveal": "always"
             },
             "group": {
                 "kind": "build",
@@ -44,7 +44,7 @@
             ],
             "isBackground": false,
             "presentation": {
-                "reveal": "silent"
+                "reveal": "always"
             },
             "group": "build"
         }
