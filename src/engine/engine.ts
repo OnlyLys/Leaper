@@ -98,19 +98,19 @@ export class Engine implements TestAPI {
      * visible.
      */
     private readonly visibleTextEditorsChangeWatcher = window.onDidChangeVisibleTextEditors(
-        (visible: ReadonlyArray<TextEditor>) => {
+        (visibleTextEditors: ReadonlyArray<TextEditor>) => {
             const newTrackers = new Map<TextEditor, Tracker>();
 
-            // Clean up the trackers for text editors that are no longer visible and preserve the 
-            // trackers for text editors that still are visible.
-            for (const [editor, tracker] of this.trackers.entries()) {
-                visible.includes(editor) ? newTrackers.set(editor, tracker) : tracker.dispose();
+            // Preserve trackers for text editors that are still visible and assign fresh trackers
+            // to text editors that are newly visible.
+            for (const editor of visibleTextEditors) {
+                newTrackers.set(editor, this.trackers.get(editor) ?? new Tracker(editor));
             }
 
-            // Assign fresh trackers for text editors that are newly visible.
-            for (const visibleTextEditor of visible) {
-                if (!newTrackers.has(visibleTextEditor)) {
-                    newTrackers.set(visibleTextEditor, new Tracker(visibleTextEditor));
+            // Clean up the trackers for text editors that are no longer visible.
+            for (const [editor, tracker] of this.trackers.entries()) {
+                if (!newTrackers.has(editor)) {
+                    tracker.dispose();
                 }
             }
 
