@@ -139,17 +139,23 @@ export class Tracker {
      */
     public leap(): void {
 
-        // Check whether leaping is actually allowed before executing it.
+        // Check whether there is actually line of sight before executing this command.
         //
-        // We do this check because even if the 'Leap' keybinding is disabled by a falsy 
-        // `leaper.hasLineOfSight` keybinding context when it is not possible to perform a cursor 
-        // jump, prior broadcasts of a falsy context value to disable the keybinding could still be 
-        // pending acknowledgement by vscode, as broadcasted context values are asynchronously read 
-        // by vscode.
+        // We have to check because:
         //
-        // Therefore it is possible for the flow of execution to reach here even though we have 
-        // disabled the keybinding. So we must perform this check.
-        if (!this.inLeaperModeContext.get() || !this.hasLineOfSightContext.get()) {
+        //   1. Even if the default 'Leap' keybinding is disabled by a falsy `leaper.hasLineOfSight` 
+        //      global keybinding context when it is not possible to perform a leap, prior requests
+        //      to disable the global keybinding context could still be pending acknowledgement by 
+        //      vscode since context values broadcasted to vscode are put into a queue and only
+        //      asynchronously read by vscode.
+        //   2. The user could define a custom keybinding that does not have `leaper.hasLineOfSight`
+        //      in the `when` context guard, which means the extension is not able to disable that
+        //      user defined keybinding.
+        //
+        // Thus, it is possible for the flow of execution to reach here even though we have disabled 
+        // the `leaper.hasLineOfSight` global keybinding context, and so we must perform this check.
+        // We check using the private keybinding context since that value is always up to date.
+        if (!this.hasLineOfSightContext.get()) {
             return;
         }
 
@@ -188,7 +194,7 @@ export class Tracker {
         if (!this.inLeaperModeContext.get()) {
             return;
         }
-
+        
         this.core.untrackPairs();
         this.markStaleSetSync();
     }
