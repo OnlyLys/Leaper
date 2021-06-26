@@ -20,7 +20,7 @@ function recursiveCopy(src: string, dest: string): void {
     const srcStats = fs.statSync(src);
     if (srcStats.isDirectory()) {
         if (fs.existsSync(dest) && fs.statSync(dest).isDirectory()) {
-            fs.rmdirSync(dest, { recursive: true });
+            fs.rmSync(dest, { recursive: true, force: true });
         }
         fs.mkdirSync(dest);
         fs.readdirSync(src).forEach((content) => {
