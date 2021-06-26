@@ -274,9 +274,11 @@ export class TrackerCore {
     public syncToContentChanges(contentChangeEvent: TextDocumentChangeEvent): void {
 
         /** 
-         * Calculate the shift in position that would result from content changes.
+         * Apply a shift in position due to content changes.
          * 
-         * Note that the return value is `undefined` if a content change overwrites `position`. 
+         * This function advances the content change stack. 
+         *
+         * Note that the return value is `undefined` if the content changes overwrite `position`. 
          */
         function shift(stack: ContentChangeStack, position: Position): Position | undefined {
 
@@ -313,7 +315,7 @@ export class TrackerCore {
         //
         // A stack is appropriate because:
         //
-        //  1. We iterate through clusters from the start to the end of the document.
+        //  1. We iterate through clusters from the top to the bottom of the document.
         //  2. We iterate through the pairs in each cluster from the outermost pair's opening side 
         //     to the innermost pair's opening side, and then from the innermost pair's closing side 
         //     to the outermost pair's closing side.
@@ -349,84 +351,101 @@ export class TrackerCore {
             // STEP 2 - Check if an autoclosing pair has been inserted. 
             // --------------------------------
 
-            const cursor = this.prevSortedCursors[iCursor].cursor;
-
-            // A new autoclosing pair that is detected within this step.
+            // A possible new autoclosing pair.
             //
             // Note that the position of this new pair (if detected) is already "finalized" and does 
             // not require further shifting.
             let newPair: Pair | undefined;
 
-            // One thing to note is that there is a possibility of us adding pairs that shouldn't be 
-            // added here. For instance, this step wouldn't be able to tell the difference between a 
-            // pasted `{}` and an autoclosed one, so both kinds of pairs get added to the finalized 
-            // clutser. 
+            // The cursor that is enclosed within the pairs of this cluster.
             //
-            // However, because the cursor ends up at different places afterwards (for example, an 
-            // autoclosed pair will have the cursor end up in between `{}`, while a pasted one will 
-            // have the cursor end up after `{}`), we can rely on a subsequent `syncToSelectionChanges` 
-            // call to remove erroneously added pairs.
-            if (cursor && cursor.isEmpty) {
+            // Note that we consider a cursor to be enclosed when the `anchor` part of the cursor
+            // is between the opening and closing sides of a pair.
+            const cursor = this.prevSortedCursors[iCursor].cursor;
 
-                // Pop the stack until we find a content change that begins at or after the cursor.
-                while (stack.peek()?.range.start.isBefore(cursor.anchor)) {
-                    stack.pop();
-                }
+            // Advance the stack until the content change at the top of the stack is one that begins 
+            // at or after the cursor.
+            //
+            // If, after this step, the stack is not empty, then the content change at the top of 
+            // the stack is the only content change that could possibly have inserted an autoclosing 
+            // pair since the rest of the content changes still in the stack are modifications of 
+            // text that come after the content change at the top of the stack.
+            while (stack.peek()?.range.start.isBefore(cursor.anchor)) {
+                stack.pop();
+            }
 
-                // There are three conditions that have to be satisfied before we can consider an
-                // inserted pair an autoclosed pair that we want to track:
-                //
-                //  1. The text insertion must have occurred at a cursor position. 
-                //     
-                //     We require this because vscode does not label its content changes. This 
-                //     condition allows us to filter out text insertions which come from other 
-                //     sources like the find-and-replace feature or from another extension. 
-                //
-                //  2. The text insertion must have an empty replacement range.
-                //    
-                //     There are two kinds of autoclosing pairs: 
-                //
-                //       - While nothing is selected, the user presses `{` and vscode completes the 
-                //         complementary `}`, then moves the cursor to in between the `{}` pair.  
-                //       - Where while text is selected, the user presses `{` and vscode wraps the 
-                //         selected text on both sides such that it becomes `{<selected_text>}`. 
-                //
-                //     This condition allows us to track the first kind of autoclosing pair and
-                //     ignore the second kind, since the first kind occurs when no existing text in
-                //     the document is replaced.
-                //
-                //     The second kind of autoclosing pair will be considered by the next condition.
-                // 
-                //  3. The cursor which inserted this pair must have an empty selection. 
-                //
-                //     As mentioned before, there are two kinds of autoclosing pairs. This condition 
-                //     allows us to ignore the second kind of autoclosing pair. 
-                //
-                //     Due to complexity, we choose not to support the second kind of autoclosing 
-                //     pair. But this may change in the future.
-                if (
-                    stack.peek()?.range.start.isEqual(cursor.anchor) 
-                    && stack.peek()?.range.isEmpty
-                    && this.configuration.detectedPairs.includes(stack.peek()?.text ?? "")
-                ) {
-                    
-                    // The finalized position of the opening side of the newly inserted pair.
-                    //
-                    // Even though this pair was inserted at the cursor, the cursor's position is 
-                    // one where content changes before it have yet to be applied. Therefore we have 
-                    // to apply the carry values to the cursor's position to get the position where
-                    // the pair would ultimately be inserted. 
-                    const newPairOpen = cursor.anchor.translate(
-                        stack.vertCarry,
-                        cursor.anchor.line === stack.horzCarry.affectsLine ? stack.horzCarry.value : 0
-                    );
+            // Check whether the content change at the top of the stack is one that inserted an 
+            // autoclosing pair.
+            //
+            // There are four conditions that have to be satisfied before a content change is
+            // considered an autoclosing pair insertion:
+            //
+            //  1. The text insertion must have occurred at a cursor. 
+            //  2. The text inserted must have a length of 2.
+            //  3. The text inserted must not have overwritten any text in the document.
+            //  4. The cursor which inserted this pair must have an empty selection.
+            //
+            // Before we explain why each condition is required, we must first mention that there 
+            // are two kinds of autoclosing pairs in vscode:
+            //
+            //  - The first kind is when nothing is selected and the user presses an opener (such as 
+            //    `{`), vscode then automatically inserts the complementary closer (in this example, 
+            //    `}`), then moves the cursor to in between the autoclosed pair.
+            //
+            //    This kind of autoclosing pair always manifests as a single content change that 
+            //    inserts a pair (such as `{}`) at a cursor and overwrites no text in the document.
+            // 
+            //  - The second kind is when there is text selected and the user presses an opener
+            //    (such as `{`), vscode then automatically wraps the selected text on both sides 
+            //    (in this example, resulting in `{<selected_text>}`). 
+            //
+            //    This kind of autoclosing pair always manifests as two content changes, one which
+            //    inserts the opening side of the pair and another which inserts the closing side 
+            //    (for instance, the first one would insert `{` before the selected text and the 
+            //    second would insert `}` after the selected text).
+            //
+            // In this extension, we do not support tracking of the second kind of autoclosing pair 
+            // due to the complexity involved. Thus, by only considering one content change at a 
+            // time, we will have implicitly excluded the second kind of autoclosing pair.
+            //
+            // It is now clear why we require the conditions listed above. By filtering out content
+            // changes that do not satisfy the conditions, we can exclude content changes that are 
+            // not insertions of the first kind of autoclosing pair. However, note that the filtering
+            // is not perfect. The conditions listed above would not be able to help us distinguish 
+            // between a pasted pair and an autoclosed one, and therefore we will end up tracking 
+            // both kinds of pairs (when really we only want to track an autoclosed one). But because 
+            // the cursor ends up at different positions afterwards (an autoclosed pair will have 
+            // the cursor end up in between the pair, like so `{|}`, while a pasted one will have 
+            // the cursor end up after the pair, like so `{}|`), we can rely on the subsequent 
+            // `TrackerCore.syncToSelectionChanges` call to untrack a pasted pair.
+            //
+            // OPTIMIZATION NOTE: We check for condition 2 first since the most common content 
+            // changes that occur are single alphbet text insertions at the cursor due to the user
+            // typing stuff into the editor.
+            if (
+                stack.peek()?.text.length === 2
+                && stack.peek()?.range.start.isEqual(cursor.anchor) 
+                && stack.peek()?.range.isEmpty
+                && cursor.isEmpty
+                && this.configuration.detectedPairs.includes(stack.peek()?.text ?? "")
+            ) {
 
-                    newPair = { 
-                        open:       newPairOpen, 
-                        close:      newPairOpen.translate(0, 1),
-                        decoration: undefined
-                    };
-                }
+                // The position of the cursor after the content changes have been applied.
+                //
+                // The `cursor` object we have actually represents the position of the cursor before
+                // the content changes have been applied. Thus, we have to calculate the cursor's 
+                // position after the content changes have been applied so that we know where the 
+                // new autoclosed pair will be located.
+                const anchorAfter = cursor.anchor.translate(
+                    stack.vertCarry,
+                    cursor.anchor.line === stack.horzCarry.affectsLine ? stack.horzCarry.value : 0
+                );
+
+                newPair = { 
+                    open:       anchorAfter,
+                    close:      anchorAfter.translate(0, 1),
+                    decoration: undefined
+                };
             }
 
             // --------------------------------
