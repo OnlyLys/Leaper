@@ -156,8 +156,8 @@ export class Tracker {
         // Perform the leap. 
         //
         // Note that we do not call `syncToSelectionChanges` after moving the cursors here. Instead 
-        // we rely on the selection change event that is fired due to cursors being modified to call 
-        // `syncToSelectionChanges`.
+        // we rely on the selection change event that is fired due to us modifying the cursors here,
+        // and that event will then call `syncToSelectionChanges` to synchronize the core.
         const innermostPairs  = this.core.getInnermostPairs();
         this.owner.selections = this.owner.selections.map((cursor, i) => {
             const leapTo = innermostPairs[i]?.close.translate(0, 1);
@@ -182,14 +182,9 @@ export class Tracker {
      */
     public escapeLeaperMode(): void {
 
-        // Note that this check is not really necessary, because unlike the 'Leap' command, where it 
-        // is likely for the control flow to reach the `leap` method (when say the user holds down 
-        // the `Tab` key) during the transient period after the broadcast to disable the keybinding 
-        // context was made, but before it is acknowledged by vscode, it is unlikely for the user to 
-        // press the keybinding for the 'Escape Leaper Mode' command (which is bound by default to 
-        // `Shift + Esc`) during such transient periods.
+        // Check whether there are actually pairs to untrack before executing this command.
         //
-        // That said, for purposes of consistency with the 'Leap' command, we do this check here.
+        // For why such a check is needed, see the `Tracker.leap()` method.
         if (!this.inLeaperModeContext.get()) {
             return;
         }
