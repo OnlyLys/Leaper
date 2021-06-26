@@ -116,11 +116,11 @@
             "commandPalette": [
                 {
                     "command": "leaper.leap",
-                    "when": "leaper.inLeaperMode"
+                    "when": "leaper.inLeaperMode && leaper.hasLineOfSight && editorTextFocus && !editorHasSelection"
                 },
                 {
                     "command": "leaper.escapeLeaperMode",
-                    "when": "leaper.inLeaperMode"
+                    "when": "leaper.inLeaperMode && editorTextFocus"
                 }
             ]
         },
