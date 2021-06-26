@@ -37,17 +37,18 @@ By 'available' we mean:
 
 #### _Potential Conflict with Tab Completion Feature_
 
-Note that `leaper.leap`'s default `Tab` keybinding, while suitable for most use 
-cases, can conflict with vscode's [_tab completion_] feature, since that feature 
-also the user to press the `Tab` key, possibly at places where there are pairs 
-that can be leaped out of. 
+`leaper.leap`'s default `Tab` keybinding, while suitable for most use cases, can 
+conflict with vscode's [_tab completion_] feature, since that feature requires 
+the user to press the `Tab` key, possibly at places where there are pairs that 
+can be leaped out of. 
 
-To avoid the conflict, the keybindings of the tab completion feature 
+To avoid conflicts, the keybindings of vscode's tab completion feature 
 (`insertBestCompletion` and `insertNextSugggestion`) could be rebound to another 
 key. Alternatively, `leaper.leap` could be rebound as well to avoid the conflict. 
 
-Note that tab completion is not the same as quick suggestion, which is the default 
-IntelliSense suggestion mode where a suggestion box appears as the user is typing.
+**Note that tab completion is not the same as quick suggestion, which is the 
+default vscode suggestion mode where a suggestion tooltip appears as the user is 
+typing.**
 
 [_tab completion_]: https://code.visualstudio.com/docs/editor/intellisense#_tab-completion
 
