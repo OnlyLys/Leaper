@@ -133,7 +133,7 @@
             {
                 "key": "shift+escape",
                 "command": "leaper.escapeLeaperMode",
-                "when": "leaper.inLeaperMode"
+                "when": "leaper.inLeaperMode && editorTextFocus"
             }
         ]
     },
