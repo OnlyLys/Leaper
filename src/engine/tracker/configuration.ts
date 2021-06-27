@@ -25,12 +25,7 @@ export class Configuration {
      */
     public readonly decorationOptions: DecorationRenderOptions;
 
-    /** 
-     * Binding to the `decorateAll` configuration to read its value. 
-     * 
-     * This also reads the deprecated `decorateOnlyNearestPair` configuration.
-     */
-    public static readonly decorateAllReader = new VCDualReader({
+    private static readonly decorateAllReader = new VCDualReader({
 
         name: `leaper.decorateAll`,
         validate: (value: any): value is boolean => typeof value === 'boolean',
@@ -41,12 +36,7 @@ export class Configuration {
 
     });
     
-    /** 
-     * Binding to the `detectedPairs` configuration to read its value. 
-     * 
-     * This also reads the deprecated `additionalTriggerPairs` configuration.
-     */
-    public static readonly detectedPairsReader = new VCDualReader({
+    private static readonly detectedPairsReader = new VCDualReader({
 
         name: `leaper.detectedPairs`,
         validate: (arr: any): arr is string[] => {
@@ -78,12 +68,7 @@ export class Configuration {
 
     });
     
-    /** 
-     * Binding to the `decorationOptions` configuration to read its value. 
-     * 
-     * This also reads the deprecated `customDecorationOptions` configuration.
-     */
-    public static readonly decorationOptionsReader = new VCDualReader({
+    private static readonly decorationOptionsReader = new VCDualReader({
 
         // Note that the type validation for this configuration is just a check to see if it's an 
         // `Object` type, because the actual `DecorationRenderOptions` type has too many properties 
