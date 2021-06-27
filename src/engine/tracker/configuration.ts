@@ -86,11 +86,12 @@ export class Configuration {
     public static readonly decorationOptionsReader = new VCDualReader({
 
         // Note that the type validation for this configuration is just a check to see if it's an 
-        // `Object` type because the actual type has too many properties to manually typecheck, and 
-        // furthermore is always evolving, as it is part of the VS Code API.
+        // `Object` type, because the actual `DecorationRenderOptions` type has too many properties 
+        // to manually typecheck. Furthermore, properties are always being added to it by vscode.
         // 
-        // Perhaps in the future I can create a script that will automatically generate the 
-        // typechecking code.
+        // But because all we ever do with this configuration (aside from setting the `rangeBehavior`
+        // property) is pass it to vscode to decorate pairs, there is no risk from an incorrectly
+        // specified object since we do not use any of its properties for computation.
         name: `leaper.decorationOptions`,
         validate: (v: any): v is DecorationRenderOptions => typeof v === 'object',
 
@@ -108,10 +109,8 @@ export class Configuration {
         this.detectedPairs     = Configuration.detectedPairsReader.read(scope).effectiveValue;
         this.decorationOptions = Configuration.decorationOptionsReader.read(scope).effectiveValue; 
 
-        // Override the range behavior of the decoration such that it is closed on both sides.
-        //
-        // We have to do this because we don't want the decoration of the closing pair to expand
-        // when inserting text next to it.
+        // The decoration must be closed on both sides so that the decoration won't expand when text
+        // is inserted next to it.
         this.decorationOptions.rangeBehavior = DecorationRangeBehavior.ClosedClosed;
     }
 
