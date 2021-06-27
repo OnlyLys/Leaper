@@ -28,10 +28,10 @@ export class Configuration {
     private static readonly decorateAllReader = new VCDualReader({
 
         name: `leaper.decorateAll`,
-        validate: (value: any): value is boolean => typeof value === 'boolean',
+        validate: (value: unknown): value is boolean => typeof value === 'boolean',
 
         deprName: `leaper.decorateOnlyNearestPair`,
-        deprValidate: (value: any): value is boolean => typeof value === 'boolean',
+        deprValidate: (value: unknown): value is boolean => typeof value === 'boolean',
         normalize: (deprValue) => !deprValue,
 
     });
@@ -39,12 +39,12 @@ export class Configuration {
     private static readonly detectedPairsReader = new VCDualReader({
 
         name: `leaper.detectedPairs`,
-        validate: (arr: any): arr is string[] => {
+        validate: (arr: unknown): arr is string[] => {
             return Array.isArray(arr) && arr.every(p => typeof p === 'string' && p.length === 2);
         },
 
         deprName: `leaper.additionalTriggerPairs`,
-        deprValidate: (arr: any): arr is { open: string, close: string }[] => {
+        deprValidate: (arr: unknown): arr is { open: string, close: string }[] => {
             function elemTypeGuard(elem: any): elem is { open: string, close: string } {
                 return typeof elem === 'object'
                     && elem !== null    // Need this because `null` is an object in JS.
@@ -81,13 +81,13 @@ export class Configuration {
         //
         // Note the null check is needed because `null` is an object in JS.
         name: `leaper.decorationOptions`,
-        validate: (v: any): v is DecorationRenderOptions => typeof v === 'object' && v !== null,
+        validate: (v: unknown): v is DecorationRenderOptions => typeof v === 'object' && v !== null,
 
         // The new configuration above is just a rename of this deprecated configuration.
         //
         // Note the null check is needed because `null` is an object in JS.
         deprName: `leaper.customDecorationOptions`,
-        deprValidate: (v: any): v is DecorationRenderOptions => typeof v === 'object' && v !== null,
+        deprValidate: (v: unknown): v is DecorationRenderOptions => typeof v === 'object' && v !== null,
         normalize: value => value
 
     });
