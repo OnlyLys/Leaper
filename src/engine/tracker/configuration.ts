@@ -47,6 +47,7 @@ export class Configuration {
         deprValidate: (arr: any): arr is { open: string, close: string }[] => {
             function elemTypeGuard(elem: any): elem is { open: string, close: string } {
                 return typeof elem === 'object'
+                    && elem !== null    // Need this because `null` is an object in JS.
                     && Reflect.ownKeys(elem).length === 2
                     && typeof elem.open  === 'string' 
                     && typeof elem.close === 'string'
@@ -73,16 +74,20 @@ export class Configuration {
         // Note that the type validation for this configuration is just a check to see if it's an 
         // `Object` type, because the actual `DecorationRenderOptions` type has too many properties 
         // to manually typecheck. Furthermore, properties are always being added to it by vscode.
-        // 
+        //
         // But because all we ever do with this configuration (aside from setting the `rangeBehavior`
         // property) is pass it to vscode to decorate pairs, there is no risk from an incorrectly
         // specified object since we do not use any of its properties for computation.
+        //
+        // Note the null check is needed because `null` is an object in JS.
         name: `leaper.decorationOptions`,
-        validate: (v: any): v is DecorationRenderOptions => typeof v === 'object',
+        validate: (v: any): v is DecorationRenderOptions => typeof v === 'object' && v !== null,
 
         // The new configuration above is just a rename of this deprecated configuration.
+        //
+        // Note the null check is needed because `null` is an object in JS.
         deprName: `leaper.customDecorationOptions`,
-        deprValidate: (v: any): v is DecorationRenderOptions => typeof v === 'object',
+        deprValidate: (v: any): v is DecorationRenderOptions => typeof v === 'object' && v !== null,
         normalize: value => value
 
     });
