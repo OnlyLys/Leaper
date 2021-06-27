@@ -32,12 +32,12 @@ export class Configuration {
      */
     public static readonly decorateAllReader = new VCDualReader({
 
-        name:     `leaper.decorateAll`,
+        name: `leaper.decorateAll`,
         validate: (value: any): value is boolean => typeof value === 'boolean',
 
-        deprName:     `leaper.decorateOnlyNearestPair`,
+        deprName: `leaper.decorateOnlyNearestPair`,
         deprValidate: (value: any): value is boolean => typeof value === 'boolean',
-        normalize:    (deprValue) => !deprValue,
+        normalize: (deprValue) => !deprValue,
 
     });
     
@@ -48,14 +48,13 @@ export class Configuration {
      */
     public static readonly detectedPairsReader = new VCDualReader({
 
-        name:     `leaper.detectedPairs`,
+        name: `leaper.detectedPairs`,
         validate: (arr: any): arr is string[] => {
             return Array.isArray(arr) && arr.every(p => typeof p === 'string' && p.length === 2);
         },
 
-        deprName:     `leaper.additionalTriggerPairs`,
+        deprName: `leaper.additionalTriggerPairs`,
         deprValidate: (arr: any): arr is { open: string, close: string }[] => {
-            return Array.isArray(arr) && arr.every((elem: any) => elemTypeGuard(elem));
             function elemTypeGuard(elem: any): elem is { open: string, close: string } {
                 return typeof elem === 'object'
                     && Reflect.ownKeys(elem).length === 2
@@ -64,8 +63,9 @@ export class Configuration {
                     && elem.open.length  === 1
                     && elem.close.length === 1;
             } 
+            return Array.isArray(arr) && arr.every((elem: any) => elemTypeGuard(elem));
         },
-        normalize:   (deprValue) => {
+        normalize: (deprValue) => {
 
             // Prior to version 0.7.0, `leaper.additionalTriggerPairs` was the only way to configure
             // which pair was to be tracked. However, that configuration only allowed the user to 
@@ -91,22 +91,22 @@ export class Configuration {
         // 
         // Perhaps in the future I can create a script that will automatically generate the 
         // typechecking code.
-        name:     `leaper.decorationOptions`,
+        name: `leaper.decorationOptions`,
         validate: (v: any): v is DecorationRenderOptions => typeof v === 'object',
 
         // The new configuration above is just a rename of this deprecated configuration.
-        deprName:     `leaper.customDecorationOptions`,
+        deprName: `leaper.customDecorationOptions`,
         deprValidate: (v: any): v is DecorationRenderOptions => typeof v === 'object',
-        normalize:    value => value
+        normalize: value => value
 
     });
 
     private constructor(scope?: ConfigurationScope) {
 
         // The `read()` calls here may throw if an effective value cannot be calculated. 
-        this.decorateAll        = Configuration.decorateAllReader.read(scope).effectiveValue;
-        this.detectedPairs      = Configuration.detectedPairsReader.read(scope).effectiveValue;
-        this.decorationOptions  = Configuration.decorationOptionsReader.read(scope).effectiveValue; 
+        this.decorateAll       = Configuration.decorateAllReader.read(scope).effectiveValue;
+        this.detectedPairs     = Configuration.detectedPairsReader.read(scope).effectiveValue;
+        this.decorationOptions = Configuration.decorationOptionsReader.read(scope).effectiveValue; 
 
         // Override the range behavior of the decoration such that it is closed on both sides.
         //
