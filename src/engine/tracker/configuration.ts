@@ -36,11 +36,23 @@ export class Configuration {
 
     });
     
+    /**
+     * We limit the max number of items that can be specified for the `leaper.detectedPairs` 
+     * configuration to prevent a malicious workspace from slowing down the extension by supplying
+     * a huge array for this configuration.
+     * 
+     * With this limit in place, it should be safe to enable the `leaper.detectedPairs` configuration
+     * in untrusted workspaces.
+     */
+    private static readonly DETECTED_PAIRS_MAX_ITEMS = 100;
+
     private static readonly detectedPairsReader = new VCDualReader({
 
         name: `leaper.detectedPairs`,
         validate: (arr: unknown): arr is string[] => {
-            return Array.isArray(arr) && arr.every(p => typeof p === 'string' && p.length === 2);
+            return Array.isArray(arr) 
+                && arr.length <= Configuration.DETECTED_PAIRS_MAX_ITEMS
+                && arr.every(pair => typeof pair === 'string' && pair.length === 2);
         },
 
         deprName: `leaper.additionalTriggerPairs`,
@@ -54,7 +66,9 @@ export class Configuration {
                     && elem.open.length  === 1
                     && elem.close.length === 1;
             } 
-            return Array.isArray(arr) && arr.every((elem: any) => elemTypeGuard(elem));
+            return Array.isArray(arr) 
+                && arr.length <= Configuration.DETECTED_PAIRS_MAX_ITEMS
+                && arr.every((elem: any) => elemTypeGuard(elem));
         },
         normalize: (deprValue) => {
 
