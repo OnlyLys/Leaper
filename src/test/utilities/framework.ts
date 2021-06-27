@@ -414,7 +414,7 @@ export class Executor {
             let location: Position | Range | undefined;
             if (Array.isArray(args.location)) {
                 location = new Position(args.location[0], args.location[1]);
-            } else if (typeof args.location === 'object') {
+            } else if (args.location !== undefined) {
                 const { start: [startLine, startChar], end: [endLine, endChar] } = args.location;
                 location = new Range(startLine, startChar, endLine, endChar);
             }
