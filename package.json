@@ -71,10 +71,8 @@
                         "outlineStyle": "solid",
                         "fontWeight": "bold"
                     },
-                    "not": {
-                        "required": [
-                            "rangeBehavior"
-                        ]
+                    "properties": {
+                        "rangeBehavior": false
                     },
                     "uniqueItems": true,
                     "markdownDescription": "How the closing side of each pair is decorated. \n\nThis configuration expects a [`DecorationRenderOptions`](https://code.visualstudio.com/api/references/vscode-api#DecorationRenderOptions) object, and all options (except for `rangeBehavior`) can be configured. \n\nHowever, options aside from the ones related to \"outline\", \"border\" or \"font\" have not been tested, and use of them may cause unwanted side-effects. It is possible for heavy and complicated decorations to slow down or even crash the editor. Unfortunately, because there are so many different options available, and newer ones are always being introduced into vscode's API, there is no way to test all the possible combinations of options. \n\nAny option that expects a non-`string` type can be specified with an object literal matching the structure of that type. For example, see the default value of this configuration, where for the `outlineColor` option, an object literal matching the structure of a [`ThemeColor`](https://code.visualstudio.com/api/references/vscode-api#ThemeColor) was specified. \n\nDecorations can be disabled by setting this configuration to `{}`.",
