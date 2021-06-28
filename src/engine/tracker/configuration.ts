@@ -56,7 +56,8 @@ export class Configuration {
         validate: (arr: unknown): arr is string[] => {
             return Array.isArray(arr) 
                 && arr.length <= Configuration.DETECTED_PAIRS_MAX_ITEMS
-                && arr.every(pair => typeof pair === 'string' && pair.length === 2);
+                && arr.every(pair => typeof pair === 'string' && pair.length === 2)
+                && arr.length === (new Set(arr)).size;  // Elements must be unique.
         },
 
         deprName: `leaper.additionalTriggerPairs`,
