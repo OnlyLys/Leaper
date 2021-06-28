@@ -23,7 +23,7 @@ export class Configuration {
     /** 
      * Decoration style for the closing side of pairs. 
      */
-    public readonly decorationOptions: DecorationRenderOptions;
+    public readonly decorationOptions: Readonly<DecorationRenderOptions>;
 
     private static readonly decorateAllReader = new VCDualReader({
 
@@ -109,13 +109,14 @@ export class Configuration {
     private constructor(scope?: ConfigurationScope) {
 
         // The `read()` calls here may throw if an effective value cannot be calculated. 
-        this.decorateAll       = Configuration.decorateAllReader.read(scope).effectiveValue;
-        this.detectedPairs     = Configuration.detectedPairsReader.read(scope).effectiveValue;
-        this.decorationOptions = Configuration.decorationOptionsReader.read(scope).effectiveValue; 
+        this.decorateAll        = Configuration.decorateAllReader.read(scope).effectiveValue;
+        this.detectedPairs      = Configuration.detectedPairsReader.read(scope).effectiveValue;
+        const decorationOptions = Configuration.decorationOptionsReader.read(scope).effectiveValue; 
 
-        // The decoration must be closed on both sides so that the decoration won't expand when text
-        // is inserted next to it.
-        this.decorationOptions.rangeBehavior = DecorationRangeBehavior.ClosedClosed;
+        // The decoration must be closed on both sides so that it won't expand when text is inserted 
+        // next to it.
+        decorationOptions.rangeBehavior = DecorationRangeBehavior.ClosedClosed;
+        this.decorationOptions          = decorationOptions;
     }
 
     /** 
