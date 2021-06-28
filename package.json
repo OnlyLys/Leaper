@@ -30,7 +30,11 @@
     "main": "./out/extension",
     "capabilities": {
         "untrustedWorkspaces": {
-            "supported": true
+            "supported": "limited",
+            "description": "Workspace specific decoration options are ignored in untrusted workspaces since malicious workspaces can specify complex decorations that might severely affect the performance of the editor.",
+            "restrictedConfigurations": [
+                "leaper.decorationOptions"
+            ]
         }
     },
     "contributes": {
