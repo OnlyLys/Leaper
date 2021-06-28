@@ -17,6 +17,10 @@ export class Configuration {
 
     /** 
      * Which pairs should be detected and tracked. 
+     * 
+     * OPTIMIZATION NOTE: It might be tempting to replace this with a `Set`, but micro benchmarks 
+     * (https://jsbench.me/5qkqg886lo/1) show that for small array sizes (such as the default value 
+     * of this configuration), checking for inclusion is faster with an array than it is with a set.
      */
     public readonly detectedPairs: ReadonlyArray<string>;
 
