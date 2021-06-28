@@ -28,6 +28,11 @@
         "*"
     ],
     "main": "./out/extension",
+    "capabilities": {
+        "untrustedWorkspaces": {
+            "supported": true
+        }
+    },
     "contributes": {
         "configuration": {
             "type": "object",
@@ -79,23 +84,28 @@
                     "scope": "language-overridable"
                 },
                 "leaper.decorateOnlyNearestPair": {
+                    "$comment": "This configuration was replaced with `leaper.decorateAll` since that configuration's name is clearer as to what its purpose is.",
                     "type": "boolean",
                     "default": true,
-                    "markdownDescription": "~~If `false`, will decorate all pairs instead of just the nearest one.~~",
-                    "deprecationMessage": "DEPRECATED since 0.7.0 \n\nThis configuration was renamed to `leaper.decorateAll` for clarity."
+                    "markdownDescription": "If `false`, will decorate all pairs instead of just the nearest one.",
+                    "markdownDeprecationMessage": "**Deprecated**: Please use `#leaper.decorateAll#` instead.",
+                    "deprecationMessage": "Deprecated: Please use `leaper.decorateAll` instead."
                 },
                 "leaper.additionalTriggerPairs": {
+                    "$comment": "This configuration was replaced with `leaper.detectedPairs`, as that configuration's value has a simpler format. Furthermore, the new configuration allows users to disable detection of the default set of pairs, whereas the default set of pairs in this configuration is hardcoded and cannot be changed.",
                     "type": "array",
                     "default": [],
-                    "markdownDescription": "~~Set additional pairs that the extension will detect. Currently there is no support for pairs that are more than 1 character wide on each side.~~",
-                    "deprecationMessage": "DEPRECATED since 0.7.0 \n\nThis configuration was deprecated in favour of `leaper.detectedPairs`, as the newer configuration allows for the specification of pairs in a simpler format. Furthermore, it allows users to disable detection of the default set of pairs. Previously, the default set of pairs was hardcoded and could not be changed."
+                    "markdownDescription": "Set additional pairs that the extension will detect. Currently there is no support for pairs that are more than 1 character wide on each side.",
+                    "markdownDeprecationMessage": "**Deprecated**: Please use `#leaper.detectedPairs#` instead.",
+                    "deprecationMessage": "Deprecated: Please use `leaper.detectedPairs` instead."
                 },
                 "leaper.customDecorationOptions": {
-                    "$comment": "This deprecated configuration has no default value in the package manifest. The default value was previously hardcoded in source code.",
+                    "$comment": "The default value of this config is null because the default value is hardcoded in the source code. This configuration was replaced with `leaper.decorationOptions` since that configuration's name is clearer as to what its purpose is.",
                     "type": "object",
                     "default": null,
-                    "markdownDescription": "~~Customize the decoration of the closing character of the pair.~~",
-                    "deprecationMessage": "DEPRECATED since 0.7.0 \n\nThis configuration was renamed to `leaper.decorationOptions` for clarity."
+                    "markdownDescription": "Customize the decoration of the closing character of the pair.",
+                    "markdownDeprecationMessage": "**Deprecated**: Please use `#leaper.decorationOptions#` instead.",
+                    "deprecationMessage": "Deprecated: Please use `leaper.decorationOptions` instead."
                 }
             }
         },
