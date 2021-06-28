@@ -61,7 +61,7 @@ export class Configuration {
 
         deprName: `leaper.additionalTriggerPairs`,
         deprValidate: (arr: unknown): arr is { open: string, close: string }[] => {
-            function elemTypeGuard(elem: any): elem is { open: string, close: string } {
+            function checkElement(elem: any): elem is { open: string, close: string } {
                 return typeof elem === 'object'
                     && elem !== null    // Need this because `null` is an object in JS.
                     && Reflect.ownKeys(elem).length === 2
@@ -72,7 +72,7 @@ export class Configuration {
             } 
             return Array.isArray(arr) 
                 && arr.length <= Configuration.DETECTED_PAIRS_MAX_ITEMS
-                && arr.every((elem: any) => elemTypeGuard(elem));
+                && arr.every(checkElement);
         },
         normalize: (deprValue) => {
 
