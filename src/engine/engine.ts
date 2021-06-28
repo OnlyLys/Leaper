@@ -204,7 +204,6 @@ export class Engine implements TestAPI {
         this.activeHasLineOfSightContextUpdateWatcher?.dispose();
         this.inLeaperModeContextBroadcaster.dispose();
         this.hasLineOfSightContextBroadcaster.dispose();
-        
     }
 
     // ------------------------------------------------------------------------------
