@@ -45,6 +45,7 @@
                     "scope": "language-overridable"
                 },
                 "leaper.detectedPairs": {
+                    "$comment": "Max items is limited to 100 to prevent a malicious workspace from slowing down the extension by specifying a really big array.",
                     "type": "array",
                     "default": [
                         "()",
@@ -62,7 +63,6 @@
                     },
                     "uniqueItems": true,
                     "maxItems": 100,
-                    "$comment": "We limit the max items to 100 to prevent a malicious workspace from slowing down the extension by specifying a really big array.",
                     "markdownDescription": "The autoclosing pairs to detect. \n\nNote that there is no support for pairs that are more than 1 character wide on either side, so `(())`, for instance, is disallowed.",
                     "scope": "language-overridable"
                 },
