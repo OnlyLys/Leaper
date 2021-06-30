@@ -476,8 +476,8 @@ export const PAIRS_CLEARED_ON_CHANGE_TEST_CASE = new TestCase({
         //     workspace root scope.
         await executor.focusLeftEditorGroup();
         await executor.setConfiguration({
-            partialName:           'detectedPairs',
-            value:                 [ "[]" ],
+            partialName: 'detectedPairs',
+            value:       [ "[]" ],
         });
         
         // 2b. Check that pairs are not cleared when a configuration change does not affect the 
