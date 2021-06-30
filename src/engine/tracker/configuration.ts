@@ -42,14 +42,14 @@ export class Configuration {
     });
     
     /**
-     * We limit the max number of items that can be specified for the `leaper.detectedPairs` 
-     * configuration to prevent a malicious workspace from slowing down the extension by supplying
-     * a huge array for this configuration.
+     * The max number of pairs that can be specified for the `leaper.detectedPairs` configuration.
      * 
-     * With this limit in place, it should be safe to enable the `leaper.detectedPairs` configuration
-     * in untrusted workspaces.
+     * We limit the max number of pairs that can be specified for the `leaper.detectedPairs` 
+     * configuration to prevent a malicious workspace from slowing down the extension by supplying
+     * a huge array for that configuration. With this limit in place, it should be safe to enable 
+     * the `leaper.detectedPairs` configuration in untrusted workspaces.
      */
-    private static readonly DETECTED_PAIRS_MAX_ITEMS = 100;
+    public static readonly DETECTED_PAIRS_MAX_ITEMS = 100;
 
     private static readonly detectedPairsReader = new VCDualReader({
 
