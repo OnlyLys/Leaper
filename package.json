@@ -164,7 +164,7 @@
         "vscode:prepublish": "npm run build-release"
     },
     "dependencies": {
-        "@onlylys/vscode-validated-configuration-reader": "github:OnlyLys/vscode-validated-configuration-reader#semver:^0.5.2"
+        "@onlylys/vscode-validated-configuration-reader": "github:OnlyLys/vscode-validated-configuration-reader#semver:^0.6.0"
     },
     "devDependencies": {
         "@types/glob": "^7.1.3",

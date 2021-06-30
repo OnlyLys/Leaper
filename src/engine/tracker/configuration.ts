@@ -33,10 +33,11 @@ export class Configuration {
 
         name: `leaper.decorateAll`,
         validate: (value: unknown): value is boolean => typeof value === 'boolean',
+        transform: (value: boolean) => value,
 
         deprName: `leaper.decorateOnlyNearestPair`,
         deprValidate: (value: unknown): value is boolean => typeof value === 'boolean',
-        normalize: (deprValue) => !deprValue,
+        deprTransform: (deprValue: boolean) => !deprValue,
 
     });
     
@@ -59,6 +60,7 @@ export class Configuration {
                 && arr.every(pair => typeof pair === 'string' && pair.length === 2)
                 && arr.length === (new Set(arr)).size;  // Elements must be unique.
         },
+        transform: (value: string[]) => value,
 
         deprName: `leaper.additionalTriggerPairs`,
         deprValidate: (arr: unknown): arr is { open: string, close: string }[] => {
@@ -75,7 +77,7 @@ export class Configuration {
                 && arr.length <= Configuration.DETECTED_PAIRS_MAX_ITEMS
                 && arr.every(checkElement);
         },
-        normalize: (deprValue) => {
+        deprTransform: (deprValue: { open: string, close: string }[]) => {
 
             // Prior to version 0.7.0, `leaper.additionalTriggerPairs` was the only way to configure
             // which pair was to be tracked. However, that configuration only allowed the user to 
@@ -101,13 +103,14 @@ export class Configuration {
         // Note the null check is needed because `null` is an object in JS.
         name: `leaper.decorationOptions`,
         validate: (v: unknown): v is DecorationRenderOptions => typeof v === 'object' && v !== null,
+        transform: (v: DecorationRenderOptions) => v,
 
         // The new configuration above is just a rename of this deprecated configuration.
         //
         // Note the null check is needed because `null` is an object in JS.
         deprName: `leaper.customDecorationOptions`,
         deprValidate: (v: unknown): v is DecorationRenderOptions => typeof v === 'object' && v !== null,
-        normalize: value => value
+        deprTransform: (v: DecorationRenderOptions) => v
 
     });
 
