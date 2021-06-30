@@ -2,11 +2,7 @@ import { DecorationRenderOptions, DecorationRangeBehavior, ConfigurationScope } 
 import { VCDualReader } from '@onlylys/vscode-validated-configuration-reader';
 
 /** 
- * A snapshot of this extension's configuration values. 
- * 
- * This value is not live, meaning any changes to the configuration values by the user will not be
- * reflected in each instance of this class. To get the latest values, call the `read()` factory 
- * function.
+ * A snapshot of the extension's configuration values. 
  */
 export class Configuration { 
 
@@ -128,10 +124,10 @@ export class Configuration {
     }
 
     /** 
-     * Get the current configuration values. 
+     * Get a snapshot of the extension's configuration values.
      * 
      * @param scope The scope to read configuration values from. If `undefined`, will use the 
-     *              default scope (which is usually the active text editor).
+     *             default scope (which is usually the active text editor).
      * @throws Will throw if any of the configurations cannot be read.
      */
     public static read(scope?: ConfigurationScope): Configuration {
