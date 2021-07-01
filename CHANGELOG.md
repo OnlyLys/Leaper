@@ -24,7 +24,7 @@
 - Tweak default decoration to make the decorated bracket bold.
 - Deprecate old configurations and replace with new counterparts:
   * Replace `leaper.additionalTriggerPairs` with `leaper.detectedPairs`. 
-  * Replace `leaper.customDecorationOptions` with `leaper.decorationOptions`
+  * Replace `leaper.customDecorationOptions` with `leaper.decorationOptions`.
   * Replace `leaper.decorateOnlyNearestPair` with `leaper.decorateAll`.
 - Overhaul README to reflect the above changes.
 - Significantly expand the testing suite to ensure correct behavior.
