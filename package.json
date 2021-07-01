@@ -79,7 +79,7 @@
                         },
                         "outlineWidth": "1px",
                         "outlineStyle": "solid",
-                        "fontWeight": "bold"
+                        "fontWeight": "bolder"
                     },
                     "properties": {
                         "rangeBehavior": false
