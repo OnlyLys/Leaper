@@ -1,6 +1,6 @@
 import { TextEditor, Selection, window, workspace } from 'vscode';
 import { Snapshot } from '../test-api';
-import { Configuration } from './configuration';
+import { Configuration } from './configuration/configuration';
 import { ImmediateReusable } from './immediate-reusable';
 import { PrivateContext } from './private-context/private-context';
 import { PrivateContextLazy } from './private-context/private-context-lazy';

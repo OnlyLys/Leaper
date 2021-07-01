@@ -74,9 +74,7 @@
                 "leaper.decorationOptions": {
                     "type": "object",
                     "default": {
-                        "outlineColor": {
-                            "id": "editorWarning.foreground"
-                        },
+                        "outlineColor": "editorWarning.foreground",
                         "outlineWidth": "1px",
                         "outlineStyle": "solid",
                         "fontWeight": "bolder"

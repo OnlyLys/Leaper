@@ -1,6 +1,6 @@
 import { Range, Position, Selection, TextEditorDecorationType, TextDocument, TextDocumentChangeEvent, TextEditorSelectionChangeEvent, window, TextEditor } from 'vscode';
 import { Snapshot } from '../../test-api';
-import { Configuration } from '../configuration';
+import { Configuration } from '../configuration/configuration';
 import { ContentChangeStack } from './content-change-stack';
 
 /** 
@@ -560,10 +560,11 @@ export class TrackerCore {
             return;
         }
 
-        // Decorate the closing side of a pair.
+        // Callback to decorate the closing side of a pair.
         const decoratePair = (pair: Pair) => {
-            const decorationOptions = this.configuration.decorationOptions;
-            const decoration        = window.createTextEditorDecorationType(decorationOptions);
+            const decoration = window.createTextEditorDecorationType(
+                this.configuration.decorationOptions.value
+            );
             owner.setDecorations(decoration, [ new Range(pair.close, pair.close.translate(0, 1)) ]);
             return decoration;
         };
