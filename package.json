@@ -75,7 +75,7 @@
                     "type": "object",
                     "default": {
                         "outlineColor": {
-                            "id": "editorBracketMatch.border"
+                            "id": "editorWarning.foreground"
                         },
                         "outlineWidth": "1px",
                         "outlineStyle": "solid",
