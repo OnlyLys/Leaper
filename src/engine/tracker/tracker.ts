@@ -29,11 +29,6 @@ export class Tracker {
      */
     private readonly core: TrackerCore;
 
-    private readonly _inLeaperModeContext = new PrivateContextLazy(
-        false, 
-        () => !this.core.isEmpty,
-    );
-
     /**
      * A keybinding context that is only `true` when there are currently pairs being tracked.
      * 
@@ -46,9 +41,9 @@ export class Tracker {
         return this._inLeaperModeContext;
     }
 
-    private readonly _hasLineOfSightContext = new PrivateContextLazy(
+    private readonly _inLeaperModeContext = new PrivateContextLazy(
         false,
-        () => this.core.hasLineOfSight(this.owner.document),
+        () => !this.core.isEmpty,
     );
 
     /** 
@@ -81,6 +76,11 @@ export class Tracker {
     public get hasLineOfSightContext(): PrivateContext {
         return this._hasLineOfSightContext;
     }
+
+    private readonly _hasLineOfSightContext = new PrivateContextLazy(
+        false,
+        () => this.core.hasLineOfSight(this.owner.document),
+    );
 
     /**
      * A timer to synchronize decorations at the end of the current event loop cycle.
