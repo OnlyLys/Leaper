@@ -6,8 +6,8 @@ Steps:
 
 1. Make sure `npm` has been installed on your system.
 2. Clone the project repository.
-3. From the command line, run `npm install` in the project directory. `npm` 
-   will download all the necessary dependencies and compile the code.
+3. From the command line, run `npm install` in the project directory. NPM will 
+   download all the necessary dependencies and compile the code.
 
 ## Running the Extension
 
@@ -59,7 +59,7 @@ To manually install this extension, perform these steps:
    vscode's [extensions folder](https://code.visualstudio.com/docs/editor/extension-marketplace#_where-are-extensions-installed).
 
 By default, a development build is created after step 1. If you wish to generate 
-the release build, in between steps 1 and 2, from the command line execute 
+a release build, in between steps 1 and 2, from the command line execute 
 `npm run build-release` in the project directory. 
 
 ## Contributing to the Repository
