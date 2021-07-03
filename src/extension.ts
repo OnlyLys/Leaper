@@ -3,9 +3,14 @@ import { Engine } from './engine/engine';
 import { TestAPI } from './engine/test-api';
 
 /**
+ * Handle to the running engine instance to allow tests to query the engine's state.
+ */
+export let testHandle: TestAPI | undefined;
+
+/**
  * This function is called by vscode in order to start the extension.
  */
-export function activate(context: ExtensionContext): TestAPI {
+export function activate(context: ExtensionContext) {
 
     // This starts the extension.
     const engine = new Engine();
@@ -14,7 +19,7 @@ export function activate(context: ExtensionContext): TestAPI {
     context.subscriptions.push(engine);
 
     // Expose the engine for tests.
-    return engine;
+    testHandle = engine;
 } 
 
 export function deactivate() {

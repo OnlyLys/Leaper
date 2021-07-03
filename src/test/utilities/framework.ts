@@ -2,10 +2,11 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
-import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, extensions, window, ViewColumn, Uri, ConfigurationTarget } from 'vscode';
+import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, window, ViewColumn, Uri, ConfigurationTarget } from 'vscode';
 import { ResolvedViewColumn, TrackerSnapshot, TestAPI } from '../../engine/test-api';
 import { CompactCluster, CompactRange, CompactPosition, CompactCursor, CompactSelection } from './compact';
 import { pickRandom, waitFor, zip } from './other';
+import { testHandle } from '../../extension';
 
 /**
  * A collection of `TestGroup`s.
@@ -119,7 +120,7 @@ export class TestCase {
  * 
  *  1. Call commands.
  *  2. Modify the state of visible text editors.
- *  3. Assert the state of the extension.
+ *  3. Assert the state of the engine.
  *  4. Temporarily change configuration values of the test workspace and the folders within it.
  *  5. Open documents in the test workspace.
  */
@@ -686,14 +687,13 @@ class ExecutorFull {
 }
 
 /**
- * Get a handle to the running extension instance.
+ * Get a handle to the running engine instance.
  */
 function getHandle(): TestAPI {
-    const handle = extensions.getExtension<TestAPI>(`OnlyLys.leaper`)?.exports;
-    if (!handle) {
-        throw new Error(`Unable to access Leaper's API!`);
+    if (!testHandle) {
+        throw new Error('Unable to access the running engine instance!');
     }
-    return handle;
+    return testHandle;
 }
 
 function resolveViewColumnOption(viewColumnOption: ViewColumnOption | undefined): ResolvedViewColumn {
