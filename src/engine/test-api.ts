@@ -27,7 +27,7 @@ export interface TestAPI {
      * The return value is a hash map, mapping the view column of each visible text editor to a
      * snapshot of all the pairs being tracked for it.
      */
-    snapshots(): Map<ViewColumn, Snapshot>;
+    snapshots(): Map<ResolvedViewColumn, Snapshot>;
     
 }
 
@@ -41,3 +41,11 @@ export interface TestAPI {
  * Snapshots can be mutated without affecting the extension's state.
  */
 export type Snapshot = { open: Position, close: Position, isDecorated: boolean }[][];
+
+/**
+ * Absolute view column numbers.
+ * 
+ * A view column can be specified in absolute terms like `ViewColumn.Two` or in relative terms like 
+ * `ViewColumn.Active`. This type contains only absolute view column numbers.
+ */
+export type ResolvedViewColumn = Exclude<ViewColumn, ViewColumn.Active | ViewColumn.Beside>;

@@ -1,5 +1,5 @@
 import { ViewColumn } from 'vscode';
-import { CompactClusters } from '../../utilities/compact';
+import { CompactCluster } from '../../utilities/compact';
 import { Executor, TestCase, TestGroup } from '../../utilities/framework';
 
 /**
@@ -18,27 +18,25 @@ import { Executor, TestCase, TestGroup } from '../../utilities/framework';
  * ```
  */
 async function preludeSetup(executor: Executor): Promise<void> {
-    await executor.clearActiveDocument();
-    await executor.editText({
-        edits: [
-            { 
-                kind: 'insert', 
-                at:   [0, 0],
-                text: 'async function helloWorld(): Promise<string> {\n' 
-                +     '    return new Promise((resolve) => {\n'
-                +     `        setTimeout(() => resolve('Hello World'), 1000);\n`
-                +     '    });\n'
-                +     '};\n'
-                +     '\n'
-                +     'async function main(): Promise<void> {\n'
-                +     '    await \n'
-                +     '}'
-            },
-        ]
-    }); 
-    await executor.setCursors({ to: [ [7, 10] ] });
-    executor.assertPairs({   expect: [ 'None' ] });
-    executor.assertCursors({ expect: [ [7, 10] ] });
+    await executor.deleteAll();
+    await executor.editText([
+        { 
+            kind: 'insert', 
+            at:   [0, 0],
+            text: 'async function helloWorld(): Promise<string> {\n' 
+            +     '    return new Promise((resolve) => {\n'
+            +     `        setTimeout(() => resolve('Hello World'), 1000);\n`
+            +     '    });\n'
+            +     '};\n'
+            +     '\n'
+            +     'async function main(): Promise<void> {\n'
+            +     '    await \n'
+            +     '}'
+        },
+    ]); 
+    await executor.setCursors([ [7, 10] ]);
+    executor.assertPairs([ 'None' ]);
+    executor.assertCursors([ [7, 10] ]);
 };
 
 /**
@@ -83,9 +81,9 @@ async function preludeSetup(executor: Executor): Promise<void> {
  */
 async function sharedTask(executor: Executor, expectDecorations: 'all' | 'nearest'): Promise<void> {
 
-    // So that we do not forget to pass `expectDecorations` to  `executor.assertPairs`.
-    function assertPairsAndDecorations(pairs: CompactClusters): void {
-        executor.assertPairs({ expect: pairs, decorations: expectDecorations });
+    // So that we do not forget to pass `expectDecorations` to `executor.assertPairs`.
+    function assertPairsAndDecorations(pairs: CompactCluster[]): void {
+        executor.assertPairs(pairs, { expectDecorations });
     }
 
     // Document state after:
@@ -101,9 +99,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await ()
     // }          ^(cursor position)
     // ```   
-    await executor.typeText({ text: '(' });
+    await executor.typeText('(');
     assertPairsAndDecorations([ { line: 7, sides: [10, 11] } ]);
-    executor.assertCursors({ expect: [ [7, 11] ] });
+    executor.assertCursors([ [7, 11] ]);
 
     // Document state after:
     //
@@ -118,9 +116,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async ())
     // }                 ^(cursor position)
     // ```   
-    await executor.typeText({ text: 'async (' });
+    await executor.typeText('async (');
     assertPairsAndDecorations([ { line: 7, sides: [10, 17, 18, 19] } ]);
-    executor.assertCursors({ expect: [ [7, 18] ] });
+    executor.assertCursors([ [7, 18] ]);
 
     // Document state after:
     //
@@ -137,7 +135,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```   
     await executor.leap();
     assertPairsAndDecorations([ { line: 7, sides: [10, 19] } ]);
-    executor.assertCursors({ expect: [ [7, 19] ] });
+    executor.assertCursors([ [7, 19] ]);
 
     // Document state after:
     //
@@ -152,9 +150,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => {})
     // }                       ^(cursor position)
     // ```   
-    await executor.typeText({ text: ' => {' });
+    await executor.typeText(' => {');
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 24, 25] } ]);
-    executor.assertCursors({ expect: [ [7, 24] ] });
+    executor.assertCursors([ [7, 24] ]);
 
     // Document state after:
     //
@@ -169,9 +167,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => {  })
     // }                         ^(cursor position)
     // ```   
-    await executor.typeText({ text: ' ', repetitions: 2 });
+    await executor.typeText(' ', { repetitions: 2 });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 26, 27] } ]);
-    executor.assertCursors({ expect: [ [7, 26] ] });
+    executor.assertCursors([ [7, 26] ]);
 
     // Document state after:
     //
@@ -186,9 +184,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => {  })
     // }                        ^(cursor position)
     // ```   
-    await executor.moveCursors({ direction: 'left' });
+    await executor.moveCursors('left');
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 26, 27] } ]);
-    executor.assertCursors({ expect: [ [7, 25] ] });
+    executor.assertCursors([ [7, 25] ]);
 
     // Document state after:
     //
@@ -203,9 +201,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => { console.log() })
     // }                                    ^(cursor position)
     // ```   
-    await executor.typeText({ text: 'console.log(' });
+    await executor.typeText('console.log(');
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 39, 40] } ]);
-    executor.assertCursors({ expect: [ [7, 37] ] });
+    executor.assertCursors([ [7, 37] ]);
 
     // Document state after:
     //
@@ -220,9 +218,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => { console.log({}) })
     // }                                     ^(cursor position)
     // ```   
-    await executor.typeText({ text: '{' });
+    await executor.typeText('{');
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 38, 39, 41, 42] } ]);
-    executor.assertCursors({ expect: [ [7, 38] ] });
+    executor.assertCursors([ [7, 38] ]);
 
     // Document state after:
     //
@@ -237,9 +235,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => { console.log({  }) })
     // }                                       ^(cursor position)
     // ```   
-    await executor.typeText({ text: ' ', repetitions: 2 });
+    await executor.typeText(' ', { repetitions: 2 });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 40, 41, 43, 44] } ]);
-    executor.assertCursors({ expect: [ [7, 40] ] });
+    executor.assertCursors([ [7, 40] ]);
 
     // Document state after:
     //
@@ -254,9 +252,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => { console.log({  }) })
     // }                                      ^(cursor position)
     // ```   
-    await executor.moveCursors({ direction: 'left' });
+    await executor.moveCursors('left');
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 40, 41, 43, 44] } ]);
-    executor.assertCursors({ expect: [ [7, 39] ] });
+    executor.assertCursors([ [7, 39] ]);
 
     // Document state after:
     //
@@ -271,9 +269,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => { console.log({ hey: [] }) })
     // }                                            ^(cursor position)
     // ```
-    await executor.typeText({ text: 'hey: [' });
+    await executor.typeText('hey: [');
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 45, 47, 48, 50, 51] } ]);
-    executor.assertCursors({ expect: [ [7, 45] ] });
+    executor.assertCursors([ [7, 45] ]);
     
     // Document state after:
     //
@@ -288,9 +286,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => { console.log({ hey: [  ] }) })
     // }                                              ^(cursor position)
     // ```
-    await executor.typeText({ text: ' ', repetitions: 2 });
+    await executor.typeText(' ', { repetitions: 2 });
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 47, 49, 50, 52, 53] } ]);
-    executor.assertCursors({ expect: [ [7, 47] ] });
+    executor.assertCursors([ [7, 47] ]);
 
     // Document state after:
     //
@@ -305,9 +303,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => { console.log({ hey: [  ] }) })
     // }                                             ^(cursor position)
     // ```
-    await executor.moveCursors({ direction: 'left' });
+    await executor.moveCursors('left');
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 47, 49, 50, 52, 53] } ]);
-    executor.assertCursors({ expect: [ [7, 46] ] });
+    executor.assertCursors([ [7, 46] ]);
 
     // Document state after:
     //
@@ -322,9 +320,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => { console.log({ hey: [ '' ] }) })
     // }                                              ^(cursor position)
     // ```
-    await executor.typeText({ text: '\'' });
+    await executor.typeText("'");
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 46, 47, 49, 51, 52, 54, 55] } ]);
-    executor.assertCursors({ expect: [ [7, 47] ] });
+    executor.assertCursors([ [7, 47] ]);
 
     // Document state after:
     //
@@ -339,9 +337,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => { console.log({ hey: [ '😎' ] }) })
     // }                                                ^(cursor position)
     // ```
-    await executor.typeText({ text: '😎' });
+    await executor.typeText('😎');
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 46, 49, 51, 53, 54, 56, 57] } ]);
-    executor.assertCursors({ expect: [ [7, 49] ] });
+    executor.assertCursors([ [7, 49] ]);
 
     // Document state after:
     //
@@ -358,7 +356,7 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     // ```
     await executor.leap();
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 51, 53, 54, 56, 57] } ]);
-    executor.assertCursors({ expect: [ [7, 50] ] });
+    executor.assertCursors([ [7, 50] ]);
 
     // Document state after:
     //
@@ -373,13 +371,11 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => { console.log({ hey: [ '😎', await helloWorld ] }) })
     // }                                                                   ^(cursor position)
     // ```
-    await executor.editText({
-        edits: [
-            { kind: 'insert', at: [7, 50], text: ', await helloWorld' }
-        ]
-    });
+    await executor.editText([
+        { kind: 'insert', at: [7, 50], text: ', await helloWorld' }
+    ]);
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 69, 71, 72, 74, 75] } ]);
-    executor.assertCursors({ expect: [ [7, 68] ] });
+    executor.assertCursors([ [7, 68] ]);
 
     // Document state after:
     //
@@ -394,9 +390,9 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => { console.log({ hey: [ '😎', await helloWorld() ] }) })
     // }                                                                    ^(cursor position)
     // ```
-    await executor.typeText({ text: '(' });
+    await executor.typeText('(');
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 68, 69, 71, 73, 74, 76, 77] } ]);
-    executor.assertCursors({ expect: [ [7, 69] ] });
+    executor.assertCursors([ [7, 69] ]);
 
     // Document state after:
     //
@@ -411,14 +407,12 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     await (async () => { console.log({ hey: [ '😎', await helloWorld() ] }); })();
     // }                                                                    ^(cursor position)
     // ```
-    await executor.editText({
-        edits: [
-            { kind: 'insert', at: [7, 78], text: '();' },
-            { kind: 'insert', at: [7, 75], text: ';'   }
-        ]
-    });
+    await executor.editText([
+        { kind: 'insert', at: [7, 78], text: '();' },
+        { kind: 'insert', at: [7, 75], text: ';'   }
+    ]);
     assertPairsAndDecorations([ { line: 7, sides: [10, 23, 36, 37, 44, 68, 69, 71, 73, 74, 77, 78] } ]);
-    executor.assertCursors({ expect: [ [7, 69] ] });
+    executor.assertCursors([ [7, 69] ]);
 
     // Document state after:
     //
@@ -437,16 +431,14 @@ async function sharedTask(executor: Executor, expectDecorations: 'all' | 'neares
     //     )();
     // }                                                                    
     // ```
-    await executor.editText({
-        edits: [
-            { kind: 'insert', at: [7, 78], text: '\n    '           },
-            { kind: 'insert', at: [7, 77], text: '\n        '       },
-            { kind: 'insert', at: [7, 25], text: '\n            '   },
-            { kind: 'insert', at: [7, 11], text: '\n        '       },
-        ]
-    });
+    await executor.editText([
+        { kind: 'insert', at: [7, 78], text: '\n    '           },
+        { kind: 'insert', at: [7, 77], text: '\n        '       },
+        { kind: 'insert', at: [7, 25], text: '\n            '   },
+        { kind: 'insert', at: [7, 11], text: '\n        '       },
+    ]);
     assertPairsAndDecorations([ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ]);
-    executor.assertCursors({ expect: [ [9, 56] ] });
+    executor.assertCursors([ [9, 56] ]);
 };
 
 /**
@@ -464,10 +456,7 @@ async function openDecorateAllEnabledTextEditor(
 ): Promise<void> {
 
     // The text document in Workspace 2 of the test workspace has `leaper.decorateAll` enabled.
-    await executor.openFile({ 
-        rel:        './workspace-2/text.ts', 
-        showOptions: { viewColumn }
-    });
+    await executor.openFile('./workspace-2/text.ts', { viewColumn });
 
     // The `sharedTask` function expects these pairs to be detected.
     await executor.setConfiguration({
@@ -533,47 +522,44 @@ const NOT_MESSED_UP_BY_FOCUS_SWITCHING = new TestCase({
     task: async (executor) => {
 
         // First check decorations are valid for both text editors.
-        executor.assertPairs({
-            expect:      [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
-            decorations: 'all'
-        });
-        executor.assertPairs({
-            expect:      [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
-            decorations: 'nearest',
-            viewColumn:  ViewColumn.One
-        });
+        executor.assertPairs(
+            [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
+            { expectDecorations: 'all' }
+        );
+        executor.assertPairs(
+            [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
+            { expectDecorations: 'nearest', viewColumn: ViewColumn.One }
+        );
 
         // Switch focus to view column 1 then check again.
-        await executor.focusLeftEditorGroup();
-        executor.assertPairs({
-            expect:      [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
-            decorations: 'nearest'
-        });
-        executor.assertPairs({
-            expect:      [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
-            decorations: 'all',
-            viewColumn:  ViewColumn.Two
-        });
+        await executor.focusEditorGroup('left');
+        executor.assertPairs(
+            [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
+            { expectDecorations: 'nearest' }
+        );
+        executor.assertPairs(
+            [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
+            { expectDecorations: 'all', viewColumn: ViewColumn.Two }
+        );
 
         // Switch focus back to view column 2 then check again.
-        await executor.focusRightEditorGroup();
-        executor.assertPairs({
-            expect:      [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
-            decorations: 'all'
-        });
-        executor.assertPairs({
-            expect:      [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
-            decorations: 'nearest',
-            viewColumn:  ViewColumn.One
-        });
+        await executor.focusEditorGroup('right');
+        executor.assertPairs(
+            [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
+            { expectDecorations: 'all' }
+        );
+        executor.assertPairs(
+            [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
+            { expectDecorations: 'nearest', viewColumn: ViewColumn.One }
+        );
 
-        // Close the text editor in view column 2 (which will yield focus to the text editor in 
-        // view column 1) then check again.
+        // Close the (active) text editor in view column 2 (which will yield focus to the text 
+        // editor in view column 1), then check again.
         await executor.closeActiveEditor();
-        executor.assertPairs({
-            expect:      [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
-            decorations: 'nearest'
-        });
+        executor.assertPairs(
+             [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ],
+            { expectDecorations: 'nearest' }
+        );
     }
 
 });
@@ -582,12 +568,12 @@ const NOT_MESSED_UP_BY_FOCUS_SWITCHING = new TestCase({
  * The following test group tests whether decorations are properly applied for pairs in single 
  * cursor situation.
  */
-export const SINGLE_CURSOR_DECORATIONS_TEST_GROUP = new TestGroup({
-    name: 'Decorations',
-    testCases: [
+export const SINGLE_CURSOR_DECORATIONS_TEST_GROUP = new TestGroup(
+    'Decorations',
+    [
         DECORATE_ALL_PAIRS_TEST_CASE,
         DECORATE_ONLY_NEAREST_PAIR_TEST_CASE,
         NOT_MESSED_UP_BY_FOCUS_SWITCHING
     ]
-});
+);
 

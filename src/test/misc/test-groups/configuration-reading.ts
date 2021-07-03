@@ -1,27 +1,18 @@
-//! Note that deprecated configuration values are not being tested in this module as:
-//! 
-//!  1. They are deprecated and should no longer be used going forward.
-//!  2. The old configurations `leaper.decorateOnlyNearestPair` and `leaper.customDecorationOptions`
-//!     are near identical to their new counterparts.
-//!  3. There is no feasible way to test `leaper.additionalTriggerPairs` as I could not think of a
-//!     programming language which autocloses pairs outside of the unchangeable base set:
-//!
-//!         [ "{}", "[]", "()" , "''" , "\"\"" , "``" , "<>" ]
-//! 
-
 import { ViewColumn } from 'vscode';
+import { CompactPosition } from '../../utilities/compact';
 import { Executor, TestCase, TestGroup } from '../../utilities/framework';
 import { range } from '../../utilities/other';
 
 /**
- * Tests the effective `detectedPairs` configuration in the active text editor by asserting that:
+ * Test the effective `leaper.detectedPairs` configuration in the active text editor by asserting 
+ * that:
  * 
  *  - The autoclosing pairs in `should` are detected.
- *  - The autoclosing pairs in` shouldNot` are not detected.
+ *  - The autoclosing pairs in `shouldNot` are not detected.
  * 
  * **Please make sure that the pairs provided are actual autoclosing pairs in the language of the
- * active text editor**. For instance, `<>`, even though it is a commonly used pair in languages with
- * generics like Rust or Typescript, is not autoclosed in either language. 
+ * active text editor**. For instance, `<>`, even though it is a commonly used pair in languages 
+ * with generics like Rust or Typescript, is not autoclosed in either language. 
  */
 async function testDetectedPairs(
     executor:  Executor,
@@ -29,54 +20,61 @@ async function testDetectedPairs(
     shouldNot: ("{}" | "[]" | "()" | "''" | "\"\"" | "``" | "<>")[]
 ): Promise<void> {
 
-    // Move cursor to the end of document.
-    await executor.cursorBottom();
-    const cursor = executor.getCursors()[0] as [number, number];
-
-    // Perform the checks.
-    await check(should,    true);
-    await check(shouldNot, false);
-
     /**
-     * Type in the opening side of each pair in `pairs`, let vscode autoclose the pair, then 
-     * depending on `expectTrack`:
+     * Type in the opening side of each pair (which are expected to be autoclosed), then depending
+     * on `expectTrack`:
      *  
-     *  - If `true`, will assert that each inserted pair is tracked by the extension.
-     *  - If `false`, will assert that each inserted pair is not tracked by the extension. 
+     *  - If `true`, will assert that each inserted pair is tracked by the engine.
+     *  - If `false`, will assert that each inserted pair is not tracked by the engine.
+     * 
+     * This function will undo all the pairs that it inserted and restore the cursor to its original
+     * position when it is done.
      */
     async function check(
+        initialCursorPosition: CompactPosition,
         pairs: ("{}" | "[]" | "()" | "''" | "\"\"" | "``" | "<>")[],
         expectTrack: boolean
     ): Promise<void> {
+        const [line, column] = initialCursorPosition;
         for (const pair of pairs) {
 
-            // Type in the opening side of the pair, and let vscode autoclose it.
-            await executor.typeText({ text: pair[0] });
+            // Type in the opening side, which is expected to be autoclosed.
+            await executor.typeText(pair[0]);
 
-            // Check that the pair is being tracked (or not tracked, depending on `expect`).
-            executor.assertPairs({
-                expect: [
-                    expectTrack ? { line: cursor[0], sides: [ cursor[1], cursor[1] + 1 ] } : 'None'
-                ]
-            });
-            executor.assertCursors({ expect: [ [cursor[0], cursor[1] + 1] ] });
+            // As a safety precaution, check that the cursor is advanced by 1 unit, as it would when 
+            // typing in a pair that is then autoclosed.
+            executor.assertCursors([ [line, column + 1] ]);
+
+            // Check that the pair is being tracked (or not tracked, depending on `expectTrack`).
+            if (expectTrack) {
+                executor.assertPairs([{ line, sides: [column, column + 1] }]);
+            } else {
+                executor.assertPairs([ 'None' ]);
+            }
 
             // Remove the inserted pair.
             await executor.undo();
 
-            // Check that the inserted pair was removed.
-            executor.assertPairs({   expect: [ 'None' ] });
-            executor.assertCursors({ expect: [ cursor ] });
+            // Check that the undo was successful.
+            executor.assertPairs([ 'None' ]);
+            executor.assertCursors([ initialCursorPosition ]);
         }
     }
+
+    // Do this so that when the opening side of pairs are entered, we know that they'll be autoclosed.
+    await executor.moveCursors('endOfDocument');
+
+    const initialCursorPosition = executor.getCursors()[0] as [number, number];
+    await check(initialCursorPosition, should,    true);
+    await check(initialCursorPosition, shouldNot, false);
 }
 
 /**
- * Test whether this extension is reading configuration values.
+ * Test whether configuration values are being read.
  * 
- * We use the `leaper.detectedPairs` configuration to perform the tests, by first configuring it to
- * different values at different scopes throughout the test workspace, then checking if this
- * extension is able to correctly behave based on the effective configuration value.
+ * We use the `leaper.detectedPairs` configuration to perform the tests. That configuration was 
+ * preconfigured to different values at different scopes throughout the test workspace. This test 
+ * here checks if the engine can correctly see those configured values.
  */
 const CAN_READ_VALUES_TEST_CASE = new TestCase({
     name: 'Can Read Values',
@@ -114,14 +112,14 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
         //      [ "{}", "[]", "()" ]
         //
         // Therefore we would expect none of the autoclosing pairs of Plaintext to be tracked.
-        await executor.openFile({ rel: './workspace-1/text.txt' });
+        await executor.openFile('./workspace-1/text.txt');
         await testDetectedPairs(executor, [], [ "{}", "[]", "()" ]);
 
         // 2b. Repeat the test after moving the opened text editor to another tab.
         //
         // This tests whether we can move the text editor without affecting its loaded configuration 
         // values.
-        await executor.moveEditorToRight();
+        await executor.moveEditorToGroup('right');
         await testDetectedPairs(executor, [], [ "{}", "[]", "()" ]);
 
         // 3a. Test whether workspace folder configuration values can be read.
@@ -143,14 +141,14 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
         // and would expect the following autoclosing pairs of Typescript to not be tracked: 
         //
         //     [ "{}", "[]", "''", "\"\"", "``" ]
-        await executor.openFile({ rel: './workspace-2/text.ts' });
+        await executor.openFile('./workspace-2/text.ts');
         await testDetectedPairs(executor, [ "()" ], [ "{}", "[]", "''", "\"\"", "``" ]);
 
         // 3b. Repeat the test after moving the active text editor to another tab.
         //
         // This tests whether we can move the text editor without affecting its loaded configuration 
         // values.
-        await executor.moveEditorToRight();
+        await executor.moveEditorToGroup('right');
         await testDetectedPairs(executor, [ "()" ], [ "{}", "[]", "''", "\"\"", "``" ]);
 
         // 4a. Test whether language-specific workspace folder configuration values can be read.
@@ -172,25 +170,25 @@ const CAN_READ_VALUES_TEST_CASE = new TestCase({
         // and would expect the following autoclosing pairs of Markdown to not be tracked:
         //
         //     [ "()", "[]" ]
-        await executor.openFile({ rel: './workspace-3/text.md'});
+        await executor.openFile('./workspace-3/text.md');
         await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);
 
         // 4b. Repeat the test after moving the active text editor to another tab.
         //
         // This tests whether we can move the text editor without affecting its loaded configuration 
         // values.
-        await executor.moveEditorToRight();
+        await executor.moveEditorToGroup('right');
         await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);
 
     }
 });
 
 /**
- * Test whether this extension reloads configuration values when a change in them is detected.
+ * Test whether configuration values are reloaded when a change in them is detected.
  * 
- * Note that we will not be testing whether this extension will automatically reload configuration 
- * values when deprecated configurations are changed, as deprecated configurations are not supposed 
- * to be used going forward.
+ * We use the `leaper.detectedPairs` configuration to perform the tests. Within the tests, we modify
+ * the configuration's values at various scopes within the test workspace. We check after each change 
+ * that the new values are in effect.
  */
 const RELOAD_ON_CHANGE_TEST_CASE = new TestCase({
     name: 'Reload on Change',
@@ -206,9 +204,9 @@ const RELOAD_ON_CHANGE_TEST_CASE = new TestCase({
         // # Focus
         // 
         // The text document in the third workspace will be in focus after this step.
-        await executor.openFile({ rel: './workspace-1/text.txt', showOptions: { viewColumn: 2 }});
-        await executor.openFile({ rel: './workspace-2/text.ts',  showOptions: { viewColumn: 3 }});
-        await executor.openFile({ rel: './workspace-3/text.md',  showOptions: { viewColumn: 4 }});
+        await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.Two   });
+        await executor.openFile('./workspace-2/text.ts',  { viewColumn: ViewColumn.Three });
+        await executor.openFile('./workspace-3/text.md',  { viewColumn: ViewColumn.Four  });
 
         // 1. Change the workspace configuration value.
         //
@@ -245,16 +243,16 @@ const RELOAD_ON_CHANGE_TEST_CASE = new TestCase({
         // # Focus 
         // 
         // The provided text editor (view column 1) will be in focus after this step.
-        await executor.setConfiguration<ReadonlyArray<string>>({
-            partialName: 'detectedPairs',
+        await executor.setConfiguration({
+            partialName: 'detectedPairs', 
             value:       [ "{}" ],
         });
         await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);                // Workspace 3 (Markdown).
-        await executor.focusLeftEditorGroup();
+        await executor.focusEditorGroup('left');
         await testDetectedPairs(executor, [ "()" ], [ "{}", "[]", "''", "\"\"", "``" ]);  // Workspace 2 (Typescript).
-        await executor.focusLeftEditorGroup();
+        await executor.focusEditorGroup('left');
         await testDetectedPairs(executor, [], [ "{}", "[]", "()" ]);                      // Workspace 1 (Plaintext).
-        await executor.focusLeftEditorGroup();
+        await executor.focusEditorGroup('left');
         await testDetectedPairs(executor, [ "{}" ], [ "[]", "()", "''", "\"\"", "``" ]);  // Provided (Typescript).
 
         // 2. Change a language-specific workspace configuration value.
@@ -293,17 +291,17 @@ const RELOAD_ON_CHANGE_TEST_CASE = new TestCase({
         // # Focus 
         //
         // The text editor of the third workspace (view column 4) will be in focus after this step.
-        await executor.setConfiguration<ReadonlyArray<string>>({
+        await executor.setConfiguration({
             partialName:    'detectedPairs',
             value:          [ "[]", "()" ],
             targetLanguage: 'plaintext',
         });
         await testDetectedPairs(executor, [ "{}" ], [ "[]", "()", "''", "\"\"", "``" ]);  // Provided (Typescript).
-        await executor.focusRightEditorGroup();
+        await executor.focusEditorGroup('right');
         await testDetectedPairs(executor, [ "[]", "()" ], [ "{}" ] );                     // Workspace 1 (Plaintext).
-        await executor.focusRightEditorGroup();
+        await executor.focusEditorGroup('right');
         await testDetectedPairs(executor, [ "()" ], [ "{}", "[]", "''", "\"\"", "``" ]);  // Workspace 2 (Typescript).
-        await executor.focusRightEditorGroup();
+        await executor.focusEditorGroup('right');
         await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);                // Workspace 3 (Markdown).
 
         // 3. Change a workspace folder configuration value.
@@ -344,17 +342,17 @@ const RELOAD_ON_CHANGE_TEST_CASE = new TestCase({
         // # Focus 
         // 
         // The provided text editor (view column 1) will be in focus after this step.
-        await executor.setConfiguration<ReadonlyArray<string>>({
+        await executor.setConfiguration({
             partialName:           'detectedPairs',
             value:                 [ "''", "\"\"", "``" ],
             targetWorkspaceFolder: 'workspace-2'
         });
         await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);                // Workspace 3 (Markdown).
-        await executor.focusLeftEditorGroup();
+        await executor.focusEditorGroup('left');
         await testDetectedPairs(executor, [ "''", "\"\"", "``" ], [ "{}", "[]", "()" ]);  // Workspace 2 (Typescript).
-        await executor.focusLeftEditorGroup();
+        await executor.focusEditorGroup('left');
         await testDetectedPairs(executor, [ "[]", "()" ], [ "{}" ] );                     // Workspace 1 (Plaintext).
-        await executor.focusLeftEditorGroup();
+        await executor.focusEditorGroup('left');
         await testDetectedPairs(executor, [ "{}" ], [ "[]", "()", "''", "\"\"", "``" ]);  // Provided (Typescript).
 
         // 4. Change a language-specific workspace folder configuration value.
@@ -389,18 +387,18 @@ const RELOAD_ON_CHANGE_TEST_CASE = new TestCase({
         // # Focus 
         //
         // The text editor of the third workspace (view column 4) will be in focus after this step.
-        await executor.setConfiguration<ReadonlyArray<string>>({
+        await executor.setConfiguration({
             partialName:           'detectedPairs',
             value:                 [ "{}", "()", "<>", "[]" ],
             targetWorkspaceFolder: 'workspace-3',
             targetLanguage:        'markdown',
         });
         await testDetectedPairs(executor, [ "{}" ], [ "[]", "()", "''", "\"\"", "``" ]);  // Provided (Typescript).
-        await executor.focusRightEditorGroup();
+        await executor.focusEditorGroup('right');
         await testDetectedPairs(executor, [ "[]", "()" ], [ "{}" ] );                     // Workspace 1 (Plaintext).
-        await executor.focusRightEditorGroup();
+        await executor.focusEditorGroup('right');
         await testDetectedPairs(executor, [ "''", "\"\"", "``" ], [ "{}", "[]", "()" ]);  // Workspace 2 (Typescript).
-        await executor.focusRightEditorGroup();
+        await executor.focusEditorGroup('right');
         await testDetectedPairs(executor, [ "{}", "()", "<>", "[]" ], []);                // Workspace 3 (Markdown).
     }
 });
@@ -413,35 +411,29 @@ export const PAIRS_CLEARED_ON_CHANGE_TEST_CASE = new TestCase({
     prelude: async (executor) => {
         
         // First type some pairs into the provided text editor (which will be in view column 1).
-        await executor.typePair({ repetitions: 10 });
-        executor.assertPairs({   expect: [ { line: 0, sides: range(0, 20) } ] });
-        executor.assertCursors({ expect: [ [0, 10] ] });
+        await executor.typeRandomPair({ repetitions: 10 });
+        executor.assertPairs([ { line: 0, sides: range(0, 20) } ]);
+        executor.assertCursors([ [0, 10] ]);
 
         // Open the Typescript file in Workspace 2 in another view column (view column 2).
         //
         // Note that we only type in `()` pairs because that is the only pair that is configured to 
         // be detected in Workspace 2.
-        await executor.openFile({
-            rel:         './workspace-2/text.ts',
-            showOptions: { viewColumn: ViewColumn.Two }
-        });
-        await executor.cursorBottom();
-        await executor.typeText({ text: '(', repetitions: 10 });
-        executor.assertPairs({   expect: [ { line: 2, sides: range(0, 20) } ] });
-        executor.assertCursors({ expect: [ [2, 10] ] });
+        await executor.openFile('./workspace-2/text.ts', { viewColumn: ViewColumn.Two });
+        await executor.moveCursors('endOfDocument');
+        await executor.typeText('(', { repetitions: 10 });
+        executor.assertPairs([ { line: 2, sides: range(0, 20) } ]);
+        executor.assertCursors([ [2, 10] ]);
 
         // Open the Markdown file in Workspace 3 in another view column (view column 3).
         //
         // Note that we only type in `{}` and `<>` pairs because those are the only two pairs that 
         // were configured to be detected in the Markdown file in Workspace 3.
-        await executor.openFile({
-            rel:         './workspace-3/text.md',
-            showOptions: { viewColumn: ViewColumn.Three }
-        });
-        await executor.cursorBottom();
-        await executor.typeText({ text: '{<{<<<{{{<' });
-        executor.assertPairs({   expect: [ { line: 2, sides: range(0, 20) } ] });
-        executor.assertCursors({ expect: [ [2, 10] ] });
+        await executor.openFile('./workspace-3/text.md', { viewColumn: ViewColumn.Three });
+        await executor.moveCursors('endOfDocument');
+        await executor.typeText('{<{<<<{{{<');
+        executor.assertPairs([ { line: 2, sides: range(0, 20) } ]);
+        executor.assertCursors([ [2, 10] ]);
 
         // View column 3 will be in focus by the end of the prelude.
     }, 
@@ -457,24 +449,24 @@ export const PAIRS_CLEARED_ON_CHANGE_TEST_CASE = new TestCase({
 
         // 1b. Check that pairs are cleared when the effective configuration value has changed for 
         //     the active text document. 
-        executor.assertPairs({   expect: [ 'None' ] });
-        executor.assertCursors({ expect: [ [2, 10] ] });
+        executor.assertPairs([ 'None' ]);
+        executor.assertCursors([ [2, 10] ]);
 
         // 1c. Ensure that unaffected text documents do not have their pairs cleared.
-        executor.assertPairs({   expect: [ { line: 0, sides: range(0, 20) } ], viewColumn: ViewColumn.One });
-        executor.assertCursors({ expect: [ [0, 10] ],                          viewColumn: ViewColumn.One });
-        executor.assertPairs({   expect: [ { line: 2, sides: range(0, 20) } ], viewColumn: ViewColumn.Two });
-        executor.assertCursors({ expect: [ [2, 10] ],                          viewColumn: ViewColumn.Two });
+        executor.assertPairs([ { line: 0, sides: range(0, 20) } ], { viewColumn: ViewColumn.One });
+        executor.assertCursors([ [0, 10] ],                        { viewColumn: ViewColumn.One });
+        executor.assertPairs([ { line: 2, sides: range(0, 20) } ], { viewColumn: ViewColumn.Two });
+        executor.assertCursors([ [2, 10] ],                        { viewColumn: ViewColumn.Two });
 
         // Type some pairs back into Workspace 3's Markdown file in preparation for the next step.
-        await executor.end();
-        await executor.typePair({ repetitions: 10 });
-        executor.assertPairs({   expect: [ { line: 2, sides: range(20, 40) } ] });
-        executor.assertCursors({ expect: [ [2, 30] ] });
+        await executor.moveCursors('end');
+        await executor.typeRandomPair({ repetitions: 10 });
+        executor.assertPairs([ { line: 2, sides: range(20, 40) } ]);
+        executor.assertCursors([ [2, 30] ]);
 
         // 2a. Switch focus to Workspace 2's text file, then change the configuration value in the 
         //     workspace root scope.
-        await executor.focusLeftEditorGroup();
+        await executor.focusEditorGroup('left');
         await executor.setConfiguration({
             partialName: 'detectedPairs',
             value:       [ "[]" ],
@@ -485,30 +477,26 @@ export const PAIRS_CLEARED_ON_CHANGE_TEST_CASE = new TestCase({
         //
         // Note that the effective value for Workspace 2's text file is not expected to change since 
         // the configuration is being overridden in Workspace 2's `settings.json` file.
-        executor.assertPairs({   expect: [ { line: 2, sides: range(0, 20) } ] });
-        executor.assertCursors({ expect: [ [2, 10] ] });
+        executor.assertPairs([ { line: 2, sides: range(0, 20) } ]);
+        executor.assertCursors([ [2, 10] ]);
 
         // 2c. Check that the desired behavior also holds for text documents that are not in focus.
-        executor.assertPairs({   expect: [ 'None' ],                             viewColumn: ViewColumn.One });
-        executor.assertCursors({ expect: [ [0, 10] ],                            viewColumn: ViewColumn.One });
-        executor.assertPairs({   expect: [ { line: 2, sides: range(20, 40) } ],  viewColumn: ViewColumn.Three });
-        executor.assertCursors({ expect: [ [2, 30] ],                            viewColumn: ViewColumn.Three });
+        executor.assertPairs([ 'None' ],                            { viewColumn: ViewColumn.One });
+        executor.assertCursors([ [0, 10] ],                         { viewColumn: ViewColumn.One });
+        executor.assertPairs([ { line: 2, sides: range(20, 40) } ], { viewColumn: ViewColumn.Three });
+        executor.assertCursors([ [2, 30] ],                         { viewColumn: ViewColumn.Three });
     }
 
 });
 
 /**
- * This test group tests whether this extension can correctly read configuration values.
- *
- * Within this group, the `leaper.detectedPairs` configuration will be modified in the workspace and 
- * workspace folder scopes in order to check if this extension can properly reload configuration 
- * values when they change.
+ * Test group containing tests for whether the engine can correctly read configuration values.
  */
-export const CONFIGURATION_READING_TEST_GROUP = new TestGroup({
-    name: 'Configuration Reading',
-    testCases: [
+export const CONFIGURATION_READING_TEST_GROUP = new TestGroup(
+    'Configuration Reading',
+    [
         CAN_READ_VALUES_TEST_CASE,
         RELOAD_ON_CHANGE_TEST_CASE,
         PAIRS_CLEARED_ON_CHANGE_TEST_CASE,
     ]
-});
+);

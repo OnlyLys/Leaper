@@ -10,7 +10,7 @@ export function range(start: number, endNotInclusive: number): number[] {
 }
 
 /** 
- * Add a number to each element within a slice of numbers.
+ * Add a number to each element within `arr[start..endNotInclusive]`.
  */
 export function sliceAdd(arr: number[], start: number, endNotInclusive: number, add: number): void {
     for (let i = start; i < endNotInclusive; ++i) {
@@ -19,7 +19,7 @@ export function sliceAdd(arr: number[], start: number, endNotInclusive: number, 
 }
 
 /** 
- * Subtract a number from each element within a slice of numbers.
+ * Subtract a number from each element within `arr[start..endNotInclusive]`.
  */
 export function sliceSub(arr: number[], start: number, endNotInclusive: number, sub: number): void {
     for (let i = start; i < endNotInclusive; ++i) {
@@ -28,13 +28,11 @@ export function sliceSub(arr: number[], start: number, endNotInclusive: number, 
 }
 
 /**
- * Randomly pick an element from an array.
- * 
- * Will throw an error if the input array is empty.
+ * Randomly pick an element from a non-empty array.
  */
 export function pickRandom<T>(arr: ReadonlyArray<T>): T {
     if (arr.length < 1) {
-        throw new Error('Input array cannot be empty.');
+        throw new Error('Cannot pick an element from an empty array!');
     }
     return arr[Math.floor(Math.random() * arr.length)];
 }

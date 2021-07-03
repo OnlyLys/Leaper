@@ -1,11 +1,11 @@
 import { TestCategory } from '../utilities/framework';
 import { CONFIGURATION_READING_TEST_GROUP } from './test-groups/configuration-reading';
 
-const TEST_CATEGORY = new TestCategory({
-    name: 'Miscellaneous Tests',
-    testGroups: [
+const TEST_CATEGORY = new TestCategory(
+    'Miscellaneous Tests',
+    [
         CONFIGURATION_READING_TEST_GROUP
     ]
-});
+);
 
 TEST_CATEGORY.run();

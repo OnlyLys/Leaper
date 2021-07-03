@@ -1,5 +1,5 @@
 import { commands, Disposable, TextEditor, ViewColumn, window } from 'vscode';
-import { Snapshot, TestAPI } from './test-api';
+import { ResolvedViewColumn, Snapshot, TestAPI } from './test-api';
 import { ContextBroadcaster } from './context-broadcaster';
 import { Tracker } from './tracker/tracker';
 
@@ -220,12 +220,20 @@ export class Engine implements TestAPI {
         return this.hasLineOfSightContextBroadcaster.prevBroadcasted;
     }
 
-    public snapshots(): Map<ViewColumn, Snapshot> {
-        const map = new Map<ViewColumn, Snapshot>();
+    public snapshots(): Map<ResolvedViewColumn, Snapshot> {
+        const map = new Map<ResolvedViewColumn, Snapshot>();
         for (const [visibleTextEditor, tracker] of this.trackers) {
-            if (visibleTextEditor.viewColumn !== undefined) {
-                map.set(visibleTextEditor.viewColumn, tracker.snapshot());
+            const viewColumn = visibleTextEditor.viewColumn;
+            if (viewColumn === undefined) {
+                throw new Error('Unexpected: visible text editor has no view column number!');
             }
+
+            // vscode only stores resolved view column numbers so this check should not throw.
+            if (viewColumn === ViewColumn.Active || viewColumn === ViewColumn.Beside) {
+                throw new Error('Unexpected: view column number is unresolved!');
+            }
+
+            map.set(viewColumn, tracker.snapshot());
         }
         return map;
     }

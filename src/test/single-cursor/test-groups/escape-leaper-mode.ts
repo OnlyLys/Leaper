@@ -28,21 +28,21 @@ const SHARED_TEXT = 'function main() {\n'
 const IT_WORKS_TEST_CASE = new TestCase({
     name: 'It Works',
     prelude: async (executor) => {
-        await executor.typeText({ text: SHARED_TEXT });
-        executor.assertPairs({   expect: [ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ] });
-        executor.assertCursors({ expect: [ [2, 28] ] });
+        await executor.typeText(SHARED_TEXT);
+        executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ]);
+        executor.assertCursors([ [2, 28] ]);
     },
     task: async (executor) => {
 
         // Jump out of one pair first, just to simulate a more 'realistic' scenario.
         await executor.leap();
-        executor.assertPairs({   expect: [ { line: 2, sides: [15, 17, 22, 29, 30, 31] } ] });
-        executor.assertCursors({ expect: [ [2, 29] ] });
+        executor.assertPairs([ { line: 2, sides: [15, 17, 22, 29, 30, 31] } ]);
+        executor.assertCursors([ [2, 29] ]);
 
         // This should remove all pairs from being tracked.
         await executor.escapeLeaperMode();
-        executor.assertPairs({   expect: [ 'None' ] });
-        executor.assertCursors({ expect: [ [2, 29] ] });
+        executor.assertPairs([ 'None' ]);
+        executor.assertCursors([ [2, 29] ]);
     }
 });
 
@@ -56,16 +56,16 @@ const IT_WORKS_TEST_CASE = new TestCase({
 const CAN_HANDLE_RAPID_CALLS = new TestCase({
     name: 'Can Handle Rapid Calls',
     prelude: async (executor) => {
-        await executor.typeText({ text: SHARED_TEXT });
-        executor.assertPairs({   expect: [ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ] });
-        executor.assertCursors({ expect: [ [2, 28] ] });
+        await executor.typeText(SHARED_TEXT);
+        executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ]);
+        executor.assertCursors([ [2, 28] ]);
     },
     task: async (executor) => {
 
         // This should remove all pairs from being tracked and do nothing else.
         await executor.escapeLeaperMode({ delay: 0, repetitions: 50 }); 
-        executor.assertPairs({   expect: [ 'None' ] });
-        executor.assertCursors({ expect: [ [2, 28] ] });
+        executor.assertPairs([ 'None' ]);
+        executor.assertCursors([ [2, 28] ]);
     }
 });
 
@@ -78,15 +78,13 @@ const ONLY_CLEARS_ACTIVE_TEXT_EDITOR = new TestCase({
 
         // Insert some text and then type in some pairs into the active text editor.
         async function action(): Promise<void> {
-            await executor.editText({
-                edits: [
-                    { kind: 'insert', at: [0, 0], text: 'function main(): void {\n    \n}' }
-                ],
-            });
-            await executor.setCursors({ to: [ [1, 4] ] });
-            await executor.typePair({ repetitions: 10 });
-            executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ] });
-            executor.assertCursors({ expect: [ [1, 14] ] });
+            await executor.editText([
+                { kind: 'insert', at: [0, 0], text: 'function main(): void {\n    \n}' }
+            ]);
+            await executor.setCursors([ [1, 4] ]);
+            await executor.typeRandomPair({ repetitions: 10 });
+            executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
+            executor.assertCursors([ [1, 14] ]);
         }
 
         // Open three additional text editors in exclusive view columns.
@@ -95,45 +93,44 @@ const ONLY_CLEARS_ACTIVE_TEXT_EDITOR = new TestCase({
         // visible view columns.
         //
         // View column 4 will be in focus after this step.
-        await executor.openNewTextEditor({ showOptions: { viewColumn: ViewColumn.Two   }});
-        await executor.openNewTextEditor({ showOptions: { viewColumn: ViewColumn.Three }});
-        await executor.openNewTextEditor({ showOptions: { viewColumn: ViewColumn.Four  }});
+        await executor.openNewTextEditor(undefined, { viewColumn: ViewColumn.Two   });
+        await executor.openNewTextEditor(undefined, { viewColumn: ViewColumn.Three });
+        await executor.openNewTextEditor(undefined, { viewColumn: ViewColumn.Four  });
 
         // Set up all four text editors to the same state.
         //
         // View column 1 will be in focus after this step.
         await action();
-        await executor.focusLeftEditorGroup();
+        await executor.focusEditorGroup('left');
         await action();
-        await executor.focusLeftEditorGroup();
+        await executor.focusEditorGroup('left');
         await action();
-        await executor.focusLeftEditorGroup();
+        await executor.focusEditorGroup('left');
         await action();
     },
     task: async (executor) => {
 
-        // Execute 'Escape Leaper Mode' in the active text editor, which is the provided text editor 
-        // in view column 1.
+        // Execute the command in the active text editor (view column 1).
         await executor.escapeLeaperMode();
 
         // Verify that only the pairs in the active text editor were cleared.
-        executor.assertPairs({   expect: [ 'None' ] });
-        executor.assertCursors({ expect: [ [1, 14] ] });
-        executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ], viewColumn: ViewColumn.Two   });
-        executor.assertCursors({ expect: [ [1, 14] ],                          viewColumn: ViewColumn.Two   });
-        executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ], viewColumn: ViewColumn.Three });
-        executor.assertCursors({ expect: [ [1, 14] ],                          viewColumn: ViewColumn.Three });
-        executor.assertPairs({   expect: [ { line: 1, sides: range(4, 24) } ], viewColumn: ViewColumn.Four  });
-        executor.assertCursors({ expect: [ [1, 14] ],                          viewColumn: ViewColumn.Four  });
+        executor.assertPairs([ 'None' ]);
+        executor.assertCursors([ [1, 14] ]);
+        executor.assertPairs([ { line: 1, sides: range(4, 24) } ], { viewColumn: ViewColumn.Two   });
+        executor.assertCursors([ [1, 14] ],                        { viewColumn: ViewColumn.Two   });
+        executor.assertPairs([ { line: 1, sides: range(4, 24) } ], { viewColumn: ViewColumn.Three });
+        executor.assertCursors([ [1, 14] ],                        { viewColumn: ViewColumn.Three });
+        executor.assertPairs([ { line: 1, sides: range(4, 24) } ], { viewColumn: ViewColumn.Four  });
+        executor.assertCursors([ [1, 14] ],                        { viewColumn: ViewColumn.Four  });
     }
 
 });
 
-export const SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP = new TestGroup({
-    name: 'Escape Leaper Mode Command',
-    testCases: [
+export const SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP = new TestGroup(
+    'Escape Leaper Mode Command',
+    [
         IT_WORKS_TEST_CASE,
         CAN_HANDLE_RAPID_CALLS,
         ONLY_CLEARS_ACTIVE_TEXT_EDITOR
     ]
-});
+);
