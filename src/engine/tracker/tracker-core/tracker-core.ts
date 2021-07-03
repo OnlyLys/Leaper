@@ -50,9 +50,6 @@ export class TrackerCore {
     /**
      * The most recently seen cursors, sorted by increasing `anchor` positions.
      * 
-     * Accompanying each cursor is an `unsortedIndex` which is the index of the cursor in the 
-     * cursors array before it was sorted.
-     * 
      * # Why Sort the Cursors?
      * 
      * We prefer working with sorted cursors because vscode is inconsistent with how cursors are 
@@ -76,8 +73,14 @@ export class TrackerCore {
      * Either will yield the same result.
      */
     private prevSortedCursors: ReadonlyArray<{ 
-        unsortedIndex: number, 
-        cursor:        Selection 
+
+        cursor: Selection,
+
+        /** 
+         * The index of the cursor before it was sorted. 
+         */
+        originalIndex: number
+
     }>;
 
     /**
@@ -512,8 +515,8 @@ export class TrackerCore {
     public getInnermostPairs(): ({ open: Position, close: Position } | undefined)[] {
         const innermostPairs = Array(this.clusters.length).fill(undefined);
         for (const [i, cluster] of this.clusters.entries()) {
-            const unsortedIndex           = this.prevSortedCursors[i].unsortedIndex;
-            innermostPairs[unsortedIndex] = cluster[cluster.length - 1];
+            const originalIndex           = this.prevSortedCursors[i].originalIndex;
+            innermostPairs[originalIndex] = cluster[cluster.length - 1];
         }
         return innermostPairs;
     }
@@ -684,7 +687,7 @@ export class TrackerCore {
     public snapshot(): Snapshot {
         const snapshot = Array(this.clusters.length).fill(undefined);
         for (const [i, cluster] of this.clusters.entries()) {
-            snapshot[this.prevSortedCursors[i].unsortedIndex] = cluster.map((pair) => {
+            snapshot[this.prevSortedCursors[i].originalIndex] = cluster.map((pair) => {
                 return { open: pair.open, close: pair.close, isDecorated: !!pair.decoration };
             });
         }
@@ -700,9 +703,9 @@ export class TrackerCore {
  * unsorted cursors array.
  */
 function sortCursors(unsorted: ReadonlyArray<Selection>): ReadonlyArray<{ 
-    unsortedIndex: number, 
-    cursor:        Selection 
+    cursor: Selection,
+    originalIndex: number
 }> {
-    return unsorted.map((cursor, i) => ({ unsortedIndex: i, cursor }))
+    return unsorted.map((cursor, i) => ({ cursor, originalIndex: i }))
                    .sort((a, b) => a.cursor.anchor.compareTo(b.cursor.anchor));
 }
