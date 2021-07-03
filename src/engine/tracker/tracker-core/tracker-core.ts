@@ -1,5 +1,6 @@
+import * as v8 from 'v8';
 import { Range, Position, Selection, TextEditorDecorationType, TextDocument, TextDocumentChangeEvent, TextEditorSelectionChangeEvent, window, TextEditor } from 'vscode';
-import { Snapshot } from '../../test-api';
+import { TrackerSnapshot } from '../../test-api';
 import { Configuration } from '../configuration/configuration';
 import { ContentChangeStack } from './content-change-stack';
 
@@ -677,21 +678,23 @@ export class TrackerCore {
     /** 
      * Get a copy of the internal state.
      * 
-     * The returned copy can be mutated affecting the internal state.
-     * 
-     * # Ordering
-     * 
-     * The returned array is parallel to the cursors in the most recent `syncToSelectionChanges` 
-     * call.
+     * The returned copy can be mutated without affecting the internal state.
      */
-    public snapshot(): Snapshot {
-        const snapshot = Array(this.clusters.length).fill(undefined);
+    public snapshot(): TrackerSnapshot {
+        
+        // Arrange the clusters back into the original order such that they are parallel to the 
+        // `TextEditor.selections` array of cursors.
+        const pairs = Array(this.clusters.length).fill(undefined);
         for (const [i, cluster] of this.clusters.entries()) {
-            snapshot[this.prevSortedCursors[i].originalIndex] = cluster.map((pair) => {
-                return { open: pair.open, close: pair.close, isDecorated: !!pair.decoration };
-            });
+            const originalIndex  = this.prevSortedCursors[i].originalIndex;
+            pairs[originalIndex] = cluster.map(pair => ({ ...pair, isDecorated: !!pair.decoration }));
         }
-        return snapshot;
+
+        // Make a deep copy so that there is no risk of someone being able to affect the state of 
+        // this tracker through mutating the decoration options object that we return.
+        const decorationOptions = v8.deserialize(v8.serialize(this.configuration.decorationOptions));
+
+        return { pairs, decorationOptions };
     }
 
 }

@@ -1,4 +1,5 @@
-import { Position, ViewColumn } from 'vscode';
+import { DecorationRenderOptions, Position, ViewColumn } from 'vscode';
+import { Unchecked } from './tracker/configuration/unchecked';
 
 /**
  * The parts of the engine exposed to tests.
@@ -22,25 +23,36 @@ export interface TestAPI {
     readonly MRBHasLineOfSightContext: boolean | undefined;
 
     /** 
-     * Get a snapshot of all the pairs that are being tracked for each visible text editor.
+     * Get a copy of the internal state of the engine.
      * 
-     * The return value is a hash map, mapping the view column of each visible text editor to a
-     * snapshot of all the pairs being tracked for it.
+     * The returned hash map maps the view column of each visible text editor to a snapshot of its 
+     * tracker. The snapshots returned can be mutated without affecting the engine's state.
      */
-    snapshots(): Map<ResolvedViewColumn, Snapshot>;
+    snapshot(): Map<ResolvedViewColumn, TrackerSnapshot>;
     
 }
 
 /** 
- * Each snapshot of a visible text editor is an array of subarrays, where each subarray (called a 
- * _cluster_) contains the pairs belonging to a cursor. 
+ * A copy of the internal state of a tracker.
  * 
- * The clusters in a snapshot are ordered parallel to the array of cursors (obtained through 
- * `TextEditor.selections`) of its corresponding text editor. 
- * 
- * Snapshots can be mutated without affecting the extension's state.
+ * A snapshot can be mutated without affecting the tracker's state.
  */
-export type Snapshot = { open: Position, close: Position, isDecorated: boolean }[][];
+export interface TrackerSnapshot {
+
+    /**
+     * The pairs being tracked for each cursor.
+     * 
+     * The clusters (i.e. the subarrays) are parallel to the array of cursors (`TextEditor.selections`) 
+     * of the corresponding text editor. 
+     */
+    pairs: { open: Position, close: Position, isDecorated: boolean }[][];
+
+    /**
+     * The style of the decorations.
+     */
+    decorationOptions: Unchecked<DecorationRenderOptions>;
+
+}
 
 /**
  * Absolute view column numbers.

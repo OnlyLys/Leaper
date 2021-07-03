@@ -1,5 +1,5 @@
-import { commands, Disposable, TextEditor, ViewColumn, window } from 'vscode';
-import { ResolvedViewColumn, Snapshot, TestAPI } from './test-api';
+import { commands, Disposable, TextEditor, window } from 'vscode';
+import { ResolvedViewColumn, TrackerSnapshot, TestAPI } from './test-api';
 import { ContextBroadcaster } from './context-broadcaster';
 import { Tracker } from './tracker/tracker';
 
@@ -221,20 +221,16 @@ export class Engine implements TestAPI {
         return this.hasLineOfSightContextBroadcaster.prevBroadcasted;
     }
 
-    public snapshots(): Map<ResolvedViewColumn, Snapshot> {
-        const map = new Map<ResolvedViewColumn, Snapshot>();
-        for (const [visibleTextEditor, tracker] of this.trackers) {
-            const viewColumn = visibleTextEditor.viewColumn;
-            if (viewColumn === undefined) {
-                throw new Error('Unexpected: visible text editor has no view column number!');
-            }
+    public snapshot(): Map<ResolvedViewColumn, TrackerSnapshot> {
+        const map = new Map<ResolvedViewColumn, TrackerSnapshot>();
+        for (const [{ viewColumn }, tracker] of this.trackers) {
+            if (viewColumn !== undefined) {
 
-            // vscode only stores resolved view column numbers so this check should not throw.
-            if (viewColumn === ViewColumn.Active || viewColumn === ViewColumn.Beside) {
-                throw new Error('Unexpected: view column number is unresolved!');
-            }
+                // This cast is safe because vscode only stores resolved view column numbers.
+                const resolvedViewColumn = viewColumn as ResolvedViewColumn;
 
-            map.set(viewColumn, tracker.snapshot());
+                map.set(resolvedViewColumn, tracker.snapshot());
+            }
         }
         return map;
     }

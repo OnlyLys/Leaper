@@ -3,7 +3,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, extensions, window, ViewColumn, Uri, ConfigurationTarget } from 'vscode';
-import { ResolvedViewColumn, Snapshot, TestAPI } from '../../engine/test-api';
+import { ResolvedViewColumn, TrackerSnapshot, TestAPI } from '../../engine/test-api';
 import { CompactCluster, CompactRange, CompactPosition, CompactCursor, CompactSelection } from './compact';
 import { pickRandom, waitFor, zip } from './other';
 
@@ -195,7 +195,7 @@ class ExecutorFull {
 
         // Convert the actual and expected pairs to a print friendly form before asserting them.
         const snapshot = getSnapshot(options);
-        const actual: Pretty[][] = snapshot.map((cluster) => 
+        const actual: Pretty[][] = snapshot.pairs.map((cluster) => 
             cluster.map((pair) => {
                 const open:  CompactPosition = [pair.open.line,  pair.open.character];
                 const close: CompactPosition = [pair.close.line, pair.close.character];
@@ -715,9 +715,9 @@ function resolveViewColumnOption(viewColumnOption: ViewColumnOption | undefined)
  * 
  * Defaults to the active text editor if no view column is specified.
  */
-function getSnapshot(viewColumnOption: ViewColumnOption | undefined): Snapshot {
+function getSnapshot(viewColumnOption: ViewColumnOption | undefined): TrackerSnapshot {
     const viewColumn = resolveViewColumnOption(viewColumnOption);
-    const snapshot   = getHandle().snapshots().get(viewColumn);
+    const snapshot   = getHandle().snapshot().get(viewColumn);
     if (!snapshot) {
         throw new Error(`Unable to obtain snapshot of text editor in view column ${viewColumn}.`);
     }

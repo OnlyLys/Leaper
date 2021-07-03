@@ -1,5 +1,5 @@
 import { TextEditor, Selection, window, workspace } from 'vscode';
-import { Snapshot } from '../test-api';
+import { TrackerSnapshot } from '../test-api';
 import { Configuration } from './configuration/configuration';
 import { ImmediateReusable } from './immediate-reusable';
 import { PrivateContext } from './private-context/private-context';
@@ -126,7 +126,7 @@ export class Tracker {
      * @param owner The text editor that this tracker is assigned to (i.e. the owning text editor).
      */
     public constructor(private readonly owner: TextEditor) {
-        this.core  = new TrackerCore(owner.selections, Configuration.read(owner.document));
+        this.core = new TrackerCore(owner.selections, Configuration.read(owner.document));
     }
 
     /** 
@@ -226,12 +226,12 @@ export class Tracker {
         this.configurationChangeWatcher.dispose();
     }
 
-    /**
-     * Get a snapshot of the pairs that are currently being tracked.
+    /** 
+     * Get a deep copy of the internal state.
      * 
-     * The returned snapshot can be mutated without affecting the internal state.
+     * The returned copy can be mutated without affecting the internal state.
      */
-    public snapshot(): Snapshot {
+    public snapshot(): TrackerSnapshot {
         return this.core.snapshot();
     }
 
