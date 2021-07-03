@@ -207,7 +207,7 @@ export class Engine implements TestAPI {
     }
 
     // ------------------------------------------------------------------------------
-    // TEST FUNCTIONS
+    // TEST API
     //
     // What follows are properties or methods exposed for testing purposes only. 
     //
