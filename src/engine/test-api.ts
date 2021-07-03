@@ -1,7 +1,7 @@
 import { Position, ViewColumn } from 'vscode';
 
 /**
- * The parts of the extension's engine exposed to tests.
+ * The parts of the engine exposed to tests.
  */
 export interface TestAPI {
 
@@ -46,6 +46,7 @@ export type Snapshot = { open: Position, close: Position, isDecorated: boolean }
  * Absolute view column numbers.
  * 
  * A view column can be specified in absolute terms like `ViewColumn.Two` or in relative terms like 
- * `ViewColumn.Active`. This type contains only absolute view column numbers.
+ * `ViewColumn.Active`. This type contains only view column numbers which have been resolved into
+ * absolute numbers.
  */
 export type ResolvedViewColumn = Exclude<ViewColumn, ViewColumn.Active | ViewColumn.Beside>;

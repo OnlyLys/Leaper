@@ -209,8 +209,9 @@ export class Engine implements TestAPI {
     // ------------------------------------------------------------------------------
     // TEST FUNCTIONS
     //
-    // What follows are properties or functions exposed for testing purposes only. Please consult 
-    // the `TestAPI` type for more info.
+    // What follows are properties or methods exposed for testing purposes only. 
+    //
+    // Please consult the `TestAPI` interface for more info.
 
     public get MRBInLeaperModeContext(): boolean | undefined {
         return this.inLeaperModeContextBroadcaster.prevBroadcasted;
