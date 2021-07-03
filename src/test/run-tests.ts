@@ -1,5 +1,5 @@
-//! This script is called by node when tests are launched in the command line via the 
-//! `npm test` command.
+//! This script is called by Node.JS when tests are launched in the command line via the `npm test` 
+//! command.
 
 import * as path from 'path';
 import { runTests } from 'vscode-test';
