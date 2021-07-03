@@ -1,5 +1,5 @@
 import { SnippetString, ViewColumn } from 'vscode';
-import { Executor, TestCase, TestGroup } from '../../utilities/framework';
+import { Executor, TestCase, TestGroup } from '../utilities/framework';
 
 // In this prelude that is shared across all the test cases in this module, we insert pairs in a way 
 // that simulates a typical usage scenario.

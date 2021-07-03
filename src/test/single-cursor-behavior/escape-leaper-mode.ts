@@ -1,6 +1,6 @@
 import { ViewColumn } from 'vscode';
-import { TestCase, TestGroup } from '../../utilities/framework';
-import { range } from '../../utilities/other';
+import { TestCase, TestGroup } from '../utilities/framework';
+import { range } from '../utilities/other';
 
 /**
  * Text that is typed in by each of the test case preludes.

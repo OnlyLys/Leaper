@@ -1,6 +1,6 @@
 import { ViewColumn } from 'vscode';
-import { TestCase, TestGroup } from '../../utilities/framework';
-import { range } from '../../utilities/other';
+import { TestCase, TestGroup } from '../utilities/framework';
+import { range } from '../utilities/other';
 
 /**
  * Test whether the keybinding contexts are correctly toggled while using a given text editor.

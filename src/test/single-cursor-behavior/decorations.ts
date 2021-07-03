@@ -1,6 +1,6 @@
 import { ViewColumn } from 'vscode';
-import { CompactCluster } from '../../utilities/compact';
-import { Executor, TestCase, TestGroup } from '../../utilities/framework';
+import { CompactCluster } from '../utilities/compact';
+import { Executor, TestCase, TestGroup } from '../utilities/framework';
 
 /**
  * Prelude where the active text document is overwritten with the following text: 

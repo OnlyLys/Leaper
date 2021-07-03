@@ -1,7 +1,7 @@
 import { ViewColumn } from 'vscode';
-import { CompactPosition } from '../../utilities/compact';
-import { Executor, TestCase, TestGroup } from '../../utilities/framework';
-import { range } from '../../utilities/other';
+import { CompactPosition } from '../utilities/compact';
+import { Executor, TestCase, TestGroup } from '../utilities/framework';
+import { range } from '../utilities/other';
 
 /**
  * Test the effective `leaper.detectedPairs` configuration in the active text editor by asserting 
