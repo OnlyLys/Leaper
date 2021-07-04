@@ -612,7 +612,7 @@ class ExecutorFull {
         args: {
             partialName:            'decorateAll' | 'decorationOptions' | 'detectedPairs', 
             value:                  T,
-            targetWorkspaceFolder?: 'workspace-1' | 'workspace-2' | 'workspace-3',
+            targetWorkspaceFolder?: 'workspace-1' | 'workspace-2' | 'workspace-3' | 'workspace-4',
             targetLanguage?:        'typescript'  | 'markdown'    | 'plaintext',
         },
         options?: RepetitionDelayOptions
