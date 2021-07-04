@@ -1,5 +1,15 @@
 # CHANGELOG
 
+### 0.10.0 _(Work in Progress)_
+- Allow the extension to run in untrusted workspaces. 
+- Change the default decoration to something with more contrast.
+- Improve the `leaper.decorationOptions` configuration.
+  * Allow theme color identifiers to be specified without object literals.
+  * Add autocompletion and validation for most of the options.
+- Improve the README.
+- Improve the descriptions of configurations.
+- Hide the 'Leap' and 'Escape Leaper Mode' commands from the command palette.
+
 ### 0.9.3 _(Not published to marketplace)_
 - Fix incorrect extension packaging. This should reduce the file size.
 
