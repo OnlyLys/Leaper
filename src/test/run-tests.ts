@@ -5,30 +5,26 @@ import * as path from 'path';
 import { runTests } from 'vscode-test';
 
 async function main() {
-
 	try {
-
-		// The folder containing the Extension Manifest package.json.
-		// Passed to `--extensionDevelopmentPath`.
 		const extensionDevelopmentPath = path.resolve(__dirname, '../../');
 
-		// The path to test runner.
-		// Passed to --extensionTestsPath.
-		const extensionTestsPath = path.resolve(__dirname, './index');
+		// The entry point of the tests.
+        const extensionTestsPath = path.resolve(__dirname, './index');
 
-		// The path to the multi-root workspace we shall be running our tests in.
+		// The path to the temporary multi-root workspace we shall be running our tests in.
 		const testWorkspacePath = path.resolve(__dirname, '../../.test-environment-tmp/multi.code-workspace');
 
-		// Download VS Code, unzip it and run the integration test.
+		// This will automatically download vscode, then run the tests on it.
         await runTests({ 
-            extensionDevelopmentPath, 
-            extensionTestsPath,
+            extensionDevelopmentPath,
+			extensionTestsPath,
             launchArgs: [
 				testWorkspacePath,
+
+				// We do not want other extensions running in the background affecting our tests.
 				'--disable-extensions'
 			] 
         });
-        
 	} catch (err) {
 		console.error('Failed to run tests');
         process.exit(1);

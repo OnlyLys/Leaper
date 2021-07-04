@@ -1,9 +1,10 @@
-//! This script is called by the "Run Tests" launch task.
-
 import * as path from "path";
 import * as Mocha from "mocha";
 import * as glob from "glob";
 
+/**
+ * This function is called by vscode in order to run the tests.
+ */
 export function run(): Promise<void> {
 
 	// Create the mocha test
