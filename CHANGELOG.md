@@ -26,7 +26,6 @@
   * Replace `leaper.customDecorationOptions` with `leaper.decorationOptions`.
   * Replace `leaper.decorateOnlyNearestPair` with `leaper.decorateAll`.
 - Overhaul README to reflect the above changes.
-- Significantly expand the testing suite to ensure correct behavior.
 - Make the 'Leap' command work the same whether through the `Tab` keybinding or 
   through the command pallete. This reverses the change introduced in `0.4.0`.
 
@@ -47,14 +46,12 @@
 
 ### 0.5.1
 - Code improvements.
-- Added more tests to verify behavior.
 
 ### 0.5.0
 - Remove `leaper.languageRules` contribution in favour of a global 
   `leaper.additionalTriggerPairs` rule that is simpler to understand. Now pairs 
   are detected globally instead of on a per language basis.
 - Code improvements.
-- Added a bunch of tests to verify behavior.
 
 ### 0.4.2
 - Fix issues with README file.
