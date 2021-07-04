@@ -378,12 +378,16 @@ class ExecutorFull {
     }
 
     /**
-     * Delete all text in the active text editor.
+     * Delete all text in a visible text document.
      */
-    public async deleteAll(options?: RepetitionDelayOptions): Promise<void> {
+    public async deleteAll(options?: RepetitionDelayOptions & ViewColumnOption): Promise<void> {
         return executeWithRepetitionDelay(async () => {
-            await commands.executeCommand('editor.action.selectAll');
-            await commands.executeCommand('deleteLeft');
+            const editor   = getVisibleTextEditor(options);
+            const document = editor.document;
+            const startPos = new Position(0, 0);
+            const endPos   = document.lineAt(document.lineCount - 1).rangeIncludingLineBreak.end;
+            const docRange = new Range(startPos, endPos);
+            return editor.edit(builder => builder.delete(docRange));
         }, options); 
     }
 
