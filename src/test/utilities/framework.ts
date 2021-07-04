@@ -59,14 +59,14 @@ export class TestCase {
         readonly name: string,
 
         /** 
-         * The language of the text editor that is provided to this test case.
+         * The language to set the fresh text editor to.
          * 
          * Defaults to 'typescript'.
          */
-        readonly editorLanguageId?: string,
+        readonly editorLanguageId?: 'typescript' | 'markdown' | 'plaintext',
 
         /**
-         * Callback to setup the provided text editor before running the test case.
+         * Callback to setup the fresh text editor before running the test case.
          */
         readonly prelude?: (executor: Executor) => Promise<void>,
 
