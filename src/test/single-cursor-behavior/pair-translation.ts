@@ -1911,16 +1911,14 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
 });
 
 /**
- * Test whether pairs in out-of-focus (but visible) text editors are properly translated after an
- * assortment of text modifications.
+ * Test whether pair translation works for an out-of-focus text editor.
  * 
- * Within this test case we will be performing text modifications before, between and after pairs
- * in order to shift the positions of pairs. However, this test case will not be very thorough, as 
- * it is not worth spending much time testing for text modifications in out-of-focus text editors, 
- * as it is rare for them to occur in the first place.
+ * We will perform tests similar to what we have done so far but for an out-of-focus text editor. 
+ * But since changes occurring in out-of-focus text editors are quite rare, this test case will not 
+ * be as comprehensive as the ones we have done so far for in-focus text editors.
  */
-export const ASSORTED_TEXT_MODIFICATIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
-    name: 'Assorted Text Modifications in Out-of-Focus Text Editor',
+export const PAIR_TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
+    name: 'Pair Translation in Out-of-Focus Text Editor',
     prelude: async (executor) => {
 
         // This sets up the initial text document as:
@@ -2003,7 +2001,7 @@ export const ASSORTED_TEXT_MODIFICATIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE =
         // function f() {
         //     function inner() {
         //         return [[[[[[[[[[ 'Goodbye' ]]]]]]]]]];
-        //     }
+        //     }                               ^(cursor position)
         //     return inner();
         // }
         //
@@ -2032,43 +2030,27 @@ export const ASSORTED_TEXT_MODIFICATIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE =
             [ { line: 2, sides: [...range(15, 25), ...range(36, 46)] } ],
             { viewColumn: ViewColumn.One }
         );
-        executor.assertCursors( 
-            [ [2, 36] ], 
-            { viewColumn: ViewColumn.One }
-        );
-    }
-});
+        executor.assertCursors([ [2, 36] ], { viewColumn: ViewColumn.One });
 
-/**
- * Insert a snippet into an out-of-focus text editor and make sure that pairs are still properly
- * tracked afterwards.
- * 
- * Note that this test will be less detailed than the test for snippet insertions in the active text
- * editor as snippet insertions in text editors other than the active one is very rare.
- */
-export const SNIPPET_INSERTIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
-    name: 'Snippet Insertions in Out-of-Focus Text Editor',
-    prelude: async (executor) => {
-
-        // This sets up the initial document as:
+        // Clear the text editor in view column 1, then set it up to have the following state:
         //
         // ```
         // function main() {
         //     const x = someFn({ outer: { inner: }})
         // }                                      ^(cursor position)
         // ```
+        await executor.focusEditorGroup('first');
         await executor.typeText('function main() {\nconst x = ');
         await executor.setCursors([ [1, 14] ]);
         await executor.typeText('someFn({ outer: { inner: ');
-        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 39, 40, 41] } ]);
-        executor.assertCursors([ [1, 39] ]);
+        await executor.focusEditorGroup('second')   ;
+        executor.assertPairs(
+            [ { line: 1, sides: [20, 21, 30, 39, 40, 41] } ], 
+            { viewColumn: ViewColumn.One }
+        );
+        executor.assertCursors([ [1, 39] ], { viewColumn: ViewColumn.One });
 
-        // Open another text editor (which will immediately take focus).
-        await executor.openNewTextEditor(undefined, { viewColumn: ViewColumn.Two });
-    },
-    task: async (executor) => {
-
-        // Insert a snippet into the out-of-focus text editor.
+        // Insert a snippet into the out-of-focus text editor in view column 1.
         //
         // Document state after:
         //  
@@ -2089,6 +2071,7 @@ export const SNIPPET_INSERTIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new Test
             [ { anchor: [1, 65], active: [1, 70] } ],
             { viewColumn: ViewColumn.One }
         );
+
     }
 });
 
@@ -2111,7 +2094,6 @@ export const SINGLE_CURSOR_PAIR_TRANSLATION_TEST_GROUP = new TestGroup(
         AUTOCOMPLETIONS_TEST_CASE,
         SNIPPET_INSERTIONS_TEST_CASE,
         TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE,
-        ASSORTED_TEXT_MODIFICATIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE,
-        SNIPPET_INSERTIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE
+        PAIR_TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE,
     ]
 );
