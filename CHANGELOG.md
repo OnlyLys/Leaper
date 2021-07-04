@@ -1,24 +1,23 @@
 # CHANGELOG
 
-### 0.9.3
+### 0.9.3 _(Not published to marketplace)_
 - Fix incorrect extension packaging. This should reduce the file size.
 
-### 0.9.2
+### 0.9.2 _(Not published to marketplace)_
 - Slightly simplify the code.
 - Use [esbuild](https://code.visualstudio.com/api/working-with-extensions/bundling-extension#using-esbuild) 
   to reduce the extension's loading time and file size.
 
-### 0.9.1
+### 0.9.1 _(Not published to marketplace)_
 - Restructure some of the code to improve readability and robustness.
-- Expand the testing suite.
 
-### 0.9.0
+### 0.9.0 _(Not published to marketplace)_
 - Add support for context switching (i.e. handle multiple visible text editors 
   at a time. Users can now insert pairs in one editor, switch to another editor, 
   then come back and still have the pairs be 'leapable', as the user had left 
   them.
 
-### 0.8.0 _(Unpublished)_
+### 0.8.0 _(Not published to marketplace)_
 - Add multicursor support.
 - Rewrite almost all of the code to reduce overhead.
 - Tweak default decoration to make the decorated bracket bold.
