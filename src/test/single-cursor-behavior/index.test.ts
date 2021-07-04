@@ -8,7 +8,7 @@ import { SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP } from './pair-invalidation'
 import { SINGLE_CURSOR_PAIR_TRANSLATION_TEST_GROUP } from './pair-translation';
 
 /**
- * Tests how the engine behaves when there is a single cursor.
+ * A collection of test groups that test how the engine behaves when there is a single cursor.
  */
 const TEST_CATEGORY = new TestCategory(
     'Single Cursor Behavior Tests',

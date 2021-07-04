@@ -841,8 +841,8 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 });
 
 /**
- * Test group containing tests for whether the keybinding context values are being appropriately
- * managed for single cursor situations.
+ * A collection of test cases that test whether the keybinding context values are being appropriately
+ * managed when there is a single cursor.
  */
 export const SINGLE_CURSOR_CONTEXT_MANAGEMENT_TEST_GROUP = new TestGroup(
     'Context Management',

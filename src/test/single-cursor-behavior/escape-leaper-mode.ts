@@ -127,7 +127,8 @@ const ONLY_CLEARS_ACTIVE_TEXT_EDITOR = new TestCase({
 });
 
 /**
- * Test group containing tests for the `leaper.escapeLeaperMode` command in single cursor situations.
+ * A collection of test cases that test the `leaper.escapeLeaperMode` command when there is a single
+ * cursor.
  */
 export const SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP = new TestGroup(
     'Escape Leaper Mode Command',

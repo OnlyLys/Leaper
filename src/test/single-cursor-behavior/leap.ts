@@ -255,7 +255,7 @@ const CAN_HANDLE_BEING_RAPIDLY_CALLED = new TestCase({
 });
 
 /** 
- * Test group containing tests for the `leaper.leap` command in single cursor situations.
+ * A collection of tests cases that test the `leaper.leap` command when there is a single cursor.
  */
 export const SINGLE_CURSOR_LEAP_COMMAND_TEST_GROUP: TestGroup = new TestGroup(
     'Leap Command',
