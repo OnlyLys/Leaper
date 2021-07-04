@@ -5,8 +5,9 @@
 
 ### 0.9.2 _(Not published to marketplace)_
 - Slightly simplify the code.
-- Use [esbuild](https://code.visualstudio.com/api/working-with-extensions/bundling-extension#using-esbuild) 
-  to reduce the extension's loading time and file size.
+- Use [esbuild] to reduce the extension's loading time and file size.
+
+[esbuild]: (https://code.visualstudio.com/api/working-with-extensions/bundling-extension#using-esbuild) 
 
 ### 0.9.1 _(Not published to marketplace)_
 - Restructure some of the code to improve readability and robustness.
