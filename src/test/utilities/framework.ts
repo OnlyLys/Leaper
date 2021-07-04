@@ -665,13 +665,13 @@ class ExecutorFull {
         //
         // This step is required because vscode only discards unsaved changes when the test instance 
         // is closed, and not when the tab containing the unsaved changes is closed. That means if 
-        // we are retrying tests, we could be reopening text documents with unsaved changes in them,
-        // which will mess up the test as the starting state of the text document is different the 
-        // second time around. By undoing all changes before closing them, we prevent such a thing 
-        // from happening.
+        // we are retrying tests (or if we have multiple tests that open the same text file), we 
+        // could be opening text documents with unsaved changes in them, which will mess up the test 
+        // as the starting state of the text document is different for each test. By undoing all 
+        // changes before closing them, we prevent such a thing from happening.
         //
-        // Note that we only perform this step for titled documents, since untitled ones immediately
-        // discard their unsaved changes on close.
+        // Note that we only need to perform this step for titled documents, since untitled ones 
+        // immediately discard their unsaved changes on close.
         for (const document of workspace.textDocuments) {
             if (!document.isUntitled) {
                 await window.showTextDocument(document);

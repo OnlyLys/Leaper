@@ -2093,13 +2093,15 @@ export const SNIPPET_INSERTIONS_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new Test
 });
 
 /**
- * Test whether the position of pairs are correctly tracked following non-deleting text edits¹ that 
- * cause them to be translated².
+ * Test group containing tests for whether the position of pairs are correctly tracked following 
+ * non-deleting text edits¹ that cause them to be translated².
  * 
  * 1 - Meaning text edits that do not delete either side of a pair. Text edits that delete pairs are 
  *     instead tested in the `pair-invalidation.ts` module.
  * 2 - Meaning a shift in position of either side of a pair due to non-deleting text edits that 
  *     occurred between or before it.
+ * 
+ * We only test for single cursor situations here.
  */
 export const SINGLE_CURSOR_PAIR_TRANSLATION_TEST_GROUP = new TestGroup(
     'Pair Translation',

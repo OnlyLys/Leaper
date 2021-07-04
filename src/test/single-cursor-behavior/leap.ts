@@ -255,10 +255,7 @@ const CAN_HANDLE_BEING_RAPIDLY_CALLED = new TestCase({
 });
 
 /** 
- * This test group tests the extension's 'Leap' command.
- *
- * Unless mentioned otherwise in the test description, the 'Leap' command is called by firing a 
- * `leaper.leap` command.  Direct command calls like these do not test the keybindings.
+ * Test group containing tests for the `leaper.leap` command in single cursor situations.
  */
 export const SINGLE_CURSOR_LEAP_COMMAND_TEST_GROUP: TestGroup = new TestGroup(
     'Leap Command',

@@ -997,11 +997,13 @@ export const ASSORTED_EXIT_OF_CURSOR_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new
 });
 
 /**
- * Test pair invalidation due to:
+ * Test group containing tests that check that pairs are invalidated due to:
  * 
  *  1. Cursor being moved out of them (also known as 'cursor escape' or 'cursor exit').
  *  2. Multi-line text being inserted between them.
  *  3. Their opening or closing sides being deleted.
+ * 
+ * We only test for single cursor situations here.
  */
 export const SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP = new TestGroup(
     'Pair Invalidation',
