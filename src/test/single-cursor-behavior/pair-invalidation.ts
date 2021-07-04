@@ -1,16 +1,18 @@
 import { SnippetString, ViewColumn } from 'vscode';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
 
-// In this prelude that is shared across all the test cases in this module, we insert pairs in a way 
-// that simulates a typical usage scenario.
-//
-// The following initial document is created:
-//
-// ```
-// function () {
-//     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
-// }                                                   ^(cursor position)
-// ```
+/**
+ * In this prelude that is shared across all the test cases in this module, we insert pairs in a way 
+ * that simulates a typical usage scenario.
+ *
+ * The following initial document is created:
+ *
+ * ```
+ * function () {
+ *     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
+ * }                                                   ^(cursor position)
+ * ```
+ */
 const sharedPrelude = async (executor: Executor) => {
     await executor.editText([
         {
@@ -789,37 +791,34 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
 /**
  * Test whether pair invalidation works for an out-of-focus text editor.
  * 
- * Furthermore, note that because changes involving an out-of-focus text editor is quite rare, this 
- * test case will not be as detailed as the other ones.
+ * We will perform tests similar to what we have done so far but for an out-of-focus text editor. 
+ * But since changes occurring in out-of-focus text editors are quite rare, this test case will not 
+ * be as comprehensive as the ones we have done so far for in-focus text editors.
  */
-export const ASSORTED_EXIT_OF_CURSOR_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
-    name: 'Assorted Exit of Cursor in Out-of-Focus Text Editor',
-    task: async (executor) => {
+export const PAIR_INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
+    name: 'Pair Invalidation in Out-of-Focus Text Editor',
+    prelude: async (executor) => {
 
-        // Open another empty text editor in view column 2. 
+        // Open another fresh text editor in view column 2. 
         // 
-        // We will be switching to this text editor in order to defocus the text editor in view 
-        // column 1. The text editor in view column 1 is the one which we will be performing the 
-        // tests on.
-        //
-        // Note that we set the language of the opened text editor in view column 2 to Plaintext, 
-        // but in actually it does not matter what its language is.
-        await executor.openNewTextEditor(
-            'plaintext',
-            { viewColumn: ViewColumn.Two, preserveFocus: true }
-        );
+        // During the tests, we will be switching focus to this text editor in order to defocus the 
+        // text editor in view column 1. Then we will make changes in the text editor in view column 
+        // 1 and check that pairs are appropriately invalidated.
+        await executor.openNewTextEditor(undefined, { viewColumn: ViewColumn.Two });
+    },
+    task: async (executor) => {
 
         // Setup the text editor in view column 1, then switch focus to view column 2.
         //
-        // Because we reuse `sharedPrelude` in this function, the text editor in view column 1 is
-        // set by this function to:
+        // By the end of this function call, the text editor in view column 1 will have the following
+        // state:
         //
         // ```
         // function () {
         //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
         // }                                                   ^(cursor position)
         // ```
-        async function setup(executor: Executor): Promise<void> {
+        async function reset(executor: Executor): Promise<void> {
             await executor.focusEditorGroup('first');
             await executor.deleteAll();
             await sharedPrelude(executor);
@@ -835,7 +834,7 @@ export const ASSORTED_EXIT_OF_CURSOR_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new
         //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
         // }                                                            ^(cursor position)
         // ```
-        await setup(executor);
+        await reset(executor);
         await executor.setCursors([ [1, 61] ],                 { viewColumn: ViewColumn.One });
         executor.assertPairs([ { line: 1, sides: [15, 61] } ], { viewColumn: ViewColumn.One });
         executor.assertCursors([ [1, 61] ],                    { viewColumn: ViewColumn.One });
@@ -849,7 +848,7 @@ export const ASSORTED_EXIT_OF_CURSOR_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new
         //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
         // }           |-----^(cursor selection)
         // ```
-        await setup(executor);
+        await reset(executor);
         await executor.setCursors(
             [ { anchor: [1, 12], active: [1, 18] } ], 
             { viewColumn: ViewColumn.One }
@@ -869,7 +868,7 @@ export const ASSORTED_EXIT_OF_CURSOR_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new
         //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
         // }
         // ```
-        await setup(executor);
+        await reset(executor);
         await executor.setCursors([ [0, 10] ], { viewColumn: ViewColumn.One });
         executor.assertPairs([ 'None' ],       { viewColumn: ViewColumn.One });
         executor.assertCursors([ [0, 10] ],    { viewColumn: ViewColumn.One });
@@ -884,7 +883,7 @@ export const ASSORTED_EXIT_OF_CURSOR_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new
         // }
         //  ^(cursor position)
         // ```
-        await setup(executor);
+        await reset(executor);
         await executor.setCursors([ [2, 1] ], { viewColumn: ViewColumn.One });
         executor.assertPairs([ 'None' ],      { viewColumn: ViewColumn.One });
         executor.assertCursors([ [2, 1] ],    { viewColumn: ViewColumn.One });
@@ -898,7 +897,7 @@ export const ASSORTED_EXIT_OF_CURSOR_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new
         //     console.log     { obj:  arr: [  prop: someFn(1, 20) } ] } }); // Log object to console.
         // }                                                     ^(cursor position)
         // ```
-        await setup(executor);
+        await reset(executor);
         await executor.editText(
             [
                 { kind: 'delete',  range: { start: [1, 32], end: [1, 33] } },
@@ -922,7 +921,7 @@ export const ASSORTED_EXIT_OF_CURSOR_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new
         //     console.log({ obj: { arr: [ { prop: someFn( }  Woah!); // Log object to console.
         // }                                              ^(cursor position)
         // ```
-        await setup(executor);
+        await reset(executor);
         await executor.editText(
             [
                 { kind: 'replace', range: { start: [1, 60], end: [1, 61] }, with: 'Woah!' },
@@ -949,7 +948,7 @@ export const ASSORTED_EXIT_OF_CURSOR_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new
         //     ) } ] } }); // Log object to console.
         // }   ^(selection end)
         // ```
-        await setup(executor);
+        await reset(executor);
         await executor.editText(
             [
                 { 
@@ -980,7 +979,7 @@ export const ASSORTED_EXIT_OF_CURSOR_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new
         //     ) } ] } }); // Log object to console.               ^(cursor position)
         // }
         // ```
-        await setup(executor);
+        await reset(executor);
         await executor.insertSnippet(
             new SnippetString(
                 '\n'
@@ -1020,6 +1019,6 @@ export const SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP = new TestGroup(
         DELETION_OF_CLOSING_SIDE_TEST_CASE,
         MULTI_LINE_TEXT_INSERTED_BETWEEN_PAIRS_TEST_CASE,
         MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE,
-        ASSORTED_EXIT_OF_CURSOR_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE
+        PAIR_INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE
     ]
 );
