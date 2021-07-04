@@ -112,8 +112,8 @@ export class Tracker {
     });
 
     /**
-     * Watcher that reloads configurations and resets internal state if configuration change is 
-     * detected in the owning text editor.
+     * Watcher that reloads configurations and resets internal state if an effective configuration
+     * value has changed for the owning text editor.
      */
     private readonly configurationChangeWatcher = workspace.onDidChangeConfiguration((event) => {
         if (event.affectsConfiguration('leaper', this.owner.document)) {
