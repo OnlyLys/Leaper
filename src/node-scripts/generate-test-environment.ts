@@ -1,4 +1,4 @@
-//! The following script is meant to be run by Node before the tests execute.
+//! The following script is meant to be run by Node.JS before running the tests.
 //!
 //! This script makes a copy of the test environment so that the tests may run on that copy instead. 
 //! By doing this, we allow the tests to modify the workspace it is in without permanently dirtying 

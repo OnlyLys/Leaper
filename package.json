@@ -221,7 +221,7 @@
         "build-dev": "tsc -p ./ --allowUnusedLabels true --noUnusedParameters false --noUnusedLocals false",
         "lint": "eslint src --ext ts",
         "postinstall": "npm run build-dev",
-        "pretest": "npm run build-dev && node ./out/test/gen-env.js",
+        "pretest": "npm run build-dev && node ./out/node-scripts/generate-test-environment.js",
         "test": "node ./out/test/run-tests.js",
         "typecheck": "tsc -noEmit -p ./",
         "vscode:prepublish": "npm run build-release"
