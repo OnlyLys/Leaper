@@ -605,14 +605,15 @@ class ExecutorFull {
      * @param value Value to set the configuration to.
      * @param targetWorkspaceFolder The name of the workspace folder to set the configuration in. If
      *                              not specified, will set the configuration in the root workspace.
-     * @param targetLanguage The language to set the configuration to. Defaults to none.
+     * @param targetLanguage The language to scope the configuration to. If not specified, will not 
+     *                       scope to any language.
      */
     public async setConfiguration<T>(
         args: {
-            partialName:            string, 
+            partialName:            'decorateAll' | 'decorationOptions' | 'detectedPairs', 
             value:                  T,
-            targetWorkspaceFolder?: string,
-            targetLanguage?:        string,
+            targetWorkspaceFolder?: 'workspace-1' | 'workspace-2' | 'workspace-3',
+            targetLanguage?:        'typescript'  | 'markdown'    | 'plaintext',
         },
         options?: RepetitionDelayOptions
     ): Promise<void> {
@@ -639,7 +640,7 @@ class ExecutorFull {
                                                       : ConfigurationTarget.Workspace;
 
             // Save the previous value so that we can restore it later.
-            const prevValue = configuration.get<T>(partialName); 
+            const prevValue = configuration.get(partialName); 
 
             // Set the configuration.
             await configuration.update(partialName, value, targetScope, !!targetLanguage);
