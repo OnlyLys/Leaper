@@ -7,39 +7,35 @@ import * as glob from "glob";
  */
 export function run(): Promise<void> {
 
-	// Create the mocha test
-	const mocha = new Mocha({
-		ui: "bdd",
-		color: true,
-		timeout: 120000,
-		slow: 60000
-	});
+    const mocha = new Mocha({
+        ui:	     'bdd',
+        color:   true,
+        timeout: 120000,    // Our tests take a while so a 2 minute timeout is appropriate.
+        slow:    60000      
+    });
 
-	const testsRoot = path.resolve(__dirname, "..");
+    const testsRoot = path.resolve(__dirname, "..");
 
-	return new Promise((c, e) => {
-		glob("**/**.test.js", { cwd: testsRoot }, (err, files) => {
-			if (err) {
-				return e(err);
-			}
-
-			// Add files to the test suite
-			files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
-
-			try {
-				// Run the mocha test
-				mocha.run(failures => {
-					if (failures > 0) {
-						e(new Error(`${failures} tests failed.`));
-					} else {
-						c();
-					}
-				});
-			} catch (err) {
-				console.error(err);
-				e(err);
-			}
-		});
-	});
+    // Test every `.test.ts` suffixed file in the test direcotry with Mocha.
+    return new Promise((c, e) => {
+        glob("**/**.test.js", { cwd: testsRoot }, (err, files) => {
+            if (err) {
+                return e(err);
+            }
+            files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
+            try {
+                mocha.run(failures => {
+                    if (failures > 0) {
+                        e(new Error(`${failures} tests failed.`));
+                    } else {
+                        c();
+                    }
+                });
+            } catch (err) {
+                console.error(err);
+                e(err);
+            }
+        });
+    });
 }
 
