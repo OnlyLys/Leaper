@@ -398,18 +398,18 @@ class ExecutorFull {
         where:    'left' | 'right' | 'up' | 'down' | 'home' | 'end' | 'endOfDocument',
         options?: RepetitionDelayOptions
     ): Promise<void> {
-        return executeWithRepetitionDelay(async () => {
+        const commandId = (() => {
             switch (where) {
-                case 'left':          return commands.executeCommand('cursorLeft');
-                case 'right':         return commands.executeCommand('cursorRight');
-                case 'up':            return commands.executeCommand('cursorUp');
-                case 'down':          return commands.executeCommand('cursorDown');
-                case 'home':          return commands.executeCommand('cursorHome');
-                case 'end':           return commands.executeCommand('cursorEnd');
-                case 'endOfDocument': return commands.executeCommand('cursorBottom');
-                default: throw new Error('Unreachable!');
+                case 'left':          return 'cursorLeft';
+                case 'right':         return 'cursorRight';
+                case 'up':            return 'cursorUp';
+                case 'down':          return 'cursorDown';
+                case 'home':          return 'cursorHome';
+                case 'end':           return 'cursorEnd';
+                case 'endOfDocument': return 'cursorBottom';
             }
-        }, options);
+        })();
+        return executeCommandWithRepetitionDelay(commandId, options);
     }
 
     /**
@@ -480,13 +480,13 @@ class ExecutorFull {
         which:    'next' | 'prev',
         options?: RepetitionDelayOptions
     ): Promise<void> {
-        return executeWithRepetitionDelay(async () => {
+        const commandId = (() => {
             switch (which) {
-                case 'next': return commands.executeCommand('jumpToNextSnippetPlaceholder');
-                case 'prev': return commands.executeCommand('jumpToPrevSnippetPlaceholder');
-                default: throw new Error('Unreachable!');
+                case 'next': return 'jumpToNextSnippetPlaceholder';
+                case 'prev': return 'jumpToPrevSnippetPlaceholder';
             }
-        }, options);
+        })();
+        return executeCommandWithRepetitionDelay(commandId, options);
     }
 
     /**
@@ -514,13 +514,13 @@ class ExecutorFull {
         which:    'next' | 'prev',
         options?: RepetitionDelayOptions
     ): Promise<void> {
-        return executeWithRepetitionDelay(async () => {
+        const commandId = (() => {
             switch (which) {
-                case 'next': return commands.executeCommand('workbench.action.nextEditorInGroup');
-                case 'prev': return commands.executeCommand('workbench.action.previousEditorInGroup');
-                default: throw new Error('Unreachable!');
+                case 'next': return 'workbench.action.nextEditorInGroup';
+                case 'prev': return 'workbench.action.previousEditorInGroup';
             }
-        }, options);
+        })();
+        return executeCommandWithRepetitionDelay(commandId, options);
     }
 
     /**
@@ -530,13 +530,13 @@ class ExecutorFull {
         which:    'left' | 'right',
         options?: RepetitionDelayOptions
     ): Promise<void> {
-        return executeWithRepetitionDelay(async () => {
+        const commandId = (() => {
             switch (which) {
-                case 'left':  return commands.executeCommand('workbench.action.moveEditorToLeftGroup');
-                case 'right': return commands.executeCommand('workbench.action.moveEditorToRightGroup');
-                default: throw new Error('Unreachable!');
+                case 'left':  return 'workbench.action.moveEditorToLeftGroup';
+                case 'right': return 'workbench.action.moveEditorToRightGroup';
             }
-        }, options);
+        })();
+        return executeCommandWithRepetitionDelay(commandId, options);
     }
 
     /**
@@ -561,12 +561,9 @@ class ExecutorFull {
                 case 'second': return 'workbench.action.focusSecondEditorGroup';
                 case 'third':  return 'workbench.action.focusThirdEditorGroup';
                 case 'fourth': return 'workbench.action.focusFourthEditorGroup';
-                default: throw new Error('Unreachable!');
             }
         })();
-        return executeWithRepetitionDelay(async () => {
-            return commands.executeCommand(commandId);
-        }, options);
+        return executeCommandWithRepetitionDelay(commandId, options);
     }
 
     /**
