@@ -795,7 +795,7 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
  * But since changes occurring in out-of-focus text editors are quite rare, this test case will not 
  * be as comprehensive as the ones we have done so far for in-focus text editors.
  */
-export const PAIR_INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
+const PAIR_INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
     name: 'Pair Invalidation in Out-of-Focus Text Editor',
     prelude: async (executor) => {
 
