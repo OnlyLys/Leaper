@@ -13,7 +13,7 @@ import { Executor, TestCase, TestGroup } from '../utilities/framework';
  * }                                                   ^(cursor position)
  * ```
  */
-const sharedPrelude = async (executor: Executor) => {
+async function sharedPrelude(executor: Executor): Promise<void> {
     await executor.editText([
         {
             kind: 'insert',
