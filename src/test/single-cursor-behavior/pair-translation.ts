@@ -2040,17 +2040,14 @@ export const PAIR_TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCa
         // }                                      ^(cursor position)
         // ```
         await executor.focusEditorGroup('first');
+        await executor.deleteAll();
         await executor.typeText('function main() {\nconst x = ');
         await executor.setCursors([ [1, 14] ]);
         await executor.typeText('someFn({ outer: { inner: ');
-        await executor.focusEditorGroup('second')   ;
-        executor.assertPairs(
-            [ { line: 1, sides: [20, 21, 30, 39, 40, 41] } ], 
-            { viewColumn: ViewColumn.One }
-        );
-        executor.assertCursors([ [1, 39] ], { viewColumn: ViewColumn.One });
+        executor.assertPairs([ { line: 1, sides: [20, 21, 30, 39, 40, 41] } ]);
+        executor.assertCursors([ [1, 39] ]);
 
-        // Insert a snippet into the out-of-focus text editor in view column 1.
+        // Defocus view column 1, then insert a snippet into it.
         //
         // Document state after:
         //  
@@ -2059,6 +2056,7 @@ export const PAIR_TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCa
         //     const x = someFn({ outer: { inner: fn1({ arg1: ``, arg2: fn2(float, binary), arg3:  })}})
         // }                                                                |----^(cursor selection)
         // ```
+        await executor.focusEditorGroup('second');
         await executor.insertSnippet(
             new SnippetString('fn1({ arg1: `$3`, arg2: fn2(${1:float}, ${2:binary}), arg3: $4 })$0'),
             { viewColumn: ViewColumn.One }
@@ -2071,7 +2069,6 @@ export const PAIR_TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCa
             [ { anchor: [1, 65], active: [1, 70] } ],
             { viewColumn: ViewColumn.One }
         );
-
     }
 });
 
