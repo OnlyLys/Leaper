@@ -540,6 +540,13 @@ class ExecutorFull {
     }
 
     /**
+     * Focus on the explorer side bar.
+     */
+    public async focusExplorerSideBar(options?: RepetitionDelayOptions): Promise<void> {
+        return executeCommandWithRepetitionDelay('workbench.view.explorer', options);
+    }
+
+    /**
      * Focus on an editor tab group.
      */
     public async focusEditorGroup(
