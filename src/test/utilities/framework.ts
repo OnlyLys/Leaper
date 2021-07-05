@@ -289,7 +289,7 @@ class ExecutorFull {
     }
 
     /**
-     * Call the command to type a random autoclosing pair into the active text document.
+     * Call the command to type a random autoclosing pair into the active text editor.
      * 
      * The pair typed in is randomly picked between `{}`, `[]` and `()`. 
      */
@@ -301,7 +301,7 @@ class ExecutorFull {
     }
 
     /**
-     * Type text into the active text document, codepoint by codepoint.
+     * Type text into the active text editor, codepoint by codepoint.
      */
     public async typeText(text: string, options?: RepetitionDelayOptions): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -312,7 +312,7 @@ class ExecutorFull {
     }
 
     /**
-     * Apply text edits to a visible text document.
+     * Apply text edits to a visible text editor.
      *   
      * All the edits will be done in parallel.
      */
@@ -378,7 +378,7 @@ class ExecutorFull {
     }
 
     /**
-     * Delete all text in a visible text document.
+     * Delete all text in a visible text editor.
      */
     public async deleteAll(options?: RepetitionDelayOptions & ViewColumnOption): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -392,7 +392,7 @@ class ExecutorFull {
     }
 
     /**
-     * Move each cursor in the active text document.
+     * Move each cursor in the active text editor.
      */
     public async moveCursors(
         where:    'left' | 'right' | 'up' | 'down' | 'home' | 'end' | 'endOfDocument',

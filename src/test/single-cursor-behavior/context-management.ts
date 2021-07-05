@@ -334,22 +334,21 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 0a. This test case begins with an empty Typescript text editor being provided to it.
         //
-        // State of initially visible text editors:
+        // State of visible text editors after this step:
         // 
-        //     View Column     | 1 (active)  |
+        //     View Column      | 1 (active) |
         //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    |
-        //     Language        | Typescript  |
-        //     Number of Pairs | 0           |
-        //     Cursor Position | [0, 0]      |
-        //     Line of Sight   | No          |
-        //                     | (in Focus)  |
+        //     Workspace Folder | None       |
+        //     Language         | Typescript |
+        //     Number of Pairs  | 0          |
+        //     Cursor Position  | [0, 0]     |
+        //     Line of Sight    | No         |
         //
         executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [0, 0] ]);
 
-        // 0b. Since the provided text document is empty, the engine should have disabled both of 
-        //     the keybinding contexts when the provided text editor takes focus.
+        // 0b. Since the provided text editor is empty, the engine should have disabled both of the 
+        //     keybinding contexts when the provided text editor takes focus.
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
 
@@ -360,13 +359,13 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1 (active)  |
-        //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    |
-        //     Language        | Typescript  |
-        //     Number of Pairs | 10          |
-        //     Cursor Position | [0, 10]     |
-        //     Line of Sight   | Yes         |
+        //     View Column      | 1 (active) |
+        //     ----------------------------------------------------------------------------
+        //     Workspace Folder | None       |
+        //     Language         | Typescript |
+        //     Number of Pairs  | 10         |
+        //     Cursor Position  | [0, 10]    |
+        //     Line of Sight    | Yes        |
         // 
         await executor.typeRandomPair({ repetitions: 10 });
         executor.assertPairs([ { line: 0, sides: range(0, 20) } ]);
@@ -377,19 +376,19 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
 
-        // 2a. Now open the Plaintext file in Workspace 1.
+        // 2a. Now open the Plaintext file from Workspace Folder 1.
         //
         // The opened file immediately takes focus.
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1           | 2 (active)  |
-        //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 |
-        //     Language        | Typescript  | Plaintext   |
-        //     Number of Pairs | 10          | 0           |
-        //     Cursor Position | [0, 10]     | [0, 0]      |
-        //     Line of Sight   | Yes         | No          |
+        //     View Column      | 1          | 2 (active) |
+        //     ----------------------------------------------------------------------------
+        //     Workspace Folder | None       | 1          |
+        //     Language         | Typescript | Plaintext  |
+        //     Number of Pairs  | 10         | 0          |
+        //     Cursor Position  | [0, 10]    | [0, 0]     |
+        //     Line of Sight    | Yes        | No         |
         //
         await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.Two });
         executor.assertPairs([ 'None' ]);
@@ -400,7 +399,7 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
 
-        // 3a. Attempt to insert some pairs into Workspace 1's Plaintext file.
+        // 3a. Attempt to insert some pairs into the file from Workspace Folder 1.
         //
         // However, because pair detection is disabled (since `leaper.detectedPairs` was set to `[]`
         // for Plaintext in the test workspace), we would not expect any of the inserted pairs to be 
@@ -408,13 +407,13 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         // 
         // State of visible text editors after this step:
         //
-        //     View Column     | 1           | 2 (active)  |
-        //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 |
-        //     Language        | Typescript  | Plaintext   |
-        //     Number of Pairs | 10          | 0           |
-        //     Cursor Position | [0, 10]     | [2, 10]     |
-        //     Line of Sight   | Yes         | No          |
+        //     View Column      | 1          | 2 (active) |
+        //     ----------------------------------------------------------------------------
+        //     Workspace Folder | None       | 1          |
+        //     Language         | Typescript | Plaintext  |
+        //     Number of Pairs  | 10         | 0          |
+        //     Cursor Position  | [0, 10]    | [2, 10]    |
+        //     Line of Sight    | Yes        | No         |
         //
         await executor.moveCursors('endOfDocument');
         await executor.typeRandomPair({ repetitions: 10 });
@@ -426,19 +425,19 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
 
-        // 4a. Now open the Typescript file in Workspace 2.
+        // 4a. Now open the Typescript file from Workspace Folder 2.
         //
         // The opened file immediately takes focus.
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1           | 2           | 3 (active)  |
-        //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
-        //     Language        | Typescript  | Plaintext   | Typescript  |
-        //     Number of Pairs | 10          | 0           | 0           |
-        //     Cursor Position | [0, 10]     | [2, 10]     | [0, 0]      |
-        //     Line of Sight   | Yes         | No          | No          |
+        //     View Column      | 1          | 2          | 3 (active) |
+        //     ----------------------------------------------------------------------------
+        //     Workspace Folder | None       | 1          | 2          |
+        //     Language         | Typescript | Plaintext  | Typescript |
+        //     Number of Pairs  | 10         | 0          | 0          |
+        //     Cursor Position  | [0, 10]    | [2, 10]    | [0, 0]     |
+        //     Line of Sight    | Yes        | No         | No         |
         //
         await executor.openFile('./workspace-2/text.ts', { viewColumn: ViewColumn.Three });
         executor.assertPairs([ 'None' ]);
@@ -449,20 +448,20 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
 
-        // 5a. Insert some pairs into Workspace 2's Typescript file. 
+        // 5a. Insert some pairs into the file from Workspace Folder 2.
         //
         // We only insert `()` pairs as `leaper.detectedPairs` was set to `[ "()" ]` in the second
         // workspace folder.
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1           | 2           | 3 (active)  |
-        //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
-        //     Language        | Typescript  | Plaintext   | Typescript  |
-        //     Number of Pairs | 10          | 0           | 10          |
-        //     Cursor Position | [0, 10]     | [2, 10]     | [2, 10]     |
-        //     Line of Sight   | Yes         | No          | Yes         |
+        //     View Column      | 1          | 2          | 3 (active) |
+        //     ----------------------------------------------------------------------------
+        //     Workspace Folder | None       | 1          | 2          |
+        //     Language         | Typescript | Plaintext  | Typescript |
+        //     Number of Pairs  | 10         | 0          | 10         |
+        //     Cursor Position  | [0, 10]    | [2, 10]    | [2, 10]    |
+        //     Line of Sight    | Yes        | No         | Yes        |
         //
         await executor.moveCursors('endOfDocument');
         await executor.typeText('(', { repetitions: 10 });
@@ -477,20 +476,20 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1           | 2 (active)  | 3           |
-        //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
-        //     Language        | Typescript  | Plaintext   | Typescript  |
-        //     Number of Pairs | 10          | 0           | 10          |
-        //     Cursor Position | [0, 10]     | [2, 10]     | [2, 10]     |
-        //     Line of Sight   | Yes         | No          | Yes         |
+        //     View Column      | 1          | 2 (active) | 3          |
+        //     ----------------------------------------------------------------------------
+        //     Workspace Folder | None       | 1          | 2          |
+        //     Language         | Typescript | Plaintext  | Typescript |
+        //     Number of Pairs  | 10         | 0          | 10         |
+        //     Cursor Position  | [0, 10]    | [2, 10]    | [2, 10]    |
+        //     Line of Sight    | Yes        | No         | Yes        |
         //
         await executor.focusEditorGroup('left');
         executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [2, 10] ]);
 
         // 6b. We expect both keybinding contexts to be disabled upon switching to it, since there 
-        //     are no pairs being tracked for Workspace 1's text editor.
+        //     are no pairs being tracked for Workspace Folder 1's text editor.
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
 
@@ -498,13 +497,13 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1           | 2 (active)  | 3           |
-        //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
-        //     Language        | Typescript  | Plaintext   | Typescript  |
-        //     Number of Pairs | 10          | 0           | 10          |
-        //     Cursor Position | [0, 10]     | [2, 10]     | [2, 10]     |
-        //     Line of Sight   | Yes         | No          | Yes         |
+        //     View Column      | 1 (active) | 2          | 3          |
+        //     ----------------------------------------------------------------------------
+        //     Workspace Folder | None       | 1          | 2          |
+        //     Language         | Typescript | Plaintext  | Typescript |
+        //     Number of Pairs  | 10         | 0          | 10         |
+        //     Cursor Position  | [0, 10]    | [2, 10]    | [2, 10]    |
+        //     Line of Sight    | Yes        | No         | Yes        |
         //
         await executor.focusEditorGroup('left');
         executor.assertPairs([ { line: 0, sides: range(0, 20) } ]);
@@ -519,13 +518,13 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1 (active)  | 2           | 3           |
+        //     View Column      | 1 (active) | 2          | 3          |
         //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
-        //     Language        | Typescript  | Plaintext   | Typescript  |
-        //     Number of Pairs | 5           | 0           | 10          |
-        //     Cursor Position | [0, 15]     | [2, 10]     | [2, 10]     |
-        //     Line of Sight   | Yes         | No          | Yes         |
+        //     Workspace Folder | None       | 1          | 2          |
+        //     Language         | Typescript | Plaintext  | Typescript |
+        //     Number of Pairs  | 5          | 0          | 10         |
+        //     Cursor Position  | [0, 15]    | [2, 10]    | [2, 10]    |
+        //     Line of Sight    | Yes        | No         | Yes        |
         //
         await executor.leap({ repetitions: 5 });
         executor.assertPairs([ { line: 0, sides: [0, 1, 2, 3, 4, 15, 16, 17, 18, 19] } ]);
@@ -535,17 +534,17 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
 
-        // 9a. Open a new empty text document in view column 1.
+        // 9a. Open a new empty Typescript text editor in view column 1.
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1 (active)  | 2           | 3           |
+        //     View Column      | 1 (active) | 2          | 3          |
         //     -----------------------------------------------------------------------------
-        //     Document Source | New Empty   | Workspace 1 | Workspace 2 |
-        //     Language        | Typescript  | Plaintext   | Typescript  |
-        //     Number of Pairs | 0           | 0           | 10          |
-        //     Cursor Position | [0, 0]      | [2, 10]     | [2, 10]     |
-        //     Line of Sight   | No          | No          | Yes         |
+        //     Workspace Folder | None       | 1          | 2          |
+        //     Language         | Typescript | Plaintext  | Typescript |
+        //     Number of Pairs  | 0          | 0          | 10         |
+        //     Cursor Position  | [0, 0]     | [2, 10]    | [2, 10]    |
+        //     Line of Sight    | No         | No         | Yes        |
         //
         await executor.openNewTextEditor('typescript', { viewColumn: ViewColumn.One });
         executor.assertPairs([ 'None' ]);
@@ -564,13 +563,13 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1 (active)  | 2           | 3           |
+        //     View Column      | 1 (active) | 2          | 3          |
         //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
-        //     Language        | Typescript  | Plaintext   | Typescript  |
-        //     Number of Pairs | 0           | 0           | 10          |
-        //     Cursor Position | [0, 15]     | [2, 10]     | [2, 10]     |
-        //     Line of Sight   | No          | No          | Yes         |
+        //     Workspace Folder | None       | 1          | 2          |
+        //     Language         | Typescript | Plaintext  | Typescript |
+        //     Number of Pairs  | 0          | 0          | 10         |
+        //     Cursor Position  | [0, 15]    | [2, 10]    | [2, 10]    |
+        //     Line of Sight    | No         | No         | Yes        |
         //
         await executor.switchToEditorInGroup('prev');
         executor.assertPairs([ 'None' ]);
@@ -588,13 +587,13 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1 (active)  | 2           | 3           |
+        //     View Column      | 1 (active) | 2          | 3          |
         //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
-        //     Language        | Typescript  | Plaintext   | Typescript  |
-        //     Number of Pairs | 3           | 0           | 10          |
-        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 10]     |
-        //     Line of Sight   | Yes         | No          | Yes         |
+        //     Workspace Folder | None       | 1          | 2          |
+        //     Language         | Typescript | Plaintext  | Typescript |
+        //     Number of Pairs  | 3          | 0          | 10         |
+        //     Cursor Position  | [0, 23]    | [2, 10]    | [2, 10]    |
+        //     Line of Sight    | Yes        | No         | Yes        |
         //
         await executor.moveCursors('end');
         await executor.typeRandomPair({ repetitions: 3 });
@@ -606,17 +605,18 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
 
-        // 12a. Delete the pairs in Workspace 2's text document without view column 3 being in focus.
+        // 12a. Delete the pairs in Workspace Folder 2's text editor without view column 3 being in 
+        //      focus.
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1 (active)  | 2           | 3           |
+        //     View Column      | 1 (active) | 2          | 3          |
         //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
-        //     Language        | Typescript  | Plaintext   | Typescript  |
-        //     Number of Pairs | 3           | 0           | 0           |
-        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 0]      |
-        //     Line of Sight   | Yes         | No          | No          |
+        //     Workspace Folder | None       | 1          | 2          |
+        //     Language         | Typescript | Plaintext  | Typescript |
+        //     Number of Pairs  | 3          | 0          | 0          |
+        //     Cursor Position  | [0, 23]    | [2, 10]    | [2, 0]     |
+        //     Line of Sight    | Yes        | No         | No         |
         //
         await executor.editText(
             [
@@ -636,13 +636,13 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1           | 2           | 3 (active)  |
+        //     View Column      | 1          | 2          | 3 (active) |
         //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 |
-        //     Language        | Typescript  | Plaintext   | Typescript  |
-        //     Number of Pairs | 3           | 0           | 0           |
-        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 0]      |
-        //     Line of Sight   | Yes         | No          | No          |
+        //     Workspace Folder | None       | 1          | 2          |
+        //     Language         | Typescript | Plaintext  | Typescript |
+        //     Number of Pairs  | 3          | 0          | 0          |
+        //     Cursor Position  | [0, 23]    | [2, 10]    | [2, 0]     |
+        //     Line of Sight    | Yes        | No         | No         |
         //
         await executor.focusEditorGroup('third');
         executor.assertPairs([ 'None' ]);
@@ -653,19 +653,19 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
 
-        // 14a. Now open the Markdown file in Workspace 3.
+        // 14a. Now open the Markdown file from Workspace Folder 3.
         //
         // The opened file immediately takes focus.
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1           | 2           | 3           | 4 (active)  | 
+        //     View Column      | 1          | 2          | 3          | 4 (active) |
         //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
-        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
-        //     Number of Pairs | 3           | 0           | 0           | 0           |
-        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 0]      | [0, 0]      |
-        //     Line of Sight   | Yes         | No          | No          | No          |
+        //     Workspace Folder | None       | 1          | 2          | 3          |
+        //     Language         | Typescript | Plaintext  | Typescript | Markdown   |
+        //     Number of Pairs  | 3          | 0          | 0          | 0          |
+        //     Cursor Position  | [0, 23]    | [2, 10]    | [2, 0]     | [0, 0]     |
+        //     Line of Sight    | Yes        | No         | No         | No         |
         //
         await executor.openFile('./workspace-3/text.md', { viewColumn: ViewColumn.Four });
         executor.assertPairs([ 'None' ]);
@@ -676,48 +676,48 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
 
-        // 15a. Type a few pairs into Workspace 3's text document.
+        // 15a. Type a few pairs into Workspace Folder 3's text editor.
         //
         // Note that we only type in `{}` and `<>` pairs because `leaper.detectedPairs` was set to
-        // `[ "{}", "<>" ]` for Markdown in Workspace 3.
+        // `[ "{}", "<>" ]` for Markdown in Workspace Folder 3.
         // 
         // State of visible text editors after this step:
         //
-        //     View Column     | 1           | 2           | 3           | 4 (active)  | 
+        //     View Column      | 1          | 2          | 3          | 4 (active) |
         //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
-        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
-        //     Number of Pairs | 3           | 0           | 0           | 10          |
-        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 0]      | [2, 10]     |
-        //     Line of Sight   | Yes         | No          | No          | Yes         |
+        //     Workspace Folder | None       | 1          | 2          | 3          |
+        //     Language         | Typescript | Plaintext  | Typescript | Markdown   |
+        //     Number of Pairs  | 3          | 0          | 0          | 10         |
+        //     Cursor Position  | [0, 23]    | [2, 10]    | [2, 0]     | [2, 10]    |
+        //     Line of Sight    | Yes        | No         | No         | Yes        |
         //
         await executor.moveCursors('endOfDocument');
         await executor.typeText('{<{<{<<{{<');
         executor.assertPairs([ { line: 2, sides: range(0, 20) } ]);
         executor.assertCursors([ [2, 10] ]);
 
-        // 15b. Both keybinding contexts should be enabled, now that Workspace 3's text document has 
-        //      pairs and line of sight.
+        // 15b. Both keybinding contexts should be enabled, now that Workspace Folder 3's text 
+        //      editor has pairs and line of sight.
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
 
-        // 16a. Type some text in between the pairs in Workspace 3's text document.
+        // 16a. Type some text in between the pairs in Workspace Folder 3's text editor.
         // 
         // State of visible text editors after this step:
         //
-        //     View Column     | 1           | 2           | 3           | 4 (active)  | 
+        //     View Column      | 1          | 2          | 3          | 4 (active) |
         //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
-        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
-        //     Number of Pairs | 3           | 0           | 0           | 10          |
-        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 0]      | [2, 22]     |
-        //     Line of Sight   | Yes         | No          | No          | Yes         |
+        //     Workspace Folder | None       | 1          | 2          | 3          |
+        //     Language         | Typescript | Plaintext  | Typescript | Markdown   |
+        //     Number of Pairs  | 3          | 0          | 0          | 10         |
+        //     Cursor Position  | [0, 23]    | [2, 10]    | [2, 0]     | [2, 22]    |
+        //     Line of Sight    | Yes        | No         | No         | Yes        |
         //
         await executor.typeText('Hello World!');
         executor.assertPairs([ { line: 2, sides: [ ...range(0, 10), ...range(22, 32)] } ]);
         executor.assertCursors([ [2, 22] ]);
 
-        // 16b. Line of sight is still maintained.
+        // 16b. Line of sight should still be maintained.
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
 
@@ -725,13 +725,13 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1           | 2           | 3           | 4 (active)  | 
+        //     View Column      | 1          | 2          | 3          | 4 (active) |
         //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
-        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
-        //     Number of Pairs | 3           | 0           | 0           | 10          |
-        //     Cursor Position | [0, 23]     | [2, 10]     | [2, 0]      | [2, 17]     |
-        //     Line of Sight   | Yes         | No          | No          | No          |
+        //     Workspace Folder | None       | 1          | 2          | 3          |
+        //     Language         | Typescript | Plaintext  | Typescript | Markdown   |
+        //     Number of Pairs  | 3          | 0          | 0          | 10         |
+        //     Cursor Position  | [0, 23]    | [2, 10]    | [2, 0]     | [2, 17]    |
+        //     Line of Sight    | Yes        | No         | No         | No         |
         //
         await executor.moveCursors('left', { repetitions: 5 });
         executor.assertPairs([ { line: 2, sides: [ ...range(0, 10), ...range(22, 32)] } ]);
@@ -742,21 +742,20 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(false);
 
-        // 18a. Insert some text into the provided text document without view column 1 being in 
-        //      focus. 
+        // 18a. Insert some text into the provided text editor without view column 1 being in focus. 
         //
         // The text is inserted before the pairs in order to shift the position of the pairs and 
         // cursors.
         //
         // State of visible text editors after this step:
         //
-        //     View Column     | 1           | 2           | 3           | 4 (active)  | 
+        //     View Column      | 1          | 2          | 3          | 4 (active) |
         //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
-        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
-        //     Number of Pairs | 3           | 0           | 0           | 10          |
-        //     Cursor Position | [5, 79]     | [2, 10]     | [2, 0]      | [2, 17]     |
-        //     Line of Sight   | Yes         | No          | No          | No          |
+        //     Workspace Folder | None       | 1          | 2          | 3          |
+        //     Language         | Typescript | Plaintext  | Typescript | Markdown   |
+        //     Number of Pairs  | 3          | 0          | 0          | 10         |
+        //     Cursor Position  | [5, 79]    | [2, 10]    | [2, 0]     | [2, 17]    |
+        //     Line of Sight    | Yes        | No         | No         | No         |
         //
         await executor.editText(
             [
@@ -790,21 +789,21 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         // 
         // State of visible text editors after this step:
         //
-        //     View Column     | 1 (active)  | 2           | 3           | 4           | 
+        //     View Column      | 1 (active) | 2          | 3          | 4          |
         //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
-        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
-        //     Number of Pairs | 3           | 0           | 0           | 10          |
-        //     Cursor Position | [5, 79]     | [2, 10]     | [2, 0]      | [2, 17]     |
-        //     Line of Sight   | Yes         | No          | No          | No          |
+        //     Workspace Folder | None       | 1          | 2          | 3          |
+        //     Language         | Typescript | Plaintext  | Typescript | Markdown   |
+        //     Number of Pairs  | 3          | 0          | 0          | 10         |
+        //     Cursor Position  | [5, 79]    | [2, 10]    | [2, 0]     | [2, 17]    |
+        //     Line of Sight    | Yes        | No         | No         | No         |
         //
         await executor.focusEditorGroup('first');
         executor.assertPairs([ { line: 5, sides: range(76, 82) } ]);
         executor.assertCursors([ [5, 79] ]);
 
-        // 19b. Since the text edit applied to the provided text document only translated the pairs 
-        //      and cursor, line of sight is still maintained within the provided text editor. Thus
-        //      we expect truthy values for both keybinding contexts to be broadcasted upon focusing
+        // 19b. Since the text edit applied to the provided text editor only translated the pairs and 
+        //      cursor, line of sight is still maintained within the provided text editor. Thus we 
+        //      expect truthy values for both keybinding contexts to be broadcasted upon focusing 
         //      back on view column 1.
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(true);
@@ -816,21 +815,21 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         // 
         // State of visible text editors after this step:
         //
-        //     View Column     | 1           | 2           | 3           | 4 (active)  | 
+        //     View Column      | 1          | 2          | 3          | 4 (active) |
         //     -----------------------------------------------------------------------------
-        //     Document Source | Provided    | Workspace 1 | Workspace 2 | Workspace 3 |
-        //     Language        | Typescript  | Plaintext   | Typescript  | Markdown    |
-        //     Number of Pairs | 3           | 0           | 0           | 10          |
-        //     Cursor Position | [5, 79]     | [2, 10]     | [2, 0]      | [2, 17]     |
-        //     Line of Sight   | Yes         | No          | No          | No          |
+        //     Workspace Folder | None       | 1          | 2          | 3          |
+        //     Language         | Typescript | Plaintext  | Typescript | Markdown   |
+        //     Number of Pairs  | 3          | 0          | 0          | 10         |
+        //     Cursor Position  | [5, 79]    | [2, 10]    | [2, 0]     | [2, 17]    |
+        //     Line of Sight    | Yes        | No         | No         | No         |
         //
         await executor.focusEditorGroup('fourth');
         executor.assertPairs([ { line: 2, sides: [ ...range(0, 10), ...range(22, 32)] } ]);
         executor.assertCursors([ [2, 17] ]);
 
         // 20b. Since as before, the path from the cursor to the closing side of the nearest pair in
-        //      Workspace 3's text editor is obstructed, we expect `leaper.hasLineOfSight` to be
-        //      disabled upon switching to view column 3. 
+        //      Workspace Folder 3's text editor is obstructed, we expect `leaper.hasLineOfSight` to 
+        //      be disabled upon switching to view column 3. 
         //
         //      Meanwhile, since there are still pairs, we expect the `leaper.inLeaperMode` to
         //      remain enabled.

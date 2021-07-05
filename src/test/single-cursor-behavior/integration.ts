@@ -37,7 +37,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
     name: 'Real User Simulation 1',
     prelude: async (executor) => {
 
-        // Since the provided text document is empty, we expect both keybinding contexts to be 
+        // Since the provided text editor is empty, we expect both keybinding contexts to be 
         // initially disabled, since there are clearly no pairs being tracked for it.
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
