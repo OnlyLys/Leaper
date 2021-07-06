@@ -7,7 +7,7 @@ import { range } from '../utilities/other';
  * In this prelude that is shared across multiple test cases in this module, we insert pairs in a 
  * way that simulates a typical usage scenario.
  *
- * The following initial document is created:
+ * The following initial document is created in the active text editor:
  *
  * ```
  * function () {
@@ -22,6 +22,11 @@ import { range } from '../utilities/other';
  * and one cursor:
  * 
  *     [1, 52]
+ * 
+ * Note that this function expects the active text editor to be Typescript and the effective value
+ * of `leaper.detectedPairs` to be at least: 
+ *     
+ *     [ "()", "{}", "[]" ]
  */
 async function sharedPrelude(executor: Executor): Promise<void> {
     await executor.deleteAll();
