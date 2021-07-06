@@ -2,8 +2,8 @@ import { SnippetString, ViewColumn } from 'vscode';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
 
 /**
- * In this prelude that is shared across all the test cases in this module, we insert pairs in a way 
- * that simulates a typical usage scenario.
+ * In this prelude that is shared across multiple test cases in this module, we insert pairs in a 
+ * way that simulates a typical usage scenario.
  *
  * The following initial document is created:
  *
@@ -12,6 +12,14 @@ import { Executor, TestCase, TestGroup } from '../utilities/framework';
  *     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
  * }                                                   ^(cursor position)
  * ```
+ * 
+ * with one cluster: 
+ * 
+ *     { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] }
+ * 
+ * and one cursor:
+ * 
+ *     [1, 52]
  */
 async function sharedPrelude(executor: Executor): Promise<void> {
     await executor.editText([
