@@ -1,5 +1,7 @@
 import { SnippetString, ViewColumn } from 'vscode';
+import { CompactCluster, CompactCursor } from '../utilities/compact';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
+import { range } from '../utilities/other';
 
 /**
  * In this prelude that is shared across multiple test cases in this module, we insert pairs in a 
@@ -1017,11 +1019,492 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
 });
 
 /**
- * A collection of test cases that test that pairs for a single cursor are invalidated due to:
+ * Test whether pairs are invalidated when the effective value of any configuration has changed.
+ * 
+ * So far, this only tests the `leaper.decorateAll` and `leaper.detectedPairs` configuration.
+ */
+ const INVALIDATION_ON_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = new TestCase({
+    name: 'Invalidation on Change in Effective Configuration Value',
+    languageId: 'typescript',
+    prelude: async (executor) => {
+
+        // Open another 3 text editors.
+        //
+        // The following table shows the relevant configuration values for each text editor after
+        // this step:
+        // 
+        //     View Column                    | 1          | 2          | 3          | 4          |
+        //     ------------------------------------------------------------------------------------
+        //     Workspace Folder               |      -     | 2          | 3          | 4          |
+        //     Text Editor Language           | Typescript | Typescript | Markdown   | Typescript |
+        //     Autoclosing Pairs              | (A1)       | (A1)       | (A2)       | (A1)       |
+        //                          
+        //     leaper.decorateAll:                   
+        //         Workspace Value            | false      | false      | false      | false      |
+        //         Workspace Folder Value     |      -     | undefined  | undefined  | true       |
+        //         Typescript Specific:       
+        //             Workspace Value        | undefined  | undefined  |      -     | undefined  |
+        //             Workspace Folder Value |      -     | undefined  |      -     | undefined  |
+        //         Markdown Specific:         
+        //             Workspace Value        |      -     |      -     | undefined  |      -     |
+        //             Workspace Folder Value |      -     |      -     | undefined  |      -     |
+        //         Effective Value            | false      | false      | false      | true       |
+        //                                    
+        //     leaper.detectedPairs:          
+        //         Workspace Value            | (P1)       | (P1)       | (P1)       | (P1)       |
+        //         Workspace Folder Value     |      -     | [ "()" ]   | []         | undefined  |
+        //         Typescript Specific:       
+        //             Workspace Value        | undefined  | undefined  |      -     | undefined  |
+        //             Workspace Folder Value |      -     | undefined  |      -     | undefined  |
+        //         Markdown Specific:         
+        //             Workspace Value        |      -     |      -     | undefined  |      -     |
+        //             Workspace Folder Value |      -     |      -     | (P2)       |      -     |
+        //         Effective Value            | (P1)       | [ "()" ]   | (P2)       | (P1)       |
+        //
+        //
+        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(A2): [ "()", "[]", "{}", "<>" ]
+        //     (P1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+        //     (P2): [ "{}", "<>" ]
+        //
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are
+        //     not consistently autoclosed.
+        //
+        await executor.openFile('./workspace-2/text.ts', { viewColumn: ViewColumn.Two });
+        await executor.openFile('./workspace-3/text.md', { viewColumn: ViewColumn.Three });
+        await executor.openFile('./workspace-4/text.ts', { viewColumn: ViewColumn.Four });
+    }, 
+    task: async (executor) => {
+
+        /**
+         * Prepare a visible text editor.
+         * 
+         * This function focuses on a visible text editor, deletes all text in it, types new text in, 
+         * then checks (for the focused text editor) the pairs that the engine is tracking as well 
+         * as the state of the cursors.
+         */
+        async function prepare(
+            executor:        Executor, 
+            whichTextEditor: 'first' | 'second' | 'third' | 'fourth',
+            newText:         string,
+            expectPairs:     CompactCluster[],
+            expectCursors:   CompactCursor[]
+        ): Promise<void> {
+            await executor.focusEditorGroup(whichTextEditor);
+            await executor.deleteAll();
+            await executor.typeText(newText);
+            executor.assertPairs(expectPairs);
+            executor.assertCursors(expectCursors);
+        }
+
+        /**
+         * For each text editor, check the pairs that the engine is tracking for that text editor
+         * and the state of the cursors in that text editor.
+         */
+        function check(
+            executor: Executor,
+            expect: {
+                firstTextEditor:  { pairs: CompactCluster[], cursors: CompactCursor[] }
+                secondTextEditor: { pairs: CompactCluster[], cursors: CompactCursor[] }
+                thirdTextEditor:  { pairs: CompactCluster[], cursors: CompactCursor[] }
+                fourthTextEditor: { pairs: CompactCluster[], cursors: CompactCursor[] }
+            }
+        ): void {
+            executor.assertPairs(  expect.firstTextEditor.pairs,    { viewColumn: ViewColumn.One });
+            executor.assertCursors(expect.firstTextEditor.cursors,  { viewColumn: ViewColumn.One });
+            executor.assertPairs(  expect.secondTextEditor.pairs,   { viewColumn: ViewColumn.Two });
+            executor.assertCursors(expect.secondTextEditor.cursors, { viewColumn: ViewColumn.Two });
+            executor.assertPairs(  expect.thirdTextEditor.pairs,    { viewColumn: ViewColumn.Three });
+            executor.assertCursors(expect.thirdTextEditor.cursors,  { viewColumn: ViewColumn.Three });
+            executor.assertPairs(  expect.fourthTextEditor.pairs,   { viewColumn: ViewColumn.Four });
+            executor.assertCursors(expect.fourthTextEditor.cursors, { viewColumn: ViewColumn.Four });
+        }
+
+        /**
+         * The expected pairs of a text editor that has been prepared.
+         */
+        const preparedPairs: CompactCluster[] = [ { line: 0, sides: range(0, 20) } ];
+
+        /**
+         * The expected cursors of a text editor that has been prepared.
+         */
+        const preparedCursors: CompactCursor[] = [ [0, 10] ];
+
+        // Prepare-1. Prepare for step 1 by clearing then typing 10 pairs into each text editor.
+        //
+        // We are careful to only type in pairs that will be autoclosed and detected since the text 
+        // editors have different effective `leaper.detectedPairs` values and different pairs that
+        // get autoclosed.
+        await prepare(executor, 'first',  '[([[[{{({(', preparedPairs, preparedCursors);
+        await prepare(executor, 'second', '((((((((((', preparedPairs, preparedCursors);
+        await prepare(executor, 'third',  '{<{<<<{{{<', preparedPairs, preparedCursors);
+        await prepare(executor, 'fourth', '[[[[[[[[[[', preparedPairs, preparedCursors);
+
+        // 1. Change the root workspace value of `leaper.detectedPairs`.
+        //
+        // This changes the effective value of `leaper.detectedPairs` for text editors one, two and 
+        // four.
+        //
+        // The relevant configuration values for each text editor after this change are:
+        // 
+        //     View Column                    | 1          | 2          | 3          | 4          |
+        //     ------------------------------------------------------------------------------------
+        //     Workspace Folder               |      -     | 2          | 3          | 4          |
+        //     Text Editor Language           | Typescript | Typescript | Markdown   | Typescript |
+        //     Autoclosing Pairs              | (A1)       | (A1)       | (A2)       | (A1)       |
+        //                          
+        //     leaper.decorateAll:                   
+        //         Workspace Value            | false      | false      | false      | false      |
+        //         Workspace Folder Value     |      -     | undefined  | undefined  | true       |
+        //         Typescript Specific:       
+        //             Workspace Value        | undefined  | undefined  |      -     | undefined  |
+        //             Workspace Folder Value |      -     | undefined  |      -     | undefined  |
+        //         Markdown Specific:         
+        //             Workspace Value        |      -     |      -     | undefined  |      -     |
+        //             Workspace Folder Value |      -     |      -     | undefined  |      -     |
+        //         Effective Value            | false      | false      | false      | true       |
+        //                                    
+        //     leaper.detectedPairs:          
+        //         Workspace Value            | [ "()" ]   | [ "()" ]   | [ "()" ]   | [ "()" ]   |
+        //         Workspace Folder Value     |      -     | [ "()" ]   | []         | undefined  |
+        //         Typescript Specific:       
+        //             Workspace Value        | undefined  | undefined  |      -     | undefined  |
+        //             Workspace Folder Value |      -     | undefined  |      -     | undefined  |
+        //         Markdown Specific:         
+        //             Workspace Value        |      -     |      -     | undefined  |      -     |
+        //             Workspace Folder Value |      -     |      -     | (P2)       |      -     |
+        //         Effective Value            | [ "()" ]   | [ "()" ]   | (P2)       | [ "()" ]   |
+        //
+        //
+        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(A2): [ "()", "[]", "{}", "<>" ]
+        //     (P2): [ "{}", "<>" ]
+        //
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are
+        //     not consistently autoclosed.
+        //
+        await executor.setConfiguration({
+            partialName: 'detectedPairs',
+            value:       [ "()" ]
+        });
+
+        // Since text editors one and four have each had an effective configuration value changed, 
+        // we expect the pairs we typed into them during the preparation step to be invalidated.
+        check(executor, {
+            firstTextEditor:  { pairs: [ 'None' ],    cursors: preparedCursors },
+            secondTextEditor: { pairs: preparedPairs, cursors: preparedCursors },
+            thirdTextEditor:  { pairs: preparedPairs, cursors: preparedCursors },
+            fourthTextEditor: { pairs: [ 'None' ],    cursors: preparedCursors }
+        });
+
+        // Prepare-2. Just like for step 1, we do a similar preparation step for step 2.
+        await prepare(executor, 'first',  '((((((((((', preparedPairs, preparedCursors);
+        await prepare(executor, 'second', '((((((((((', preparedPairs, preparedCursors);
+        await prepare(executor, 'third',  '{{{{<{{{{{', preparedPairs, preparedCursors);
+        await prepare(executor, 'fourth', '((((((((((', preparedPairs, preparedCursors);
+
+        // 2. Change Workspace Folder 3's Markdown specific `leaper.detectedPairs` value.
+        //
+        // This changes the effective value of `leaper.detectedPairs` for text editor three.
+        //
+        // The relevant configuration values for each text editor after this change are:
+        // 
+        //     View Column                    | 1          | 2          | 3          | 4          |
+        //     ------------------------------------------------------------------------------------
+        //     Workspace Folder               |      -     | 2          | 3          | 4          |
+        //     Text Editor Language           | Typescript | Typescript | Markdown   | Typescript |
+        //     Autoclosing Pairs              | (A1)       | (A1)       | (A2)       | (A1)       |
+        //                          
+        //     leaper.decorateAll:                   
+        //         Workspace Value            | false      | false      | false      | false      |
+        //         Workspace Folder Value     |      -     | undefined  | undefined  | true       |
+        //         Typescript Specific:       
+        //             Workspace Value        | undefined  | undefined  |      -     | undefined  |
+        //             Workspace Folder Value |      -     | undefined  |      -     | undefined  |
+        //         Markdown Specific:         
+        //             Workspace Value        |      -     |      -     | undefined  |      -     |
+        //             Workspace Folder Value |      -     |      -     | undefined  |      -     |
+        //         Effective Value            | false      | false      | false      | true       |
+        //                                    
+        //     leaper.detectedPairs:          
+        //         Workspace Value            | [ "()" ]   | [ "()" ]   | [ "()" ]   | [ "()" ]   |
+        //         Workspace Folder Value     |      -     | [ "()" ]   | []         | undefined  |
+        //         Typescript Specific:       
+        //             Workspace Value        | undefined  | undefined  |      -     | undefined  |
+        //             Workspace Folder Value |      -     | undefined  |      -     | undefined  |
+        //         Markdown Specific:         
+        //             Workspace Value        |      -     |      -     | undefined  |      -     |
+        //             Workspace Folder Value |      -     |      -     | [ "<>" ]   |      -     |
+        //         Effective Value            | [ "()" ]   | [ "()" ]   | [ "<>" ]   | [ "()" ]   |
+        //
+        //
+        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(A2): [ "()", "[]", "{}", "<>" ]
+        //
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are
+        //     not consistently autoclosed.
+        //
+        await executor.setConfiguration({
+            partialName:           'detectedPairs',
+            value:                 [ "<>" ],
+            targetLanguage:        'markdown',
+            targetWorkspaceFolder: 'workspace-3'
+        });
+
+        // Since text editor three has had an effective configuration value changed, we expect the 
+        // pairs we typed into it during the preparation step to be invalidated.
+        check(executor, {
+            firstTextEditor:  { pairs: preparedPairs, cursors: preparedCursors },
+            secondTextEditor: { pairs: preparedPairs, cursors: preparedCursors },
+            thirdTextEditor:  { pairs: [ 'None' ],    cursors: preparedCursors },
+            fourthTextEditor: { pairs: preparedPairs, cursors: preparedCursors }
+        });
+
+        // Prepare-3. Just like for step 1, we do a similar preparation step for step 3.
+        await prepare(executor, 'first',  '((((((((((', preparedPairs, preparedCursors);
+        await prepare(executor, 'second', '((((((((((', preparedPairs, preparedCursors);
+        await prepare(executor, 'third',  '<<<<<<<<<<', preparedPairs, preparedCursors);
+        await prepare(executor, 'fourth', '((((((((((', preparedPairs, preparedCursors);
+
+        // 3. Change the root workspace's Typescript specific `leaper.decorateAll` value.
+        //
+        // This changes the effective value of `leaper.decorateAll` for text editors one and two.
+        //
+        // The relevant configuration values for each text editor after this change are:
+        // 
+        //     View Column                    | 1          | 2          | 3          | 4          |
+        //     ------------------------------------------------------------------------------------
+        //     Workspace Folder               |      -     | 2          | 3          | 4          |
+        //     Text Editor Language           | Typescript | Typescript | Markdown   | Typescript |
+        //     Autoclosing Pairs              | (A1)       | (A1)       | (A2)       | (A1)       |
+        //                          
+        //     leaper.decorateAll:                   
+        //         Workspace Value            | false      | false      | false      | false      |
+        //         Workspace Folder Value     |      -     | undefined  | undefined  | true       |
+        //         Typescript Specific:       
+        //             Workspace Value        | true       | true       |      -     | true       |
+        //             Workspace Folder Value |      -     | undefined  |      -     | undefined  |
+        //         Markdown Specific:         
+        //             Workspace Value        |      -     |      -     | undefined  |      -     |
+        //             Workspace Folder Value |      -     |      -     | undefined  |      -     |
+        //         Effective Value            | true       | true       | false      | true       |
+        //                                    
+        //     leaper.detectedPairs:          
+        //         Workspace Value            | [ "()" ]   | [ "()" ]   | [ "()" ]   | [ "()" ]   |
+        //         Workspace Folder Value     |      -     | [ "()" ]   | []         | undefined  |
+        //         Typescript Specific:       
+        //             Workspace Value        | undefined  | undefined  |      -     | undefined  |
+        //             Workspace Folder Value |      -     | undefined  |      -     | undefined  |
+        //         Markdown Specific:         
+        //             Workspace Value        |      -     |      -     | undefined  |      -     |
+        //             Workspace Folder Value |      -     |      -     | [ "<>" ]   |      -     |
+        //         Effective Value            | [ "()" ]   | [ "()" ]   | [ "<>" ]   | [ "()" ]   |
+        //
+        //
+        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(A2): [ "()", "[]", "{}", "<>" ]
+        //
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are
+        //     not consistently autoclosed.
+        //
+        await executor.setConfiguration({
+            partialName:    'decorateAll',
+            value:          true,
+            targetLanguage: 'typescript'
+        });
+
+        // Since text editors one and two have each had an effective configuration value changed, we 
+        // expect the pairs we typed into them during the preparation step to be invalidated.
+        check(executor, {
+            firstTextEditor:  { pairs: [ 'None' ],    cursors: preparedCursors },
+            secondTextEditor: { pairs: [ 'None' ],    cursors: preparedCursors },
+            thirdTextEditor:  { pairs: preparedPairs, cursors: preparedCursors },
+            fourthTextEditor: { pairs: preparedPairs, cursors: preparedCursors }
+        });
+
+        // Prepare-4. Just like for step 1, we do a similar preparation step for step 4.
+        await prepare(executor, 'first',  '((((((((((', preparedPairs, preparedCursors);
+        await prepare(executor, 'second', '((((((((((', preparedPairs, preparedCursors);
+        await prepare(executor, 'third',  '<<<<<<<<<<', preparedPairs, preparedCursors);
+        await prepare(executor, 'fourth', '((((((((((', preparedPairs, preparedCursors);
+
+        // 4. Change Workspace Folder 3's `leaper.decorateAll` value.
+        //
+        // This changes the effective value of `leaper.decorateAll` for text editor three.
+        //
+        // The relevant configuration values for each text editor after this change are:
+        // 
+        //     View Column                    | 1          | 2          | 3          | 4          |
+        //     ------------------------------------------------------------------------------------
+        //     Workspace Folder               |      -     | 2          | 3          | 4          |
+        //     Text Editor Language           | Typescript | Typescript | Markdown   | Typescript |
+        //     Autoclosing Pairs              | (A1)       | (A1)       | (A2)       | (A1)       |
+        //                          
+        //     leaper.decorateAll:                   
+        //         Workspace Value            | false      | false      | false      | false      |
+        //         Workspace Folder Value     |      -     | undefined  | true       | true       |
+        //         Typescript Specific:       
+        //             Workspace Value        | true       | true       |      -     | true       |
+        //             Workspace Folder Value |      -     | undefined  |      -     | undefined  |
+        //         Markdown Specific:         
+        //             Workspace Value        |      -     |      -     | undefined  |      -     |
+        //             Workspace Folder Value |      -     |      -     | undefined  |      -     |
+        //         Effective Value            | true       | true       | true       | true       |
+        //                                    
+        //     leaper.detectedPairs:          
+        //         Workspace Value            | [ "()" ]   | [ "()" ]   | [ "()" ]   | [ "()" ]   |
+        //         Workspace Folder Value     |      -     | [ "()" ]   | []         | undefined  |
+        //         Typescript Specific:       
+        //             Workspace Value        | undefined  | undefined  |      -     | undefined  |
+        //             Workspace Folder Value |      -     | undefined  |      -     | undefined  |
+        //         Markdown Specific:         
+        //             Workspace Value        |      -     |      -     | undefined  |      -     |
+        //             Workspace Folder Value |      -     |      -     | [ "<>" ]   |      -     |
+        //         Effective Value            | [ "()" ]   | [ "()" ]   | [ "<>" ]   | [ "()" ]   |
+        //
+        //
+        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(A2): [ "()", "[]", "{}", "<>" ]
+        //
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are
+        //     not consistently autoclosed.
+        //
+        await executor.setConfiguration({
+            partialName:           'decorateAll',
+            value:                 true,
+            targetWorkspaceFolder: 'workspace-3'
+        });        
+
+        // Since text editor three has had an effective configuration value changed, we expect the 
+        // pairs we typed into it during the preparation step to be invalidated.
+        check(executor, {
+            firstTextEditor:  { pairs: preparedPairs, cursors: preparedCursors },
+            secondTextEditor: { pairs: preparedPairs, cursors: preparedCursors },
+            thirdTextEditor:  { pairs: [ 'None' ],    cursors: preparedCursors },
+            fourthTextEditor: { pairs: preparedPairs, cursors: preparedCursors }
+        });
+    }
+});
+
+/**
+ * Test that the pairs in a text editor are not invalidated when focus is switched away from it.
+ */
+ const NO_INVALIDATION_AFTER_FOCUS_SWITCH_TEST_CASE = new TestCase({
+    name: 'No Invalidation After Focus Switch',
+    languageId: 'typescript',
+    prelude: sharedPrelude,
+    task: async (executor) => {
+
+        /**
+         * The pairs that are expected to be in the provided text editor in view column 1 after it
+         * is initialized with `sharedPrelude`.
+         */
+        const firstEditorPairs = [ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ];
+
+        /**
+         * The expected state of the cursors in the provided text editor in view column 1 after it 
+         * is initialized with `sharedPrelude`.
+         */
+        const firstEditorCursors: CompactCursor[] = [ [1, 52] ];
+
+        // 1. Open another text editor in view column 2, which takes focus.
+        //
+        // Check that the pairs in the first text editor have not been invalidated.
+        await executor.openFile('./workspace-2/text.ts', { viewColumn: ViewColumn.Two });
+        executor.assertPairs(firstEditorPairs,     { viewColumn: ViewColumn.One });
+        executor.assertCursors(firstEditorCursors, { viewColumn: ViewColumn.One });
+
+        // Might as well check that the newly opened text editor in view column 2 has no pairs being 
+        // tracked for it.
+        executor.assertPairs([ 'None' ]);
+        executor.assertCursors([ [0, 0] ]);
+
+        // 2. Type some pairs into the text editor in view column 2.
+        //
+        // Check that pairs are indeed being tracked for the second text editor, while the pairs for
+        // the first text editor remain unaffected.
+        // 
+        // We only type in `()` pairs because the effective value of the `leaper.detectedPairs`
+        // configuration for the text editor in view column 2 is `['()']`.
+        await executor.moveCursors('endOfDocument');
+        await executor.typeText('(', { repetitions: 20 });
+        executor.assertPairs(firstEditorPairs,     { viewColumn: ViewColumn.One });
+        executor.assertCursors(firstEditorCursors, { viewColumn: ViewColumn.One });
+        executor.assertPairs([ { line: 2, sides: range(0, 40) } ]);
+        executor.assertCursors([ [2, 20] ]);
+
+        // 3. Open another text document in view column 3, which takes focus.
+        //
+        // Check that the pairs in the first two text editors have not been invalidated.
+        await executor.openFile('./workspace-3/text.md', { viewColumn: ViewColumn.Three });
+        executor.assertPairs(firstEditorPairs,                     { viewColumn: ViewColumn.One });
+        executor.assertCursors(firstEditorCursors,                 { viewColumn: ViewColumn.One });
+        executor.assertPairs([ { line: 2, sides: range(0, 40) } ], { viewColumn: ViewColumn.Two });
+        executor.assertCursors([ [2, 20] ],                        { viewColumn: ViewColumn.Two });
+
+        // Might as well check that the newly opened text editor in view column 3 has no pairs being 
+        // tracked for it.
+        executor.assertPairs([ 'None' ]);
+        executor.assertCursors([ [0, 0] ]);
+
+        // 4. Switch focus to the text editor in view column 1.
+        //
+        // Check that the pairs in the first two text editors have not been invalidated and that no 
+        // new pairs have been created in the third text editor.
+        await executor.focusEditorGroup('first');
+        async function stepFourChecks(executor: Executor): Promise<void> {
+            executor.assertPairs(firstEditorPairs,                     { viewColumn: ViewColumn.One });
+            executor.assertCursors(firstEditorCursors,                 { viewColumn: ViewColumn.One });
+            executor.assertPairs([ { line: 2, sides: range(0, 40) } ], { viewColumn: ViewColumn.Two });
+            executor.assertCursors([ [2, 20] ],                        { viewColumn: ViewColumn.Two });
+            executor.assertPairs([ 'None' ],                           { viewColumn: ViewColumn.Three });
+            executor.assertCursors([ [0, 0] ],                         { viewColumn: ViewColumn.Three });    
+        }
+        await stepFourChecks(executor);
+
+        // 5. Switch focus to the text editor in view column 2.
+        // 
+        // Repeat the checks we did in step 4.
+        await executor.focusEditorGroup('second');
+        await stepFourChecks(executor);
+        
+        // 6. Switch focus to view column 4, which will open an empty editor tab group since there
+        //    was no existing text editor opened in view column 4.
+        //
+        // Repeat the checks we did in step 4.
+        await executor.focusEditorGroup('fourth');
+        await stepFourChecks(executor);
+
+        // 7. Switch focus to the text editor in view column 1.
+        //
+        // Repeat the checks we did in step 4.
+        await executor.focusEditorGroup('first');
+        await stepFourChecks(executor);
+
+        // 8. Switch focus to the explorer side bar.
+        //
+        // Repeat the checks we did in step 4.
+        await executor.focusExplorerSideBar();
+        await stepFourChecks(executor);
+
+        // 9. Switch focus to the text editor in view column 2.
+        //
+        // Repeat the checks we did in step 4.
+        await executor.focusEditorGroup('second');
+        await stepFourChecks(executor);
+    }
+});
+
+/**
+ * A collection of test cases that check that pairs for a single cursor are invalidated due to:
  * 
  *  1. Cursor being moved out of them (also known as 'cursor escape' or 'cursor exit').
  *  2. Multi-line text being inserted between them.
  *  3. Their opening or closing sides being deleted.
+ *  4. The text editor being closed.
+ * 
+ * In addition to the checks above, this test group also checks that pairs are not invalidated when 
+ * the text editor that they are in is defocused but not closed.
  */
 export const SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP = new TestGroup(
     'Pair Invalidation',
@@ -1039,5 +1522,7 @@ export const SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP = new TestGroup(
         MULTI_LINE_TEXT_INSERTED_BETWEEN_PAIRS_TEST_CASE,
         MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE,
         INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE,
+        INVALIDATION_ON_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE,
+        NO_INVALIDATION_AFTER_FOCUS_SWITCH_TEST_CASE
     ]
 );

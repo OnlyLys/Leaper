@@ -1,6 +1,7 @@
 import { TestCategory } from '../utilities/framework';
 import { SINGLE_CURSOR_CONTEXT_MANAGEMENT_TEST_GROUP } from './context-management';
-import { SINGLE_CURSOR_DECORATIONS_TEST_GROUP } from './decorations';
+import { SINGLE_CURSOR_DECORATE_ALL_TEST_GROUP } from './decorate-all';
+import { SINGLE_CURSOR_DETECTED_PAIRS_TEST_GROUP } from './detected-pairs';
 import { SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP } from './escape-leaper-mode';
 import { SINGLE_CURSOR_INTEGRATION_TEST_GROUP } from './integration';
 import { SINGLE_CURSOR_LEAP_COMMAND_TEST_GROUP } from './leap';
@@ -14,7 +15,8 @@ const TEST_CATEGORY = new TestCategory(
     'Single Cursor Behavior Tests',
     [
         SINGLE_CURSOR_CONTEXT_MANAGEMENT_TEST_GROUP,
-        SINGLE_CURSOR_DECORATIONS_TEST_GROUP,
+        SINGLE_CURSOR_DECORATE_ALL_TEST_GROUP,
+        SINGLE_CURSOR_DETECTED_PAIRS_TEST_GROUP,
         SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP,
         SINGLE_CURSOR_INTEGRATION_TEST_GROUP,
         SINGLE_CURSOR_LEAP_COMMAND_TEST_GROUP,
