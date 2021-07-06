@@ -1023,8 +1023,8 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
  * 
  * So far, this only tests the `leaper.decorateAll` and `leaper.detectedPairs` configuration.
  */
- const INVALIDATION_ON_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = new TestCase({
-    name: 'Invalidation on Change in Effective Configuration Value',
+const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = new TestCase({
+    name: 'Invalidation Due To Change in Effective Configuration Value',
     languageId: 'typescript',
     prelude: async (executor) => {
 
@@ -1389,7 +1389,7 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
 /**
  * Test that the pairs in a text editor are not invalidated when focus is switched away from it.
  */
- const NO_INVALIDATION_DUE_TO_FOCUS_SWITCH_TEST_CASE = new TestCase({
+const NO_INVALIDATION_DUE_TO_FOCUS_SWITCH_TEST_CASE = new TestCase({
     name: 'No Invalidation Due To Focus Switch',
     languageId: 'typescript',
     prelude: sharedPrelude,
@@ -1522,7 +1522,7 @@ export const SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP = new TestGroup(
         MULTI_LINE_TEXT_INSERTED_BETWEEN_PAIRS_TEST_CASE,
         MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE,
         INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE,
-        INVALIDATION_ON_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE,
+        INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE,
         NO_INVALIDATION_DUE_TO_FOCUS_SWITCH_TEST_CASE
     ]
 );

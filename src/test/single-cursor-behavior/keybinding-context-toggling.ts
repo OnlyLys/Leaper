@@ -3,10 +3,11 @@ import { TestCase, TestGroup } from '../utilities/framework';
 import { range } from '../utilities/other';
 
 /**
- * Test whether the keybinding contexts are correctly toggled while using a given text editor.
+ * Test whether the (global) keybinding contexts are appropriately toggled while using a given text 
+ * editor.
  */
-const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
-    name: 'Context Toggling for a Given Text Editor',
+const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
+    name: 'Works for a Given Text Editor',
     languageId: 'typescript',
     prelude: async (executor) => {
 
@@ -327,10 +328,11 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
 });
 
 /**
- * Test whether the keybinding contexts are correctly set when switching between text editors.
+ * Test whether the (global) keybinding contexts are appropriately toggled when switching between 
+ * text editors.
  */
-const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
-    name: 'Context Switching Between Text Editors',
+const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
+    name: 'Works When Switching Between Text Editors',
     languageId: 'typescript',
     prelude: async (executor) => {
 
@@ -841,13 +843,13 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 });
 
 /**
- * A collection of test cases that test whether the keybinding context values are being appropriately
- * managed when there is a single cursor.
+ * A collection of test cases that test whether the (global) keybinding context values are being 
+ * appropriately toggled when there is a single cursor.
  */
-export const SINGLE_CURSOR_CONTEXT_MANAGEMENT_TEST_GROUP = new TestGroup(
-    'Context Management',
+export const SINGLE_CURSOR_KEYBINDING_CONTEXT_TOGGLING_TEST_GROUP = new TestGroup(
+    'Keybinding Context Toggling',
     [
-        CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE,
-        CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE
+        WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE,
+        WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE
     ]
 );

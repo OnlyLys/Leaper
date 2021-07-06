@@ -1921,7 +1921,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
  * But since changes occurring in out-of-focus text editors are quite rare, this test case will not 
  * be as comprehensive as the ones we have done so far for in-focus text editors.
  */
-export const PAIR_TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
+export const TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
     name: 'Pair Translation in Out-of-Focus Text Editor',
     languageId: 'typescript',
     prelude: async (executor) => {
@@ -2094,6 +2094,6 @@ export const SINGLE_CURSOR_PAIR_TRANSLATION_TEST_GROUP = new TestGroup(
         AUTOCOMPLETIONS_TEST_CASE,
         SNIPPET_INSERTIONS_TEST_CASE,
         TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE,
-        PAIR_TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE,
+        TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE,
     ]
 );
