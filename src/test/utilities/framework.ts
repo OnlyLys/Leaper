@@ -610,34 +610,46 @@ class ExecutorFull {
         options?: RepetitionDelayOptions
     ): Promise<void> {
         const { partialName, value, targetWorkspaceFolder, targetLanguage } = args;
-        return executeWithRepetitionDelay(async () => {
-            let workspaceUri: Uri | undefined;
-            if (targetWorkspaceFolder) {
-                workspaceUri = workspace.workspaceFolders?.find(folder => folder.name === targetWorkspaceFolder)?.uri;
-            } else {
-                workspaceUri = workspace.workspaceFile;
-            }
-            if (!workspaceUri) {
-                throw new Error('Unable to obtain workspace uri!');
-            }
 
-            // Tag the workspace uri with the language identifier if one was specified.
-            const fullUri = targetLanguage ? { uri: workspaceUri, languageId: targetLanguage } : workspaceUri;
+        let workspaceUri: Uri | undefined;
+        if (targetWorkspaceFolder) {
+            workspaceUri = workspace.workspaceFolders?.find(folder => folder.name === targetWorkspaceFolder)?.uri;
+        } else {
+            workspaceUri = workspace.workspaceFile;
+        }
+        if (!workspaceUri) {
+            throw new Error('Unable to obtain workspace uri!');
+        }
+
+        // Tag the workspace uri with the language identifier if one was specified.
+        const fullUri = targetLanguage ? { uri: workspaceUri, languageId: targetLanguage } : workspaceUri;
+
+        // Whether we set the configuration at the workspace folder level or the workspace level.
+        const targetScope = targetWorkspaceFolder ? ConfigurationTarget.WorkspaceFolder 
+                                                  : ConfigurationTarget.Workspace;
+
+        return executeWithRepetitionDelay(async () => {
 
             // The object that allows us to get and set the configuration value.
             const configuration = workspace.getConfiguration('leaper', fullUri);
 
-            // Whether we set the configuration at the workspace folder level or the workspace level.
-            const targetScope = targetWorkspaceFolder ? ConfigurationTarget.WorkspaceFolder 
-                                                      : ConfigurationTarget.Workspace;
-
             // Save the previous value so that we can restore it later.
-            const prevValue = configuration.get(partialName); 
+            let prevValue: any;
+            const inspect = configuration.inspect(partialName);
+            if (targetWorkspaceFolder && targetLanguage) {
+                prevValue = inspect?.workspaceFolderLanguageValue;
+            } else if (targetWorkspaceFolder && !targetLanguage) {
+                prevValue = inspect?.workspaceFolderValue;
+            } else if (!targetWorkspaceFolder && targetLanguage) {
+                prevValue = inspect?.workspaceLanguageValue;
+            } else {
+                prevValue = inspect?.workspaceValue;
+            }
 
-            // Set the configuration.
+            // Set the configuration value.
             await configuration.update(partialName, value, targetScope, !!targetLanguage);
 
-            // Store the callback that allows configuration change we just did to be reverted.
+            // Store the callback that allows the configuration change we just did to be reverted.
             this.configurationRestorers.push(async () => {
                 const configuration = workspace.getConfiguration('leaper', fullUri);
                 return configuration.update(partialName, prevValue, targetScope, !!targetLanguage);
