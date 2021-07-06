@@ -5,7 +5,7 @@ import * as path from 'path';
 import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, window, ViewColumn, Uri, ConfigurationTarget } from 'vscode';
 import { ResolvedViewColumn, TrackerSnapshot, TestAPI } from '../../engine/test-api';
 import { CompactCluster, CompactRange, CompactPosition, CompactCursor, CompactSelection } from './compact';
-import { pickRandom, waitFor, zip } from './other';
+import { waitFor, zip } from './other';
 import { testHandle } from '../../extension';
 
 /**
@@ -284,18 +284,6 @@ class ExecutorFull {
     public assertMRBHasLineOfSightContext(expect: boolean): void {
         const message = 'Most Recently Broadcasted `leaper.hasLineOfSight` Context Mismatch';
         this.assertEq(getHandle().MRBHasLineOfSightContext, expect, message);
-    }
-
-    /**
-     * Call the command to type a random autoclosing pair into the active text editor.
-     * 
-     * The pair typed in is randomly picked between `{}`, `[]` and `()`. 
-     */
-    public async typeRandomPair(options?: RepetitionDelayOptions): Promise<void> {
-        return executeWithRepetitionDelay(async () => {
-            const opener = pickRandom([ '{', '[', '(' ]);
-            return commands.executeCommand('default:type', { text: opener });
-        }, options);
     }
 
     /**

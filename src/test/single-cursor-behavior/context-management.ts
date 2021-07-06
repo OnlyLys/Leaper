@@ -369,7 +369,7 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //     Cursor Position  | [0, 10]    |
         //     Line of Sight    | Yes        |
         // 
-        await executor.typeRandomPair({ repetitions: 10 });
+        await executor.typeText('[({{{([(([');
         executor.assertPairs([ { line: 0, sides: range(0, 20) } ]);
         executor.assertCursors([ [0, 10] ]);
 
@@ -418,7 +418,7 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //     Line of Sight    | Yes        | No         |
         //
         await executor.moveCursors('endOfDocument');
-        await executor.typeRandomPair({ repetitions: 10 });
+        await executor.typeText('[{{([({{([');
         executor.assertPairs([ 'None' ]);
         executor.assertCursors([ [2, 10] ]);
 
@@ -598,7 +598,7 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //     Line of Sight    | Yes        | No         | Yes        |
         //
         await executor.moveCursors('end');
-        await executor.typeRandomPair({ repetitions: 3 });
+        await executor.typeText('[{(');
         executor.assertPairs([ { line: 0, sides: range(20, 26) } ]);
         executor.assertCursors([ [0, 23] ]);
 

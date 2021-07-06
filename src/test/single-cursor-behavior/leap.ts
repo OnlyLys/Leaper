@@ -6,7 +6,7 @@ const SINGLE_LEAP_TEST_CASE = new TestCase({
     name: 'Single Leap',
     languageId: 'typescript',
     prelude: async (executor) => {
-        await executor.typeRandomPair();
+        await executor.typeText('[');
         executor.assertPairs([ { line: 0, sides: [0, 1] } ]);
         executor.assertCursors([ [0, 1] ]);
     },
@@ -21,8 +21,8 @@ const SINGLE_LEAP_ACROSS_WHITESPACE_TEST_CASE = new TestCase({
     name: 'Single Leap Across Whitespace',
     languageId: 'typescript',
     prelude: async (executor) => { 
-        await executor.typeRandomPair();
-        await executor.typeText('     ');
+        await executor.typeText('(');
+        await executor.typeText(' ', { repetitions: 5 });
         await executor.moveCursors('left', { repetitions: 5 });
         executor.assertPairs([ { line: 0, sides: [0, 6] } ]);
         executor.assertCursors([ [0, 1] ]);
@@ -44,7 +44,7 @@ const CONSECUTIVE_LEAPS_TEST_CASE = new TestCase({
             { kind: 'insert', at: [0, 0], text: ALICE_TEXT_1 + '\n\n' + ALICE_TEXT_2 }
         ]);
         await executor.setCursors([ [6, 71] ]);
-        await executor.typeRandomPair({ repetitions: 10 });
+        await executor.typeText('[[({(([{((');
         executor.assertPairs([ { line: 6, sides: range(71, 91) } ]);
         executor.assertCursors([ [6, 81] ]);
     },
@@ -70,8 +70,8 @@ const CONSECUTIVE_LEAPS_ACROSS_WHITESPACE = new TestCase({
         // Insert pairs after some text to simulate a typical usage scenario.
         await executor.typeText('some text\n\nfunction ');
         for (let i = 0; i < 6; ++i) {
-            await executor.typeRandomPair();
-            await executor.typeText('     ');
+            await executor.typeText('{');
+            await executor.typeText(' ', { repetitions: 5 });
             await executor.moveCursors('left', { repetitions: 5 });
         }
         executor.assertPairs(
@@ -114,7 +114,7 @@ const LEAP_CALL_IGNORED_WHEN_NO_PAIRS = new TestCase({
         }
 
         // Now insert 5 pairs.
-        await executor.typeRandomPair({ repetitions: 5 });
+        await executor.typeText('[<{[(');
         executor.assertPairs([ { line: 2, sides: range(11, 21) } ]);
         executor.assertCursors([ [2, 16] ]);
 

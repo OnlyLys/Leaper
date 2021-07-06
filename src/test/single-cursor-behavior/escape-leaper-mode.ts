@@ -85,7 +85,7 @@ const ONLY_CLEARS_ACTIVE_TEXT_EDITOR = new TestCase({
                 { kind: 'insert', at: [0, 0], text: 'function main(): void {\n    \n}' }
             ]);
             await executor.setCursors([ [1, 4] ]);
-            await executor.typeRandomPair({ repetitions: 10 });
+            await executor.typeText('{{[[(([[{{');
             executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
             executor.assertCursors([ [1, 14] ]);
         }

@@ -27,16 +27,6 @@ export function sliceSub(arr: number[], start: number, endNotInclusive: number, 
     }
 }
 
-/**
- * Randomly pick an element from a non-empty array.
- */
-export function pickRandom<T>(arr: ReadonlyArray<T>): T {
-    if (arr.length < 1) {
-        throw new Error('Cannot pick an element from an empty array!');
-    }
-    return arr[Math.floor(Math.random() * arr.length)];
-}
-
 /** 
  * Timeout by `n` milliseconds. 
  */

@@ -32,7 +32,7 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
         // pairs.
         await executor.typeText('function main() {\n');
-        await executor.typeRandomPair({ repetitions: 10 });
+        await executor.typeText('{{{{{[[[[[');
         executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
         executor.assertCursors([ [1, 14] ]);
     },
@@ -530,7 +530,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         await executor.typeText('\nblah-blah\n');
         await executor.moveCursors('up');
         await executor.moveCursors('end');
-        await executor.typeRandomPair({ repetitions: 10 });
+        await executor.typeText('{[<[({[{((');
         executor.assertPairs([ { line: 1, sides: range(9, 29) } ]);
         executor.assertCursors([ [1, 19] ]);
     },
@@ -1061,7 +1061,7 @@ const AUTOCOMPLETIONS_TEST_CASE = new TestCase({
             }
         ]);
         await executor.setCursors([ [2, 4] ]);
-        await executor.typeRandomPair({ repetitions: 10 });
+        await executor.typeText('[[({(([[[[');
         executor.assertPairs([ { line: 2, sides: range(4, 24) } ]);
         executor.assertCursors([ [2, 14] ]);
     },
@@ -1474,7 +1474,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
         // pairs.
         await executor.typeText('function main() {\n');
-        await executor.typeRandomPair({ repetitions: 10 });
+        await executor.typeText('((([[[{{{{');
         executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
         executor.assertCursors([ [1, 14] ]);
     },
