@@ -1389,8 +1389,8 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
 /**
  * Test that the pairs in a text editor are not invalidated when focus is switched away from it.
  */
- const NO_INVALIDATION_AFTER_FOCUS_SWITCH_TEST_CASE = new TestCase({
-    name: 'No Invalidation After Focus Switch',
+ const NO_INVALIDATION_DUE_TO_FOCUS_SWITCH_TEST_CASE = new TestCase({
+    name: 'No Invalidation Due To Focus Switch',
     languageId: 'typescript',
     prelude: sharedPrelude,
     task: async (executor) => {
@@ -1523,6 +1523,6 @@ export const SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP = new TestGroup(
         MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE,
         INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE,
         INVALIDATION_ON_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE,
-        NO_INVALIDATION_AFTER_FOCUS_SWITCH_TEST_CASE
+        NO_INVALIDATION_DUE_TO_FOCUS_SWITCH_TEST_CASE
     ]
 );
