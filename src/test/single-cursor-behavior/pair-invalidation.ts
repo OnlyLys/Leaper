@@ -24,6 +24,7 @@ import { range } from '../utilities/other';
  *     [1, 52]
  */
 async function sharedPrelude(executor: Executor): Promise<void> {
+    await executor.deleteAll();
     await executor.editText([
         {
             kind: 'insert',
