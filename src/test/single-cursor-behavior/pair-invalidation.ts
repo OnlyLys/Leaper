@@ -1393,6 +1393,57 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
 });
 
 /**
+ * Test that the pairs in a text editor are invalidated once the text editor is closed.
+ */
+const INVALIDATION_DUE_TO_TEXT_EDITOR_BEING_CLOSED = new TestCase({
+    name: 'Invalidation Due to Text Editor Being Closed',
+    languageId: 'typescript',
+    prelude: async (executor) => {
+
+        // Type some text into the provided text editor such that when we open another text editor 
+        // in view column 1, it does not automatically close the provided text editor.
+        await executor.typeText('Hello World');
+
+        // Open two more text editors, one in view column 1 and another in view column 2. 
+        await executor.openNewTextEditor('typescript',   { viewColumn: ViewColumn.One });
+        await executor.openFile('./workspace-4/text.ts', { viewColumn: ViewColumn.Two });
+
+        // Since both visible text editors are Typescript, we can set them up with `sharedPrelude`.
+        //
+        // The first view column will be in focus after this step.
+        await sharedPrelude(executor);
+        await executor.focusEditorGroup('first');
+        await sharedPrelude(executor);
+    },
+    task: async (executor) => {
+
+        // 1. Check that pairs are invalidated when a text editor is switched away from.
+        //
+        // vscode considers switching away from a text editor (i.e. `Ctrl` + `Tab`) closing that 
+        // text editor.
+        await executor.switchToEditorInGroup('prev');
+
+        // When we switch back, there should be no more pairs being tracked for it.
+        await executor.switchToEditorInGroup('next');
+        executor.assertPairs([ 'None' ]);
+
+        // But the cursors are restored when a text editor is switched back to.
+        executor.assertCursors([ [1, 52] ]);
+
+        // 2. Check that pairs are invalidated when a text editor is directly closed.
+        await executor.focusEditorGroup('second');
+        await executor.closeActiveEditor();
+
+        // When we reopen a text editor, there should be no more pairs being tracked for it.
+        await executor.openFile('./workspace-4/text.ts', { viewColumn: ViewColumn.Two });
+        executor.assertPairs([ 'None' ]);
+
+        // Cursors are not restored when a directly closed text editor is reopened.
+        executor.assertCursors([ [0, 0] ]);
+    }
+});
+
+/**
  * Test that the pairs in a text editor are not invalidated when focus is switched away from it.
  */
 const NO_INVALIDATION_DUE_TO_FOCUS_SWITCH_TEST_CASE = new TestCase({
@@ -1529,6 +1580,7 @@ export const SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP = new TestGroup(
         MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE,
         INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE,
         INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE,
+        INVALIDATION_DUE_TO_TEXT_EDITOR_BEING_CLOSED,
         NO_INVALIDATION_DUE_TO_FOCUS_SWITCH_TEST_CASE
     ]
 );
