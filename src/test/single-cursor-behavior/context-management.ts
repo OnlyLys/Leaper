@@ -7,6 +7,7 @@ import { range } from '../utilities/other';
  */
 const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
     name: 'Context Toggling for a Given Text Editor',
+    languageId: 'typescript',
     prelude: async (executor) => {
 
         // The provided text editor starts out empty (and therefore without any pairs) so we would 
@@ -330,6 +331,7 @@ const CONTEXT_TOGGLING_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
  */
 const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
     name: 'Context Switching Between Text Editors',
+    languageId: 'typescript',
     prelude: async (executor) => {
 
         // 0a. This test case begins with an empty Typescript text editor being provided to it.
@@ -835,7 +837,6 @@ const CONTEXT_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //      remain enabled.
         executor.assertMRBInLeaperModeContext(true);
         executor.assertMRBHasLineOfSightContext(false);
-
     }
 });
 

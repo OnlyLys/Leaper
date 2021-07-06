@@ -27,6 +27,7 @@ const SHARED_TEXT = 'function main() {\n'
  */
 const IT_WORKS_TEST_CASE = new TestCase({
     name: 'It Works',
+    languageId: 'typescript',
     prelude: async (executor) => {
         await executor.typeText(SHARED_TEXT);
         executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ]);
@@ -55,6 +56,7 @@ const IT_WORKS_TEST_CASE = new TestCase({
  */
 const CAN_HANDLE_RAPID_CALLS = new TestCase({
     name: 'Can Handle Rapid Calls',
+    languageId: 'typescript',
     prelude: async (executor) => {
         await executor.typeText(SHARED_TEXT);
         executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ]);
@@ -74,6 +76,7 @@ const CAN_HANDLE_RAPID_CALLS = new TestCase({
  */
 const ONLY_CLEARS_ACTIVE_TEXT_EDITOR = new TestCase({
     name: 'Only Clears Active Text Editor',
+    languageId: 'typescript',
     prelude: async (executor) => {
 
         // Insert some text and then type in some pairs into the active text editor.
@@ -93,9 +96,9 @@ const ONLY_CLEARS_ACTIVE_TEXT_EDITOR = new TestCase({
         // visible view columns.
         //
         // View column 4 will be in focus after this step.
-        await executor.openNewTextEditor(undefined, { viewColumn: ViewColumn.Two   });
-        await executor.openNewTextEditor(undefined, { viewColumn: ViewColumn.Three });
-        await executor.openNewTextEditor(undefined, { viewColumn: ViewColumn.Four  });
+        await executor.openNewTextEditor('typescript', { viewColumn: ViewColumn.Two   });
+        await executor.openNewTextEditor('typescript', { viewColumn: ViewColumn.Three });
+        await executor.openNewTextEditor('typescript', { viewColumn: ViewColumn.Four  });
 
         // Set up all four text editors to the same state.
         //

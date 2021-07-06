@@ -40,6 +40,7 @@ async function sharedPrelude(executor: Executor): Promise<void> {
 
 const RIGHTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
     name: 'Rightwards Exit of Cursor (Incremental)',
+    languageId: 'typescript',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -177,6 +178,7 @@ const RIGHTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
     
 const RIGHTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_CLICKING_OUT_TEST_CASE = new TestCase({
     name: 'Rightwards Exit of Cursor (in One Go by Clicking Out)',
+    languageId: 'typescript',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -195,6 +197,7 @@ const RIGHTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_CLICKING_OUT_TEST_CASE = new TestCa
 
 const RIGHTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_PRESSING_END_KEY_TEST_CASE = new TestCase({
     name: 'Rightwards Exit of Cursor (in One Go by Pressing `End` Key)',
+    languageId: 'typescript',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -213,6 +216,7 @@ const RIGHTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_PRESSING_END_KEY_TEST_CASE = new Te
 
 const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
     name: 'Leftwards Exit of Cursor (Incremental)',
+    languageId: 'typescript',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -363,6 +367,7 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
 
 const LEFTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_CLICKING_OUT_TEST_CASE = new TestCase({
     name: 'Leftwards Exit of Cursor (in One Go by Clicking Out)',
+    languageId: 'typescript',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -381,6 +386,7 @@ const LEFTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_CLICKING_OUT_TEST_CASE = new TestCas
 
 const LEFTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_PRESSING_HOME_KEY_TEST_CASE = new TestCase({
     name: 'Leftwards Exit of Cursor (in One Go by Pressing `Home` Key)',
+    languageId: 'typescript',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -399,6 +405,7 @@ const LEFTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_PRESSING_HOME_KEY_TEST_CASE = new Te
 
 const UPWARDS_EXIT_OF_CURSOR_TEST_CASE = new TestCase({
     name: 'Upwards Exit of Cursor',
+    languageId: 'typescript',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -418,6 +425,7 @@ const UPWARDS_EXIT_OF_CURSOR_TEST_CASE = new TestCase({
 
 const DOWNWARDS_EXIT_OF_CURSOR_TEST_CASE = new TestCase({
     name: 'Downwards Exit of Cursor',
+    languageId: 'typescript',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -440,6 +448,7 @@ const DOWNWARDS_EXIT_OF_CURSOR_TEST_CASE = new TestCase({
 
 const DELETION_OF_OPENING_SIDE_TEST_CASE = new TestCase({
     name: 'Deletion of Opening Side',
+    languageId: 'typescript',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -519,6 +528,7 @@ const DELETION_OF_OPENING_SIDE_TEST_CASE = new TestCase({
 
 const DELETION_OF_CLOSING_SIDE_TEST_CASE = new TestCase({
     name: 'Deletion of Closing Side',
+    languageId: 'typescript',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -600,6 +610,7 @@ const DELETION_OF_CLOSING_SIDE_TEST_CASE = new TestCase({
 
 const MULTI_LINE_TEXT_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
     name: 'Multi-line Text Inserted Between Pairs',
+    languageId: 'typescript',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -675,6 +686,7 @@ const MULTI_LINE_TEXT_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
 
 const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
     name: 'Multi-line Snippet Inserted Between Pairs',
+    languageId: 'typescript',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -795,8 +807,9 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
  * But since changes occurring in out-of-focus text editors are quite rare, this test case will not 
  * be as comprehensive as the ones we have done so far for in-focus text editors.
  */
-const PAIR_INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
-    name: 'Pair Invalidation in Out-of-Focus Text Editor',
+const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
+    name: 'Invalidation in Out-of-Focus Text Editor',
+    languageId: 'typescript',
     prelude: async (executor) => {
 
         // Open another fresh text editor in view column 2. 
@@ -804,7 +817,7 @@ const PAIR_INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         // During the tests, we will be switching focus to this text editor in order to defocus the 
         // text editor in view column 1. Then we will make changes in the text editor in view column 
         // 1 and check that pairs are appropriately invalidated.
-        await executor.openNewTextEditor(undefined, { viewColumn: ViewColumn.Two });
+        await executor.openNewTextEditor('typescript', { viewColumn: ViewColumn.Two });
     },
     task: async (executor) => {
 
@@ -1017,6 +1030,6 @@ export const SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP = new TestGroup(
         DELETION_OF_CLOSING_SIDE_TEST_CASE,
         MULTI_LINE_TEXT_INSERTED_BETWEEN_PAIRS_TEST_CASE,
         MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE,
-        PAIR_INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE
+        INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE,
     ]
 );

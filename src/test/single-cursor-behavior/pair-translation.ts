@@ -17,6 +17,7 @@ import { ALICE_TEXT_1, ALICE_TEXT_2, LOREM_IPSUM_1 } from '../utilities/placehol
  */
 const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
     name: 'Text Modifications Before Pairs',
+    languageId: 'typescript',
     prelude: async (executor) => {
 
         // This sets up the initial document as:
@@ -512,7 +513,7 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
  */
 const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
     name: 'Single-line Text Modifications Between Pairs',
-    editorLanguageId: 'markdown',
+    languageId: 'markdown',
     prelude: async (executor) => {
 
         // This sets up the initial document as:
@@ -1034,6 +1035,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
  */
 const AUTOCOMPLETIONS_TEST_CASE = new TestCase({
     name: 'Autocompletions',
+    languageId: 'typescript',
     prelude: async (executor) => {
 
         // This sets up the document:
@@ -1117,6 +1119,7 @@ const AUTOCOMPLETIONS_TEST_CASE = new TestCase({
  */
 const SNIPPET_INSERTIONS_TEST_CASE = new TestCase({
     name: 'Snippet Insertions',
+    languageId: 'typescript',
     prelude: async (executor) => {
 
         // This sets up the initial document as:
@@ -1456,6 +1459,7 @@ const SNIPPET_INSERTIONS_TEST_CASE = new TestCase({
  */
 const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
     name: 'Text Modifications After Pairs',
+    languageId: 'typescript',
     prelude: async (executor) => {
 
         // This sets up the initial document as:
@@ -1919,6 +1923,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
  */
 export const PAIR_TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
     name: 'Pair Translation in Out-of-Focus Text Editor',
+    languageId: 'typescript',
     prelude: async (executor) => {
 
         // This sets up the initial text document as:
@@ -1934,7 +1939,7 @@ export const PAIR_TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCa
         executor.assertCursors([ [1, 14] ]);
 
         // Open another text editor (which will immediately take focus).
-        await executor.openNewTextEditor(undefined, { viewColumn: ViewColumn.Two });
+        await executor.openNewTextEditor('typescript', { viewColumn: ViewColumn.Two });
     },
     task: async (executor) => {
 

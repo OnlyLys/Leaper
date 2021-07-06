@@ -35,6 +35,7 @@ import { TestCase, TestGroup } from '../utilities/framework';
  */
 const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
     name: 'Real User Simulation 1',
+    languageId: 'typescript',
     prelude: async (executor) => {
 
         // Since the provided text editor is empty, we expect both keybinding contexts to be 

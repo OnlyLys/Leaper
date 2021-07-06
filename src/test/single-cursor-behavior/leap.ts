@@ -4,6 +4,7 @@ import { ALICE_TEXT_1, ALICE_TEXT_2, } from '../utilities/placeholder-texts';
 
 const SINGLE_LEAP_TEST_CASE = new TestCase({
     name: 'Single Leap',
+    languageId: 'typescript',
     prelude: async (executor) => {
         await executor.typeRandomPair();
         executor.assertPairs([ { line: 0, sides: [0, 1] } ]);
@@ -18,6 +19,7 @@ const SINGLE_LEAP_TEST_CASE = new TestCase({
 
 const SINGLE_LEAP_ACROSS_WHITESPACE_TEST_CASE = new TestCase({
     name: 'Single Leap Across Whitespace',
+    languageId: 'typescript',
     prelude: async (executor) => { 
         await executor.typeRandomPair();
         await executor.typeText('     ');
@@ -34,6 +36,7 @@ const SINGLE_LEAP_ACROSS_WHITESPACE_TEST_CASE = new TestCase({
 
 const CONSECUTIVE_LEAPS_TEST_CASE = new TestCase({
     name: 'Consecutive Leaps',
+    languageId: 'typescript',
     prelude: async (executor) => { 
 
         // Insert pairs between some text to simulate a typical usage scenario.
@@ -61,6 +64,7 @@ const CONSECUTIVE_LEAPS_TEST_CASE = new TestCase({
 
 const CONSECUTIVE_LEAPS_ACROSS_WHITESPACE = new TestCase({
     name: 'Consecutive Leaps Across Whitespace',
+    languageId: 'typescript',
     prelude: async (executor) => { 
 
         // Insert pairs after some text to simulate a typical usage scenario.
@@ -93,7 +97,7 @@ const CONSECUTIVE_LEAPS_ACROSS_WHITESPACE = new TestCase({
 
 const LEAP_CALL_IGNORED_WHEN_NO_PAIRS = new TestCase({
     name: 'Leap Call Ignored When No Pairs',
-    editorLanguageId: 'markdown',
+    languageId: 'markdown',
     prelude: async (executor) => { 
         await executor.typeText(ALICE_TEXT_2);
         await executor.setCursors([ [2, 11] ]);
@@ -130,7 +134,7 @@ const LEAP_CALL_IGNORED_WHEN_NO_PAIRS = new TestCase({
 
 const LEAP_CALL_IGNORED_WHEN_NO_LINE_OF_SIGHT = new TestCase({
     name: 'Leap Call Ignored When No Line of Sight',
-    editorLanguageId: 'markdown',
+    languageId: 'markdown',
     prelude: async (executor) => { 
 
         // Insert some random text to simulate a typical usage scenario.
@@ -214,6 +218,7 @@ const LEAP_CALL_IGNORED_WHEN_NO_LINE_OF_SIGHT = new TestCase({
  */
 const CAN_HANDLE_BEING_RAPIDLY_CALLED = new TestCase({
     name: 'Can Handle Being Rapidly Called',
+    languageId: 'typescript',
     prelude: async (executor) => {
 
         // Initialize the editor to the following state:

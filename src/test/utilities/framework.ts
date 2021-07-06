@@ -60,10 +60,8 @@ export class TestCase {
 
         /** 
          * The language to set the fresh text editor to.
-         * 
-         * Defaults to 'typescript'.
          */
-        readonly editorLanguageId?: 'typescript' | 'markdown' | 'plaintext',
+        readonly languageId: AllowedLanguages,
 
         /**
          * Callback to setup the fresh text editor before running the test case.
@@ -80,7 +78,7 @@ export class TestCase {
     }) {}
 
     public run(): void {
-        const { name, editorLanguageId, prelude, task } = this.args;
+        const { name, languageId, prelude, task } = this.args;
         it(name, async function () {
 
             // We should retry once because sometimes tests can fail due to vscode lagging.
@@ -92,7 +90,7 @@ export class TestCase {
             try {
                 
                 // Open a fresh text editor for the test case.
-                await executor.openNewTextEditor(editorLanguageId);
+                await executor.openNewTextEditor(languageId);
     
                 // Setup the opened editor for the test.
                 if (prelude) {
@@ -585,11 +583,9 @@ class ExecutorFull {
 
     /**
      * Open a new text editor containing an empty text document.
-     * 
-     * @param languageId Specifies the language of the opened document. Defaults to `'typescript'`.
      */
     public async openNewTextEditor(
-        languageId: string = 'typescript',
+        languageId: AllowedLanguages,
         options?:   RepetitionDelayOptions & ShowOptions
     ): Promise<void> {
         return executeWithRepetitionDelay(async () => {
@@ -621,7 +617,7 @@ class ExecutorFull {
             partialName:            'decorateAll' | 'decorationOptions' | 'detectedPairs', 
             value:                  T,
             targetWorkspaceFolder?: 'workspace-1' | 'workspace-2' | 'workspace-3' | 'workspace-4',
-            targetLanguage?:        'typescript'  | 'markdown'    | 'plaintext',
+            targetLanguage?:        AllowedLanguages
         },
         options?: RepetitionDelayOptions
     ): Promise<void> {
@@ -818,3 +814,5 @@ interface RepetitionDelayOptions {
 }
 
 type ShowOptions = Pick<TextDocumentShowOptions, 'viewColumn' | 'preserveFocus'>;
+
+type AllowedLanguages = 'typescript' | 'markdown' | 'plaintext';
