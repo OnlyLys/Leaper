@@ -46,7 +46,7 @@
                 "leaper.decorateAll": {
                     "type": "boolean",
                     "default": false,
-                    "markdownDescription": "If `true`, will decorate all detected pairs. \n\nIf `false`, will only decorate the detected pairs nearest to each cursor.",
+                    "markdownDescription": "Whether to decorate all detected pairs or just the ones nearest to each cursor.",
                     "scope": "language-overridable"
                 },
                 "leaper.detectedPairs": {
