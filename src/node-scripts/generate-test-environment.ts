@@ -8,8 +8,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * `dest` will be overwritten if it already exists.
- * 
  * @param src Absolute path to the source.
  * @param dest Absolute path to the destination.
  */
@@ -19,9 +17,6 @@ function recursiveCopy(src: string, dest: string): void {
     }
     const srcStats = fs.statSync(src);
     if (srcStats.isDirectory()) {
-        if (fs.existsSync(dest) && fs.statSync(dest).isDirectory()) {
-            fs.rmSync(dest, { recursive: true, force: true });
-        }
         fs.mkdirSync(dest);
         fs.readdirSync(src).forEach((content) => {
             recursiveCopy(path.join(src, content), path.join(dest, content));
@@ -31,7 +26,11 @@ function recursiveCopy(src: string, dest: string): void {
     }
 }
 
+// Delete old test environment.
+fs.rmSync(path.resolve('.test-environment-tmp'), { recursive: true, force: true });
+
+// Make copy of test environment.
 recursiveCopy(
-    path.resolve('.test-environment'), 
+    path.resolve('.test-environment'),
     path.resolve('.test-environment-tmp')
 );
