@@ -1,7 +1,8 @@
 import * as v8 from 'v8';
-import { Range, Position, Selection, TextEditorDecorationType, TextDocument, TextDocumentChangeEvent, TextEditorSelectionChangeEvent, window, TextEditor } from 'vscode';
+import { Range, Position, Selection, TextEditorDecorationType, TextDocument, TextDocumentChangeEvent, TextEditorSelectionChangeEvent, window, TextEditor, DecorationRenderOptions } from 'vscode';
 import { TrackerSnapshot } from '../../test-api';
 import { Configuration } from '../configuration/configuration';
+import { Unchecked } from '../configuration/unchecked';
 import { ContentChangeStack } from './content-change-stack';
 
 /** 
@@ -564,36 +565,43 @@ export class TrackerCore {
             return;
         }
 
-        // Callback to decorate the closing side of a pair.
-        const decoratePair = (pair: Pair) => {
-            const decoration = window.createTextEditorDecorationType(
-                this.configuration.decorationOptions.value
-            );
-            owner.setDecorations(decoration, [ new Range(pair.close, pair.close.translate(0, 1)) ]);
+        /**
+         * Decorate the closing side of a pair in a text editor.
+         */
+        function decorate(
+            editor:            TextEditor,
+            pair:              Pair,
+            decorationOptions: Unchecked<DecorationRenderOptions>
+        ): TextEditorDecorationType {
+            const decoration = window.createTextEditorDecorationType(decorationOptions.value);
+            editor.setDecorations(decoration, [ new Range(pair.close, pair.close.translate(0, 1)) ]);
             return decoration;
         };
-
+        
         // Synchronize the decorations.
         for (const cluster of this.clusters) {
             if (this.configuration.decorateAll) {
 
                 // Make sure all pairs are decorated since `decorateAll` is enabled.
-                for (const [i, pair] of cluster.entries()) {
+                for (const pair of cluster) {
                     if (!pair.decoration) {
-                        cluster[i].decoration = decoratePair(pair);
+                        pair.decoration = decorate(owner, pair, this.configuration.decorationOptions);
                     }
                 }
             } else {
-    
-                // Remove decorations for all pairs that are not the most nested pair.
+
+                // Make sure every pair aside from the one nearest to the cursor is not decorated.
                 for (let i = 0; i < cluster.length - 1; ++i) {
                     cluster[i].decoration?.dispose();
                     cluster[i].decoration = undefined;
                 }
 
-                // Decorate the pair nearest to the each cursor (the most nested pair).
-                if (cluster.length > 0 && !cluster[cluster.length - 1].decoration) {
-                    cluster[cluster.length - 1].decoration = decoratePair(cluster[cluster.length - 1]);
+                // Make sure the pair nearest to the cursor is decorated.
+                if (cluster.length > 0) {
+                    const nearest = cluster[cluster.length - 1];
+                    if (!nearest.decoration) {
+                        nearest.decoration = decorate(owner, nearest, this.configuration.decorationOptions);
+                    }
                 }
             }
         }
