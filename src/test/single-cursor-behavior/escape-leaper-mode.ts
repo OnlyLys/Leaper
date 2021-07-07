@@ -1,4 +1,5 @@
 import { ViewColumn } from 'vscode';
+import { CompactCluster, CompactCursor } from '../utilities/compact';
 import { TestCase, TestGroup } from '../utilities/framework';
 import { range } from '../utilities/other';
 
@@ -30,20 +31,20 @@ const IT_WORKS_TEST_CASE = new TestCase({
     languageId: 'typescript',
     prelude: async (executor) => {
         await executor.typeText(SHARED_TEXT);
-        executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ]);
-        executor.assertCursors([ [2, 28] ]);
+        await executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ]);
+        await executor.assertCursors([ [2, 28] ]);
     },
     task: async (executor) => {
 
         // Jump out of one pair first, just to simulate a more 'realistic' scenario.
         await executor.leap();
-        executor.assertPairs([ { line: 2, sides: [15, 17, 22, 29, 30, 31] } ]);
-        executor.assertCursors([ [2, 29] ]);
+        await executor.assertPairs([ { line: 2, sides: [15, 17, 22, 29, 30, 31] } ]);
+        await executor.assertCursors([ [2, 29] ]);
 
         // This should remove all pairs from being tracked.
         await executor.escapeLeaperMode();
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [2, 29] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [2, 29] ]);
     }
 });
 
@@ -59,15 +60,15 @@ const CAN_HANDLE_RAPID_CALLS = new TestCase({
     languageId: 'typescript',
     prelude: async (executor) => {
         await executor.typeText(SHARED_TEXT);
-        executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ]);
-        executor.assertCursors([ [2, 28] ]);
+        await executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 28, 29, 30, 31] } ]);
+        await executor.assertCursors([ [2, 28] ]);
     },
     task: async (executor) => {
 
         // This should remove all pairs from being tracked and do nothing else.
-        await executor.escapeLeaperMode({ delay: 0, repetitions: 50 }); 
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [2, 28] ]);
+        await executor.escapeLeaperMode({ repetitions: 50 }); 
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [2, 28] ]);
     }
 });
 
@@ -86,8 +87,8 @@ const ONLY_CLEARS_ACTIVE_TEXT_EDITOR = new TestCase({
             ]);
             await executor.setCursors([ [1, 4] ]);
             await executor.typeText('{{[[(([[{{');
-            executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
-            executor.assertCursors([ [1, 14] ]);
+            await executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
+            await executor.assertCursors([ [1, 14] ]);
         }
 
         // Open three additional text editors in exclusive view columns.
@@ -116,15 +117,21 @@ const ONLY_CLEARS_ACTIVE_TEXT_EDITOR = new TestCase({
         // Execute the command in the active text editor (view column 1).
         await executor.escapeLeaperMode();
 
+        // Expected pairs for text editors that have not been cleared.
+        const pairs: CompactCluster[] = [ { line: 1, sides: range(4, 24) } ];
+        
+        // Expected cursors for each text editor.
+        const cursors: CompactCursor[] = [ [1, 14] ];
+
         // Verify that only the pairs in the active text editor were cleared.
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [1, 14] ]);
-        executor.assertPairs([ { line: 1, sides: range(4, 24) } ], { viewColumn: ViewColumn.Two   });
-        executor.assertCursors([ [1, 14] ],                        { viewColumn: ViewColumn.Two   });
-        executor.assertPairs([ { line: 1, sides: range(4, 24) } ], { viewColumn: ViewColumn.Three });
-        executor.assertCursors([ [1, 14] ],                        { viewColumn: ViewColumn.Three });
-        executor.assertPairs([ { line: 1, sides: range(4, 24) } ], { viewColumn: ViewColumn.Four  });
-        executor.assertCursors([ [1, 14] ],                        { viewColumn: ViewColumn.Four  });
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors(cursors);
+        await executor.assertPairs(pairs,     { viewColumn: ViewColumn.Two });
+        await executor.assertCursors(cursors, { viewColumn: ViewColumn.Two });
+        await executor.assertPairs(pairs,     { viewColumn: ViewColumn.Three });
+        await executor.assertCursors(cursors, { viewColumn: ViewColumn.Three });
+        await executor.assertPairs(pairs,     { viewColumn: ViewColumn.Four });
+        await executor.assertCursors(cursors, { viewColumn: ViewColumn.Four });
     }
 
 });

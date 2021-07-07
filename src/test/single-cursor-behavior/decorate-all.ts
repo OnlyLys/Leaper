@@ -1,5 +1,4 @@
 import { ViewColumn } from 'vscode';
-import { CompactCluster } from '../utilities/compact';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
 
 /**
@@ -78,13 +77,8 @@ async function testDecorations(
         },
     ]); 
     await executor.setCursors([ [7, 10] ]);
-    executor.assertPairs([ 'None' ]);
-    executor.assertCursors([ [7, 10] ]);
-
-    // So that we do not forget to pass `expectDecorations` to `executor.assertPairs`.
-    function assertPairsAndDecorations(executor: Executor, pairs: CompactCluster[]): void {
-        executor.assertPairs(pairs, { expectDecorations });
-    }
+    await executor.assertPairs([ 'None' ], { expectDecorations });
+    await executor.assertCursors([ [7, 10] ]);
 
     // Document state after:
     //
@@ -100,8 +94,8 @@ async function testDecorations(
     // }          ^(cursor position)
     // ```   
     await executor.typeText('(');
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 11] } ]);
-    executor.assertCursors([ [7, 11] ]);
+    await executor.assertPairs([ { line: 7, sides: [10, 11] } ], { expectDecorations });
+    await executor.assertCursors([ [7, 11] ]);
 
     // Document state after:
     //
@@ -117,8 +111,8 @@ async function testDecorations(
     // }                 ^(cursor position)
     // ```   
     await executor.typeText('async (');
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 17, 18, 19] } ]);
-    executor.assertCursors([ [7, 18] ]);
+    await executor.assertPairs([ { line: 7, sides: [10, 17, 18, 19] } ], { expectDecorations });
+    await executor.assertCursors([ [7, 18] ]);
 
     // Document state after:
     //
@@ -134,8 +128,8 @@ async function testDecorations(
     // }                  ^(cursor position)
     // ```   
     await executor.leap();
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 19] } ]);
-    executor.assertCursors([ [7, 19] ]);
+    await executor.assertPairs([ { line: 7, sides: [10, 19] } ], { expectDecorations });
+    await executor.assertCursors([ [7, 19] ]);
 
     // Document state after:
     //
@@ -151,8 +145,8 @@ async function testDecorations(
     // }                       ^(cursor position)
     // ```   
     await executor.typeText(' => {');
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 24, 25] } ]);
-    executor.assertCursors([ [7, 24] ]);
+    await executor.assertPairs([ { line: 7, sides: [10, 23, 24, 25] } ], { expectDecorations });
+    await executor.assertCursors([ [7, 24] ]);
 
     // Document state after:
     //
@@ -168,8 +162,8 @@ async function testDecorations(
     // }                         ^(cursor position)
     // ```   
     await executor.typeText(' ', { repetitions: 2 });
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 26, 27] } ]);
-    executor.assertCursors([ [7, 26] ]);
+    await executor.assertPairs([ { line: 7, sides: [10, 23, 26, 27] } ], { expectDecorations });
+    await executor.assertCursors([ [7, 26] ]);
 
     // Document state after:
     //
@@ -185,8 +179,8 @@ async function testDecorations(
     // }                        ^(cursor position)
     // ```   
     await executor.moveCursors('left');
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 26, 27] } ]);
-    executor.assertCursors([ [7, 25] ]);
+    await executor.assertPairs([ { line: 7, sides: [10, 23, 26, 27] } ], { expectDecorations });
+    await executor.assertCursors([ [7, 25] ]);
 
     // Document state after:
     //
@@ -202,8 +196,11 @@ async function testDecorations(
     // }                                    ^(cursor position)
     // ```   
     await executor.typeText('console.log(');
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 36, 37, 39, 40] } ]);
-    executor.assertCursors([ [7, 37] ]);
+    await executor.assertPairs(
+        [ { line: 7, sides: [10, 23, 36, 37, 39, 40] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [7, 37] ]);
 
     // Document state after:
     //
@@ -219,8 +216,11 @@ async function testDecorations(
     // }                                     ^(cursor position)
     // ```   
     await executor.typeText('{');
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 36, 37, 38, 39, 41, 42] } ]);
-    executor.assertCursors([ [7, 38] ]);
+    await executor.assertPairs(
+        [ { line: 7, sides: [10, 23, 36, 37, 38, 39, 41, 42] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [7, 38] ]);
 
     // Document state after:
     //
@@ -236,8 +236,11 @@ async function testDecorations(
     // }                                       ^(cursor position)
     // ```   
     await executor.typeText(' ', { repetitions: 2 });
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 36, 37, 40, 41, 43, 44] } ]);
-    executor.assertCursors([ [7, 40] ]);
+    await executor.assertPairs(
+        [ { line: 7, sides: [10, 23, 36, 37, 40, 41, 43, 44] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [7, 40] ]);
 
     // Document state after:
     //
@@ -253,8 +256,11 @@ async function testDecorations(
     // }                                      ^(cursor position)
     // ```   
     await executor.moveCursors('left');
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 36, 37, 40, 41, 43, 44] } ]);
-    executor.assertCursors([ [7, 39] ]);
+    await executor.assertPairs(
+        [ { line: 7, sides: [10, 23, 36, 37, 40, 41, 43, 44] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [7, 39] ]);
 
     // Document state after:
     //
@@ -270,8 +276,11 @@ async function testDecorations(
     // }                                            ^(cursor position)
     // ```
     await executor.typeText('hey: [');
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 36, 37, 44, 45, 47, 48, 50, 51] } ]);
-    executor.assertCursors([ [7, 45] ]);
+    await executor.assertPairs(
+        [ { line: 7, sides: [10, 23, 36, 37, 44, 45, 47, 48, 50, 51] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [7, 45] ]);
     
     // Document state after:
     //
@@ -287,8 +296,11 @@ async function testDecorations(
     // }                                              ^(cursor position)
     // ```
     await executor.typeText(' ', { repetitions: 2 });
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 36, 37, 44, 47, 49, 50, 52, 53] } ]);
-    executor.assertCursors([ [7, 47] ]);
+    await executor.assertPairs(
+        [ { line: 7, sides: [10, 23, 36, 37, 44, 47, 49, 50, 52, 53] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [7, 47] ]);
 
     // Document state after:
     //
@@ -304,8 +316,11 @@ async function testDecorations(
     // }                                             ^(cursor position)
     // ```
     await executor.moveCursors('left');
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 36, 37, 44, 47, 49, 50, 52, 53] } ]);
-    executor.assertCursors([ [7, 46] ]);
+    await executor.assertPairs(
+        [ { line: 7, sides: [10, 23, 36, 37, 44, 47, 49, 50, 52, 53] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [7, 46] ]);
 
     // Document state after:
     //
@@ -321,8 +336,11 @@ async function testDecorations(
     // }                                              ^(cursor position)
     // ```
     await executor.typeText("'");
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 36, 37, 44, 46, 47, 49, 51, 52, 54, 55] } ]);
-    executor.assertCursors([ [7, 47] ]);
+    await executor.assertPairs(
+        [ { line: 7, sides: [10, 23, 36, 37, 44, 46, 47, 49, 51, 52, 54, 55] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [7, 47] ]);
 
     // Document state after:
     //
@@ -338,8 +356,11 @@ async function testDecorations(
     // }                                                ^(cursor position)
     // ```
     await executor.typeText('😎');
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 36, 37, 44, 46, 49, 51, 53, 54, 56, 57] } ]);
-    executor.assertCursors([ [7, 49] ]);
+    await executor.assertPairs(
+        [ { line: 7, sides: [10, 23, 36, 37, 44, 46, 49, 51, 53, 54, 56, 57] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [7, 49] ]);
 
     // Document state after:
     //
@@ -355,8 +376,11 @@ async function testDecorations(
     // }                                                 ^(cursor position)
     // ```
     await executor.leap();
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 36, 37, 44, 51, 53, 54, 56, 57] } ]);
-    executor.assertCursors([ [7, 50] ]);
+    await executor.assertPairs(
+        [ { line: 7, sides: [10, 23, 36, 37, 44, 51, 53, 54, 56, 57] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [7, 50] ]);
 
     // Document state after:
     //
@@ -374,8 +398,11 @@ async function testDecorations(
     await executor.editText([
         { kind: 'insert', at: [7, 50], text: ', await helloWorld' }
     ]);
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 36, 37, 44, 69, 71, 72, 74, 75] } ]);
-    executor.assertCursors([ [7, 68] ]);
+    await executor.assertPairs(
+        [ { line: 7, sides: [10, 23, 36, 37, 44, 69, 71, 72, 74, 75] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [7, 68] ]);
 
     // Document state after:
     //
@@ -391,8 +418,11 @@ async function testDecorations(
     // }                                                                    ^(cursor position)
     // ```
     await executor.typeText('(');
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 36, 37, 44, 68, 69, 71, 73, 74, 76, 77] } ]);
-    executor.assertCursors([ [7, 69] ]);
+    await executor.assertPairs(
+        [ { line: 7, sides: [10, 23, 36, 37, 44, 68, 69, 71, 73, 74, 76, 77] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [7, 69] ]);
 
     // Document state after:
     //
@@ -411,8 +441,11 @@ async function testDecorations(
         { kind: 'insert', at: [7, 78], text: '();' },
         { kind: 'insert', at: [7, 75], text: ';'   }
     ]);
-    assertPairsAndDecorations(executor, [ { line: 7, sides: [10, 23, 36, 37, 44, 68, 69, 71, 73, 74, 77, 78] } ]);
-    executor.assertCursors([ [7, 69] ]);
+    await executor.assertPairs(
+        [ { line: 7, sides: [10, 23, 36, 37, 44, 68, 69, 71, 73, 74, 77, 78] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [7, 69] ]);
 
     // Document state after:
     //
@@ -437,8 +470,11 @@ async function testDecorations(
         { kind: 'insert', at: [7, 25], text: '\n            '   },
         { kind: 'insert', at: [7, 11], text: '\n        '       },
     ]);
-    assertPairsAndDecorations(executor, [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ]);
-    executor.assertCursors([ [9, 56] ]);
+    await executor.assertPairs(
+        [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ], 
+        { expectDecorations }
+    );
+    await executor.assertCursors([ [9, 56] ]);
 };
 
 /**
@@ -454,7 +490,7 @@ const DECORATE_ONLY_NEAREST_PAIR_TEST_CASE = new TestCase({
     //     [ "()", "[]", "{}", "``", "''", "\"\"" ]
     //
     // Thus, we can call `testDecorations` as the requirements noted by its doc comment are satisfied.
-    task: async (executor) => testDecorations(executor, 'nearest')
+    task: async (executor) => await testDecorations(executor, 'nearest')
 });
 
 /**
@@ -466,7 +502,7 @@ const DECORATE_ALL_PAIRS_TEST_CASE = new TestCase({
 
     // We open the Typescript file from Workspace Folder 4 because Workspace Folder 4 has been 
     // configured to have `leaper.decorateAll` enabled.
-    prelude: async (executor) => executor.openFile('./workspace-4/text.ts'),
+    prelude: async (executor) => await executor.openFile('./workspace-4/text.ts'),
 
     // The opened text editor is Typescript and its effective value is from the root workspace, which 
     // has the value:
@@ -474,7 +510,7 @@ const DECORATE_ALL_PAIRS_TEST_CASE = new TestCase({
     //     [ "()", "[]", "{}", "``", "''", "\"\"" ]
     //
     // Thus, we can call `testDecorations` as the requirements noted by its doc comment are satisfied.
-    task: async (executor) => testDecorations(executor, 'all')
+    task: async (executor) => await testDecorations(executor, 'all')
 });
 
 /**
@@ -537,7 +573,7 @@ const AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE = new TestCase({
             expectDecorations:  'all'   | 'nearest' 
         ): Promise<void> {
             await executor.focusEditorGroup(focusOnEditorGroup);
-            return testDecorations(executor, expectDecorations);
+            await testDecorations(executor, expectDecorations);
         }
 
         // 1. Enable the configuration in Workspace Folder 2.

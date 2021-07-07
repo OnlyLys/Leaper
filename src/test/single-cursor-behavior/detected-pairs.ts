@@ -43,21 +43,21 @@ async function testDetectedPairs(
 
             // As a safety precaution, check that the cursor is advanced by 1 unit, as it would when 
             // typing in a pair that is then autoclosed.
-            executor.assertCursors([ [line, column + 1] ]);
+            await executor.assertCursors([ [line, column + 1] ]);
 
             // Check that the pair is being tracked (or not tracked, depending on `expectTrack`).
             if (expectTrack) {
-                executor.assertPairs([{ line, sides: [column, column + 1] }]);
+                await executor.assertPairs([{ line, sides: [column, column + 1] }]);
             } else {
-                executor.assertPairs([ 'None' ]);
+                await executor.assertPairs([ 'None' ]);
             }
 
             // Remove the inserted pair.
             await executor.undo();
 
             // Check that the undo was successful.
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ initialCursorPosition ]);
+            await executor.assertPairs([ 'None' ]);
+            await executor.assertCursors([ initialCursorPosition ]);
         }
     }
 
@@ -65,7 +65,7 @@ async function testDetectedPairs(
     // so that when the opening side of pairs are entered, we know that they will be autoclosed.
     await executor.moveCursors('endOfDocument');
 
-    const initialCursorPosition = executor.getCursors()[0] as [number, number];
+    const initialCursorPosition = (await executor.getCursors())[0] as [number, number];
     await check(initialCursorPosition, should,    true);
     await check(initialCursorPosition, shouldNot, false);
 }

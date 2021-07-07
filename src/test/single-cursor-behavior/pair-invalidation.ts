@@ -47,8 +47,8 @@ async function sharedPrelude(executor: Executor): Promise<void> {
     await executor.typeText('{  ');
     await executor.moveCursors('left');
     await executor.typeText('prop: someFn(1, 20');
-    executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ]); 
-    executor.assertCursors([ [1, 52] ]);
+    await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ]); 
+    await executor.assertCursors([ [1, 52] ]);
 };
 
 // ----------------------------------------------------------------------------------
@@ -70,8 +70,8 @@ const RIGHTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                                                    ^(cursor position)
         // ```
         await executor.moveCursors('right');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
-        executor.assertCursors([ [1, 53] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
+        await executor.assertCursors([ [1, 53] ]);
 
         // Move to the boundary of the next nearest pair.
         //
@@ -83,8 +83,8 @@ const RIGHTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                                                     ^(cursor position)
         // ```
         await executor.moveCursors('right');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
-        executor.assertCursors([ [1, 54] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
+        await executor.assertCursors([ [1, 54] ]);
 
         // Move out of the nearest pair.
         //
@@ -96,8 +96,8 @@ const RIGHTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                                                      ^(cursor position)
         // ```
         await executor.moveCursors('right');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
-        executor.assertCursors([ [1, 55] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
+        await executor.assertCursors([ [1, 55] ]);
 
         // Move to the boundary of the next nearest pair.
         //
@@ -109,8 +109,8 @@ const RIGHTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                                                       ^(cursor position)
         // ```
         await executor.moveCursors('right');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
-        executor.assertCursors([ [1, 56] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
+        await executor.assertCursors([ [1, 56] ]);
 
         // Move out of the nearest pair.
         //
@@ -122,8 +122,8 @@ const RIGHTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                                                        ^(cursor position)
         // ```
         await executor.moveCursors('right');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
-        executor.assertCursors([ [1, 57] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
+        await executor.assertCursors([ [1, 57] ]);
 
         // Move to the boundary of the next nearest pair.
         //
@@ -135,8 +135,8 @@ const RIGHTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                                                         ^(cursor position)
         // ```
         await executor.moveCursors('right');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
-        executor.assertCursors([ [1, 58] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
+        await executor.assertCursors([ [1, 58] ]);
 
         // Move out of the nearest pair.
         //
@@ -148,8 +148,8 @@ const RIGHTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                                                          ^(cursor position)
         // ```
         await executor.moveCursors('right');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
-        executor.assertCursors([ [1, 59] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
+        await executor.assertCursors([ [1, 59] ]);
 
         // Move to the boundary of the next nearest pair.
         //
@@ -161,8 +161,8 @@ const RIGHTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                                                           ^(cursor position)
         // ```
         await executor.moveCursors('right');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
-        executor.assertCursors([ [1, 60] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
+        await executor.assertCursors([ [1, 60] ]);
         
         // Move out of the nearest pair.
         //
@@ -174,8 +174,8 @@ const RIGHTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                                                            ^(cursor position)
         // ```
         await executor.moveCursors('right');
-        executor.assertPairs([ { line: 1, sides: [15, 61] } ]);
-        executor.assertCursors([ [1, 61] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 61] } ]);
+        await executor.assertCursors([ [1, 61] ]);
 
         // Move out of the last pair.
         //
@@ -187,8 +187,8 @@ const RIGHTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                                                             ^(cursor position)
         // ```
         await executor.moveCursors('right');
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [1, 62] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [1, 62] ]);
     }
 });
     
@@ -206,8 +206,8 @@ const RIGHTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_CLICKING_OUT_TEST_CASE = new TestCa
         // }                                                             ^(cursor position)
         // ```
         await executor.setCursors([ [1, 62] ]);
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [1, 62] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [1, 62] ]);
     }
 });
 
@@ -225,8 +225,8 @@ const RIGHTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_PRESSING_END_KEY_TEST_CASE = new Te
         // }                                                                                        ^(cursor position)
         // ```
         await executor.moveCursors('end');
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [1, 89] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [1, 89] ]);
     }
 });
 
@@ -246,8 +246,8 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                                              ^(cursor position)
         // ```
         await executor.moveCursors('left', { repetitions: 5 });
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ]); 
-        executor.assertCursors([ [1, 47] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ]); 
+        await executor.assertCursors([ [1, 47] ]);
 
         // Move out of the nearest pair.
         //
@@ -259,8 +259,8 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                                             ^(cursor position)
         // ```
         await executor.moveCursors('left');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
-        executor.assertCursors([ [1, 46] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
+        await executor.assertCursors([ [1, 46] ]);
 
         // Move to the boundary of the next nearest pair.
         //
@@ -272,8 +272,8 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                                ^(cursor position)
         // ```
         await executor.moveCursors('left', { repetitions: 13 });
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
-        executor.assertCursors([ [1, 33] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
+        await executor.assertCursors([ [1, 33] ]);
 
         // Move out of the nearest pair.
         //
@@ -285,8 +285,8 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                               ^(cursor position)
         // ```
         await executor.moveCursors('left');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
-        executor.assertCursors([ [1, 32] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
+        await executor.assertCursors([ [1, 32] ]);
 
         // Move to the boundary of the next nearest pair.
         //
@@ -298,8 +298,8 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                              ^(cursor position)
         // ```
         await executor.moveCursors('left');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
-        executor.assertCursors([ [1, 31] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 56, 58, 60, 61] } ]);
+        await executor.assertCursors([ [1, 31] ]);
 
         // Move out of the nearest pair.
         //
@@ -311,8 +311,8 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                             ^(cursor position)
         // ```
         await executor.moveCursors('left');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
-        executor.assertCursors([ [1, 30] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
+        await executor.assertCursors([ [1, 30] ]);
 
         // Move to the boundary of the next nearest pair.
         //
@@ -324,8 +324,8 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                       ^(cursor position)
         // ```
         await executor.moveCursors('left', { repetitions: 6 });
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
-        executor.assertCursors([ [1, 24] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
+        await executor.assertCursors([ [1, 24] ]);
             
         // Move out of the nearest pair.
         //
@@ -337,8 +337,8 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                      ^(cursor position)
         // ```
         await executor.moveCursors('left');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
-        executor.assertCursors([ [1, 23] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
+        await executor.assertCursors([ [1, 23] ]);
 
         // Move to the boundary of the next nearest pair.
         //
@@ -350,8 +350,8 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }                ^(cursor position)
         // ```
         await executor.moveCursors('left', { repetitions: 6 });
-        executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
-        executor.assertCursors([ [1, 17] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
+        await executor.assertCursors([ [1, 17] ]);
 
         // Move out of the nearest pair.
         //
@@ -363,8 +363,8 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }               ^(cursor position)
         // ```
         await executor.moveCursors('left');
-        executor.assertPairs([ { line: 1, sides: [15, 61] } ]);
-        executor.assertCursors([ [1, 16] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 61] } ]);
+        await executor.assertCursors([ [1, 16] ]);
 
         // Move out of the last pair.
         //
@@ -376,8 +376,8 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         // }              ^(cursor position)
         // ```
         await executor.moveCursors('left');
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [1, 15] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [1, 15] ]);
     }
 });
 
@@ -395,8 +395,8 @@ const LEFTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_CLICKING_OUT_TEST_CASE = new TestCas
         // }              ^(cursor position)
         // ```
         await executor.setCursors([ [1, 15] ]);
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [1, 15] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [1, 15] ]);
     }
 });
 
@@ -414,8 +414,8 @@ const LEFTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_PRESSING_HOME_KEY_TEST_CASE = new Te
         // }   ^(cursor position)
         // ```
         await executor.moveCursors('home');
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [1, 4] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [1, 4] ]);
     }
 });
 
@@ -434,8 +434,8 @@ const UPWARDS_EXIT_OF_CURSOR_TEST_CASE = new TestCase({
         // }
         // ```
         await executor.moveCursors('up');
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [0, 13] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [0, 13] ]);
     }
 });
 
@@ -454,8 +454,8 @@ const DOWNWARDS_EXIT_OF_CURSOR_TEST_CASE = new TestCase({
         //  ^(cursor position)
         // ```
         await executor.moveCursors('down');
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [2, 1] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [2, 1] ]);
     }
 });
 
@@ -479,8 +479,8 @@ const DELETION_OF_OPENING_SIDE_TEST_CASE = new TestCase({
         // ```
         await executor.moveCursors('left', { repetitions: 5 });
         await executor.backspace();
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } ]);
-        executor.assertCursors([ [1, 46] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } ]);
+        await executor.assertCursors([ [1, 46] ]);
 
         // Overwrite text including the third and fourth of the remaining pairs.
         //
@@ -494,8 +494,8 @@ const DELETION_OF_OPENING_SIDE_TEST_CASE = new TestCase({
         await executor.editText([
             { kind: 'replace', range: { start: [1, 23], end: [1, 32] }, with: 'cheesecake' }
         ]);
-        executor.assertPairs([ { line: 1, sides: [15, 16, 33, 54, 60, 61] } ]);
-        executor.assertCursors([ [1, 47] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 33, 54, 60, 61] } ]);
+        await executor.assertCursors([ [1, 47] ]);
 
         // Overwrite some text including the first of the remaining pairs. 
         //
@@ -506,11 +506,9 @@ const DELETION_OF_OPENING_SIDE_TEST_CASE = new TestCase({
         //     { obj: cheesecake{ prop: someFn1, 20) } ] } }); // Log object to console.
         // }                                  ^(cursor position)
         // ```
-        await executor.editText([
-            { kind: 'delete', range: { start: [1, 4], end: [1, 16] } }
-        ]);
-        executor.assertPairs([ { line: 1, sides: [4, 21, 42, 48] } ]);
-        executor.assertCursors([ [1, 35] ]);
+        await executor.editText([ { kind: 'delete', range: { start: [1, 4], end: [1, 16] } } ]);
+        await executor.assertPairs([ { line: 1, sides: [4, 21, 42, 48] } ]);
+        await executor.assertCursors([ [1, 35] ]);
 
         // Backspace until the second of the remaining pairs is deleted.
         //
@@ -522,8 +520,8 @@ const DELETION_OF_OPENING_SIDE_TEST_CASE = new TestCase({
         // }                    ^(cursor position)
         // ```
         await executor.backspace({ repetitions: 14 });
-        executor.assertPairs([ { line: 1, sides: [4, 34] } ]);
-        executor.assertCursors([ [1, 21] ]);
+        await executor.assertPairs([ { line: 1, sides: [4, 34] } ]);
+        await executor.assertCursors([ [1, 21] ]);
 
         // Overwrite first pair.
         //
@@ -537,8 +535,8 @@ const DELETION_OF_OPENING_SIDE_TEST_CASE = new TestCase({
         await executor.editText([
             { kind: 'replace', range: { start: [1, 4], end: [1, 5] }, with: 'rabbit' }
         ]);
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [1, 26] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [1, 26] ]);
     }
 });
 
@@ -558,8 +556,8 @@ const DELETION_OF_CLOSING_SIDE_TEST_CASE = new TestCase({
         // }                                                   ^(cursor position)
         // ```
         await executor.deleteRight();
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } ]);
-        executor.assertCursors([ [1, 52] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } ]);
+        await executor.assertCursors([ [1, 52] ]);
 
         // Overwrite text including the third and fourth of the remaining pairs.
         //
@@ -573,8 +571,8 @@ const DELETION_OF_CLOSING_SIDE_TEST_CASE = new TestCase({
         await executor.editText([
             { kind: 'replace', range: { start: [1, 55], end: [1, 59] }, with: 'cheesecake' }
         ]);
-        executor.assertPairs([ { line: 1, sides: [15, 16, 32, 53, 65, 66] } ]);
-        executor.assertCursors([ [1, 52] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 32, 53, 65, 66] } ]);
+        await executor.assertCursors([ [1, 52] ]);
 
         // Overwrite some text including the first of the remaining pairs.
         //
@@ -585,11 +583,9 @@ const DELETION_OF_CLOSING_SIDE_TEST_CASE = new TestCase({
         //     console.log({ obj: { arr: [ { prop: someFn(1, 20 } cheesecake}
         // }                                                   ^(cursor position)
         // ```
-        await executor.editText([
-            { kind: 'delete', range: { start: [1, 66], end: [1, 94] } }
-        ]);
-        executor.assertPairs([ { line: 1, sides: [16, 32, 53, 65] } ]);
-        executor.assertCursors([ [1, 52] ]);
+        await executor.editText([ { kind: 'delete', range: { start: [1, 66], end: [1, 94] } } ]);
+        await executor.assertPairs([ { line: 1, sides: [16, 32, 53, 65] } ]);
+        await executor.assertCursors([ [1, 52] ]);
         
         // Delete right until the second of the remaining pairs is deleted.
         //
@@ -601,8 +597,8 @@ const DELETION_OF_CLOSING_SIDE_TEST_CASE = new TestCase({
         // }                                                   ^(cursor position)
         // ```
         await executor.deleteRight({ repetitions: 2 });
-        executor.assertPairs([ { line: 1, sides: [16, 63] } ]);
-        executor.assertCursors([ [1, 52] ]);
+        await executor.assertPairs([ { line: 1, sides: [16, 63] } ]);
+        await executor.assertCursors([ [1, 52] ]);
         
         // Overwrite text including the final pair.
         //
@@ -616,8 +612,8 @@ const DELETION_OF_CLOSING_SIDE_TEST_CASE = new TestCase({
         await executor.editText([
             { kind: 'replace', range: { start: [1, 17], end: [1, 64] }, with: 'rabbit' }
         ]);
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [1, 23] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [1, 23] ]);
     }
 });
 
@@ -640,11 +636,9 @@ const MULTI_LINE_TEXT_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         //        { obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
         // }                                          ^(cursor position)
         // ```
-        await executor.editText([
-            { kind: 'insert', at: [1, 16], text: '\n        ' }
-        ]);
-        executor.assertPairs([ { line: 2, sides: [8, 15, 22, 24, 38, 44, 46, 48, 50, 52] } ]);
-        executor.assertCursors([ [2, 44] ]);
+        await executor.editText([{ kind: 'insert', at: [1, 16], text: '\n        ' }]);
+        await executor.assertPairs([ { line: 2, sides: [8, 15, 22, 24, 38, 44, 46, 48, 50, 52] } ]);
+        await executor.assertCursors([ [2, 44] ]);
 
         // Replace the text between the second and third remaining pairs with multiline text.
         //
@@ -673,8 +667,8 @@ const MULTI_LINE_TEXT_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
                     + '            lamb'
             }
         ]);
-        executor.assertPairs([ { line: 7, sides: [17, 19, 33, 39, 41, 43] } ]);
-        executor.assertCursors([ [7, 39] ]);
+        await executor.assertPairs([ { line: 7, sides: [17, 19, 33, 39, 41, 43] } ]);
+        await executor.assertCursors([ [7, 39] ]);
 
         // Type in a newline at the cursor position.
         //
@@ -695,8 +689,8 @@ const MULTI_LINE_TEXT_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         //
         // (Note that auto-indentation of Typescript applies).
         await executor.typeText('\n');
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [8, 16] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [8, 16] ]);
     }
 });
 
@@ -716,8 +710,8 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // }                                                 ^(cursor position)
         // ```
         await executor.backspace({ repetitions: 2 });
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 50, 52, 54, 56, 58, 59] } ]);
-        executor.assertCursors([ [1, 50] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 50, 52, 54, 56, 58, 59] } ]);
+        await executor.assertCursors([ [1, 50] ]);
 
         // Type in an array of numbers.
         //
@@ -729,8 +723,8 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // }                                                             ^(cursor position)
         // ```
         await executor.typeText('[-1, -2, -3]');
-        executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 62, 64, 66, 68, 70, 71] } ]);
-        executor.assertCursors([ [1, 62] ]);
+        await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 62, 64, 66, 68, 70, 71] } ]);
+        await executor.assertCursors([ [1, 62] ]);
 
         // Insert a multi-line snippet.
         // 
@@ -750,8 +744,8 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
                + '}, ${4:init})$0'
             ) 
         );
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ { anchor: [1, 71], active: [1, 74] } ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ { anchor: [1, 71], active: [1, 74] } ]);
 
         // Make sure that the snippet still works by jumping to the second tabstop.
         // 
@@ -765,8 +759,8 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // }                                                            
         // ```
         await executor.jumpToTabstop('next');
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ { anchor: [1, 76], active: [1, 80] } ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ { anchor: [1, 76], active: [1, 80] } ]);
 
         // Make sure that the snippet still works by jumping to the third tabstop.
         // 
@@ -781,8 +775,8 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // }                                                            
         // ```
         await executor.jumpToTabstop('next');
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [2, 8] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [2, 8] ]);
 
         // Make sure that the snippet still works by jumping to the fourth tabstop.
         //
@@ -796,8 +790,8 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // }      |---^(cursor selection)
         // ```
         await executor.jumpToTabstop('next');
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ { anchor: [3, 7], active: [3, 11] } ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ { anchor: [3, 7], active: [3, 11] } ]);
 
         // Make sure that the snippet still works by jumping to the final tabstop.
         //
@@ -811,8 +805,8 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // }           ^(cursor position)
         // ```
         await executor.jumpToTabstop('next');
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [3, 12] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [3, 12] ]);
     }
 });
 
@@ -864,9 +858,9 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         // }                                                            ^(cursor position)
         // ```
         await reset(executor);
-        await executor.setCursors([ [1, 61] ],                 { viewColumn: ViewColumn.One });
-        executor.assertPairs([ { line: 1, sides: [15, 61] } ], { viewColumn: ViewColumn.One });
-        executor.assertCursors([ [1, 61] ],                    { viewColumn: ViewColumn.One });
+        await executor.setCursors([ [1, 61] ], { viewColumn: ViewColumn.One });
+        await executor.assertPairs([ { line: 1, sides: [15, 61] } ], { viewColumn: ViewColumn.One });
+        await executor.assertCursors([ [1, 61] ],                    { viewColumn: ViewColumn.One });
 
         // Test setting cursor out leftwards.
         //
@@ -882,8 +876,8 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
             [ { anchor: [1, 12], active: [1, 18] } ], 
             { viewColumn: ViewColumn.One }
         );
-        executor.assertPairs([ 'None' ], { viewColumn: ViewColumn.One });
-        executor.assertCursors(
+        await executor.assertPairs([ 'None' ], { viewColumn: ViewColumn.One });
+        await executor.assertCursors(
             [ { anchor: [1, 12], active: [1, 18] } ],
             { viewColumn: ViewColumn.One }
         );
@@ -899,8 +893,8 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         // ```
         await reset(executor);
         await executor.setCursors([ [0, 10] ], { viewColumn: ViewColumn.One });
-        executor.assertPairs([ 'None' ],       { viewColumn: ViewColumn.One });
-        executor.assertCursors([ [0, 10] ],    { viewColumn: ViewColumn.One });
+        await executor.assertPairs([ 'None' ],    { viewColumn: ViewColumn.One });
+        await executor.assertCursors([ [0, 10] ], { viewColumn: ViewColumn.One });
 
         // Test setting cursor out downwards.
         //
@@ -914,8 +908,8 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         // ```
         await reset(executor);
         await executor.setCursors([ [2, 1] ], { viewColumn: ViewColumn.One });
-        executor.assertPairs([ 'None' ],      { viewColumn: ViewColumn.One });
-        executor.assertCursors([ [2, 1] ],    { viewColumn: ViewColumn.One });
+        await executor.assertPairs([ 'None' ],   { viewColumn: ViewColumn.One });
+        await executor.assertCursors([ [2, 1] ], { viewColumn: ViewColumn.One });
 
         // Test deletion of opening side.
         //
@@ -935,11 +929,11 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
             ],
             { viewColumn: ViewColumn.One }
         );
-        executor.assertPairs(
+        await executor.assertPairs(
             [ { line: 1, sides: [20, 33, 48, 54, 58, 62] } ], 
             { viewColumn: ViewColumn.One }
         );
-        executor.assertCursors([ [1, 54] ], { viewColumn: ViewColumn.One });
+        await executor.assertCursors([ [1, 54] ], { viewColumn: ViewColumn.One });
 
         // Test deletion of closing side.
         //
@@ -959,8 +953,11 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
             ],
             { viewColumn: ViewColumn.One }
         );
-        executor.assertPairs([ { line: 1, sides: [15, 32, 48, 56] } ], { viewColumn: ViewColumn.One });
-        executor.assertCursors([ [1, 47] ],                            { viewColumn: ViewColumn.One });
+        await executor.assertPairs(
+            [ { line: 1, sides: [15, 32, 48, 56] } ], 
+            { viewColumn: ViewColumn.One }
+        );
+        await executor.assertCursors([ [1, 47] ], { viewColumn: ViewColumn.One });
 
         // Test that multi-line text insertion between pairs untracks them.
         //
@@ -994,8 +991,11 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
             ],
             { viewColumn: ViewColumn.One }
         );
-        executor.assertPairs([ 'None' ],                               { viewColumn: ViewColumn.One });
-        executor.assertCursors([ { anchor: [2, 4], active: [7, 4] } ], { viewColumn: ViewColumn.One });
+        await executor.assertPairs([ 'None' ], { viewColumn: ViewColumn.One });
+        await executor.assertCursors(
+            [ { anchor: [2, 4], active: [7, 4] } ], 
+            { viewColumn: ViewColumn.One }
+        );
 
         // Test that multi-line snippet insertion between pairs untracks them.
         // 
@@ -1019,8 +1019,8 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
                 viewColumn: ViewColumn.One
             }
         );
-        executor.assertPairs([ 'None' ],    { viewColumn: ViewColumn.One });
-        executor.assertCursors([ [2, 56] ], { viewColumn: ViewColumn.One });
+        await executor.assertPairs([ 'None' ],    { viewColumn: ViewColumn.One });
+        await executor.assertCursors([ [2, 56] ], { viewColumn: ViewColumn.One });
     }
 });
 
@@ -1099,15 +1099,15 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
             await executor.focusEditorGroup(whichTextEditor);
             await executor.deleteAll();
             await executor.typeText(newText);
-            executor.assertPairs(expectPairs);
-            executor.assertCursors(expectCursors);
+            await executor.assertPairs(expectPairs);
+            await executor.assertCursors(expectCursors);
         }
 
         /**
          * For each text editor, check the pairs that the engine is tracking for that text editor
          * and the state of the cursors in that text editor.
          */
-        function check(
+        async function check(
             executor: Executor,
             expect: {
                 firstTextEditor:  { pairs: CompactCluster[], cursors: CompactCursor[] }
@@ -1115,15 +1115,15 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
                 thirdTextEditor:  { pairs: CompactCluster[], cursors: CompactCursor[] }
                 fourthTextEditor: { pairs: CompactCluster[], cursors: CompactCursor[] }
             }
-        ): void {
-            executor.assertPairs(  expect.firstTextEditor.pairs,    { viewColumn: ViewColumn.One });
-            executor.assertCursors(expect.firstTextEditor.cursors,  { viewColumn: ViewColumn.One });
-            executor.assertPairs(  expect.secondTextEditor.pairs,   { viewColumn: ViewColumn.Two });
-            executor.assertCursors(expect.secondTextEditor.cursors, { viewColumn: ViewColumn.Two });
-            executor.assertPairs(  expect.thirdTextEditor.pairs,    { viewColumn: ViewColumn.Three });
-            executor.assertCursors(expect.thirdTextEditor.cursors,  { viewColumn: ViewColumn.Three });
-            executor.assertPairs(  expect.fourthTextEditor.pairs,   { viewColumn: ViewColumn.Four });
-            executor.assertCursors(expect.fourthTextEditor.cursors, { viewColumn: ViewColumn.Four });
+        ): Promise<void> {
+            await executor.assertPairs(expect.firstTextEditor.pairs,      { viewColumn: ViewColumn.One });
+            await executor.assertCursors(expect.firstTextEditor.cursors,  { viewColumn: ViewColumn.One });
+            await executor.assertPairs(expect.secondTextEditor.pairs,     { viewColumn: ViewColumn.Two });
+            await executor.assertCursors(expect.secondTextEditor.cursors, { viewColumn: ViewColumn.Two });
+            await executor.assertPairs(expect.thirdTextEditor.pairs,      { viewColumn: ViewColumn.Three });
+            await executor.assertCursors(expect.thirdTextEditor.cursors,  { viewColumn: ViewColumn.Three });
+            await executor.assertPairs(expect.fourthTextEditor.pairs,     { viewColumn: ViewColumn.Four });
+            await executor.assertCursors(expect.fourthTextEditor.cursors, { viewColumn: ViewColumn.Four });
         }
 
         /**
@@ -1196,7 +1196,7 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
 
         // Since text editors one and four have each had an effective configuration value changed, 
         // we expect the pairs we typed into them during the preparation step to be invalidated.
-        check(executor, {
+        await check(executor, {
             firstTextEditor:  { pairs: [ 'None' ],    cursors: preparedCursors },
             secondTextEditor: { pairs: preparedPairs, cursors: preparedCursors },
             thirdTextEditor:  { pairs: preparedPairs, cursors: preparedCursors },
@@ -1259,7 +1259,7 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
 
         // Since text editor three has had an effective configuration value changed, we expect the 
         // pairs we typed into it during the preparation step to be invalidated.
-        check(executor, {
+        await check(executor, {
             firstTextEditor:  { pairs: preparedPairs, cursors: preparedCursors },
             secondTextEditor: { pairs: preparedPairs, cursors: preparedCursors },
             thirdTextEditor:  { pairs: [ 'None' ],    cursors: preparedCursors },
@@ -1321,7 +1321,7 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
 
         // Since text editors one and two have each had an effective configuration value changed, we 
         // expect the pairs we typed into them during the preparation step to be invalidated.
-        check(executor, {
+        await check(executor, {
             firstTextEditor:  { pairs: [ 'None' ],    cursors: preparedCursors },
             secondTextEditor: { pairs: [ 'None' ],    cursors: preparedCursors },
             thirdTextEditor:  { pairs: preparedPairs, cursors: preparedCursors },
@@ -1383,7 +1383,7 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
 
         // Since text editor three has had an effective configuration value changed, we expect the 
         // pairs we typed into it during the preparation step to be invalidated.
-        check(executor, {
+        await check(executor, {
             firstTextEditor:  { pairs: preparedPairs, cursors: preparedCursors },
             secondTextEditor: { pairs: preparedPairs, cursors: preparedCursors },
             thirdTextEditor:  { pairs: [ 'None' ],    cursors: preparedCursors },
@@ -1425,10 +1425,10 @@ const INVALIDATION_DUE_TO_TEXT_EDITOR_BEING_CLOSED = new TestCase({
 
         // When we switch back, there should be no more pairs being tracked for it.
         await executor.switchToEditorInGroup('next');
-        executor.assertPairs([ 'None' ]);
+        await executor.assertPairs([ 'None' ]);
 
         // But the cursors are restored when a text editor is switched back to.
-        executor.assertCursors([ [1, 52] ]);
+        await executor.assertCursors([ [1, 52] ]);
 
         // 2. Check that pairs are invalidated when a text editor is directly closed.
         await executor.focusEditorGroup('second');
@@ -1436,10 +1436,10 @@ const INVALIDATION_DUE_TO_TEXT_EDITOR_BEING_CLOSED = new TestCase({
 
         // When we reopen a text editor, there should be no more pairs being tracked for it.
         await executor.openFile('./workspace-4/text.ts', { viewColumn: ViewColumn.Two });
-        executor.assertPairs([ 'None' ]);
+        await executor.assertPairs([ 'None' ]);
 
         // Cursors are not restored when a directly closed text editor is reopened.
-        executor.assertCursors([ [0, 0] ]);
+        await executor.assertCursors([ [0, 0] ]);
     }
 });
 
@@ -1468,13 +1468,13 @@ const NO_INVALIDATION_DUE_TO_FOCUS_SWITCH_TEST_CASE = new TestCase({
         //
         // Check that the pairs in the first text editor have not been invalidated.
         await executor.openFile('./workspace-2/text.ts', { viewColumn: ViewColumn.Two });
-        executor.assertPairs(firstEditorPairs,     { viewColumn: ViewColumn.One });
-        executor.assertCursors(firstEditorCursors, { viewColumn: ViewColumn.One });
+        await executor.assertPairs(firstEditorPairs,     { viewColumn: ViewColumn.One });
+        await executor.assertCursors(firstEditorCursors, { viewColumn: ViewColumn.One });
 
         // Might as well check that the newly opened text editor in view column 2 has no pairs being 
         // tracked for it.
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [0, 0] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [0, 0] ]);
 
         // 2. Type some pairs into the text editor in view column 2.
         //
@@ -1485,70 +1485,72 @@ const NO_INVALIDATION_DUE_TO_FOCUS_SWITCH_TEST_CASE = new TestCase({
         // configuration for the text editor in view column 2 is `['()']`.
         await executor.moveCursors('endOfDocument');
         await executor.typeText('(', { repetitions: 20 });
-        executor.assertPairs(firstEditorPairs,     { viewColumn: ViewColumn.One });
-        executor.assertCursors(firstEditorCursors, { viewColumn: ViewColumn.One });
-        executor.assertPairs([ { line: 2, sides: range(0, 40) } ]);
-        executor.assertCursors([ [2, 20] ]);
+        const secondEditorPairs: CompactCluster[]  = [ { line: 2, sides: range(0, 40) } ];
+        const secondEditorCursors: CompactCursor[] = [ [2, 20] ];
+        await executor.assertPairs(firstEditorPairs,     { viewColumn: ViewColumn.One });
+        await executor.assertCursors(firstEditorCursors, { viewColumn: ViewColumn.One });
+        await executor.assertPairs(secondEditorPairs);
+        await executor.assertCursors(secondEditorCursors);
 
         // 3. Open another text document in view column 3, which takes focus.
         //
         // Check that the pairs in the first two text editors have not been invalidated.
         await executor.openFile('./workspace-3/text.md', { viewColumn: ViewColumn.Three });
-        executor.assertPairs(firstEditorPairs,                     { viewColumn: ViewColumn.One });
-        executor.assertCursors(firstEditorCursors,                 { viewColumn: ViewColumn.One });
-        executor.assertPairs([ { line: 2, sides: range(0, 40) } ], { viewColumn: ViewColumn.Two });
-        executor.assertCursors([ [2, 20] ],                        { viewColumn: ViewColumn.Two });
+        await executor.assertPairs(firstEditorPairs,      { viewColumn: ViewColumn.One });
+        await executor.assertCursors(firstEditorCursors,  { viewColumn: ViewColumn.One });
+        await executor.assertPairs(secondEditorPairs,     { viewColumn: ViewColumn.Two });
+        await executor.assertCursors(secondEditorCursors, { viewColumn: ViewColumn.Two });
 
         // Might as well check that the newly opened text editor in view column 3 has no pairs being 
         // tracked for it.
-        executor.assertPairs([ 'None' ]);
-        executor.assertCursors([ [0, 0] ]);
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [0, 0] ]);
 
         // 4. Switch focus to the text editor in view column 1.
         //
         // Check that the pairs in the first two text editors have not been invalidated and that no 
         // new pairs have been created in the third text editor.
         await executor.focusEditorGroup('first');
-        async function stepFourChecks(executor: Executor): Promise<void> {
-            executor.assertPairs(firstEditorPairs,                     { viewColumn: ViewColumn.One });
-            executor.assertCursors(firstEditorCursors,                 { viewColumn: ViewColumn.One });
-            executor.assertPairs([ { line: 2, sides: range(0, 40) } ], { viewColumn: ViewColumn.Two });
-            executor.assertCursors([ [2, 20] ],                        { viewColumn: ViewColumn.Two });
-            executor.assertPairs([ 'None' ],                           { viewColumn: ViewColumn.Three });
-            executor.assertCursors([ [0, 0] ],                         { viewColumn: ViewColumn.Three });    
+        async function stepFourChecks(): Promise<void> {
+            await executor.assertPairs(firstEditorPairs,      { viewColumn: ViewColumn.One });
+            await executor.assertCursors(firstEditorCursors,  { viewColumn: ViewColumn.One });
+            await executor.assertPairs(secondEditorPairs,     { viewColumn: ViewColumn.Two });
+            await executor.assertCursors(secondEditorCursors, { viewColumn: ViewColumn.Two });
+            await executor.assertPairs([ 'None' ],            { viewColumn: ViewColumn.Three });
+            await executor.assertCursors([ [0, 0] ],          { viewColumn: ViewColumn.Three });    
         }
-        await stepFourChecks(executor);
+        await stepFourChecks();
 
         // 5. Switch focus to the text editor in view column 2.
         // 
         // Repeat the checks we did in step 4.
         await executor.focusEditorGroup('second');
-        await stepFourChecks(executor);
+        await stepFourChecks();
         
         // 6. Switch focus to view column 4, which will open an empty editor tab group since there
         //    was no existing text editor opened in view column 4.
         //
         // Repeat the checks we did in step 4.
         await executor.focusEditorGroup('fourth');
-        await stepFourChecks(executor);
+        await stepFourChecks();
 
         // 7. Switch focus to the text editor in view column 1.
         //
         // Repeat the checks we did in step 4.
         await executor.focusEditorGroup('first');
-        await stepFourChecks(executor);
+        await stepFourChecks();
 
         // 8. Switch focus to the explorer side bar.
         //
         // Repeat the checks we did in step 4.
         await executor.focusExplorerSideBar();
-        await stepFourChecks(executor);
+        await stepFourChecks();
 
         // 9. Switch focus to the text editor in view column 2.
         //
         // Repeat the checks we did in step 4.
         await executor.focusEditorGroup('second');
-        await stepFourChecks(executor);
+        await stepFourChecks();
     }
 });
 
