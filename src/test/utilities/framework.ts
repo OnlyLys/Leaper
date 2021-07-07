@@ -706,7 +706,7 @@ function getHandle(): TestAPI {
 function resolveViewColumnOption(viewColumnOption: ViewColumnOption | undefined): ResolvedViewColumn {
     const viewColumn = viewColumnOption?.viewColumn ?? ViewColumn.Active;
     if (viewColumn === ViewColumn.Active) {
-        if (window.activeTextEditor === undefined || window.activeTextEditor.viewColumn === undefined) {
+        if (!window.activeTextEditor|| window.activeTextEditor.viewColumn === undefined) {
             throw new Error('Unable to resolve `ViewColumn.Active`!');
         }
 
