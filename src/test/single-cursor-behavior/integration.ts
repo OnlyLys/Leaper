@@ -63,7 +63,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // function main()
         //               ^(cursor position)
         // ```
-        await executor.typeText('(' );
+        await executor.typeText('(');
         executor.assertPairs([ { line: 0, sides: [13, 14] } ]);
         executor.assertCursors([ [0, 14] ]);
         executor.assertMRBInLeaperModeContext(true);
@@ -81,6 +81,18 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         executor.assertMRBInLeaperModeContext(false);
         executor.assertMRBHasLineOfSightContext(false);
 
+        // Document state after:
+        //
+        // ```
+        // function main() 
+        //                 ^(cursor position)
+        // ```
+        await executor.typeText(' ');
+        executor.assertPairs([ 'None' ]);
+        executor.assertCursors([ [0, 16] ]);
+        executor.assertMRBInLeaperModeContext(false);
+        executor.assertMRBHasLineOfSightContext(false);
+
             // Mistake simulation: wrong bracket inserted.
             //
             // Document state after:
@@ -89,7 +101,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // function main() []
             //                  ^(cursor position)
             // ```
-            await executor.typeText(' [');
+            await executor.typeText('[');
             executor.assertPairs([ { line: 0, sides: [16, 17] } ]);
             executor.assertCursors([ [0, 17] ]);
             executor.assertMRBInLeaperModeContext(true);
@@ -115,25 +127,12 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // Document state after:
             // 
             // ```
-            // function main() []
-            // ```              ^(cursor position)
-            await executor.undo();
-            executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [0, 17] ]);
-            executor.assertMRBInLeaperModeContext(false);
-            executor.assertMRBHasLineOfSightContext(false);
-
-            // Mistake simulation: wrong bracket inserted.
-            //
-            // Document state after:
-            // 
-            // ```
             // function main() 
-            //                ^(cursor position)
+            //                 ^(cursor position)
             // ```
-            await executor.backspace({ repetitions: 2 });
+            await executor.undo({ repetitions: 2 });
             executor.assertPairs([ 'None' ]);
-            executor.assertCursors([ [0, 15] ]);
+            executor.assertCursors([ [0, 16] ]);
             executor.assertMRBInLeaperModeContext(false);
             executor.assertMRBHasLineOfSightContext(false);
 
@@ -143,7 +142,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // function main() {}
         //                  ^(cursor position)
         // ```
-        await executor.typeText(' {');
+        await executor.typeText('{');
         executor.assertPairs([ { line: 0, sides: [16, 17] } ]);
         executor.assertCursors([ [0, 17] ]);
         executor.assertMRBInLeaperModeContext(true);
