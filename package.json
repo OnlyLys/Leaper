@@ -82,7 +82,7 @@
                     "properties": {
                         "backgroundColor": {
                             "type": "string",
-                            "markdownDescription": "CSS [`background-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) property. \n\nThis configuration accepts either an [RGB color value](https://code.visualstudio.com/api/references/theme-color#color-formats) or a [theme color identifier](https://code.visualstudio.com/api/references/vscode-api#ThemeColor)."
+                            "markdownDescription": "CSS [`background-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
                         },
                         "border": {
                             "type": "string",
@@ -90,7 +90,7 @@
                         },
                         "borderColor": {
                             "type": "string",
-                            "markdownDescription": "CSS [`border-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-color) property. \n\nThis configuration accepts either an [RGB color value](https://code.visualstudio.com/api/references/theme-color#color-formats) or a [theme color identifier](https://code.visualstudio.com/api/references/vscode-api#ThemeColor)."
+                            "markdownDescription": "CSS [`border-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
                         },
                         "borderRadius": {
                             "type": "string",
@@ -110,7 +110,7 @@
                         },
                         "color": {
                             "type": "string",
-                            "markdownDescription": "CSS [`color`](https://developer.mozilla.org/en-US/docs/Web/CSS/color) property. \n\nThis configuration accepts either an [RGB color value](https://code.visualstudio.com/api/references/theme-color#color-formats) or a [theme color identifier](https://code.visualstudio.com/api/references/vscode-api#ThemeColor)."
+                            "markdownDescription": "CSS [`color`](https://developer.mozilla.org/en-US/docs/Web/CSS/color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
                         },
                         "fontStyle": {
                             "type": "string",
@@ -119,6 +119,10 @@
                         "fontWeight": {
                             "type": "string",
                             "markdownDescription": "CSS [`font-weight`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight) property."
+                        },
+                        "letterSpacing": {
+                            "type": "string",
+                            "markdownDescription": "CSS [`letter-spacing`](https://developer.mozilla.org/en-US/docs/Web/CSS/letter-spacing) property."
                         },
                         "opacity": {
                             "type": "string",
@@ -130,7 +134,7 @@
                         },
                         "outlineColor": {
                             "type": "string",
-                            "markdownDescription": "CSS [`outline-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/outline-color) property. \n\nThis configuration accepts either an [RGB color value](https://code.visualstudio.com/api/references/theme-color#color-formats) or a [theme color identifier](https://code.visualstudio.com/api/references/vscode-api#ThemeColor)."
+                            "markdownDescription": "CSS [`outline-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/outline-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
                         },
                         "outlineStyle": {
                             "type": "string",
@@ -140,14 +144,462 @@
                             "type": "string",
                             "markdownDescription": "CSS [`outline-width`](https://developer.mozilla.org/en-US/docs/Web/CSS/outline-width) property."
                         },
-                        "rangeBehavior": false,
                         "textDecoration": {
                             "type": "string",
                             "markdownDescription": "CSS [`text-decoration`](https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration) property."
-                        }
+                        },
+                        "after": {
+                            "type": "object",
+                            "markdownDescription": "The decoration style of the attachment that is inserted after closing side of each pair.",
+                            "properties": {
+                                "backgroundColor": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`background-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "border": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border`](https://developer.mozilla.org/en-US/docs/Web/CSS/border) property."
+                                },
+                                "borderColor": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "color": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`color`](https://developer.mozilla.org/en-US/docs/Web/CSS/color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "contentText": {
+                                    "type": "string",
+                                    "markdownDescription": "Text content that is shown in the attachment."
+                                },
+                                "fontStyle": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`font-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-style) property."
+                                },
+                                "fontWeight": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`font-weight`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight) property."
+                                },
+                                "height": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`height`](https://developer.mozilla.org/en-US/docs/Web/CSS/height) property."
+                                },
+                                "margin": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`margin`](https://developer.mozilla.org/en-US/docs/Web/CSS/margin) property."
+                                },
+                                "textDecoration": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`text-decoration`](https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration) property."
+                                },
+                                "width": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`width`](https://developer.mozilla.org/en-US/docs/Web/CSS/width) property."
+                                }
+                            }
+                        },
+                        "before": {
+                            "type": "object",
+                            "markdownDescription": "The decoration style of the attachment that is inserted before closing side of each pair.",
+                            "properties": {
+                                "backgroundColor": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`background-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "border": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border`](https://developer.mozilla.org/en-US/docs/Web/CSS/border) property."
+                                },
+                                "borderColor": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "color": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`color`](https://developer.mozilla.org/en-US/docs/Web/CSS/color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "contentText": {
+                                    "type": "string",
+                                    "markdownDescription": "Text content that is shown in the attachment."
+                                },
+                                "fontStyle": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`font-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-style) property."
+                                },
+                                "fontWeight": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`font-weight`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight) property."
+                                },
+                                "height": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`height`](https://developer.mozilla.org/en-US/docs/Web/CSS/height) property."
+                                },
+                                "margin": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`margin`](https://developer.mozilla.org/en-US/docs/Web/CSS/margin) property."
+                                },
+                                "textDecoration": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`text-decoration`](https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration) property."
+                                },
+                                "width": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`width`](https://developer.mozilla.org/en-US/docs/Web/CSS/width) property."
+                                }
+                            }
+                        },
+                        "light": {
+                            "type": "object",
+                            "markdownDescription": "Options to override for light themes.",
+                            "properties": {
+                                "backgroundColor": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`background-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "border": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border`](https://developer.mozilla.org/en-US/docs/Web/CSS/border) property."
+                                },
+                                "borderColor": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "borderRadius": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border-radius`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius) property."
+                                },
+                                "borderSpacing": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border-spacing`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-spacing) property."
+                                },
+                                "borderStyle": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-style) property."
+                                },
+                                "borderWidth": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border-width`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-width) property."
+                                },
+                                "color": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`color`](https://developer.mozilla.org/en-US/docs/Web/CSS/color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "fontStyle": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`font-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-style) property."
+                                },
+                                "fontWeight": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`font-weight`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight) property."
+                                },
+                                "letterSpacing": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`letter-spacing`](https://developer.mozilla.org/en-US/docs/Web/CSS/letter-spacing) property."
+                                },
+                                "opacity": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`opacity`](https://developer.mozilla.org/en-US/docs/Web/CSS/opacity) property."
+                                },
+                                "outline": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`outline`](https://developer.mozilla.org/en-US/docs/Web/CSS/outline) property."
+                                },
+                                "outlineColor": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`outline-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/outline-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "outlineStyle": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`outline-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/outline-style) property."
+                                },
+                                "outlineWidth": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`outline-width`](https://developer.mozilla.org/en-US/docs/Web/CSS/outline-width) property."
+                                },
+                                "textDecoration": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`text-decoration`](https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration) property."
+                                },
+                                "after": {
+                                    "type": "object",
+                                    "markdownDescription": "The decoration style of the attachment that is inserted after closing side of each pair.",
+                                    "properties": {
+                                        "backgroundColor": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`background-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                        },
+                                        "border": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`border`](https://developer.mozilla.org/en-US/docs/Web/CSS/border) property."
+                                        },
+                                        "borderColor": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`border-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                        },
+                                        "color": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`color`](https://developer.mozilla.org/en-US/docs/Web/CSS/color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                        },
+                                        "contentText": {
+                                            "type": "string",
+                                            "markdownDescription": "Text content that is shown in the attachment."
+                                        },
+                                        "fontStyle": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`font-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-style) property."
+                                        },
+                                        "fontWeight": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`font-weight`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight) property."
+                                        },
+                                        "height": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`height`](https://developer.mozilla.org/en-US/docs/Web/CSS/height) property."
+                                        },
+                                        "margin": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`margin`](https://developer.mozilla.org/en-US/docs/Web/CSS/margin) property."
+                                        },
+                                        "textDecoration": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`text-decoration`](https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration) property."
+                                        },
+                                        "width": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`width`](https://developer.mozilla.org/en-US/docs/Web/CSS/width) property."
+                                        }
+                                    }
+                                },
+                                "before": {
+                                    "type": "object",
+                                    "markdownDescription": "The decoration style of the attachment that is inserted before closing side of each pair.",
+                                    "properties": {
+                                        "backgroundColor": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`background-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                        },
+                                        "border": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`border`](https://developer.mozilla.org/en-US/docs/Web/CSS/border) property."
+                                        },
+                                        "borderColor": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`border-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                        },
+                                        "color": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`color`](https://developer.mozilla.org/en-US/docs/Web/CSS/color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                        },
+                                        "contentText": {
+                                            "type": "string",
+                                            "markdownDescription": "Text content that is shown in the attachment."
+                                        },
+                                        "fontStyle": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`font-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-style) property."
+                                        },
+                                        "fontWeight": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`font-weight`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight) property."
+                                        },
+                                        "height": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`height`](https://developer.mozilla.org/en-US/docs/Web/CSS/height) property."
+                                        },
+                                        "margin": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`margin`](https://developer.mozilla.org/en-US/docs/Web/CSS/margin) property."
+                                        },
+                                        "textDecoration": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`text-decoration`](https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration) property."
+                                        },
+                                        "width": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`width`](https://developer.mozilla.org/en-US/docs/Web/CSS/width) property."
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "dark": {
+                            "type": "object",
+                            "markdownDescription": "Options to override for dark themes.",
+                            "properties": {
+                                "backgroundColor": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`background-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "border": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border`](https://developer.mozilla.org/en-US/docs/Web/CSS/border) property."
+                                },
+                                "borderColor": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "borderRadius": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border-radius`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius) property."
+                                },
+                                "borderSpacing": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border-spacing`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-spacing) property."
+                                },
+                                "borderStyle": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-style) property."
+                                },
+                                "borderWidth": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`border-width`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-width) property."
+                                },
+                                "color": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`color`](https://developer.mozilla.org/en-US/docs/Web/CSS/color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "fontStyle": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`font-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-style) property."
+                                },
+                                "fontWeight": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`font-weight`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight) property."
+                                },
+                                "letterSpacing": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`letter-spacing`](https://developer.mozilla.org/en-US/docs/Web/CSS/letter-spacing) property."
+                                },
+                                "opacity": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`opacity`](https://developer.mozilla.org/en-US/docs/Web/CSS/opacity) property."
+                                },
+                                "outline": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`outline`](https://developer.mozilla.org/en-US/docs/Web/CSS/outline) property."
+                                },
+                                "outlineColor": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`outline-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/outline-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                },
+                                "outlineStyle": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`outline-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/outline-style) property."
+                                },
+                                "outlineWidth": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`outline-width`](https://developer.mozilla.org/en-US/docs/Web/CSS/outline-width) property."
+                                },
+                                "textDecoration": {
+                                    "type": "string",
+                                    "markdownDescription": "CSS [`text-decoration`](https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration) property."
+                                },
+                                "after": {
+                                    "type": "object",
+                                    "markdownDescription": "The decoration style of the attachment that is inserted after closing side of each pair.",
+                                    "properties": {
+                                        "backgroundColor": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`background-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                        },
+                                        "border": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`border`](https://developer.mozilla.org/en-US/docs/Web/CSS/border) property."
+                                        },
+                                        "borderColor": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`border-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                        },
+                                        "color": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`color`](https://developer.mozilla.org/en-US/docs/Web/CSS/color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                        },
+                                        "contentText": {
+                                            "type": "string",
+                                            "markdownDescription": "Text content that is shown in the attachment."
+                                        },
+                                        "fontStyle": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`font-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-style) property."
+                                        },
+                                        "fontWeight": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`font-weight`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight) property."
+                                        },
+                                        "height": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`height`](https://developer.mozilla.org/en-US/docs/Web/CSS/height) property."
+                                        },
+                                        "margin": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`margin`](https://developer.mozilla.org/en-US/docs/Web/CSS/margin) property."
+                                        },
+                                        "textDecoration": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`text-decoration`](https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration) property."
+                                        },
+                                        "width": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`width`](https://developer.mozilla.org/en-US/docs/Web/CSS/width) property."
+                                        }
+                                    }
+                                },
+                                "before": {
+                                    "type": "object",
+                                    "markdownDescription": "The decoration style of the attachment that is inserted before closing side of each pair.",
+                                    "properties": {
+                                        "backgroundColor": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`background-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                        },
+                                        "border": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`border`](https://developer.mozilla.org/en-US/docs/Web/CSS/border) property."
+                                        },
+                                        "borderColor": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`border-color`](https://developer.mozilla.org/en-US/docs/Web/CSS/border-color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                        },
+                                        "color": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`color`](https://developer.mozilla.org/en-US/docs/Web/CSS/color) property. \n\nAccepts either a hex RGB(A) color value (such as `#EC1D51E0`) or a theme color identifier (such as `editorWarning.foreground`). Read more about colors [here](https://code.visualstudio.com/api/references/theme-color)."
+                                        },
+                                        "contentText": {
+                                            "type": "string",
+                                            "markdownDescription": "Text content that is shown in the attachment."
+                                        },
+                                        "fontStyle": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`font-style`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-style) property."
+                                        },
+                                        "fontWeight": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`font-weight`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight) property."
+                                        },
+                                        "height": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`height`](https://developer.mozilla.org/en-US/docs/Web/CSS/height) property."
+                                        },
+                                        "margin": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`margin`](https://developer.mozilla.org/en-US/docs/Web/CSS/margin) property."
+                                        },
+                                        "textDecoration": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`text-decoration`](https://developer.mozilla.org/en-US/docs/Web/CSS/text-decoration) property."
+                                        },
+                                        "width": {
+                                            "type": "string",
+                                            "markdownDescription": "CSS [`width`](https://developer.mozilla.org/en-US/docs/Web/CSS/width) property."
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "rangeBehavior": false
                     },
                     "uniqueItems": true,
-                    "markdownDescription": "How the closing side of each pair is decorated. \n\nThis configuration expects a [`DecorationRenderOptions`](https://code.visualstudio.com/api/references/vscode-api#DecorationRenderOptions) object, and all options (except for `rangeBehavior`) can be configured. \n\nHowever, options aside from the ones related to \"outline\", \"border\" or \"font\" have not been tested, and use of them may cause unwanted side-effects. It is possible for heavy and complicated decorations to slow down or even crash the editor. Unfortunately, because there are so many different options available, and newer ones are always being introduced into vscode's API, there is no way to test all the possible combinations of options. \n\nAny option that expects a non-`string` type can be specified with an object literal matching the structure of that type. For example, see the default value of this configuration, where for the `outlineColor` option, an object literal matching the structure of a [`ThemeColor`](https://code.visualstudio.com/api/references/vscode-api#ThemeColor) was specified. \n\nDecorations can be disabled by setting this configuration to `{}`.",
+                    "markdownDescription": "The decoration style of the closing side of each pair. \n\nAccepts a subset of [`DecorationRenderOptions`](https://code.visualstudio.com/api/references/vscode-api#DecorationRenderOptions). Disables decorations when set to `{}`.",
                     "scope": "language-overridable"
                 },
                 "leaper.decorateOnlyNearestPair": {
