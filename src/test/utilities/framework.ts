@@ -676,7 +676,9 @@ class ExecutorFull {
         // changes before closing them, we prevent such a thing from happening.
         //
         // Note that we only need to perform this step for titled documents, since untitled ones 
-        // immediately discard their unsaved changes on close.
+        // immediately discard their unsaved changes on close. Furthermore, we cannot wait on 
+        // `isDirty` of untitled documents since they are always considered dirty even though there
+        // is no text content in them.
         for (const document of workspace.textDocuments) {
             if (!document.isUntitled) {
                 await window.showTextDocument(document);
