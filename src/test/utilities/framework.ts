@@ -698,7 +698,7 @@ class ExecutorFull {
  * a while before changes in the state of the running vscode instance are acknowledged by the engine.
  * Thus, we require some delay before querying the engine.
  */
-const QUERY_DELAY_MS = 30;
+const QUERY_DELAY_MS = 50;
 
 function resolveViewColumnOption(
     viewColumnOption: ViewColumnOption | undefined
