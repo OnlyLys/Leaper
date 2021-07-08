@@ -21,6 +21,17 @@ export class TestCategory {
     public run(): void {
         const testGroups = this.testGroups;
         describe(this.name, function () {
+
+            before(async function () {
+
+                // If the previous test run did not terminate properly, then during the next test 
+                // run, vscode might restore the previous run's view state. That might cause tests
+                // to fail since the initial view state is unpredictable. We solve that issue by 
+                // closing all text editors the moment the test instance opens.
+                await commands.executeCommand('workbench.action.closeAllEditors');
+
+            });
+
             testGroups.forEach((group) => group.run());
         });
     }
