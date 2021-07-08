@@ -30,6 +30,8 @@ export class TestCategory {
                 // closing all text editors the moment the test instance opens.
                 await commands.executeCommand('workbench.action.closeAllEditors');
 
+                // Make sure side bar is closed so that it does not take up space.
+                await commands.executeCommand('workbench.action.closeSidebar');
             });
 
             testGroups.forEach((group) => group.run());
