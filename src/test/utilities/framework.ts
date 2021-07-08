@@ -139,7 +139,7 @@ class ExecutorFull {
      * the API has "caught up". Similarly, this extension's engine also requires some time to reflect 
      * changes since it receives information asynchronously.
      */
-    private static readonly QUERY_DELAY_MS = 50;
+    private static readonly QUERY_DELAY_MS = 70;
 
     /**
      * Delay to apply after each repetition of a command.
