@@ -48,9 +48,6 @@ export class TestGroup {
 
 /**
  * Represents a task to be executed in order to verify a behavior of this extension.
- * 
- * Each test case is provided a fresh text editor. Additional text editors can be opened by calling
- * the appropriate `Executor` methods.
  */
 export class TestCase {
 
@@ -58,18 +55,13 @@ export class TestCase {
 
         readonly name: string,
 
-        /** 
-         * The language to set the fresh text editor to.
-         */
-        readonly languageId: AllowedLanguages,
-
-        /**
-         * Callback to setup the fresh text editor before running the test case.
+        /*
+         * Setup to perform before executing the test.
          */
         readonly prelude?: (executor: Executor) => Promise<void>,
 
         /** 
-         * Callback to execute as part of the test case. 
+         * The test to run.
          * 
          * The `executor` parameter provides the necessary facilities for test execution.
          */
@@ -78,7 +70,7 @@ export class TestCase {
     }) {}
 
     public run(): void {
-        const { name, languageId, prelude, task } = this.args;
+        const { name, prelude, task } = this.args;
         it(name, async function () {
 
             // To allow test cases to modify and check the state of the running vscode instance.
@@ -86,10 +78,7 @@ export class TestCase {
 
             try {
                 
-                // Open a fresh text editor for the test case.
-                await executor.openNewTextEditor(languageId);
-    
-                // Setup the opened editor for the test.
+                // Perform setup for the test.
                 if (prelude) {
                     executor.inPrelude = true;
                     await prelude(executor);
@@ -252,24 +241,6 @@ class ExecutorFull {
     }
 
     /**
-     * Get the cursors of a visible text editor.
-     */
-    public async getCursors(options?: ViewColumnOption): Promise<CompactCursor[]> {
-        const editor = await getVisibleTextEditor(options);
-        return editor.selections.map((cursor) => {
-            const anchorLine = cursor.anchor.line;
-            const anchorChar = cursor.anchor.character;
-            const activeLine = cursor.active.line;
-            const activeChar = cursor.active.character;
-            if (anchorLine === activeLine && anchorChar === activeChar) {
-                return [anchorLine, anchorChar];
-            } else {
-                return { anchor: [anchorLine, anchorChar], active: [activeLine, activeChar] };
-            }
-        });
-    }
-
-    /**
      * Assert the most recently broadcasted value of `leaper.inLeaperMode` keybinding context.
      */
     public async assertMRBInLeaperModeContext(expect: boolean): Promise<void> {
@@ -380,18 +351,17 @@ class ExecutorFull {
      * Move each cursor in the active text editor.
      */
     public async moveCursors(
-        where:    'left' | 'right' | 'up' | 'down' | 'home' | 'end' | 'endOfDocument',
+        where:    'left' | 'right' | 'up' | 'down' | 'home' | 'end',
         options?: RepetitionOption
     ): Promise<void> {
         const commandId = (() => {
             switch (where) {
-                case 'left':          return 'cursorLeft';
-                case 'right':         return 'cursorRight';
-                case 'up':            return 'cursorUp';
-                case 'down':          return 'cursorDown';
-                case 'home':          return 'cursorHome';
-                case 'end':           return 'cursorEnd';
-                case 'endOfDocument': return 'cursorBottom';
+                case 'left':  return 'cursorLeft';
+                case 'right': return 'cursorRight';
+                case 'up':    return 'cursorUp';
+                case 'down':  return 'cursorDown';
+                case 'home':  return 'cursorHome';
+                case 'end':   return 'cursorEnd';
             }
         })();
         await executeCommandWithRepetition(commandId, options);
@@ -554,29 +524,55 @@ class ExecutorFull {
     /**
      * Open a file within the test workspace.
      * 
-     * @param relPath The path of the file relative to the root of the test workspace.
+     * Each file is within a workspace folder, and has different preconfigured configuration values 
+     * that override the root workspace's values. Below is a table of the relevant configuration 
+     * values for each available file:
+     * 
+     * ```      
+     * -------------------------------------------------------------------------------------------------            
+     * Workspace Folder               | 0          | 1          | 2          | 3          | 4          |
+     * File                           | text.ts    | text.txt   | text.ts    | text.md    | text.ts    |
+     * -------------------------------------------------------------------------------------------------
+     * Language                       | Typescript | Plaintext  | Typescript | Markdown   | Typescript |
+     * Autoclosing Pairs              | (A1)       | (A3)       | (A1)       | (A2)       | (A1)       |
+     *                                |            |            |            |            |            |
+     * leaper.decorateAll Value       |            |            |            |            |            |
+     *   - Workspace                  | false      | false      | false      | false      | false      |
+     *   - Workspace Folder           | undefined  | undefined  | undefined  | undefined  | true       |
+     *   - Language Workspace         | undefined  | undefined  | undefined  | undefined  | undefined  | 
+     *   - Language Workspace Folder  | undefined  | undefined  | undefined  | undefined  | undefined  | 
+     *   - Effective                  | false      | false      | false      | false      | true       | 
+     *                                |            |            |            |            |            |
+     * leaper.detectedPairs Value     |            |            |            |            |            |
+     *   - Workspace                  | (P1)       | (P1)       | (P1)       | (P1)       | (P1)       | 
+     *   - Workspace Folder           | undefined  | undefined  | [ "()" ]   | []         | undefined  | 
+     *   - Language Workspace         | undefined  | []         | undefined  | undefined  | undefined  | 
+     *   - Language Workspace Folder  | undefined  | undefined  | undefined  | (P2)       | undefined  | 
+     *   - Effective                  | (P1)       | []         | [ "()" ]   | (P2)       | (P1)       | 
+     * -------------------------------------------------------------------------------------------------
+     * 
+     * (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+     * *(A2): [ "()", "[]", "{}", "<>" ]
+     * (A3): [ "()", "[]", "{}" ]
+     * (P1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+     * (P2): [ "{}", "<>" ]
+     * 
+     * *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
+     * consistently autoclosed.
+     * ```
      */
     public async openFile(
-        relPath:  string, 
-        options?: RepetitionOption & ShowOptions
+        file: './workspace-0/text.ts'
+            | './workspace-1/text.txt'
+            | './workspace-2/text.ts'
+            | './workspace-3/text.md'
+            | './workspace-4/text.ts', 
+        options?: RepetitionOption & Pick<TextDocumentShowOptions, 'viewColumn' | 'preserveFocus'>
     ): Promise<void> {
         await executeWithRepetition(async () => {
             const rootPath = path.dirname(workspace.workspaceFile?.path ?? '');
-            const filePath = path.join(rootPath, relPath);
+            const filePath = path.join(rootPath, file);
             const document = await workspace.openTextDocument(filePath);
-            await window.showTextDocument(document, options);
-        }, options);
-    }
-
-    /**
-     * Open a new text editor containing an empty text document.
-     */
-    public async openNewTextEditor(
-        languageId: AllowedLanguages,
-        options?:   RepetitionOption & ShowOptions
-    ): Promise<void> {
-        await executeWithRepetition(async () => {
-            const document = await workspace.openTextDocument({ language: languageId });
             await window.showTextDocument(document, options);
         }, options);
     }
@@ -602,9 +598,9 @@ class ExecutorFull {
     public async setConfiguration<T>(
         args: {
             partialName:            'decorateAll' | 'decorationOptions' | 'detectedPairs', 
-            value:                  T,
-            targetWorkspaceFolder?: 'workspace-1' | 'workspace-2' | 'workspace-3' | 'workspace-4',
-            targetLanguage?:        AllowedLanguages
+            value:                  T | undefined,
+            targetWorkspaceFolder?: 'workspace-0' | 'workspace-1' | 'workspace-2' | 'workspace-3' | 'workspace-4',
+            targetLanguage?:        'typescript' | 'markdown' | 'plaintext'
         },
         options?: RepetitionOption
     ): Promise<void> {
@@ -820,7 +816,3 @@ interface RepetitionOption {
     repetitions?: number;
 
 }
-
-type ShowOptions = Pick<TextDocumentShowOptions, 'viewColumn' | 'preserveFocus'>;
-
-type AllowedLanguages = 'typescript' | 'markdown' | 'plaintext';

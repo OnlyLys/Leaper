@@ -1,24 +1,42 @@
 import { ViewColumn } from 'vscode';
 import { Configuration } from '../../engine/tracker/configuration/configuration';
-import { CompactPosition } from '../utilities/compact';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
 
 /**
- * Test the effective `leaper.detectedPairs` configuration in the active text editor by asserting 
+ * Test the effective `leaper.detectedPairs` configuration in a visible text editor by asserting 
  * that:
  * 
  *  - The autoclosing pairs in `should` are detected.
  *  - The autoclosing pairs in `shouldNot` are not detected.
  * 
- * **Please make sure that the pairs provided are actual autoclosing pairs in the language of the
- * active text editor**. For instance, `<>`, even though it is a commonly used pair in languages 
- * with generics like Rust or Typescript, is not autoclosed in either language. 
+ * Because different languages have different autoclosing pairs, the pairs that you can specify in
+ * `should` and `shouldNot` also depends on the language of the target text editor.
+ * 
+ * Note that this function takes focus of and overwrites the target text editor.
  */
-async function testDetectedPairs(
-    executor:  Executor,
-    should:    ("{}" | "[]" | "()" | "''" | "\"\"" | "``" | "<>")[],
-    shouldNot: ("{}" | "[]" | "()" | "''" | "\"\"" | "``" | "<>")[]
+async function testDetection(
+    executor: Executor,
+    targetViewColumn: 'first' | 'second' | 'third' | 'fourth',
+    args: {
+            language: 'typescript',
+            should:    ("{}" | "[]" | "()" | "''" | "\"\"" | "``")[],
+            shouldNot: ("{}" | "[]" | "()" | "''" | "\"\"" | "``")[],
+          } | 
+          {
+            language: 'plaintext',
+            should:    ("{}" | "[]" | "()" )[],
+            shouldNot: ("{}" | "[]" | "()" )[],
+          } |
+          {
+            language: 'markdown',
+            should:    ("{}" | "[]" | "()" | "<>" )[],
+            shouldNot: ("{}" | "[]" | "()" | "<>" )[],
+          }
 ): Promise<void> {
+    await executor.focusEditorGroup(targetViewColumn);
+
+    // Get rid of all existing text so we know where pairs will be inserted.
+    await executor.deleteAll();
 
     /**
      * Type in the opening side of each pair (which are expected to be autoclosed), then depending
@@ -27,84 +45,113 @@ async function testDetectedPairs(
      *  - If `true`, will assert that each inserted pair is tracked by the engine.
      *  - If `false`, will assert that each inserted pair is not tracked by the engine.
      * 
-     * This function will undo all the pairs that it inserted and restore the cursor to its original
-     * position when it is done.
+     * This function will undo all the pairs that it inserted when it is done.
      */
     async function check(
-        initialCursorPosition: CompactPosition,
-        pairs: ("{}" | "[]" | "()" | "''" | "\"\"" | "``" | "<>")[],
+        executor:    Executor,
+        pairs:       ("{}" | "[]" | "()" | "''" | "\"\"" | "``" | "<>")[],
         expectTrack: boolean
     ): Promise<void> {
-        const [line, column] = initialCursorPosition;
         for (const pair of pairs) {
 
             // Type in the opening side, which is expected to be autoclosed.
             await executor.typeText(pair[0]);
 
-            // As a safety precaution, check that the cursor is advanced by 1 unit, as it would when 
-            // typing in a pair that is then autoclosed.
-            await executor.assertCursors([ [line, column + 1] ]);
-
             // Check that the pair is being tracked (or not tracked, depending on `expectTrack`).
             if (expectTrack) {
-                await executor.assertPairs([{ line, sides: [column, column + 1] }]);
+                await executor.assertPairs([{ line: 0, sides: [0, 1] }]);
             } else {
                 await executor.assertPairs([ 'None' ]);
             }
+
+            // As a precaution, check that the cursor is advanced by 1 unit, as it would when typing 
+            // in a pair that is then autoclosed.
+            await executor.assertCursors([ [0, 1] ]);
 
             // Remove the inserted pair.
             await executor.undo();
 
             // Check that the undo was successful.
             await executor.assertPairs([ 'None' ]);
-            await executor.assertCursors([ initialCursorPosition ]);
+            await executor.assertCursors([ [0, 0] ]);
         }
     }
 
-    // Some of the documents that we open might already have preexisting text it. Thus, we do this 
-    // so that when the opening side of pairs are entered, we know that they will be autoclosed.
-    await executor.moveCursors('endOfDocument');
-
-    const initialCursorPosition = (await executor.getCursors())[0] as [number, number];
-    await check(initialCursorPosition, should,    true);
-    await check(initialCursorPosition, shouldNot, false);
+    await check(executor, args.should,    true);
+    await check(executor, args.shouldNot, false);
 }
 
 /**
- * Test whether the configuration value for `leaper.detectedPairs`'s is being correctly read and 
- * that its value appropriately affects the behavior of the engine.
+ * Open four text editors in exclusive view columns.
+ *
+ * The following table shows the relevant configuration values for the text editors in each view 
+ * column:
+ * 
+ *     View Column                       1            2            3            4          
+ *     -------------------------------------------------------------------------------------
+ *     Workspace Folder                | 0          | 1          | 2          | 3          |
+ *     File                            | text.ts    | text.txt   | text.ts    | text.md    |
+ *     -------------------------------------------------------------------------------------
+ *     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
+ *     Autoclosing Pairs               | (A1)       | (A3)       | (A1)       | (A2)       |
+ *                                     |            |            |            |            |
+ *     leaper.detectedPairs Value      |            |            |            |            |
+ *       - Workspace                   | (P1)       | (P1)       | (P1)       | (P1)       |
+ *       - Workspace Folder            | undefined  | undefined  | [ "()" ]   | []         |
+ *       - Language Workspace          | undefined  | []         | undefined  | undefined  |
+ *       - Language Workspace Folder   | undefined  | undefined  | undefined  | (P2)       |
+ *       - Effective                   | (P1)       | []         | [ "()" ]   | (P2)       |
+ *     -------------------------------------------------------------------------------------
+ *     
+ *     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+ *     *(A2): [ "()", "[]", "{}", "<>" ]
+ *     (A3): [ "()", "[]", "{}" ]
+ *     (P1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+ *     (P2): [ "{}", "<>" ]
+ *     
+ *     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
+ *     consistently autoclosed.
+ */
+async function prelude(executor: Executor): Promise<void> {
+    await executor.openFile('./workspace-0/text.ts');
+    await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.Two });
+    await executor.openFile('./workspace-2/text.ts',  { viewColumn: ViewColumn.Three });
+    await executor.openFile('./workspace-3/text.md',  { viewColumn: ViewColumn.Four });
+}
+
+/**
+ * Test whether the configuration value for `leaper.detectedPairs` is being correctly read and that 
+ * its value appropriately affects the behavior of the engine.
  */
 const WORKS_TEST_CASE = new TestCase({
     name: 'Works',
-    languageId: 'typescript',
+    prelude,
     task: async (executor) => {
 
-        // Within this test case we shall be switching between different text editors within the 
-        // test workspace. Each of the text documents in the test workspace has been preconfigured 
-        // to have effective values inherited from different scopes. 
-
-        // 1. Effective value from workspace scope.
+        // 1. Test effective value from workspace scope.
         // 
-        // For this, we use the text editor that is provided to this test case.
+        // For this, we use the Typescript text editor in view column 1.
         // 
-        // The root workspace has `leaper.detectedPairs` configured to: 
-        // 
+        // Since the text editor in view column 1 has an effective `leaper.detectedPairs` value of:
+        //
         //     [ "{}", "[]", "()", "''", "\"\"", "``", "<>" ]
         // 
         // while Typescript autocloses the following pairs: 
         //
         //     [ "{}", "[]", "()", "''", "\"\"", "``" ]
         //
-        // Because the text editor provided is Typescript and does not belong to any of the workspace
-        // folders within the test workspace, its effective value will be from the root workspace
-        // scope. Therefore we expect all of the autoclosing pairs of Typescript to be tracked.
-        await testDetectedPairs(executor, [ "{}", "[]", "()", "''", "\"\"", "``" ], []);
+        // Then we expect all of the pairs that Typescript autocloses to be detected.
+        await testDetection(executor, 'first', { 
+            language: 'typescript',
+            should:    [ "{}", "[]", "()", "''", "\"\"", "``" ], 
+            shouldNot: []
+        });
 
-        // 2. Effective value from language-specific workspace scope.
+        // 2. Test effective value from language-specific workspace scope.
         //
-        // For this, we use the Plaintext file within Workspace Folder 1.
+        // For this, we use the Plaintext text editor in view column 2.
         //
-        // The root workspace has `leaper.detectedPairs`, scoped to Plaintext, configured to:
+        // Since the text editor in view column 2 has an effective `leaper.detectedPairs` value of:
         //
         //      []
         //
@@ -112,23 +159,18 @@ const WORKS_TEST_CASE = new TestCase({
         //
         //      [ "{}", "[]", "()" ]
         //
-        // Workspace Folder 1 does not override the root workspace value. Therefore we expect none 
-        // of the autoclosing pairs of Plaintext to be tracked.
-        await executor.openFile('./workspace-1/text.txt');
-        await testDetectedPairs(executor, [], [ "{}", "[]", "()" ]);
+        // Then we expect none of the pairs that Plaintext autocloses to be detected.
+        await testDetection(executor, 'second', {
+            language:  'plaintext',
+            should:    [], 
+            shouldNot: [ "{}", "[]", "()" ]
+        });
 
-        // 2-Extra. Repeat the test after moving the opened text editor to another tab.
+        // 3. Test effective value from workspace folder scope.
         //
-        // This tests whether we can move the text editor without affecting its effective 
-        // configuration value.
-        await executor.moveEditorToGroup('right');
-        await testDetectedPairs(executor, [], [ "{}", "[]", "()" ]);
-
-        // 3. Effective value from workspace folder scope.
-        //
-        // For this, we use the Typescript file within Workspace Folder 2.
+        // For this, we use the Typescript text editor in view column 3.
         // 
-        // Workspace Folder 2 has `leaper.detectedPairs` configured to:
+        // Since the text editor in view column 3 has an effective `leaper.detectedPairs` value of:
         // 
         //     [ "()" ]
         //
@@ -136,29 +178,25 @@ const WORKS_TEST_CASE = new TestCase({
         //
         //     [ "{}", "[]", "()", "''", "\"\"", "``" ]
         // 
-        // Therefore we expect the following autoclosing pairs of Typescript to be tracked:
+        // Then we expect the following autoclosing pairs of Typescript to be detected:
         //
         //     [ "()" ]
         // 
-        // and expect the following autoclosing pairs of Typescript to not be tracked: 
+        // and expect the following autoclosing pairs of Typescript to not be detected:
         //
         //     [ "{}", "[]", "''", "\"\"", "``" ]
         //
-        await executor.openFile('./workspace-2/text.ts');
-        await testDetectedPairs(executor, [ "()" ], [ "{}", "[]", "''", "\"\"", "``" ]);
+        await testDetection(executor, 'third', {
+            language:  'typescript',
+            should:    [ "()" ], 
+            shouldNot: [ "{}", "[]", "''", "\"\"", "``" ]
+        });
 
-        // 3-Extra. Repeat the test after moving the active text editor to another tab.
+        // 4. Test effective value from language-specific workspace folder scope.
         //
-        // This tests whether we can move the text editor without affecting its effective configuration 
-        // value.
-        await executor.moveEditorToGroup('right');
-        await testDetectedPairs(executor, [ "()" ], [ "{}", "[]", "''", "\"\"", "``" ]);
-
-        // 4. Effective value from language-specific workspace folder scope.
+        // For this, we use the Markdown text editor in view column 4.
         //
-        // For this, we use the Markdown file within Workspace Folder 3.
-        //
-        // Workspace Folder 3 has `leaper.detectedPairs`, scoped to Markdown, configured to:
+        // Since the text editor in view column 4 has an effective `leaper.detectedPairs` value of:
         //
         //     [ "{}", "<>" ]
         //
@@ -166,23 +204,51 @@ const WORKS_TEST_CASE = new TestCase({
         //
         //     [ "{}", "()", "<>", "[]" ]
         //
-        // Therefore we expect the following autoclosing pairs of Markdown to be tracked:
+        // Then we expect the following autoclosing pairs of Markdown to be detected:
         //
         //     [ "{}", "<>" ]
         //
-        // and expect the following autoclosing pairs of Markdown to not be tracked:
+        // and expect the following autoclosing pairs of Markdown to not be detected:
         //
         //     [ "()", "[]" ]
         //
-        await executor.openFile('./workspace-3/text.md');
-        await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);
+        await testDetection(executor, 'fourth', {
+            language:  'markdown',
+            should:    [ "{}", "<>" ], 
+            shouldNot: [ "()", "[]" ]
+        });
 
-        // 4-Extra. Repeat the test after moving the active text editor to another tab.
+        // 5 (Extra). Repeat the test in step 4 after moving the text editor in view column 4 to 
+        //            view column 3.
         //
-        // This tests whether we can move the text editor without affecting its loaded configuration 
-        // values.
+        // This tests whether we can move a text editor without affecting its effective configuration 
+        // value.
+        //
+        // Note that moving the text editor in view column 4 to view column 3 causes view column 4 
+        // to close, meaning that after this step, there will only be three view columns.
+        await executor.moveEditorToGroup('left');
+        await testDetection(executor, 'third', {
+            language:  'markdown',
+            should:    [ "{}", "<>" ], 
+            shouldNot: [ "()", "[]" ]
+        });
+
+        // 6 (Extra). Repeat the test in step 2 after moving the text editor in view column 2 to 
+        //            view column 3.
+        // 
+        // This tests whether we can move a text editor without affecting its effective configuration 
+        // value.
+        //
+        // Note that moving the text editor in view column 2 to view column 3 causes view column 2
+        // to close. View column 3 then becomes view column 2. This means that after this step, 
+        // there will only be three view columns.
+        await executor.focusEditorGroup('second');
         await executor.moveEditorToGroup('right');
-        await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);
+        await testDetection(executor, 'second', {
+            language:  'plaintext',
+            should:    [], 
+            shouldNot: [ "{}", "[]", "()" ]
+        });   
     }
 });
 
@@ -192,214 +258,284 @@ const WORKS_TEST_CASE = new TestCase({
  */
 const AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE = new TestCase({
     name: 'Automatic Reload of Latest Effective Value',
-    languageId: 'typescript',
-    prelude: async (executor) => {
-
-        // Open the text files from the first three workspace folders. 
-        //
-        // This results in a total of 4 text editors (including the one provided to this test case)
-        // being opened, arranged as so:
-        //
-        //      Provided | Workspace Folder 1 | Workspace Folder 2 | Workspace Folder 3 
-        //
-        // # Focus
-        // 
-        // The text editor of Workspace Folder 3 (view column 4) will be in focus after this step.
-        await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.Two   });
-        await executor.openFile('./workspace-2/text.ts',  { viewColumn: ViewColumn.Three });
-        await executor.openFile('./workspace-3/text.md',  { viewColumn: ViewColumn.Four  });
-    },
+    prelude,
     task: async (executor) => {
 
-        // Within this test case, we shall modify the configuration's values at various scopes within 
-        // the test workspace. We check after each change that the new values are in effect.
-
+        // Within this test case, we will modify the configuration's values at various scopes within 
+        // the test workspace. We check after each change that the effective values are as expected.
+        //
+        // For the sake of brevity, we will not be writing specific comments explaining why we expect 
+        // certain pairs to be detected and certain pairs to not be detected. The general approach 
+        // for a given text editor is that the pairs that should be detected is the intersection 
+        // between the set of pairs autoclosed by the language of that text editor with the effective 
+        // value of `leaper.detectedPairs`, while the pairs that should not be detected is the set 
+        // of pairs autoclosed by the language of that text editor less the effective value of 
+        // `leaper.detectedPairs`. Please consult the 'Works' test case for detailed examples.
+        
         // 1. Change the workspace configuration value.
         //
-        // The test workspace's configuration value is changed:
-        //
-        //     From: [ "{}", "[]", "()", "<>", "''", "\"\"", "``" ]
+        // This changes the effective value of the text editor in view column 1. The other text 
+        // editors maintain their effective values.
         // 
-        //     To:   [ "{}" ]
-        //
-        // # Effect on the Provided Text Editor
+        // The relevant configuration values after this change:
         // 
-        // The provided text editor inherits the workspace configuration value since there are no
-        // values in more nested scopes that would override the workspace configuration value.
-        //  
-        // Since the provided text editor is Typescript, and Typescript autocloses the following 
-        // pairs:
+        //     View Column                       1            2            3            4          
+        //     -------------------------------------------------------------------------------------
+        //     Workspace Folder                | 0          | 1          | 2          | 3          |
+        //     File                            | text.ts    | text.txt   | text.ts    | text.md    |
+        //     -------------------------------------------------------------------------------------
+        //     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
+        //     Autoclosing Pairs               | (A1)       | (A3)       | (A1)       | (A2)       |
+        //                                     |            |            |            |            |
+        //     leaper.detectedPairs Value      |            |            |            |            |
+        //       - Workspace                   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   |
+        //       - Workspace Folder            | undefined  | undefined  | [ "()" ]   | []         |
+        //       - Language Workspace          | undefined  | []         | undefined  | undefined  |
+        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (P2)       |
+        //       - Effective                   | [ "{}" ]   | []         | [ "()" ]   | (P2)       |
+        //     -------------------------------------------------------------------------------------
+        //     
+        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(A2): [ "()", "[]", "{}", "<>" ]
+        //     (A3): [ "()", "[]", "{}" ]
+        //     (P2): [ "{}", "<>" ]
+        //     
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
+        //     consistently autoclosed.
         //
-        //     [ "{}", "[]", "()", "''", "\"\"", "``" ]
-        // 
-        // we expect the following autoclosing pairs of Typescript to be tracked:
-        //
-        //     [ "{}" ]
-        // 
-        // Furthermore, we expect the following autoclosing pairs of Typescript to not be tracked: 
-        //
-        //     [ "{}", "[]", "''", "\"\"", "``" ]
-        //
-        // # Effect on the Other Text Editors
-        //
-        // The other text editors have been configured to override the workspace configuration value, 
-        // so no change is expected for them.
-        //
-        // # Focus 
-        // 
-        // The provided text editor (view column 1) will be in focus after this step.
         await executor.setConfiguration({
             partialName: 'detectedPairs', 
             value:       [ "{}" ],
         });
-        await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);                // Workspace Folder 3 (Markdown).
-        await executor.focusEditorGroup('left');
-        await testDetectedPairs(executor, [ "()" ], [ "{}", "[]", "''", "\"\"", "``" ]);  // Workspace Folder 2 (Typescript).
-        await executor.focusEditorGroup('left');
-        await testDetectedPairs(executor, [], [ "{}", "[]", "()" ]);                      // Workspace Folder 1 (Plaintext).
-        await executor.focusEditorGroup('left');
-        await testDetectedPairs(executor, [ "{}" ], [ "[]", "()", "''", "\"\"", "``" ]);  // Provided (Typescript).
+        await testDetection(executor, 'first', {
+            language:  'typescript',
+            should:    [ "{}" ], 
+            shouldNot: [ "[]", "()", "''", "\"\"", "``" ]
+        });
+        await testDetection(executor, 'second', {
+            language:  'plaintext',
+            should:    [], 
+            shouldNot: [ "{}", "[]", "()" ]
+        });
+        await testDetection(executor, 'third', { 
+            language:  'typescript',
+            should:    [ "()" ], 
+            shouldNot: [ "{}", "[]", "''", "\"\"", "``" ]
+        });
+        await testDetection(executor, 'fourth', { 
+            language:  'markdown',
+            should:    [ "{}", "<>" ], 
+            shouldNot: [ "()", "[]" ]
+        });
 
         // 2. Change a language-specific workspace configuration value.
         //
-        // The test workspace's, scoped to Plaintext, configuration value is changed:
-        //
-        //     From: []
-        //     
-        //     To:   [ "[]",  "()" ]
-        //
-        // # Effect on Workspace Folder 1's Text Editor
-        //
-        // Workspace Folder 1's text editor inherits the language-specific workspace configuration 
-        // value from the root workspace.
-        //
-        // Since Workspace Folder 1's text editor is Plaintext, and Plaintext autocloses the following 
-        // pairs:
-        //
-        //     [ "{}", "[]", "()" ]
+        // For this, we change the Plaintext specific configuration value in the root workspace.
+        // This changes the effective value of the text editor in view column 2. The other text
+        // editors maintain their effective values.
         // 
-        // we expect the following autoclosing pairs of Plaintext to be tracked:
+        // The relevant configuration values after this change:
+        // 
+        //     View Column                       1            2            3            4          
+        //     -------------------------------------------------------------------------------------
+        //     Workspace Folder                | 0          | 1          | 2          | 3          |
+        //     File                            | text.ts    | text.txt   | text.ts    | text.md    |
+        //     -------------------------------------------------------------------------------------
+        //     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
+        //     Autoclosing Pairs               | (A1)       | (A3)       | (A1)       | (A2)       |
+        //                                     |            |            |            |            |
+        //     leaper.detectedPairs Value      |            |            |            |            |
+        //       - Workspace                   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   |
+        //       - Workspace Folder            | undefined  | undefined  | [ "()" ]   | []         |
+        //       - Language Workspace          | undefined  | (P3)       | undefined  | undefined  |
+        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (P2)       |
+        //       - Effective                   | [ "{}" ]   | (P3)       | [ "()" ]   | (P2)       |
+        //     -------------------------------------------------------------------------------------
+        //     
+        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(A2): [ "()", "[]", "{}", "<>" ]
+        //     (A3): [ "()", "[]", "{}" ]
+        //     (P2): [ "{}", "<>" ]
+        //     (P3): [ "[]", "()" ]
+        //     
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
+        //     consistently autoclosed.
         //
-        //     [ "[]",  "()" ]
-        //
-        // Furthermore, we expect the following autoclosing pairs of Plaintext to not be tracked:
-        //
-        //     [ "{}" ]
-        //
-        // # Effect on the Other Text Editors
-        //
-        // The other text editors are not of Plaintext language and are therefore not affected by
-        // this change.
-        //
-        // # Focus 
-        //
-        // The text editor of Workspace Folder 3 (view column 4) will be in focus after this step.
         await executor.setConfiguration({
             partialName:    'detectedPairs',
             value:          [ "[]", "()" ],
             targetLanguage: 'plaintext',
         });
-        await testDetectedPairs(executor, [ "{}" ], [ "[]", "()", "''", "\"\"", "``" ]);  // Provided (Typescript).
-        await executor.focusEditorGroup('right');
-        await testDetectedPairs(executor, [ "[]", "()" ], [ "{}" ] );                     // Workspace Folder 1 (Plaintext).
-        await executor.focusEditorGroup('right');
-        await testDetectedPairs(executor, [ "()" ], [ "{}", "[]", "''", "\"\"", "``" ]);  // Workspace Folder 2 (Typescript).
-        await executor.focusEditorGroup('right');
-        await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);                // Workspace Folder 3 (Markdown).
+        await testDetection(executor, 'first', {
+            language:  'typescript',
+            should:    [ "{}" ], 
+            shouldNot: [ "[]", "()", "''", "\"\"", "``" ]
+        });
+        await testDetection(executor, 'second', {
+            language:  'plaintext',
+            should:    [ "[]", "()" ], 
+            shouldNot: [ "{}" ]
+        });
+        await testDetection(executor, 'third', { 
+            language:  'typescript',
+            should:    [ "()" ], 
+            shouldNot: [ "{}", "[]", "''", "\"\"", "``" ]
+        });
+        await testDetection(executor, 'fourth', { 
+            language:  'markdown',
+            should:    [ "{}", "<>" ], 
+            shouldNot: [ "()", "[]" ]
+        });
 
         // 3. Change a workspace folder configuration value.
         //
-        // Workspace Folder 2's configuration value is changed:
-        //
-        //     From: [ "()" ]
-        //
-        //     To:   [ "''", "\"\"", "``" ]
-        //
-        // # Effect on Workspace Folder 2's Text Editor
-        //
-        // Workspace Folder 2's text editor is affected by this change as there is no override of 
-        // the configuration value for Typescript in Workspace Folder 2.
-        //
-        // Since Workspace Folder 2's text editor is Typescript, and Typescript autocloses the 
-        // following pairs:
-        //
-        //      [ "{}", "[]", "()", "''", "\"\"", "``" ]
-        //
-        // we expect the following autoclosing pairs of Typescript to be tracked:
-        //
-        //      [ "''", "\"\"", "``" ]
-        //
-        // Furthermore, we expect the following autoclosing pairs of Typescript to not be tracked: 
-        //
-        //      [ "{}", "[]", "()" ]
-        //
-        // # Effect on the Other Text Editors
-        //
-        // The provided text editor is not within any of the workspace folders so it is not affected. 
-        //
-        // Meanwhile, the text editors of Workspace Folder 1 and Workspace Folder 3 are not affected 
-        // at all as this change only applies to Workspace Folder 2.
-        //
-        // # Focus 
+        // For this, we change the configuration value in Workspace Folder 2. This changes the 
+        // effective value of the text editor in view column 3. The other text editors maintain 
+        // their effective values.
         // 
-        // The provided text editor (view column 1) will be in focus after this step.
+        // The relevant configuration values after this change:
+        // 
+        //     View Column                       1            2            3            4          
+        //     -------------------------------------------------------------------------------------
+        //     Workspace Folder                | 0          | 1          | 2          | 3          |
+        //     File                            | text.ts    | text.txt   | text.ts    | text.md    |
+        //     -------------------------------------------------------------------------------------
+        //     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
+        //     Autoclosing Pairs               | (A1)       | (A3)       | (A1)       | (A2)       |
+        //                                     |            |            |            |            |
+        //     leaper.detectedPairs Value      |            |            |            |            |
+        //       - Workspace                   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   |
+        //       - Workspace Folder            | undefined  | undefined  | (P4)       | []         |
+        //       - Language Workspace          | undefined  | (P3)       | undefined  | undefined  |
+        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (P2)       |
+        //       - Effective                   | [ "{}" ]   | (P3)       | (P4)       | (P2)       |
+        //     -------------------------------------------------------------------------------------
+        //     
+        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(A2): [ "()", "[]", "{}", "<>" ]
+        //     (A3): [ "()", "[]", "{}" ]
+        //     (P2): [ "{}", "<>" ]
+        //     (P3): [ "[]", "()" ]
+        //     (P4): [ "''", "\"\"", "``" ]
+        //     
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
+        //     consistently autoclosed.
+        //
         await executor.setConfiguration({
             partialName:           'detectedPairs',
             value:                 [ "''", "\"\"", "``" ],
             targetWorkspaceFolder: 'workspace-2'
         });
-        await testDetectedPairs(executor, [ "{}", "<>" ], [ "()", "[]" ]);                // Workspace Folder 3 (Markdown).
-        await executor.focusEditorGroup('left');
-        await testDetectedPairs(executor, [ "''", "\"\"", "``" ], [ "{}", "[]", "()" ]);  // Workspace Folder 2 (Typescript).
-        await executor.focusEditorGroup('left');
-        await testDetectedPairs(executor, [ "[]", "()" ], [ "{}" ] );                     // Workspace Folder 1 (Plaintext).
-        await executor.focusEditorGroup('left');
-        await testDetectedPairs(executor, [ "{}" ], [ "[]", "()", "''", "\"\"", "``" ]);  // Provided (Typescript).
+        await testDetection(executor, 'first', {
+            language:  'typescript',
+            should:    [ "{}" ], 
+            shouldNot: [ "[]", "()", "''", "\"\"", "``" ]
+        });
+        await testDetection(executor, 'second', {
+            language:  'plaintext',
+            should:    [ "[]", "()" ], 
+            shouldNot: [ "{}" ]
+        });
+        await testDetection(executor, 'third', { 
+            language:  'typescript',
+            should:    [ "''", "\"\"", "``" ], 
+            shouldNot: [ "{}", "[]", "()" ]
+        });
+        await testDetection(executor, 'fourth', { 
+            language:  'markdown',
+            should:    [ "{}", "<>" ], 
+            shouldNot: [ "()", "[]" ]
+        });
 
         // 4. Change a language-specific workspace folder configuration value.
         //
-        // Workspace Folder 3's, scoped to Markdown, configuration value is changed:
-        //
-        //     From: [ "{}", "<>" ]
-        //
-        //     To:   [ "{}", "()", "<>", "[]" ]
-        //
-        // # Effect on Workspace Folder 3's Text Editor
+        // For this, we change the Markdown specific configuration value in Workspace Folder 3. This 
+        // changes the effective value of the text editor in view column 4. The other text editors 
+        // maintain their effective values.
         // 
-        // Workspace Folder 3's text editor is affected by this change as its language is Markdown.
+        // The relevant configuration values after this change:
+        // 
+        //     View Column                       1            2            3            4          
+        //     -------------------------------------------------------------------------------------
+        //     Workspace Folder                | 0          | 1          | 2          | 3          |
+        //     File                            | text.ts    | text.txt   | text.ts    | text.md    |
+        //     -------------------------------------------------------------------------------------
+        //     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
+        //     Autoclosing Pairs               | (A1)       | (A3)       | (A1)       | (A2)       |
+        //                                     |            |            |            |            |
+        //     leaper.detectedPairs Value      |            |            |            |            |
+        //       - Workspace                   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   |
+        //       - Workspace Folder            | undefined  | undefined  | (P4)       | []         |
+        //       - Language Workspace          | undefined  | (P3)       | undefined  | undefined  |
+        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (P5)       |
+        //       - Effective                   | [ "{}" ]   | (P3)       | (P4)       | (P5)       |
+        //     -------------------------------------------------------------------------------------
+        //     
+        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(A2): [ "()", "[]", "{}", "<>" ]
+        //     (A3): [ "()", "[]", "{}" ]
+        //     (P2): [ "{}", "<>" ]
+        //     (P3): [ "[]", "()" ]
+        //     (P4): [ "''", "\"\"", "``" ]
+        //     (P5): [ "{}", "()", "<>", "[]" ]
+        //     
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
+        //     consistently autoclosed.
         //
-        // Since Workspace Folder 3's text editor is Markdown, and Markdown autocloses the following
-        // pairs:
-        //
-        //     [ "{}", "()", "<>", "[]" ]
-        //
-        // we expect all of the autoclosing pairs of Markdown to be tracked.
-        //
-        // Furthermore, we expect none of the autoclosing pairs of Markdown to not be tracked.
-        //
-        // # Effect on Other Text Editors
-        //
-        // The provided text editor is not within any of the workspace folders so it is not affected.
-        //
-        // Meanwhile, the text editors of Workspace Folder 1 and Workspace Folder 2 are not affected 
-        // at all as this change only applies to Markdown text editor from Workspace Folder 3.
-        //
-        // # Focus 
-        //
-        // The text editor of Workspace Folder 3 (view column 4) will be in focus after this step.
         await executor.setConfiguration({
             partialName:           'detectedPairs',
             value:                 [ "{}", "()", "<>", "[]" ],
             targetWorkspaceFolder: 'workspace-3',
             targetLanguage:        'markdown',
         });
-        await testDetectedPairs(executor, [ "{}" ], [ "[]", "()", "''", "\"\"", "``" ]);  // Provided (Typescript).
-        await executor.focusEditorGroup('right');
-        await testDetectedPairs(executor, [ "[]", "()" ], [ "{}" ] );                     // Workspace Folder 1 (Plaintext).
-        await executor.focusEditorGroup('right');
-        await testDetectedPairs(executor, [ "''", "\"\"", "``" ], [ "{}", "[]", "()" ]);  // Workspace Folder 2 (Typescript).
-        await executor.focusEditorGroup('right');
-        await testDetectedPairs(executor, [ "{}", "()", "<>", "[]" ], []);                // Workspace Folder 3 (Markdown).
+        await testDetection(executor, 'first', {
+            language:  'typescript',
+            should:    [ "{}" ], 
+            shouldNot: [ "[]", "()", "''", "\"\"", "``" ]
+        });
+        await testDetection(executor, 'second', {
+            language:  'plaintext',
+            should:    [ "[]", "()" ], 
+            shouldNot: [ "{}" ]
+        });
+        await testDetection(executor, 'third', { 
+            language:  'typescript',
+            should:    [ "''", "\"\"", "``" ], 
+            shouldNot: [ "{}", "[]", "()" ]
+        });
+        await testDetection(executor, 'fourth', { 
+            language:  'markdown',
+            should:    [ "{}", "()", "<>", "[]" ], 
+            shouldNot: []
+        });
+    }
+});
+
+/**
+ * Check that configuration values which do not have unique items are rejected.
+ */
+const REJECT_VALUE_IF_ITEMS_ARE_NOT_UNIQUE_TEST_CASE: TestCase = new TestCase({
+    name: 'Reject Value if Items Are Not Unique',
+    prelude,
+    task: async (executor) => {
+
+        // For this test case, we will only be using the Typescript document in Workspace Folder 0.
+        // The effective value is preconfigured to come from the root workspace scope.
+
+        // Set the configuration value in Workspace Folder 0 to one that does not have unique items.
+        await executor.setConfiguration({
+            partialName:           'detectedPairs',
+            value:                 [ "{}", "[]", "[]" ],
+            targetWorkspaceFolder: 'workspace-0'
+        });
+
+        // Since the workspace folder value does not have unique items, it will be ignored, and the 
+        // effective value will continue to come from the root workspace scope.
+        await testDetection(executor, 'first', {
+            language:  'typescript',
+            should:    [ "{}", "[]", "()", "''", "\"\"", "``" ], 
+            shouldNot: []
+        });
     }
 });
 
@@ -408,60 +544,32 @@ const AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE = new TestCase({
  */
 const REJECT_VALUE_IF_MAX_ITEMS_EXCEEDED_TEST_CASE: TestCase = new TestCase({
     name: 'Reject Value if Max Items Exceeded',
-    languageId: 'typescript',
-    prelude: async (executor) => {
-
-        // Open the text file from Workspace Folder 2, which has an effective `leaper.detectedPairs`
-        // value that comes from the workspace folder of:
-        //
-        //     [ "()" ]
-        //
-        await executor.openFile('./workspace-2/text.ts');
-
-        // Since the opened file is Typescript and we know that Typescript autocloses:
-        //
-        //     [ "{}", "[]", "()", "''", "\"\"", "``" ]
-        //
-        // Then we expect the following autoclosing pairs of Typescript to be tracked:
-        //
-        //     [ "()" ]
-        // 
-        // and expect the following autoclosing pairs of Typescript to not be tracked: 
-        //
-        //     [ "{}", "[]", "''", "\"\"", "``" ]
-        //
-        await testDetectedPairs(executor,  [ "()" ], [ "{}", "[]", "''", "\"\"", "``" ]);
-    },
+    prelude,
     task: async (executor) => {
 
-        // Set the configuration value in the workspace folder to one that exceeds the limit.
+        // For this test case, we will only be using the Typescript document in Workspace Folder 0.
+        // The effective value is preconfigured to come from the root workspace scope.
+
+        // Set the configuration value in Workspace Folder 0 to one that exceeds the limit. 
         const tooManyItemsValue = [];
         for (let i = 0; i < Configuration.DETECTED_PAIRS_MAX_ITEMS + 1; ++i) {
-
-            // It doesn't matter what pairs we use to fill the array since we are just testing 
-            // whether the length limiter kicks in.
             tooManyItemsValue.push("()");
         }
         await executor.setConfiguration({
             partialName:           'detectedPairs',
             value:                 tooManyItemsValue,
-            targetWorkspaceFolder: 'workspace-2'
+            targetWorkspaceFolder: 'workspace-0'
         });
 
-        // Since the workspace folder value now exceeds the limit, it will be rejected, and the 
-        // effective value should now come from the root workspace scope, which has the value:
-        //
-        //     [ "{}", "[]", "()", "''", "\"\"", "``", "<>" ]
-        //
-        // Since the opened file is Typescript and we know that Typescript autocloses:
-        //
-        //     [ "{}", "[]", "()", "''", "\"\"", "``" ]
-        //
-        // Then we expect all of the autoclosing pairs of Typescript to be tracked.
-        await testDetectedPairs(executor, [ "{}", "[]", "()", "''", "\"\"", "``" ], []);
+        // Since the workspace folder value exceeds the limit, it will be ignored, and the effective 
+        // value will continue to come from the root workspace scope.
+        await testDetection(executor, 'first', {
+            language:  'typescript',
+            should:    [ "{}", "[]", "()", "''", "\"\"", "``" ], 
+            shouldNot: []
+        });
     }
 });
-
 
 /** 
  * A collection of test cases that test the behavior of the `leaper.detectedPairs` configuration 
@@ -472,6 +580,7 @@ export const SINGLE_CURSOR_DETECTED_PAIRS_TEST_GROUP: TestGroup = new TestGroup(
     [
         WORKS_TEST_CASE,
         AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE,
+        REJECT_VALUE_IF_ITEMS_ARE_NOT_UNIQUE_TEST_CASE,
         REJECT_VALUE_IF_MAX_ITEMS_EXCEEDED_TEST_CASE,
     ]
 );

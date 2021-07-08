@@ -9,18 +9,15 @@ import { SnippetString, ViewColumn } from 'vscode';
 import { ALICE_TEXT_1, ALICE_TEXT_2, LOREM_IPSUM_1 } from '../utilities/placeholder-texts';
 
 /**
- * Test case to check whether this extension can handle text modifications before pairs.
- * 
- * Within this test case we will be trying all possible variants of text modifications before pairs.
+ * Test case to check whether the engine can handle text modifications before pairs.
  * 
  * Text modifications before pairs are expected to shift the position of the cursor and the pairs.
  */
 const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
     name: 'Text Modifications Before Pairs',
-    languageId: 'typescript',
     prelude: async (executor) => {
 
-        // This sets up the initial document as:
+        // Set up an initial Typescript document as:
         //
         // ```
         // function main() {
@@ -28,11 +25,9 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         // }
         // ```
         //
-        // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
-        // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
-        // pairs.
+        await executor.openFile('./workspace-0/text.ts');
         await executor.typeText('function main() {\n');
-        await executor.typeText('{{{{{[[[[[');
+        await executor.typeText('[', { repetitions: 10 });
         await executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
         await executor.assertCursors([ [1, 14] ]);
     },
@@ -494,31 +489,27 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
 });
 
 /**
- * Test case to check whether this extension can handle single-line text modifications between pairs.
+ * Test case to check whether the engine can handle single-line text modifications between pairs.
  * 
  * Note that because multi-line text insertions between pairs cause pairs to be untracked, those 
  * kind of text insertions are tested in the `pair-invalidation.ts` module.
  */
 const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
     name: 'Single-line Text Modifications Between Pairs',
-    languageId: 'markdown',
     prelude: async (executor) => {
 
-        // This sets up the initial document as:
+        // Set up an initial Typescript document as:
         //
         // ```
         // 
         // blah-blah[[[[[[[[[[]]]]]]]]]]
         //                    ^(cursor position)
         // ```
-        //
-        // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
-        // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
-        // pairs.
+        await executor.openFile('./workspace-0/text.ts');
         await executor.typeText('\nblah-blah\n');
         await executor.moveCursors('up');
         await executor.moveCursors('end');
-        await executor.typeText('{[<[({[{((');
+        await executor.typeText('[', { repetitions: 10 });
         await executor.assertPairs([ { line: 1, sides: range(9, 29) } ]);
         await executor.assertCursors([ [1, 19] ]);
     },
@@ -527,6 +518,8 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
 
         /**
          * The expected positions of the pairs.
+         * 
+         * We will be mutating this as we go.
          */
         const pairs: Exclude<CompactCluster, 'None'> = { line: 1, sides: range(9, 29) };
 
@@ -997,10 +990,9 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
  */
 const AUTOCOMPLETIONS_TEST_CASE = new TestCase({
     name: 'Autocompletions',
-    languageId: 'typescript',
     prelude: async (executor) => {
 
-        // This sets up the document:
+        // Set up an initial Typescript document as:
         //
         // ```
         // function main(){
@@ -1008,10 +1000,7 @@ const AUTOCOMPLETIONS_TEST_CASE = new TestCase({
         //     [[[[[[[[[[]]]]]]]]]]
         // }
         // ```
-        //
-        // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
-        // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
-        // pairs.
+        await executor.openFile('./workspace-0/text.ts');
         await executor.editText([
             { 
                 kind: 'insert',
@@ -1023,7 +1012,7 @@ const AUTOCOMPLETIONS_TEST_CASE = new TestCase({
             }
         ]);
         await executor.setCursors([ [2, 4] ]);
-        await executor.typeText('[[({(([[[[');
+        await executor.typeText('[', { repetitions: 10 });
         await executor.assertPairs([ { line: 2, sides: range(4, 24) } ]);
         await executor.assertCursors([ [2, 14] ]);
     },
@@ -1032,6 +1021,8 @@ const AUTOCOMPLETIONS_TEST_CASE = new TestCase({
 
         /**
          * The expected positions of the pairs.
+         * 
+         * We will be mutating this as we go.
          */
         const pairs: Exclude<CompactCluster, 'None'> = { line: 2, sides: range(4, 24) };
 
@@ -1081,16 +1072,16 @@ const AUTOCOMPLETIONS_TEST_CASE = new TestCase({
  */
 const SNIPPET_INSERTIONS_TEST_CASE = new TestCase({
     name: 'Snippet Insertions',
-    languageId: 'typescript',
     prelude: async (executor) => {
 
-        // This sets up the initial document as:
+        // Set up an initial Typescript document as:
         //
         // ```
         // function main() {
         //     const x = someFn({ outer: { inner: }})
         // }                                      ^(cursor position)
         // ```
+        await executor.openFile('./workspace-0/text.ts');
         await executor.typeText('function main() {\nconst x = ');
         await executor.setCursors([ [1, 14] ]);
         await executor.typeText('someFn({ outer: { inner: ');
@@ -1421,20 +1412,16 @@ const SNIPPET_INSERTIONS_TEST_CASE = new TestCase({
  */
 const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
     name: 'Text Modifications After Pairs',
-    languageId: 'typescript',
     prelude: async (executor) => {
 
-        // This sets up the initial document as:
+        // Set up an initial Typescript document as:
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]]
+        //     ((([[[{{{{}}}}]]])))
         // }
         // ```
-        //
-        // Note that in reality when we insert autoclosing pairs with the 'typePair' action, the 
-        // pairs are randomly selected. However for notational convenience, we use `[]` to represent 
-        // pairs.
+        await executor.openFile('./workspace-0/text.ts');
         await executor.typeText('function main() {\n');
         await executor.typeText('((([[[{{{{');
         await executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
@@ -1456,7 +1443,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Goodbye World 🌍! 
+        //     ((([[[{{{{}}}}]]]))) Goodbye World 🌍! 
         // }
         // ```
         await executor.editText([ { kind: 'insert', at: [1, 24], text: ' Goodbye World 🌍! ' } ]);
@@ -1468,7 +1455,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Goodbye World 🌍! Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to 
+        //     ((([[[{{{{}}}}]]]))) Goodbye World 🌍! Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to 
         // do: once or twice she had peeped into the book her sister was reading, but it had no pictures or 
         // conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'
         // 
@@ -1486,7 +1473,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Goodbye World 🌍! Alice was tired of sitting by her sister on the bank, and of having nothing to 
+        //     ((([[[{{{{}}}}]]]))) Goodbye World 🌍! Alice was tired of sitting by her sister on the bank, and of having nothing to 
         // do: once or twice she had peeped into the book her sister was reading, but it had no pictures or 
         // conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'
         // 
@@ -1505,7 +1492,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Goodbye World 🌍! Alice
+        //     ((([[[{{{{}}}}]]]))) Goodbye World 🌍! Alice
         //
         // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
         // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
@@ -1521,7 +1508,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! Alice
+        //     ((([[[{{{{}}}}]]]))) Hello World 🌍! Alice
         //        
         // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
         // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
@@ -1539,7 +1526,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam facilisis, libero at viverra 
+        //     ((([[[{{{{}}}}]]]))) Hello World 🌍! Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam facilisis, libero at viverra 
         // egestas, ipsum nunc venenatis felis, at ultrices nulla ex vitae quam. Etiam convallis purus eget 
         // nibh commodo, a molestie sapien rhoncus. Vestibulum ante ipsum primis in faucibus orci luctus et 
         // ultrices posuere cubilia curae; Aenean at sodales elit, ut ornare arcu. Donec vulputate auctor 
@@ -1564,7 +1551,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! Cat 😺!
+        //     ((([[[{{{{}}}}]]]))) Hello World 🌍! Cat 😺!
         //
         // So she was considering in her own mind (as well as she could, for the hot day made her feel very 
         // sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting 
@@ -1583,7 +1570,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+        //     ((([[[{{{{}}}}]]]))) Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
         // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
         // it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); 
         // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
@@ -1604,7 +1591,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+        //     ((([[[{{{{}}}}]]]))) Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
         // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
         // it occurred to her that she ought to 😤 hmph 😤 have wondered at this, but at the time it all seemed quite natural); 
         // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
@@ -1623,7 +1610,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+        //     ((([[[{{{{}}}}]]]))) Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
         // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
         // it occurred to her that she ought to 😤 hmph 😤 have wondered at this, but at the time it all seemed quite natural); 
         // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
@@ -1650,7 +1637,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+        //     ((([[[{{{{}}}}]]]))) Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
         // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
         // it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); 
         // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
@@ -1677,7 +1664,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+        //     ((([[[{{{{}}}}]]]))) Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
         // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
         // it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); 
         // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
@@ -1700,7 +1687,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+        //     ((([[[{{{{}}}}]]]))) Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
         // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
         // it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); 
         // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
@@ -1725,7 +1712,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+        //     ((([[[{{{{}}}}]]]))) Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
         // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
         // it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); 
         // but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then 
@@ -1757,7 +1744,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         // 
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+        //     ((([[[{{{{}}}}]]]))) Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
         // hear the Rabbit say to itself, 'Hey now, you're an all star!'
         //
         // So she was considering 🥳🥳🥳🥳🥳🥳🥳🥳🥳🥳 for the hot day made her feel very 
@@ -1780,7 +1767,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
+        //     ((([[[{{{{}}}}]]]))) Hello World 🌍! There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
         // hear the Rabbit say to There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
         // hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, 
         // it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); 
@@ -1803,7 +1790,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Hello World 🌍! Goodbye World 😢!
+        //     ((([[[{{{{}}}}]]]))) Hello World 🌍! Goodbye World 😢!
         //
         // There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
         // hear the Rabbit say to There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
@@ -1837,7 +1824,7 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
         //
         // ```
         // function main() {
-        //     [[[[[[[[[[]]]]]]]]]] Goodbye 😢!
+        //     ((([[[{{{{}}}}]]]))) Goodbye 😢!
         //
         //     const text = `There was nothing so very remarkable in that; nor did Alice think it so very much out of the way to 
         //     hear the Rabbit say to itself, '3.14159265359' (when she thought it over afterwards, 
@@ -1869,23 +1856,23 @@ const TEXT_MODIFICATIONS_AFTER_PAIRS_TEST_CASE = new TestCase({
  */
 export const TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
     name: 'Pair Translation in Out-of-Focus Text Editor',
-    languageId: 'typescript',
     prelude: async (executor) => {
 
-        // This sets up the initial text document as:
+        // Set up an initial Typescript document as:
         //
         // ```
         // function main() {
         //     [[[[[[[[[[]]]]]]]]]]
         // }             ^(cursor position)
         // ```
+        await executor.openFile('./workspace-0/text.ts');
         await executor.typeText('function main() {\n');
         await executor.typeText('[', { repetitions: 10 });
         await executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
         await executor.assertCursors([ [1, 14] ]);
 
         // Open another text editor (which will immediately take focus).
-        await executor.openNewTextEditor('typescript', { viewColumn: ViewColumn.Two });
+        await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.Two });
     },
     task: async (executor) => {
 

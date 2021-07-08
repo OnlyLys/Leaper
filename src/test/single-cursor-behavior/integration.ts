@@ -35,10 +35,10 @@ import { TestCase, TestGroup } from '../utilities/framework';
  */
 const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
     name: 'Real User Simulation 1',
-    languageId: 'typescript',
     prelude: async (executor) => {
+        await executor.openFile('./workspace-0/text.ts');
 
-        // Since the provided text editor is empty, we expect both keybinding contexts to be 
+        // Since the initial text editor is empty, we expect both keybinding contexts to be 
         // initially disabled, since there are clearly no pairs being tracked for it.
         await executor.assertMRBInLeaperModeContext(false);
         await executor.assertMRBHasLineOfSightContext(false);

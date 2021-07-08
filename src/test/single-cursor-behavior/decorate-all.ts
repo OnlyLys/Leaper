@@ -2,27 +2,28 @@ import { ViewColumn } from 'vscode';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
 
 /**
- * Type some pairs into the active text editor then assert that decorations were properly applied.
+ * Test the effective `leaper.decorateAll` configuration in a visible text editor by checking that
+ * decorations are appropriately applied.
  * 
- * If the `expectDecorations` parameter is `'all'`, then this function expects decorations to be 
- * applied to all pairs. Otherwise, if it is `'nearest'`, then this function expects decorations to
- * only be applied to the pair nearest to the cursor (i.e. the 'most nested' pair).
+ * If the `expectDecorations` parameter is `'all'`, then decorations are expected to be applied to 
+ * all pairs. Otherwise, if it is `'nearest'`, then tdecorations are expectedd to only be applied to 
+ * the pair nearest to the cursor.
  * 
  * Note that this function only checks whether decorations were applied. It does not check for the 
- * style of the decorations. Also note that the active text editor will be overwritten when this 
- * function is called.
+ * style of the decorations. Also note that this function takes focus of and overwrites the target
+ * text editor.
  * 
- * # Requirements Before This Function Can Be Called
+ * # Requirements 
  * 
- * The active text editor must satisfy the following requirements before this function can be called:
+ * The target text editor must satisfy the following requirements before this function can be called:
  * 
- *   1. The effective `leaper.detectedPairs` configuration in the active text editor at least have
- *      `[ "()", "[]", "{}" ]`.
- *   2. The active text editor's language must be Typescript.
+ *   1. The effective `leaper.detectedPairs` configuration in the target text editor must at least 
+ *      be `[ "()", "[]", "{}" ]`.
+ *   2. The target text editor's language must be Typescript.
  * 
  * # Document State Afterwards
  * 
- * By the end of this function, the active text editor will have the following state:
+ * By the end of this function, the target text editor will have the following state:
  * 
  * ```
  * async function helloWorld(): Promise<string> {
@@ -43,11 +44,12 @@ import { Executor, TestCase, TestGroup } from '../utilities/framework';
  * with a pair cluster at `{ line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] }`.
  */
 async function testDecorations(
-    executor:          Executor, 
+    executor: Executor, 
+    targetViewColumn: 'first' | 'second' | 'third',
     expectDecorations: 'all' | 'nearest'
 ): Promise<void> {
 
-    // Initialize the active text editor to the following:
+    // Initialize the target text editor to the following state:
     // 
     // ```
     // async function helloWorld(): Promise<string> {
@@ -60,6 +62,7 @@ async function testDecorations(
     //     await 
     // }         ^(cursor position)
     // ```
+    await executor.focusEditorGroup(targetViewColumn);
     await executor.deleteAll();
     await executor.editText([
         { 
@@ -481,36 +484,18 @@ async function testDecorations(
  * Check that only the pair nearest to the cursor is decorated when `leaper.decorateAll` is disabled.
  */
 const DECORATE_ONLY_NEAREST_PAIR_TEST_CASE = new TestCase({
-    name: 'Decorate Only Nearest Pair (Configuration Disabled)',
-    languageId: 'typescript',
-    
-    // The provided Typescript text editor's effective value of `leaper.detectedPairs` is from the 
-    // root workspace, which has the value:
-    //
-    //     [ "()", "[]", "{}", "``", "''", "\"\"" ]
-    //
-    // Thus, we can call `testDecorations` as the requirements noted by its doc comment are satisfied.
-    task: async (executor) => await testDecorations(executor, 'nearest')
+    name:    'Decorate Only Nearest Pair (Configuration Disabled)',
+    prelude: async (executor) => await executor.openFile('./workspace-0/text.ts'),
+    task:    async (executor) => await testDecorations(executor, 'first', 'nearest')
 });
 
 /**
  * Check that all pairs being tracked for a cursor are decorated when `leaper.decorateAll` is enabled.
  */
 const DECORATE_ALL_PAIRS_TEST_CASE = new TestCase({
-    name: 'Decorate All Pairs (Configuration Enabled)',
-    languageId: 'typescript',
-
-    // We open the Typescript file from Workspace Folder 4 because Workspace Folder 4 has been 
-    // configured to have `leaper.decorateAll` enabled.
+    name:    'Decorate All Pairs (Configuration Enabled)',
     prelude: async (executor) => await executor.openFile('./workspace-4/text.ts'),
-
-    // The opened text editor is Typescript and its effective value is from the root workspace, which 
-    // has the value:
-    //
-    //     [ "()", "[]", "{}", "``", "''", "\"\"" ]
-    //
-    // Thus, we can call `testDecorations` as the requirements noted by its doc comment are satisfied.
-    task: async (executor) => await testDecorations(executor, 'all')
+    task:    async (executor) => await testDecorations(executor, 'first', 'all')
 });
 
 /**
@@ -522,26 +507,29 @@ const DECORATE_ALL_PAIRS_TEST_CASE = new TestCase({
  */
 const AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE = new TestCase({
     name: 'Automatic Reload of Latest Effective Value',
-    languageId: 'typescript',
     prelude: async (executor) => {
 
-        // Open the Typescript files from Workspace Folder 2 and Workspace Folder 4.
+        // Open three text editors in exclusive view columns.
         //
-        // This results in a total of 3 Typescript text editors (including the one provided to this 
-        // test case) being opened, one for each view column. 
+        // The following table shows the relevant configuration values for the text editors in each 
+        // view column:
+        // 
+        //     View Column                      1            2            3
+        //     -----------------------------------------------------------------------
+        //     Workspace Folder               | 0          | 2          | 4          |
+        //     File                           | text.ts    | text.ts    | text.ts    |
+        //     -----------------------------------------------------------------------
+        //     Language                       | Typescript | Typescript | Typescript |
+        //                                    |            |            |            |
+        //     leaper.decorateAll Value       |            |            |            |
+        //       - Workspace                  | false      | false      | false      |
+        //       - Workspace Folder           | undefined  | undefined  | true       |
+        //       - Language Workspace         | undefined  | undefined  | undefined  | 
+        //       - Language Workspace Folder  | undefined  | undefined  | undefined  | 
+        //       - Effective                  | false      | false      | true       | 
+        //     -----------------------------------------------------------------------
         //
-        // The following table shows the relevant `leaper.decorateAll` values after this step:
-        //
-        //     View Column                | 1         | 2         | 3         |
-        //     -----------------------------------------------------------------------------
-        //     Workspace Folder           |     -     | 2         | 4         |
-        //     Workspace Value            | false     | false     | false     |
-        //     Workspace Folder Value     |     -     | false     | true      |
-        //     Typescript Specific:       
-        //         Workspace Value        | undefined | undefined | undefined |
-        //         Workspace Folder Value |     -     | undefined | undefined |
-        //     Effective Value            | false     | false     | true      |
-        //
+        await executor.openFile('./workspace-0/text.ts');
         await executor.openFile('./workspace-2/text.ts', { viewColumn: ViewColumn.Two   });
         await executor.openFile('./workspace-4/text.ts', { viewColumn: ViewColumn.Three });
 
@@ -550,130 +538,150 @@ const AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE = new TestCase({
         //
         // The first and third text editors already have at least this effective value as they 
         // inherit the value from the root workspace. But Workspace Folder 2 overrides that value, 
-        // so we clear the value of `leaper.detectedPairs` in Workspace Folder 2 so that the second 
-        // text editor also inherits the value from the root workspace.
+        // so we have to clear the value of `leaper.detectedPairs` in Workspace Folder 2 so that the 
+        // second text editor also inherits the value from the root workspace.
         await executor.setConfiguration({
             partialName:           'detectedPairs',
             targetWorkspaceFolder: 'workspace-2',
             value:                 undefined
         });
 
-        // As a precaution, test that the configuration values have been correctly preconfigured.
-        await executor.focusEditorGroup('first');
-        await testDecorations(executor, 'nearest');
-        await executor.focusEditorGroup('second');
-        await testDecorations(executor, 'nearest');
-        await executor.focusEditorGroup('third');
-        await testDecorations(executor, 'all');
+        // As a precaution, test that the preconfigured values of `leaper.decorateAll` are as 
+        // expected.
+        await testDecorations(executor, 'first',  'nearest');
+        await testDecorations(executor, 'second', 'nearest');
+        await testDecorations(executor, 'third',  'all');
     },
     task: async (executor) => {
 
-        async function focusThenTestDecorations(
-            focusOnEditorGroup: 'first' | 'second' | 'third',
-            expectDecorations:  'all'   | 'nearest' 
-        ): Promise<void> {
-            await executor.focusEditorGroup(focusOnEditorGroup);
-            await testDecorations(executor, expectDecorations);
-        }
-
-        // 1. Enable the configuration in Workspace Folder 2.
+        // 1. Enable the configuration in a workspace folder. 
+        //
+        // For this, we enable the configuration in Workspace Folder 2.
         //
         // The relevant configuration values after this step:
         //
-        //     View Column                | 1         | 2         | 3         |
-        //     -----------------------------------------------------------------------------
-        //     Workspace Folder           |     -     | 2         | 4         |
-        //     Workspace Value            | false     | false     | false     |
-        //     Workspace Folder Value     |     -     | true      | true      |
-        //     Typescript Specific:       
-        //         Workspace Value        | undefined | undefined | undefined |
-        //         Workspace Folder Value |     -     | undefined | undefined |
-        //     Effective Value            | false     | true      | true      |
+        //     View Column                      1            2            3
+        //     -----------------------------------------------------------------------
+        //     Workspace Folder               | 0          | 2          | 4          |
+        //     File                           | text.ts    | text.ts    | text.ts    |
+        //     -----------------------------------------------------------------------
+        //     Language                       | Typescript | Typescript | Typescript |
+        //                                    |            |            |            |
+        //     leaper.decorateAll Value       |            |            |            |
+        //       - Workspace                  | false      | false      | false      |
+        //       - Workspace Folder           | undefined  | true       | true       |
+        //       - Language Workspace         | undefined  | undefined  | undefined  | 
+        //       - Language Workspace Folder  | undefined  | undefined  | undefined  | 
+        //       - Effective                  | false      | true       | true       | 
+        //     -----------------------------------------------------------------------
         //
-        // `leaper.decorateAll` should now be enabled for both the second and third text editors, 
-        // while remaining disabled for the first.
         await executor.setConfiguration({
             partialName:           'decorateAll',
             targetWorkspaceFolder: 'workspace-2',
             value:                 true
         });
-        await focusThenTestDecorations('first',  'nearest');
-        await focusThenTestDecorations('second', 'all');
-        await focusThenTestDecorations('third',  'all');
+
+        // `leaper.decorateAll` should now be enabled for the second text editor, while remaining 
+        // disabled for the first and enabled for the third.
+        await testDecorations(executor, 'first',  'nearest');
+        await testDecorations(executor, 'second', 'all');
+        await testDecorations(executor, 'third',  'all');
 
         // 2. Enable the configuration in the root workspace.
         //
         // The relevant configuration values after this step:
         //
-        //     View Column                | 1         | 2         | 3         |
-        //     -----------------------------------------------------------------------------
-        //     Workspace Folder           |     -     | 2         | 4         |
-        //     Workspace Value            | true      | true      | true      |
-        //     Workspace Folder Value     |     -     | true      | true      |
-        //     Typescript Specific:       
-        //         Workspace Value        | undefined | undefined | undefined |
-        //         Workspace Folder Value |     -     | undefined | undefined |
-        //     Effective Value            | true      | true      | true      |
+        //     View Column                      1            2            3
+        //     -----------------------------------------------------------------------
+        //     Workspace Folder               | 0          | 2          | 4          |
+        //     File                           | text.ts    | text.ts    | text.ts    |
+        //     -----------------------------------------------------------------------
+        //     Language                       | Typescript | Typescript | Typescript |
+        //                                    |            |            |            |
+        //     leaper.decorateAll Value       |            |            |            |
+        //       - Workspace                  | true       | true       | true       |
+        //       - Workspace Folder           | undefined  | true       | true       |
+        //       - Language Workspace         | undefined  | undefined  | undefined  | 
+        //       - Language Workspace Folder  | undefined  | undefined  | undefined  | 
+        //       - Effective                  | true       | true       | true       | 
+        //     -----------------------------------------------------------------------
         //
-        // The configuration should now be enabled for all three text editors.
         await executor.setConfiguration({
             partialName: 'decorateAll',
             value:       true
         });
-        await focusThenTestDecorations('first',  'all');
-        await focusThenTestDecorations('second', 'all');
-        await focusThenTestDecorations('third',  'all');
 
-        // 3. Disable the configuration for Typescript in the root workspace.
+        // The configuration should now be enabled for all three text editors.
+        await testDecorations(executor, 'first',  'all');
+        await testDecorations(executor, 'second', 'all');
+        await testDecorations(executor, 'third',  'all');
+
+        // 3. Disable the configuration for specific language in the root workspace.
         //
-        // The relevant configuration values after the change:
+        // For this, we disable the configuration for Typescript in the root workspace.
         //
-        //     View Column                | 1         | 2         | 3         |
-        //     -----------------------------------------------------------------------------
-        //     Workspace Folder           |     -     | 2         | 4         |
-        //     Workspace Value            | true      | true      | true      |
-        //     Workspace Folder Value     |     -     | true      | true      |
-        //     Typescript Specific:       
-        //         Workspace Value        | false     | false     | false     |
-        //         Workspace Folder Value |     -     | undefined | undefined |
-        //     Effective Value            | false     | false     | false     |
+        // The relevant configuration values after this step:
         //
-        // Since all three text editors are Typescript, the configuration should now be disabled 
-        // for all of them.
+        //     View Column                      1            2            3
+        //     -----------------------------------------------------------------------
+        //     Workspace Folder               | 0          | 2          | 4          |
+        //     File                           | text.ts    | text.ts    | text.ts    |
+        //     -----------------------------------------------------------------------
+        //     Language                       | Typescript | Typescript | Typescript |
+        //                                    |            |            |            |
+        //     leaper.decorateAll Value       |            |            |            |
+        //       - Workspace                  | true       | true       | true       |
+        //       - Workspace Folder           | undefined  | true       | true       |
+        //       - Language Workspace         | false      | false      | false      |
+        //       - Language Workspace Folder  | undefined  | undefined  | undefined  | 
+        //       - Effective                  | false      | false      | false      |
+        //     -----------------------------------------------------------------------
+        //
         await executor.setConfiguration({
             partialName:    'decorateAll',
             value:          false,
             targetLanguage: 'typescript'
         });
-        await focusThenTestDecorations('first',  'nearest');
-        await focusThenTestDecorations('second', 'nearest');
-        await focusThenTestDecorations('third',  'nearest');
 
-        // 4. Enable the configuration for Typescript in Workspace Folder 2.
+        // Since all three text editors are Typescript, the configuration should now be disabled for 
+        // all of them.
+        await testDecorations(executor, 'first',  'nearest');
+        await testDecorations(executor, 'second', 'nearest');
+        await testDecorations(executor, 'third',  'nearest');
+
+        // 4. Enable the configuration for a specific language in a workspace folder.
         //
-        // The relevant configuration values after the change:
+        // For this, we enable the configuration for Typescript in Workspace Folder 2.
+        // 
+        // The relevant configuration values after this step:
         //
-        //     View Column                | 1         | 2         | 3         |
-        //     -----------------------------------------------------------------------------
-        //     Workspace Folder           |     -     | 2         | 4         |
-        //     Workspace Value            | true      | true      | true      |
-        //     Workspace Folder Value     |     -     | true      | true      |
-        //     Typescript Specific:       
-        //         Workspace Value        | false     | false     | false     |
-        //         Workspace Folder Value |     -     | true      | undefined |
-        //     Effective Value            | false     | true      | false     |
-        //
-        // The configuration should now be enabled for the second text editor, while remaining 
-        // disabled for the other two text editors.
+        //     View Column                      1            2            3
+        //     -----------------------------------------------------------------------
+        //     Workspace Folder               | 0          | 2          | 4          |
+        //     File                           | text.ts    | text.ts    | text.ts    |
+        //     -----------------------------------------------------------------------
+        //     Language                       | Typescript | Typescript | Typescript |
+        //                                    |            |            |            |
+        //     leaper.decorateAll Value       |            |            |            |
+        //       - Workspace                  | true       | true       | true       |
+        //       - Workspace Folder           | undefined  | true       | true       |
+        //       - Language Workspace         | false      | false      | false      |
+        //       - Language Workspace Folder  | undefined  | true       | undefined  | 
+        //       - Effective                  | false      | true       | false      |
+        //     -----------------------------------------------------------------------
+
         await executor.setConfiguration({
             partialName:           'decorateAll',
             value:                 true,
             targetWorkspaceFolder: 'workspace-2',
             targetLanguage:        'typescript'
         });
-        await focusThenTestDecorations('first',  'nearest');
-        await focusThenTestDecorations('second', 'all');
-        await focusThenTestDecorations('third',  'nearest');
+
+        // The configuration should now be enabled for the second text editor, while remaining 
+        // disabled for the other two text editors.
+        await testDecorations(executor, 'first',  'nearest');
+        await testDecorations(executor, 'second', 'all');
+        await testDecorations(executor, 'third',  'nearest');
     }
 });
 
@@ -684,8 +692,8 @@ const AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE = new TestCase({
 export const SINGLE_CURSOR_DECORATE_ALL_TEST_GROUP = new TestGroup(
     '`leaper.decorateAll` Configuration',
     [
-        DECORATE_ALL_PAIRS_TEST_CASE,
         DECORATE_ONLY_NEAREST_PAIR_TEST_CASE,
+        DECORATE_ALL_PAIRS_TEST_CASE,
         AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE
     ]
 );
