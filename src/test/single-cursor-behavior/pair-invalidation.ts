@@ -1354,10 +1354,17 @@ const INVALIDATION_DUE_TO_TEXT_EDITOR_BEING_CLOSED = new TestCase({
         // Set up view column 1 with a single text editor using the shared prelude.
         await sharedPrelude(executor);
 
-        // Set up view column 2 with two text editors. Some pairs are typed into the one that is on
-        // display in view column 2.
+        // Set up view column 2 with two text editors.
+        //
+        // Note that in order to set up view column 2 with two tabs, we have to open the second text
+        // editor in view column 3 then move it to view column 2. Otherwise, if we open two files
+        // in view column 2, it will cause the second file to replace the first one in that view
+        // column.
         await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.Two });
-        await executor.openFile('./workspace-2/text.ts',  { viewColumn: ViewColumn.Two });
+        await executor.openFile('./workspace-2/text.ts',  { viewColumn: ViewColumn.Three });
+        await executor.moveEditorToGroup('left');
+
+        // Type some pairs into the Typescript text editor that is on display in view column 2.
         await executor.typeText('(', { repetitions: 10 });
         await executor.assertPairs([ { line: 0, sides: range(0, 20) }]);
         await executor.assertCursors([ [0, 10] ]);
