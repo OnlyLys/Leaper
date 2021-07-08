@@ -2,7 +2,7 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
-import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, window, ViewColumn, Uri, ConfigurationTarget } from 'vscode';
+import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, window, ViewColumn, Uri, ConfigurationTarget, WorkspaceEdit } from 'vscode';
 import { ResolvedViewColumn, TrackerSnapshot } from '../../engine/test-api';
 import { CompactCluster, CompactRange, CompactPosition, CompactCursor, CompactSelection } from './compact';
 import { waitFor, zip } from './other';
@@ -71,7 +71,14 @@ export class TestCase {
 
     public run(): void {
         const { name, prelude, task } = this.args;
+
         it(name, async function () {
+
+            // Clear and close all test workspace files before running this test. 
+            //
+            // This step is done so that each test has a predictable starting state to work with.
+            await clearAllWorkspaceFiles();
+            await commands.executeCommand('workbench.action.closeAllEditors');
 
             // To allow test cases to modify and check the state of the running vscode instance.
             const executor = new ExecutorFull();
@@ -90,7 +97,7 @@ export class TestCase {
 
             } finally {
 
-                // Cleanup after the test.
+                // Restore any changed configurations.
                 await executor.dispose();
             }
 
@@ -648,37 +655,12 @@ class ExecutorFull {
     }
 
     /**
-     * Perform cleanup by closing all opened text editors and restoring all configurations to their 
-     * original values.
+     * Perform cleanup restoring all configurations to their original values.
      */
     public async dispose(): Promise<void> {
         for (const restorer of this.configurationRestorers.reverse()) {
             await restorer();
         }
-
-        // Undo all changes in all the opened text editors. 
-        //
-        // This step is required because vscode only discards unsaved changes when the test instance 
-        // is closed, and not when the tab containing the unsaved changes is closed. That means if 
-        // we are retrying tests (or if we have multiple tests that open the same text file), we 
-        // could be opening text documents with unsaved changes in them, which will mess up the test 
-        // as the starting state of the text document is different for each test. By undoing all 
-        // changes before closing them, we prevent such a thing from happening.
-        //
-        // Note that we only need to perform this step for titled documents, since untitled ones 
-        // immediately discard their unsaved changes on close. Furthermore, we cannot wait on 
-        // `isDirty` of untitled documents since they are always considered dirty even though there
-        // is no text content in them.
-        for (const document of workspace.textDocuments) {
-            if (!document.isUntitled) {
-                await window.showTextDocument(document);
-                while (document.isDirty) {
-                    await commands.executeCommand('undo');
-                }
-            }
-        }
-
-        await commands.executeCommand('workbench.action.closeAllEditors');
     }
 
 }
@@ -788,6 +770,20 @@ async function executeCommandWithRepetition(
     options:   RepetitionOption | undefined
 ): Promise<void> {
     return executeWithRepetition(async () => await commands.executeCommand(commandId), options);
+}
+
+/**
+ * Empty each of the source files in the running test workspace.
+ */
+async function clearAllWorkspaceFiles(): Promise<void> {
+    for (const document of workspace.textDocuments) {
+        const builder = new WorkspaceEdit();
+        const startPos = new Position(0, 0);
+        const endPos   = document.lineAt(document.lineCount - 1).rangeIncludingLineBreak.end;
+        const docRange = new Range(startPos, endPos);
+        builder.delete(document.uri, docRange);
+        await workspace.applyEdit(builder); 
+    }
 }
 
 interface ViewColumnOption {
