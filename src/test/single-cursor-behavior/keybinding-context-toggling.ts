@@ -334,9 +334,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
 const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
     name: 'Works When Switching Between Text Editors',
     prelude: async (executor) => {
-        await executor.openFile('./workspace-0/text.ts');
-
-        // 0a. This test case begins with an empty Typescript text editor.
+        
+        // 0a. We begin with an empty Typescript text editor.
         //
         // State of visible text editors after this step:
         // 
@@ -348,6 +347,7 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //     Cursor Position  | [0, 0]     |
         //     Line of Sight    | No         |
         //
+        await executor.openFile('./workspace-0/text.ts');
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [0, 0] ]);
 

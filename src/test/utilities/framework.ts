@@ -777,7 +777,7 @@ async function executeCommandWithRepetition(
  */
 async function clearAllWorkspaceFiles(): Promise<void> {
     for (const document of workspace.textDocuments) {
-        const builder = new WorkspaceEdit();
+        const builder  = new WorkspaceEdit();
         const startPos = new Position(0, 0);
         const endPos   = document.lineAt(document.lineCount - 1).rangeIncludingLineBreak.end;
         const docRange = new Range(startPos, endPos);
