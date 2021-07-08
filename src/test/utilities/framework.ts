@@ -276,20 +276,15 @@ class ExecutorFull {
         edits: ReadonlyArray<
             {
                 /** Replace a range of text. */
-                kind:  'replace';
-                range: CompactRange;
-                with:  string;
+                kind:  'replace'; range: CompactRange; with: string;
             } | 
             {
                 /** Insert text at a position. */
-                kind: 'insert';
-                at:   CompactPosition;
-                text: string;
+                kind: 'insert'; at: CompactPosition; text: string;
             } |
             {
                 /** Delete a range of text. */
-                kind: 'delete';
-                range: CompactRange;
+                kind: 'delete'; range: CompactRange;
             }
         >,
         options?: RepetitionOption & ViewColumnOption
