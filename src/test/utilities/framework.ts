@@ -22,7 +22,7 @@ export class TestCategory {
         const testGroups = this.testGroups;
         describe(this.name, function () {
 
-            // Always retry test cases at least once because sometimes they spuriously fail due to
+            // Allow one retry for each test case because sometimes they spuriously fail due to
             // vscode lagging.
             this.retries(1);
             
