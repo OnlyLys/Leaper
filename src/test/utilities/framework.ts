@@ -149,7 +149,7 @@ class ExecutorFull {
      * We need a small amount of delay after calling each command, otherwise, in the case of many
      * command calls in a short span of time, vscode might omit a few of them.
      */
-    private static readonly REPETITION_DELAY_MS = 10;
+    private static readonly REPETITION_DELAY_MS = 15;
 
     /**
      * Whether or not the executor is executing commands as part of a prelude.
