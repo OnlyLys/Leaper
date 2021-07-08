@@ -49,14 +49,12 @@ const IT_WORKS_TEST_CASE = new TestCase({
 });
 
 /**
- * Check if the 'Escape Leaper Mode' command can handle being called multiple times in one event 
- * loop cycle.
+ * Check if the engine can handle many 'Escape Leaper Mode' calls in a short span of time.
  * 
- * Such a scenario could occur when the user presses and holds down the keybinding for the
- * command.
+ * Such a scenario could occur when the user presses and holds down the keybinding for the command.
  */
-const CAN_HANDLE_RAPID_CALLS = new TestCase({
-    name: 'Can Handle Rapid Calls',
+const ENGINE_CAN_HANDLE_RAPID_CALLS = new TestCase({
+    name: 'Engine Can Handle Rapid Calls',
     prelude: async (executor) => {
         await executor.openFile('./workspace-0/text.ts');
         await executor.typeText(SHARED_TEXT);
@@ -131,10 +129,10 @@ const ONLY_CLEARS_ACTIVE_TEXT_EDITOR = new TestCase({
  * cursor.
  */
 export const SINGLE_CURSOR_ESCAPE_LEAPER_MODE_COMMAND_TEST_GROUP = new TestGroup(
-    'Escape Leaper Mode Command',
+    "'Escape Leaper Mode' Command",
     [
         IT_WORKS_TEST_CASE,
-        CAN_HANDLE_RAPID_CALLS,
+        ENGINE_CAN_HANDLE_RAPID_CALLS,
         ONLY_CLEARS_ACTIVE_TEXT_EDITOR
     ]
 );

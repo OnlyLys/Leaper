@@ -91,8 +91,8 @@ const CONSECUTIVE_LEAPS_ACROSS_WHITESPACE = new TestCase({
     }
 });
 
-const LEAP_CALL_IGNORED_WHEN_NO_PAIRS = new TestCase({
-    name: 'Leap Call Ignored When No Pairs',
+const CALL_IGNORED_WHEN_NO_PAIRS = new TestCase({
+    name: 'Call Ignored When No Pairs',
     prelude: async (executor) => { 
         await executor.openFile('./workspace-3/text.md');
         await executor.typeText(ALICE_TEXT_2);
@@ -128,8 +128,8 @@ const LEAP_CALL_IGNORED_WHEN_NO_PAIRS = new TestCase({
     }
 });
 
-const LEAP_CALL_IGNORED_WHEN_NO_LINE_OF_SIGHT = new TestCase({
-    name: 'Leap Call Ignored When No Line of Sight',
+const CALL_IGNORED_WHEN_NO_LINE_OF_SIGHT = new TestCase({
+    name: 'Call Ignored When No Line of Sight',
     prelude: async (executor) => { 
         await executor.openFile('./workspace-3/text.md');
         
@@ -208,8 +208,8 @@ const LEAP_CALL_IGNORED_WHEN_NO_LINE_OF_SIGHT = new TestCase({
  * Test whether the engine can handle the 'Leap' command being called many times in a short span of 
  * time.
  */
-const ENGINE_CAN_HANDLE_RAPID_LEAP_CALLS = new TestCase({
-    name: 'Engine Can Handle Rapid Leap Calls',
+const ENGINE_CAN_HANDLE_RAPID_CALLS = new TestCase({
+    name: 'Engine Can Handle Rapid Calls',
     prelude: async (executor) => {
 
         // Initialize a Typescript text editor to the following state:
@@ -277,14 +277,14 @@ const ENGINE_CAN_HANDLE_RAPID_LEAP_CALLS = new TestCase({
  * A collection of tests cases that test the `leaper.leap` command when there is a single cursor.
  */
 export const SINGLE_CURSOR_LEAP_COMMAND_TEST_GROUP: TestGroup = new TestGroup(
-    'Leap Command',
+    "'Leap' Command",
     [
         SINGLE_LEAP_TEST_CASE,
         SINGLE_LEAP_ACROSS_WHITESPACE_TEST_CASE,
         CONSECUTIVE_LEAPS_TEST_CASE,
         CONSECUTIVE_LEAPS_ACROSS_WHITESPACE,
-        LEAP_CALL_IGNORED_WHEN_NO_PAIRS,
-        LEAP_CALL_IGNORED_WHEN_NO_LINE_OF_SIGHT,
-        ENGINE_CAN_HANDLE_RAPID_LEAP_CALLS
+        CALL_IGNORED_WHEN_NO_PAIRS,
+        CALL_IGNORED_WHEN_NO_LINE_OF_SIGHT,
+        ENGINE_CAN_HANDLE_RAPID_CALLS
     ]
 );
