@@ -1492,9 +1492,10 @@ const NO_INVALIDATION_DUE_TO_FOCUS_SWITCH_TEST_CASE = new TestCase({
         await executor.focusExplorerSideBar();
         await stepFourChecks();
 
-        // 9. Switch focus to the text editor in view column 2.
+        // 9. Close the side bar, then switch focus to the text editor in view column 2.
         //
         // Repeat the checks we did in step 4.
+        await executor.closeSideBar();
         await executor.focusEditorGroup('second');
         await stepFourChecks();
     }

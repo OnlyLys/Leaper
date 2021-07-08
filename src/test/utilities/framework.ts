@@ -492,6 +492,13 @@ class ExecutorFull {
     }
 
     /**
+     * Close the side bar.
+     */
+    public async closeSideBar(): Promise<void> {
+        await this.executeOnce('workbench.action.closeSidebar');
+    }
+
+    /**
      * Close the active text editor.
      */
     public async closeActiveEditor(options?: RepetitionOption): Promise<void> {
