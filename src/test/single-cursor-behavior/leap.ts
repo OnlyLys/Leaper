@@ -205,18 +205,14 @@ const LEAP_CALL_IGNORED_WHEN_NO_LINE_OF_SIGHT = new TestCase({
 });
 
 /**
- * Let's say the user created a new keybinding for the 'Leap' command that does not take into 
- * consideration the `leaper.hasLineOfSight` or `leaper.inLeaperMode` keybinding contexts, and 
- * managed to hold down said keybinding for a while. That will cause many calls of the 'Leap' 
- * command to occur in a short span of time.
- *
- * This test case tests whether the extension can handle such a situation.
+ * Test whether the engine can handle the 'Leap' command being called many times in a short span of 
+ * time.
  */
-const CAN_HANDLE_BEING_RAPIDLY_CALLED = new TestCase({
-    name: 'Can Handle Being Rapidly Called',
+const ENGINE_CAN_HANDLE_RAPID_LEAP_CALLS = new TestCase({
+    name: 'Engine Can Handle Rapid Leap Calls',
     prelude: async (executor) => {
 
-        // Initialize a Typescript document to the following state:
+        // Initialize a Typescript text editor to the following state:
         //
         // ```
         // function main() {
@@ -237,21 +233,43 @@ const CAN_HANDLE_BEING_RAPIDLY_CALLED = new TestCase({
     },
     task: async (executor) => {
 
-        // Since there is an obstacle at where the cursor is at, a leap should not occur.
+        // 1. Test whether the engine is resilient to rapid 'Leap' calls even though there is no 
+        //    line-of-sight.
+        //
+        // The cursor is currently at a position where it has no line-of-sight to the closing side 
+        // of the nearest pair. The `leaper.hasLineOfSight` global keybinding context should be 
+        // disabled at this point, which disables the default keybinding to the 'Leap' command. 
+        // However, the user may still have a custom keybinding for the 'Leap' command that ignores 
+        // the `leaper.hasLineOfSight` keybinding context. Thus, we have to check that calling the
+        // command, even though there is no line-of-sight, does not create any problems. 
+        //
+        // To do this test, we call the 'Leap' command many times when there is no line-of-sight, 
+        // then check that neither the pairs being tracked nor the cursor position has changed, 
+        // since we expect the engine to do nothing.
         await executor.leap({ repetitions: 50 });
         await executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
         await executor.assertCursors([ [2, 29] ]);
 
-        // Move past the '100' obstacle.
+        // 2. Test whether the engine is resilient to more 'Leap' calls than is necessary.
+        //
+        // To do this test, we move the cursor to a position that has line-of-sight, then call more 
+        // 'Leap' commands than is necessary. We check that all that happens is the cursors are 
+        // leapt out of all available pairs, and that nothing more is done after that.
         await executor.moveCursors('right', { repetitions: 3 });
-        await executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
-        await executor.assertCursors([ [2, 32] ]);
-
-        // Rapidly calling the 'Leap' command here should cause the cursor to leap out of all
-        // the pairs, and do nothing else after that.
         await executor.leap({ repetitions: 50 });
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [2, 37] ]);
+
+        // 3. Test whether the engine is resilient to many valid 'Leap' calls.
+        //
+        // To do this test, we type in 50 pairs then consecutively leap out of all of them. In a way,
+        // this tests the ability of the engine to handle the 'Leap' key being held down.
+        await executor.typeText('{', { repetitions: 50 });
+        await executor.assertPairs([ { line: 2, sides: range(37, 137) } ]);
+        await executor.assertCursors([ [2, 87] ]);
+        await executor.leap({ repetitions: 50 });
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [2, 137] ]);
     }
 });
 
@@ -267,6 +285,6 @@ export const SINGLE_CURSOR_LEAP_COMMAND_TEST_GROUP: TestGroup = new TestGroup(
         CONSECUTIVE_LEAPS_ACROSS_WHITESPACE,
         LEAP_CALL_IGNORED_WHEN_NO_PAIRS,
         LEAP_CALL_IGNORED_WHEN_NO_LINE_OF_SIGHT,
-        CAN_HANDLE_BEING_RAPIDLY_CALLED
+        ENGINE_CAN_HANDLE_RAPID_LEAP_CALLS
     ]
 );
