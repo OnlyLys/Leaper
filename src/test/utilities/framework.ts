@@ -22,6 +22,10 @@ export class TestCategory {
         const testGroups = this.testGroups;
         describe(this.name, function () {
 
+            // Always retry test cases at least once because sometimes they spuriously fail due to
+            // vscode lagging.
+            this.retries(1);
+            
             before(async function () {
 
                 // If the previous test run did not terminate properly, then during the next test 
@@ -141,7 +145,7 @@ class ExecutorFull {
      * the API has "caught up". Similarly, this extension's engine also requires some time to reflect 
      * changes since it receives information asynchronously.
      */
-    private static readonly QUERY_DELAY_MS = 70;
+    private static readonly QUERY_DELAY_MS = 50;
 
     /**
      * Delay to apply after each repetition of a command.
