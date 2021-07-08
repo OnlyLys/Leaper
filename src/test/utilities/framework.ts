@@ -762,7 +762,7 @@ function resolveViewColumnOption(
 }
 
 /**
- * Empty each of the source files in the running test workspace.
+ * Empty each of the files in the test workspace.
  */
 async function clearAllWorkspaceFiles(): Promise<void> {
     for (const document of workspace.textDocuments) {
