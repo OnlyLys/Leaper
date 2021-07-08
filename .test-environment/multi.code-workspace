@@ -46,6 +46,13 @@
 		// Some test cases rely on this being set to "auto".
 		"editor.autoClosingOvertype": "auto",
 		// Test cases rely on this being the default value in the test workspace.
-		"leaper.decorateAll": false
+		"leaper.decorateAll": false,
+		// Make sure that when we open files in the test workspace, they are open as intended 
+		// languages.
+		"files.associations": {
+			"*.ts": "typescript",
+			"*.md": "markdown",
+			"*.txt": "plaintext"
+		},
 	}
 }
