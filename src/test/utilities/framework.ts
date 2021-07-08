@@ -759,6 +759,10 @@ async function executeWithRepetition(
     let repetitions = options?.repetitions ?? DEFAULT_REPETITIONS;
     while (repetitions-- > 0) {
         await callback();
+
+        // There needs to be a delay between repetitions otherwise vscode might combine multiple 
+        // command calls into one.
+        await waitFor(10);
     }
 }
 
