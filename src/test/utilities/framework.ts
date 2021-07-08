@@ -71,36 +71,18 @@ export class TestCase {
 
     public run(): void {
         const { name, prelude, task } = this.args;
-
         it(name, async function () {
-
-            // Clear and close all test workspace files before running this test. 
-            //
-            // We do this so that each test has a predictable starting state to work with.
-            await clearAllWorkspaceFiles();
-            await commands.executeCommand('workbench.action.closeAllEditors');
-
-            // To allow test cases to modify and check the state of the running vscode instance.
             const executor = new ExecutorFull();
-
             try {
-
-                // Perform setup for the test.
                 if (prelude) {
                     executor.inPrelude = true;
                     await prelude(executor);
                     executor.inPrelude = false;
                 }
-    
-                // Run the actual test.            
                 await task(executor);
-
             } finally {
-
-                // Restore any changed configurations.
-                await executor.dispose();
+                await executor.cleanup();
             }
-
         });
     }
 
@@ -115,7 +97,7 @@ export class TestCase {
  *  4. Temporarily change configuration values of the test workspace and the folders within it.
  *  5. Open documents in the test workspace.
  */
-export type Executor = Omit<ExecutorFull, 'inPrelude' | 'dispose'>;
+export type Executor = Omit<ExecutorFull, 'inPrelude' | 'cleanup'>;
 
 /**
  * The full `Executor` class that has some methods and properties that are only exposed to this 
@@ -735,12 +717,23 @@ class ExecutorFull {
     }
 
     /**
-     * Perform cleanup restoring all configurations to their original values.
+     * Perform cleanup after a test case.
+     * 
+     * Cleanup should be performed regardless of whether the test case succeeded or failed.
      */
-    public async dispose(): Promise<void> {
+    public async cleanup(): Promise<void> {
+
+        // Restore all configurations.
         for (const restorer of this.configurationRestorers.reverse()) {
             await restorer();
         }
+
+        // Undo all changes made to any of the files in the test workspace.
+        await clearAllWorkspaceFiles();
+
+        // Close all open text editors so that the next test case has a predictable starting state 
+        // to work from.
+        await commands.executeCommand('workbench.action.closeAllEditors');
     }
 
 }
