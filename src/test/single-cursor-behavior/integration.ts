@@ -38,8 +38,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
     prelude: async (executor) => {
         await executor.openFile('./workspace-0/text.ts');
 
-        // Since the initial text editor is empty, we expect both keybinding contexts to be 
-        // initially disabled, since there are clearly no pairs being tracked for it.
+        // Since the text editor is empty, there should be no pairs in it, and we expect both 
+        // keybinding contexts to be disabled.
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [0, 0] ]);
         await executor.assertMRBInLeaperModeContext(false);
         await executor.assertMRBHasLineOfSightContext(false);
     },
