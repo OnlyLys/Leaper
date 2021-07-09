@@ -666,7 +666,7 @@
         ]
     },
     "engines": {
-        "vscode": "^1.57.1"
+        "vscode": "^1.58.0"
     },
     "scripts": {
         "build-release": "npm run lint && npm run typecheck && esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --minify",
@@ -682,17 +682,17 @@
         "@onlylys/vscode-validated-configuration-reader": "github:OnlyLys/vscode-validated-configuration-reader#semver:^0.6.0"
     },
     "devDependencies": {
-        "@types/glob": "^7.1.3",
-        "@types/mocha": "^8.2.2",
+        "@types/glob": "^7.1.4",
+        "@types/mocha": "^8.2.3",
         "@types/node": "^15.12.5",
-        "@types/vscode": "^1.57.0",
-        "@typescript-eslint/eslint-plugin": "^4.27.0",
-        "@typescript-eslint/parser": "^4.27.0",
-        "esbuild": "^0.12.9",
-        "eslint": "^7.29.0",
+        "@types/vscode": "^1.58.0",
+        "@typescript-eslint/eslint-plugin": "^4.28.2",
+        "@typescript-eslint/parser": "^4.28.2",
+        "esbuild": "^0.12.15",
+        "eslint": "^7.30.0",
         "glob": "^7.1.7",
-        "mocha": "^9.0.1",
-        "typescript": "^4.3.2",
+        "mocha": "^9.0.2",
+        "typescript": "^4.3.5",
         "vscode-test": "^1.5.2"
     }
 }
