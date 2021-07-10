@@ -23,8 +23,8 @@ const SHARED_TEXT = 'function main() {\n'
 /**
  * Make sure the command works.
  * 
- * Note that the command is directly called instead of being triggered by a keypress. The 
- * keybinding (and its 'when' context) are not being tested here.
+ * Note that the command is directly called instead of being triggered by a keypress. The keybinding 
+ * context is being tested here.
  */
 const IT_WORKS_TEST_CASE = new TestCase({
     name: 'It Works',
