@@ -237,10 +237,10 @@ const ENGINE_CAN_HANDLE_RAPID_CALLS = new TestCase({
         //    line-of-sight.
         //
         // The cursor is currently at a position where it has no line-of-sight to the closing side 
-        // of the nearest pair. The `leaper.hasLineOfSight` global keybinding context should be 
-        // disabled at this point, which disables the default keybinding to the 'Leap' command. 
-        // However, the user may still have a custom keybinding for the 'Leap' command that ignores 
-        // the `leaper.hasLineOfSight` keybinding context. Thus, we have to check that calling the
+        // of the nearest pair. The `leaper.hasLineOfSight` keybinding context should be disabled at 
+        // this point, which disables the default keybinding to the 'Leap' command. However, the 
+        // user may still have a custom keybinding for the 'Leap' command that ignores the 
+        // `leaper.hasLineOfSight` keybinding context. Thus, we have to check that calling the
         // command, even though there is no line-of-sight, does not create any problems. 
         //
         // To do this test, we call the 'Leap' command many times when there is no line-of-sight, 

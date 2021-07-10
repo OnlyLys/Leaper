@@ -3,8 +3,7 @@ import { TestCase, TestGroup } from '../utilities/framework';
 import { range } from '../utilities/other';
 
 /**
- * Test whether the (global) keybinding contexts are appropriately toggled while using a given text 
- * editor.
+ * Test whether the keybinding contexts are appropriately toggled while using a given text editor.
  */
 const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
     name: 'Works for a Given Text Editor',
@@ -328,8 +327,7 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
 });
 
 /**
- * Test whether the (global) keybinding contexts are appropriately toggled when switching between 
- * text editors.
+ * Test whether the keybinding contexts are appropriately toggled when switching between text editors.
  */
 const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
     name: 'Works When Switching Between Text Editors',
@@ -777,8 +775,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         await executor.assertCursors([ [5, 79] ],                         { viewColumn: ViewColumn.One });
 
         // 18b. Since the text was inserted into a view column that is not in focus, it should not
-        //      affect the keybinding contexts, since the (global) keybinding contexts are only
-        //      synchronized to the active text editor.
+        //      affect the keybinding contexts, since the keybinding contexts are only synchronized 
+        //      to the active text editor.
         await executor.assertMRBInLeaperModeContext(true);
         await executor.assertMRBHasLineOfSightContext(false);
 
@@ -840,8 +838,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 });
 
 /**
- * A collection of test cases that test whether the (global) keybinding context values are being 
- * appropriately toggled when there is a single cursor.
+ * A collection of test cases that test whether the keybinding contexts are being appropriately 
+ * toggled when there is a single cursor.
  */
 export const SINGLE_CURSOR_KEYBINDING_CONTEXT_TOGGLING_TEST_GROUP = new TestGroup(
     'Keybinding Context Toggling',
