@@ -13,6 +13,6 @@ DESIGN-NOTES.md
 
 # In release builds, the extension will be bundled into `out/extension.js`. All the other files in 
 # 'out' should therefore be ignored.
-out/*
+out
 !out/extension.js
 node_modules
