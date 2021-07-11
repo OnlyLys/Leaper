@@ -68,6 +68,8 @@ export class Configuration {
                 return typeof elem === 'object'
                     && elem !== null    // Need this because `null` is an object in JS.
                     && Reflect.ownKeys(elem).length === 2
+                    && Reflect.has(elem, 'open')
+                    && Reflect.has(elem, 'close')
                     && typeof elem.open  === 'string' 
                     && typeof elem.close === 'string'
                     && elem.open.length  === 1
