@@ -128,7 +128,7 @@ export class Configuration {
 
                         // Recursively descend into subobjects.
                         convertColors(value); 
-                    } else if (typeof key === "string" && /color$/i.test(key) && typeof value === 'string') {
+                    } else if (typeof key === 'string' && /color$/i.test(key) && typeof value === 'string') {
 
                         // To differentiate between a hex RGB(A) value and a theme color identifier, 
                         // we look at the first character in the string. If the string starts with a 
