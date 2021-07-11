@@ -4,12 +4,13 @@
 - Allow the extension to run in untrusted workspaces. 
 - Change the default decoration to something with more contrast.
 - Improve the `leaper.decorationOptions` configuration.
-  * Allow theme color identifiers to be specified without object literals.
+  * Allow theme color identifiers to be specified with strings.
   * Add autocompletion and validation for most of the options.
 - Improve the README.
 - Improve the descriptions of configurations.
 - Improve the engine code.
 - Hide the 'Leap' and 'Escape Leaper Mode' commands from the command palette.
+- Fix incorrect extension packaging. The fix in 0.9.3 did not work.
 
 ### 0.9.3 _(Not published to marketplace)_
 - Fix incorrect extension packaging. This should reduce the file size.
@@ -40,6 +41,9 @@
 - Overhaul README to reflect the above changes.
 - Make the 'Leap' command work the same whether through the `Tab` keybinding or 
   through the command pallete. This reverses the change introduced in `0.4.0`.
+
+### 0.7.0 _(Scrapped)_
+- This version was scrapped and never published.
 
 ### 0.6.0
 - Remove the unnecessary `!config.emmet.triggerExpansionOnTab` when context for 
