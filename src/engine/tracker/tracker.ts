@@ -691,9 +691,11 @@ export class Tracker {
     }
 
     /** 
+     * **For tests only**
+     * 
      * Get a deep copy of the internal state of this tracker.
      * 
-     * The returned snapshot can be mutated without affecting the internal state.
+     * The returned snapshot can be mutated without affecting the state of this tracker.
      */
     public snapshot(): TrackerSnapshot {
         
@@ -702,7 +704,11 @@ export class Tracker {
         const pairs = Array(this.clusters.length).fill(undefined);
         for (const [i, cluster] of this.clusters.entries()) {
             const originalIndex  = this.sortedCursors[i].originalIndex;
-            pairs[originalIndex] = cluster.map(pair => ({ ...pair, isDecorated: !!pair.decoration }));
+            pairs[originalIndex] = cluster.map(pair => {
+                const open  = [pair.open.line, pair.open.character];
+                const close = [pair.close.line, pair.close.character];
+                return { open, close, isDecorated: !!pair.decoration };
+            });
         }
 
         // Make a deep copy so that there is no risk of someone being able to affect the state of 

@@ -4,7 +4,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, window, ViewColumn, Uri, ConfigurationTarget, WorkspaceEdit } from 'vscode';
 import { ResolvedViewColumn, TrackerSnapshot } from '../../engine/test-handle';
-import { CompactCluster, CompactRange, CompactPosition, CompactCursor, CompactSelection } from './compact';
+import { CompactCluster, CompactRange, CompactPosition, CompactCursor, CompactSelection, CompactPair } from './compact';
 import { waitFor, zip } from './other';
 import { testHandle } from '../../extension';
 
@@ -23,9 +23,10 @@ export class TestCategory {
         describe(this.name, function () {
 
             // Allow one retry for each test case because sometimes they spuriously fail due to
-            // vscode lagging.
+            // vscode lagging or acting weird. Seriously, I don't know why but sometimes vscode does 
+            // not autoclose the first pair inserted in a test case.
             this.retries(1);
-            
+
             before(async function () {
 
                 // If the previous test run did not terminate properly, then during the next test 
@@ -36,6 +37,9 @@ export class TestCategory {
 
                 // Make sure side bar is closed so that it does not take up space.
                 await commands.executeCommand('workbench.action.closeSidebar');
+
+                // Wait for the engine and vscode to "catch up" before starting the tests.
+                await waitFor(100);
             });
 
             testGroups.forEach((group) => group.run());
@@ -130,145 +134,67 @@ class ExecutorFull {
     private configurationRestorers: (() => Promise<void>)[] = [];
 
     /**
-     * Whether any delay should be applied before the next query of the state of vscode or the engine.
+     * The minimum amount of delay to apply before querying the engine.
+     * 
+     * This delay exists because it may take a while for changes we have made to be reflected in the
+     * engine as the engine receives information asynchronously.
      */
-    private queryDelayRequired: boolean = true;
+    private static readonly PRE_ENGINE_QUERY_MIN_DELAY_MS = 50;
 
     /**
-     * Delay to apply before querying the state of vscode or the engine.
+     * The delay to apply after each repetition of a command.
      * 
-     * This delay exists because it may take a while for changes in the state of the running vscode 
-     * instance to be reflected through the vscode API. For instance, suppose we change focus to 
-     * another text editor. The `window.activeTextEditor` pointer does not update instantaneously, 
-     * meaning that if we immediately query that pointer after changing focus, it will still point 
-     * to the previous active text editor. So we need a small delay before any queries to ensure that
-     * the API has "caught up". Similarly, this extension's engine also requires some time to reflect 
-     * changes since it receives information asynchronously.
+     * This delay exists to allow some time for the engine and vscode to "catch up" before executing
+     * the next command.
      */
-    private static readonly QUERY_DELAY_MS = 50;
+    private static readonly POST_REPETITION_DELAY_MS = 10;
 
     /**
-     * Delay to apply after each repetition of a command.
+     * The delay to apply after a command that affects the view state is executed.
      * 
-     * We need a small amount of delay after calling each command, otherwise, in the case of many
-     * command calls in a short span of time, vscode might omit a few of them.
+     * This delay exists because it may take a while before requests to change the view state (e.g.
+     * focusing on a different text editor or opening a new text editor) are acknowledged by vscode.
      */
-    private static readonly REPETITION_DELAY_MS = 15;
+    private static readonly POST_VIEW_STATE_CHANGE_DELAY_MS = 50;
 
     /**
      * Whether or not the executor is executing commands as part of a prelude.
+     * 
+     * When this flag is `true`, the assertion message of `this.assertEq` will have a header denoting
+     * that the assertion failed in a prelude.
      */
     public inPrelude: boolean = false;
-
-    /**
-     * Execute a command `options.repetitions` amount of times.
-     */
-    private async execute(commandId: string, options: RepetitionOption | undefined): Promise<void> {
-        let repetitions = options?.repetitions ?? 1;
-        while (repetitions-- > 0) {
-            await commands.executeCommand(commandId);
-        
-            // We need some delay after each command call because calling commands too rapidly may
-            // cause vscode to ignore some of them.
-            await waitFor(ExecutorFull.REPETITION_DELAY_MS);
-        }
-
-        // It may take a while for vscode or the engine to acknowledge the commands we just called. 
-        // Thus, we need some delay before the next query, otherwise there is a risk of the next 
-        // query reading the state of vscode or the engine too soon.
-        this.queryDelayRequired = true;
-    }
-
-    /**
-     * Execute a command once.
-     */
-    private async executeOnce(commandId: string): Promise<void> {
-        await this.execute(commandId, { repetitions: 1 });
-    }
-
-    /**
-     * Get a snapshot of all the pairs being tracked for a visible text editor.
-     */
-    private async getSnapshot(
-        viewColumnOption: ViewColumnOption | undefined
-    ): Promise<TrackerSnapshot> {
-        if (!testHandle) {
-            throw new Error('Unable to access the running engine instance!');
-        }
-        if (this.queryDelayRequired) {
-            await waitFor(ExecutorFull.QUERY_DELAY_MS);
-            this.queryDelayRequired = false;
-        }
-        const viewColumn = resolveViewColumnOption(viewColumnOption);
-        const snapshot   = testHandle.snapshot().get(viewColumn);
-        if (!snapshot) {
-            throw new Error(`Unable to obtain snapshot of text editor in view column ${viewColumn}.`);
-        }
-        return snapshot;
-    }
-
-    /**
-     * Get the most recently set value of the `leaper.inLeaperMode` keybinding context.
-     */
-    private async getMostRecentInLeaperModeContext(): Promise<boolean | undefined> {
-        if (!testHandle) {
-            throw new Error('Unable to access the running engine instance!');
-        }
-        if (this.queryDelayRequired) {
-            await waitFor(ExecutorFull.QUERY_DELAY_MS);
-            this.queryDelayRequired = false;
-        }
-        return testHandle.mostRecentInLeaperModeContext;
-    }
-
-    /**
-     * Get the most recently set value of the `leaper.hasLineOfSight` keybinding context.
-     */
-    private async getMostRecentHasLineOfSightContext(): Promise<boolean | undefined> {
-        if (!testHandle) {
-            throw new Error('Unable to access the running engine instance!');
-        }
-        if (this.queryDelayRequired) {
-            await waitFor(ExecutorFull.QUERY_DELAY_MS);
-            this.queryDelayRequired = false;
-        }
-        return testHandle.mostRecentHasLineOfSightContext;
-    }
-
-    /**
-     * Get a reference to a visible text editor.
-     */
-    private async getVisibleTextEditor(
-        viewColumnOption: ViewColumnOption | undefined
-    ): Promise<TextEditor> {
-        if (this.queryDelayRequired) {
-            await waitFor(ExecutorFull.QUERY_DELAY_MS);
-            this.queryDelayRequired = false;
-        }
-        const viewColumn = resolveViewColumnOption(viewColumnOption);
-        const editor     = window.visibleTextEditors.find(editor => editor.viewColumn === viewColumn);
-        if (!editor) {
-            throw new Error(`Unable to obtain text editor in view column ${viewColumn}.`);
-        }
-        return editor;
-    }
 
     /**
      * Perform deep strict equality comparison between two objects. 
      * 
      * If the `inPrelude` flag of this executor is `true`, then on assertion failure, the message
-     * shown will have a header denoting that the assertion failed in a test prelude.
+     * shown will have a header denoting that the assertion failed in a prelude.
      */
-    private assertEq(actual: any, expect: any, message: string): void {
+    private assertEq<T>(actual: T, expect: T, message: string): void {
         const _message = this.inPrelude ? `(Prelude Failure) ${message}` : message;
         assert.deepStrictEqual(actual, expect, _message);
+    }
+
+    /**
+     * Execute a command `repetitions` amount of times.
+     * 
+     * A delay of `ExecutorFull.POST_REPETITION_DELAY_MS` is applied after each repetition.
+     * 
+     * `repetitions` defaults to `1` if not specified.
+     */
+    private async execute(commandId: string, repetitions: number = 1): Promise<void> {
+        while (repetitions-- > 0) {
+            await commands.executeCommand(commandId);
+            await waitFor(ExecutorFull.POST_REPETITION_DELAY_MS);
+        }
     }
 
     /**
      * Assert the position of pairs being tracked for a visible text editor.
      */
     public async assertPairs(
-        expect: CompactCluster[],
+        expect: ReadonlyArray<CompactCluster>,
         options?: ViewColumnOption & {
 
             /**
@@ -278,81 +204,79 @@ class ExecutorFull {
              *  - `'nearest'` asserts that only the pairs nearest to each cursor are decorated.
              *  - `undefined` means no decoration checks are performed.
              * 
-             * This option defaults to `undefined`
+             * This option defaults to `undefined`.
              * 
              * Note that this option only relates to checking for the presence of decorations (i.e. 
-             * checking whether decorations are applied or not). We do not check for the style of 
-             * the decoration.
+             * checking whether decorations are applied or not). We do not check the style of the 
+             * decorations here.
              */
             expectDecorations?: 'all' | 'nearest' | undefined;
         }
     ): Promise<void> {
-        
-        // Print friendly representation of a pair.
-        type Pretty = { open: CompactPosition, close: CompactPosition, isDecorated: boolean };
+    
+        // Wait in case the engine has not caught up.
+        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_MIN_DELAY_MS);
 
-        // Print friendly representation of a pair without a decoration flag.
-        type PrettyPartial = Omit<Pretty, "isDecorated">;
+        // The actual pairs being tracked for the target text editor.
+        const actual = getSnapshot(options?.viewColumn).pairs;
 
-        function stripDecorationFlag(pairs: Pretty[][]): PrettyPartial[][] {
-            return pairs.map(cluster => cluster.map(({ open, close }) => ({ open, close })));
-        }
-
-        // Query the state of the engine.
-        const snapshot = await this.getSnapshot(options);
-
-        // Convert the actual and expected pairs to a print friendly form before asserting them.
-        const actual: Pretty[][] = snapshot.pairs.map((cluster) => 
-            cluster.map((pair) => {
-                const open:  CompactPosition = [pair.open.line,  pair.open.character];
-                const close: CompactPosition = [pair.close.line, pair.close.character];
-                const isDecorated = pair.isDecorated;
-                return { open, close, isDecorated };
-            })
-        );
-        const _expect: Pretty[][] = expect.map((cluster) => {
+        // Convert the expected pairs to a form suited for comparison with the actual pairs.
+        const _expect: CompactPair[][] = expect.map(cluster => {
             if (cluster === 'None') {
                 return [];
+            } else {
+                const line    = cluster.line;
+                const openers = cluster.sides.slice(0, cluster.sides.length / 2);
+                const closers = cluster.sides.slice(cluster.sides.length / 2).reverse();
+                return [...zip(openers, closers)].map(([opener, closer]) => (
+                    { open: [line, opener], close: [line, closer], isDecorated: false }
+                ));
             }
-            const line    = cluster.line;
-            const openers = cluster.sides.slice(0, cluster.sides.length / 2);
-            const closers = cluster.sides.slice(cluster.sides.length / 2).reverse();
-            return [...zip(openers, closers)].map(([opener, closer]) => (
-                { open: [line, opener], close: [line, closer], isDecorated: false }
-            ));
         });
 
-        const expectDecorations = options?.expectDecorations;
-        const message           = 'Pairs Mismatch';
-        if (expectDecorations === 'all') {
-            _expect.flat().forEach(pair => pair.isDecorated = true);
-            this.assertEq(actual, _expect, message);
-        } else if (expectDecorations === 'nearest') {
-            _expect.filter(cluster => cluster.length > 0)
-                   .map(cluster => cluster[cluster.length - 1])
-                   .forEach(nearestPair => nearestPair.isDecorated = true);
-            this.assertEq(actual, _expect, message);
+        const assertionMsg = 'Pairs Mismatch';
+        if (options?.expectDecorations === 'all') {
+
+            // We expect every pair to be decorated.
+            _expect.forEach(cluster => cluster.forEach(pair => pair.isDecorated = true));
+            this.assertEq(actual, _expect, assertionMsg);
+        } else if (options?.expectDecorations === 'nearest') {
+
+            // We expect only the pair nearest to each cursor to be decorated.
+            _expect.forEach(cluster => {
+                cluster.forEach((pair, i) => pair.isDecorated = (i === cluster.length - 1));
+            });
+            this.assertEq(actual, _expect, assertionMsg);
         } else {
-            this.assertEq(stripDecorationFlag(actual), stripDecorationFlag(_expect), message);
-        }
+            function stripIsDecoratedFlag(pairs: CompactPair[][]) {
+                return pairs.map(cluster => cluster.map(({ open, close }) => ({ open, close })));
+            }
+            
+            // We are not checking decorations here.
+            this.assertEq(stripIsDecoratedFlag(actual), stripIsDecoratedFlag(_expect), assertionMsg);
+        };
     }
 
     /**
      * Assert the state of the cursors of a visible text editor.
      */
     public async assertCursors(
-        expect:   CompactCursor[],
+        expect:   ReadonlyArray<CompactCursor>,
         options?: RepetitionOption & ViewColumnOption
     ): Promise<void> {
-        const editor = await this.getVisibleTextEditor(options);
+
+        // Note that this function is not actually `async` since it does not wait on anything. But 
+        // we keep the `async` in the function declaration in case in the future we want to wait on
+        // something here.
+
+        const editor = getVisibleTextEditor(options?.viewColumn);
 
         // Convert the actual and expected cursors to a print friendly form before asserting them.
-        const actual: CompactSelection[] = editor.selections.map((cursor) => (
-            { 
-                anchor: [cursor.anchor.line, cursor.anchor.character], 
-                active: [cursor.active.line, cursor.active.character]
-            }
-        ));
+        const actual: CompactSelection[] = editor.selections.map((cursor) => {
+            const anchor: CompactPosition = [cursor.anchor.line, cursor.anchor.character];
+            const active: CompactPosition = [cursor.active.line, cursor.active.character];
+            return { anchor, active };
+        });
         const _expect: CompactSelection[] = expect.map((cursor) => 
             Array.isArray(cursor) ? { anchor: cursor, active: cursor } : cursor
         );
@@ -364,37 +288,45 @@ class ExecutorFull {
      * Assert the most recently set value of the `leaper.inLeaperMode` keybinding context.
      */
     public async assertMostRecentInLeaperModeContext(expect: boolean): Promise<void> {
+        
+        // Wait in case the engine has not caught up.
+        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_MIN_DELAY_MS);
+
         const message = 'Most Recently Set `leaper.inLeaperMode` Keybinding Context Mismatch';
-        this.assertEq(await this.getMostRecentInLeaperModeContext(), expect, message);
+        this.assertEq(getMostRecentInLeaperModeContext(), expect, message);
     }
 
     /**
      * Assert the most recently set value of the `leaper.hasLineOfSight` keybinding context.
      */
     public async assertMostRecentHasLineOfSightContext(expect: boolean): Promise<void> {
+
+        // Wait in case the engine has not caught up.
+        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_MIN_DELAY_MS);
+
         const message = 'Most Recently Set `leaper.hasLineOfSight` Keybinding Context Mismatch';
-        this.assertEq(await this.getMostRecentHasLineOfSightContext(), expect, message);
+        this.assertEq(getMostRecentHasLineOfSightContext(), expect, message);
     }
 
     /** 
      * Perform a backspace for each cursor in the active text editor.
      */
     public async backspace(options?: RepetitionOption): Promise<void> {
-        await this.execute('deleteLeft', options);
+        await this.execute('deleteLeft', options?.repetitions);
     }
 
     /**
      * Backspace a word for each cursor in the active text editor.
      */
     public async backspaceWord(options?: RepetitionOption): Promise<void> {
-        await this.execute('deleteWordLeft', options);
+        await this.execute('deleteWordLeft', options?.repetitions);
     }
 
     /**
      * Delete a character to the right of each cursor in the active text editor.
      */
     public async deleteRight(options?: RepetitionOption): Promise<void> {
-        await this.execute('deleteRight', options);
+        await this.execute('deleteRight', options?.repetitions);
     }
 
     /**
@@ -405,12 +337,12 @@ class ExecutorFull {
         options?: RepetitionOption
     ): Promise<void> {
         switch (where) {
-            case 'left':  return this.execute('cursorLeft',  options);
-            case 'right': return this.execute('cursorRight', options);
-            case 'up':    return this.execute('cursorUp',    options);
-            case 'down':  return this.execute('cursorDown',  options);
-            case 'home':  return this.execute('cursorHome',  options);
-            case 'end':   return this.execute('cursorEnd',   options);
+            case 'left':  return this.execute('cursorLeft',  options?.repetitions);
+            case 'right': return this.execute('cursorRight', options?.repetitions);
+            case 'up':    return this.execute('cursorUp',    options?.repetitions);
+            case 'down':  return this.execute('cursorDown',  options?.repetitions);
+            case 'home':  return this.execute('cursorHome',  options?.repetitions);
+            case 'end':   return this.execute('cursorEnd',   options?.repetitions);
         }
     }
 
@@ -418,14 +350,14 @@ class ExecutorFull {
      * Call the 'Leap' command.
      */
     public async leap(options?: RepetitionOption): Promise<void> {
-        await this.execute('leaper.leap', options);
+        await this.execute('leaper.leap', options?.repetitions);
     }
 
     /**
      * Call the 'Escape Leaper Mode' command.
      */
     public async escapeLeaperMode(options?: RepetitionOption): Promise<void> {
-        await this.execute('leaper.escapeLeaperMode', options);
+        await this.execute('leaper.escapeLeaperMode', options?.repetitions);
     }
 
     /**
@@ -433,8 +365,8 @@ class ExecutorFull {
      */
     public async jumpToTabstop(which: 'next' | 'prev', options?: RepetitionOption): Promise<void> {
         switch (which) {
-            case 'next': return this.execute('jumpToNextSnippetPlaceholder', options);
-            case 'prev': return this.execute('jumpToPrevSnippetPlaceholder', options);
+            case 'next': return this.execute('jumpToNextSnippetPlaceholder', options?.repetitions);
+            case 'prev': return this.execute('jumpToPrevSnippetPlaceholder', options?.repetitions);
         }
     }
 
@@ -442,102 +374,42 @@ class ExecutorFull {
      * Trigger an autocomplete suggestion in the active text editor then accept the first suggestion.
      */
     public async triggerAndAcceptSuggestion(): Promise<void> {
-        await this.executeOnce('editor.action.triggerSuggest');
+        await this.execute('editor.action.triggerSuggest');
         await waitFor(100);    // Wait for the suggestion box to appear.
-        await this.executeOnce('acceptSelectedSuggestion');
+        await this.execute('acceptSelectedSuggestion');
     }
 
     /**
      * Perform an undo in the active text editor.
      */
     public async undo(options?: RepetitionOption): Promise<void> {
-        await this.execute('undo', options);
-    }
-
-    /**
-     * Switch to another text editor in the in-focus editor tab group.
-     */
-    public async switchToEditorInGroup(which: 'next' | 'prev', options?: RepetitionOption): Promise<void> {
-        switch (which) {
-            case 'next': return this.execute('workbench.action.nextEditorInGroup', options);
-            case 'prev': return this.execute('workbench.action.previousEditorInGroup', options);
-        }
-    }
-
-    /**
-     * Move the active text editor to another editor tab group.
-     */
-    public async moveEditorToGroup(which: 'left' | 'right', options?: RepetitionOption): Promise<void> {
-        switch (which) {
-            case 'left':  return this.execute('workbench.action.moveEditorToLeftGroup', options);
-            case 'right': return this.execute('workbench.action.moveEditorToRightGroup', options);
-        }
-    }
-
-    /**
-     * Focus on the explorer side bar.
-     */
-    public async focusExplorerSideBar(): Promise<void> {
-        await this.executeOnce('workbench.view.explorer');
-    }
-
-    /**
-     * Focus on an editor tab group.
-     */
-    public async focusEditorGroup(
-        which: 'left' | 'right' | 'first' | 'second' | 'third' | 'fourth',
-    ): Promise<void> {
-        switch (which) {
-            case 'left':   return this.executeOnce('workbench.action.focusLeftGroup');
-            case 'right':  return this.executeOnce('workbench.action.focusRightGroup');
-            case 'first':  return this.executeOnce('workbench.action.focusFirstEditorGroup');
-            case 'second': return this.executeOnce('workbench.action.focusSecondEditorGroup');
-            case 'third':  return this.executeOnce('workbench.action.focusThirdEditorGroup');
-            case 'fourth': return this.executeOnce('workbench.action.focusFourthEditorGroup');
-        }
-    }
-
-    /**
-     * Close the side bar.
-     */
-    public async closeSideBar(): Promise<void> {
-        await this.executeOnce('workbench.action.closeSidebar');
-    }
-
-    /**
-     * Close the active text editor.
-     */
-    public async closeActiveEditor(options?: RepetitionOption): Promise<void> {
-        await this.execute('workbench.action.closeActiveEditor', options);
+        await this.execute('undo', options?.repetitions);
     }
 
     /**
      * Type text into the active text editor, codepoint by codepoint.
      */
     public async typeText(text: string, options?: RepetitionOption): Promise<void> {
-        const repetitions = options?.repetitions ?? 1;
-        for (let _ = 0; _ < repetitions; ++_) {
+        let repetitions = options?.repetitions ?? 1;
+        while (repetitions-- > 0) {
             for (const char of text) {
-
-                // Don't need delay after 'default:type' command calls, as vscode never omits any
-                // of them even if large amount of calls are made in a short span of time.
                 await commands.executeCommand('default:type', { text: char });
             }
+            await waitFor(ExecutorFull.POST_REPETITION_DELAY_MS);
         }
-        this.queryDelayRequired = true;
     }
 
     /**
      * Delete all text in a visible text editor.
      */
     public async deleteAll(options?: ViewColumnOption): Promise<void> {
-        const editor   = await this.getVisibleTextEditor(options);
+        const editor   = getVisibleTextEditor(options?.viewColumn);
         const document = editor.document;
         const startPos = new Position(0, 0);
         const endPos   = document.lineAt(document.lineCount - 1).rangeIncludingLineBreak.end;
         const docRange = new Range(startPos, endPos);
         await editor.edit(builder => builder.delete(docRange));
-        this.queryDelayRequired = true;
+        await waitFor(ExecutorFull.POST_REPETITION_DELAY_MS);
     }
 
     /**
@@ -547,22 +419,13 @@ class ExecutorFull {
      */
     public async editText(
         edits: ReadonlyArray<
-            {
-                /** Replace a range of text. */
-                kind:  'replace'; range: CompactRange; with: string;
-            } | 
-            {
-                /** Insert text at a position. */
-                kind: 'insert'; at: CompactPosition; text: string;
-            } |
-            {
-                /** Delete a range of text. */
-                kind: 'delete'; range: CompactRange;
-            }
+            { kind: 'replace'; range: CompactRange; with: string; } 
+          | { kind: 'insert';  at: CompactPosition; text: string; } 
+          | { kind: 'delete';  range: CompactRange; }
         >,
         options?: ViewColumnOption
     ): Promise<void> {
-        const editor = await this.getVisibleTextEditor(options);
+        const editor = getVisibleTextEditor(options?.viewColumn);
         await editor.edit((builder: TextEditorEdit) => {
             for (const edit of edits) {
                 if (edit.kind === 'replace') {
@@ -576,7 +439,7 @@ class ExecutorFull {
                 }
             }
         });
-        this.queryDelayRequired = true;
+        await waitFor(ExecutorFull.POST_REPETITION_DELAY_MS);
     }
 
     /**
@@ -600,17 +463,17 @@ class ExecutorFull {
             location = new Position(at[0], at[1]);
         } else if (typeof at === 'object') {
             location = new Range(at.start[0], at.start[1], at.end[0], at.end[1]);
-        }
-        const editor = await this.getVisibleTextEditor(options);
+        }       
+        const editor = getVisibleTextEditor(options?.viewColumn);
         await editor.insertSnippet(snippet, location);
-        this.queryDelayRequired = true;
+        await waitFor(ExecutorFull.POST_REPETITION_DELAY_MS);
     }
     
     /**
      * Set the cursors in a visible text editor to specific positions.
      */
     public async setCursors(to: CompactCursor[], options?: ViewColumnOption): Promise<void> {
-        const editor = await this.getVisibleTextEditor(options);
+        const editor = getVisibleTextEditor(options?.viewColumn);
         editor.selections = to.map((cursor) => {
             const anchorLine = Array.isArray(cursor) ? cursor[0] : cursor.anchor[0];
             const anchorChar = Array.isArray(cursor) ? cursor[1] : cursor.anchor[1];
@@ -618,7 +481,75 @@ class ExecutorFull {
             const activeChar = Array.isArray(cursor) ? cursor[1] : cursor.active[1];
             return new Selection(anchorLine, anchorChar, activeLine, activeChar);
         });
-        this.queryDelayRequired = true;
+        await waitFor(ExecutorFull.POST_REPETITION_DELAY_MS);
+    }
+
+    /**
+     * Switch to another text editor in the in-focus editor tab group.
+     */
+    public async switchToEditorInGroup(which: 'next' | 'prev'): Promise<void> {
+        if (which === 'next') {
+            await this.execute('workbench.action.nextEditorInGroup');
+        } else if (which === 'prev') {
+            await this.execute('workbench.action.previousEditorInGroup');
+        }
+        await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
+    }
+
+    /**
+     * Move the active text editor to another editor tab group.
+     */
+    public async moveEditorToGroup(which: 'left' | 'right'): Promise<void> {
+        if (which === 'left') {
+            await this.execute('workbench.action.moveEditorToLeftGroup');
+        } else if (which === 'right') {
+            await this.execute('workbench.action.moveEditorToRightGroup');
+        }
+        await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
+    }
+
+    /**
+     * Focus on the explorer side bar.
+     */
+    public async focusExplorerSideBar(): Promise<void> {
+        await this.execute('workbench.view.explorer');
+        await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
+    }
+
+    /**
+     * Focus on an editor tab group.
+     */
+    public async focusEditorGroup(
+        which: 'left' | 'right' | 'first' | 'second' | 'third' | 'fourth',
+    ): Promise<void> {
+        const commandId = (() => { 
+            switch (which) {
+                case 'left':   return 'workbench.action.focusLeftGroup';
+                case 'right':  return 'workbench.action.focusRightGroup';
+                case 'first':  return 'workbench.action.focusFirstEditorGroup';
+                case 'second': return 'workbench.action.focusSecondEditorGroup';
+                case 'third':  return 'workbench.action.focusThirdEditorGroup';
+                case 'fourth': return 'workbench.action.focusFourthEditorGroup';
+            }
+        })();
+        await this.execute(commandId);
+        await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
+    }
+
+    /**
+     * Close the side bar.
+     */
+    public async closeSideBar(): Promise<void> {
+        await this.execute('workbench.action.closeSidebar');
+        await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
+    }
+
+    /**
+     * Close the active text editor.
+     */
+    public async closeActiveEditor(): Promise<void> {
+        await this.execute('workbench.action.closeActiveEditor');
+        await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
     }
 
     /**
@@ -673,7 +604,7 @@ class ExecutorFull {
         const filePath = path.join(rootPath, file);
         const document = await workspace.openTextDocument(filePath);
         await window.showTextDocument(document, options);
-        this.queryDelayRequired = true;
+        await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
     }
 
     /**
@@ -737,7 +668,6 @@ class ExecutorFull {
             await configuration.update(partialName, prevValue, targetScope, !!targetLanguage);
         });
 
-        this.queryDelayRequired = true;
     }
 
     /**
@@ -754,28 +684,97 @@ class ExecutorFull {
 
         // Undo all changes made to any of the files in the test workspace.
         await clearAllWorkspaceFiles();
+        await waitFor(ExecutorFull.POST_REPETITION_DELAY_MS);
 
         // Close all open text editors so that the next test case has a predictable starting state 
         // to work from.
         await commands.executeCommand('workbench.action.closeAllEditors');
+        await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
     }
 
 }
 
-function resolveViewColumnOption(
-    viewColumnOption: ViewColumnOption | undefined
-): ResolvedViewColumn {
-    const viewColumn = viewColumnOption?.viewColumn ?? ViewColumn.Active;
+/**
+ * This function should not be called immediately after a executing command that affects the view 
+ * state, because it takes a while for changes in the view state to become effective. For example, 
+ * if this function is called too soon after a different text editor is focused, `window.activeTextEditor` 
+ * might not yet have been updated to point at the new active text editor.
+ */
+function resolveViewColumn(viewColumn: AllowedViewColumns): ResolvedViewColumn {
     if (viewColumn === ViewColumn.Active) {
         if (!window.activeTextEditor|| window.activeTextEditor.viewColumn === undefined) {
             throw new Error('Unable to resolve `ViewColumn.Active`!');
         }
 
-        // vscode only stores resolved view column numbers, so this cast is safe.
+        // vscode only stores resolved view column numbers in `TextEditor`s, so this cast is safe.
         return window.activeTextEditor.viewColumn as ResolvedViewColumn;
     } else {
         return viewColumn;
     }
+}
+
+/**
+ * Get a snapshot of the tracker of a visible text editor.
+ * 
+ * Defaults to the active text editor's tracker if no `viewColumn` is specified.
+ * 
+ * Note that this function should not be called immediately after a executing command that affects 
+ * the view state, because it takes a while for changes in the view state to become effective.
+ */
+function getSnapshot(viewColumn?: AllowedViewColumns): TrackerSnapshot {
+    if (!testHandle) {
+        throw new Error('Unable to retrive test handle!');
+    }
+    const resolved = resolveViewColumn(viewColumn ?? ViewColumn.Active);
+    const snapshot = testHandle.snapshot().get(resolved);
+    if (!snapshot) {
+        throw new Error(`Unable to get snapshot for view column ${viewColumn}`);
+    }
+    return snapshot;
+}
+
+/**
+ * Get the most recently set value of the `leaper.inLeaperMode` keybinding context.
+ * 
+ * Note that this function should not be called immediately after a executing command that affects 
+ * the view state, because it takes a while for changes in the view state to become effective.
+ */
+function getMostRecentInLeaperModeContext(): boolean {
+    if (!testHandle) {
+        throw new Error('Unable to retrive test handle!');
+    }
+    return testHandle.mostRecentInLeaperModeContext;
+}
+
+/**
+ * Get the most recently set value of the `leaper.hasLineOfSight` keybinding context.
+ * 
+ * Note that this function should not be called immediately after a executing command that affects 
+ * the view state, because it takes a while for changes in the view state to become effective.
+ */
+function getMostRecentHasLineOfSightContext(): boolean {
+    if (!testHandle) {
+        throw new Error('Unable to retrive test handle!');
+    }
+    return testHandle.mostRecentHasLineOfSightContext;
+}
+
+
+/**
+ * Get a visible text editor at a specific view column.
+ * 
+ * Defaults to the active text editor if no `viewColumn` is specified.
+ * 
+ * Note that this function should not be called immediately after a executing command that affects 
+ * the view state, because it takes a while for changes in the view state to become effective.
+ */
+function getVisibleTextEditor(viewColumn?: AllowedViewColumns): TextEditor {
+    const resolved = resolveViewColumn(viewColumn ?? ViewColumn.Active);
+    const editor   = window.visibleTextEditors.find(editor => editor.viewColumn === resolved);
+    if (!editor) {
+        throw new Error(`No text editor in view column ${viewColumn}!`);
+    }
+    return editor;
 }
 
 /**
@@ -792,6 +791,8 @@ async function clearAllWorkspaceFiles(): Promise<void> {
     }
 }
 
+type AllowedViewColumns = ViewColumn.Active | ViewColumn.One | ViewColumn.Two | ViewColumn.Three | ViewColumn.Four;
+
 interface ViewColumnOption {
 
     /**
@@ -799,7 +800,7 @@ interface ViewColumnOption {
      * 
      * Defaults to `ViewColumn.Active`.
      */
-    viewColumn?: ViewColumn.Active | ViewColumn.One | ViewColumn.Two | ViewColumn.Three | ViewColumn.Four;
+    viewColumn?: AllowedViewColumns;
     
 }
 

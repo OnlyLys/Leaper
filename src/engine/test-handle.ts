@@ -1,4 +1,5 @@
-import { DecorationRenderOptions, Position, ViewColumn } from 'vscode';
+import { DecorationRenderOptions, ViewColumn } from 'vscode';
+import { CompactPair } from '../test/utilities/compact';
 import { Unchecked } from './configuration/unchecked';
 
 /**
@@ -39,7 +40,7 @@ export interface TrackerSnapshot {
      * The subarrays (i.e. the clusters) are parallel to the `selections` array of cursors of the 
      * corresponding text editor. 
      */
-    pairs: { open: Position, close: Position, isDecorated: boolean }[][];
+    pairs: CompactPair[][];
 
     /**
      * The style of the decorations.

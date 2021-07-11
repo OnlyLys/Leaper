@@ -123,8 +123,8 @@ async function prelude(executor: Executor): Promise<void> {
  * Test whether the configuration value for `leaper.detectedPairs` is being correctly read and that 
  * its value appropriately affects the behavior of the engine.
  */
-const WORKS_TEST_CASE = new TestCase({
-    name: 'Works',
+const IT_WORKS_TEST_CASE = new TestCase({
+    name: 'It Works',
     prelude,
     task: async (executor) => {
 
@@ -270,7 +270,7 @@ const AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE = new TestCase({
         // between the set of pairs autoclosed by the language of that text editor with the effective 
         // value of `leaper.detectedPairs`, while the pairs that should not be detected is the set 
         // of pairs autoclosed by the language of that text editor less the effective value of 
-        // `leaper.detectedPairs`. Please consult the 'Works' test case for detailed examples.
+        // `leaper.detectedPairs`. Please consult the 'It Works' test case for detailed examples.
         
         // 1. Change the workspace configuration value.
         //
@@ -578,7 +578,7 @@ const REJECT_VALUE_IF_MAX_ITEMS_EXCEEDED_TEST_CASE: TestCase = new TestCase({
 export const SINGLE_CURSOR_DETECTED_PAIRS_TEST_GROUP: TestGroup = new TestGroup(
     '`leaper.detectedPairs` Configuration',
     [
-        WORKS_TEST_CASE,
+        IT_WORKS_TEST_CASE,
         AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE,
         REJECT_VALUE_IF_ITEMS_ARE_NOT_UNIQUE_TEST_CASE,
         REJECT_VALUE_IF_MAX_ITEMS_EXCEEDED_TEST_CASE,

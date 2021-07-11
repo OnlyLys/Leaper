@@ -28,6 +28,11 @@ export type CompactSelection = { anchor: CompactPosition, active: CompactPositio
 export type CompactCursor = CompactPosition | CompactSelection;
 
 /**
+ * Represents a pair being tracked.
+ */
+export type CompactPair = { open: CompactPosition, close: CompactPosition, isDecorated: boolean };
+
+/**
  * Represents all the pairs being tracked for a cursor in an editor.
  * 
  * Specify `'None'` if there are no pairs being tracked for a cursor.
