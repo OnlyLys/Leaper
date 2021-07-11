@@ -8,6 +8,7 @@
   * Add autocompletion and validation for most of the options.
 - Improve the README.
 - Improve the descriptions of configurations.
+- Improve the engine code.
 - Hide the 'Leap' and 'Escape Leaper Mode' commands from the command palette.
 
 ### 0.9.3 _(Not published to marketplace)_

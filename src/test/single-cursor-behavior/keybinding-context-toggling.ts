@@ -12,8 +12,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
 
         // The Typescript text editor starts out empty (and therefore without any pairs) so we would 
         // expect the engine to have initially disabled both keybinding contexts.
-        await executor.assertMRBInLeaperModeContext(false);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(false);
+        await executor.assertMostRecentHasLineOfSightContext(false);
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [0, 0] ]);
     },
@@ -32,8 +32,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.inLeaperMode`: `false` since there are no pairs inserted in this step.
         // `leaper.hasLineOfSight`: `false` since there are no pairs inserted in this step.
         await executor.typeText('const ARR = ');
-        await executor.assertMRBInLeaperModeContext(false);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(false);
+        await executor.assertMostRecentHasLineOfSightContext(false);
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [0, 12] ]);
 
@@ -51,8 +51,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.hasLineOfSight`: `true` since the cursor is next to the closing side of the newly
         //                          autoclosed square brackets.
         await executor.typeText('[');
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
         await executor.assertPairs([ { line: 0, sides: [12, 13] } ]);
         await executor.assertCursors([ [0, 13] ]);
 
@@ -70,8 +70,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.hasLineOfSight`: `true` since the cursor is still next to the closing side of the
         //                          pair being tracked.
         await executor.typeText(' ', { repetitions: 2 });
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
         await executor.assertPairs([ { line: 0, sides: [12, 15] } ]);
         await executor.assertCursors([ [0, 15] ]);
 
@@ -88,8 +88,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.inLeaperMode`: `true` since there is still a pair being tracked.
         // `leaper.hasLineOfSight`: `true` since line of sight is maintained.
         await executor.moveCursors('left');
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
         await executor.assertPairs([ { line: 0, sides: [12, 15] } ]);
         await executor.assertCursors([ [0, 14] ]);
 
@@ -107,8 +107,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.hasLineOfSight`: `true` since the cursor is next to the closing side of the newly
         //                          autoclosed single quotes.
         await executor.typeText("'");
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
         await executor.assertPairs([ { line: 0, sides: [12, 14, 15, 17] } ]);
         await executor.assertCursors([ [0, 15] ]);
 
@@ -125,8 +125,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.inLeaperMode`: `true` since there are still two pairs being tracked.
         // `leaper.hasLineOfSight`: `true` since line of sight is maintained.
         await executor.typeText('World');
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
         await executor.assertPairs([ { line: 0, sides: [12, 14, 20, 22] } ]);
         await executor.assertCursors([ [0, 20] ]);
 
@@ -144,8 +144,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.hasLineOfSight`: `false` since there is a character `d` preventing line of sight
         //                          from the cursor to the nearest pair's closing side.
         await executor.moveCursors('left');
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(false);
         await executor.assertPairs([ { line: 0, sides: [12, 14, 20, 22] } ]);
         await executor.assertCursors([ [0, 19] ]);
 
@@ -163,8 +163,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.hasLineOfSight`: `false` since there is a word `World` preventing line of sight
         //                          from the cursor to the nearest pair's closing side.
         await executor.moveCursors('left', { repetitions: 4 });
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(false);
         await executor.assertPairs([ { line: 0, sides: [12, 14, 20, 22] } ]);
         await executor.assertCursors([ [0, 15] ]);
 
@@ -184,8 +184,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.hasLineOfSight`: `false` since there is clearly no line of sight to the enclosing
         //                          square brackets's closing side.
         await executor.moveCursors('left');
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(false);
         await executor.assertPairs([ { line: 0, sides: [12, 22] } ]);
         await executor.assertCursors([ [0, 14] ]);
 
@@ -203,8 +203,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.hasLineOfSight`: `false` since there is still no line of sight to the enclosing
         //                          square brackets's closing side.
         await executor.moveCursors('left');
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(false);
         await executor.assertPairs([ { line: 0, sides: [12, 22] } ]);
         await executor.assertCursors([ [0, 13] ]);
 
@@ -222,8 +222,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.hasLineOfSight`: `true` since the cursor is next to the closing side of the newly
         //                          autoclosed single quotes.
         await executor.typeText(" '");
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
         await executor.assertPairs([ { line: 0, sides: [12, 14, 15, 25] } ]);
         await executor.assertCursors([ [0, 15] ]);
 
@@ -241,8 +241,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.hasLineOfSight`: `true` since line of sight to the nearest single quotes's 
         //                          closing side is maintained.
         await executor.typeText('Hello');
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
         await executor.assertPairs([ { line: 0, sides: [12, 14, 20, 30] } ]);
         await executor.assertCursors([ [0, 20] ]);
 
@@ -261,8 +261,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.hasLineOfSight`: `false` since there is clearly no line of sight to the enclosing
         //                          square brackets's closing side.
         await executor.leap();
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(false);
         await executor.assertPairs([ { line: 0, sides: [12, 30] } ]);
         await executor.assertCursors([ [0, 21] ]);
 
@@ -280,8 +280,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.hasLineOfSight`: `false` since there is still no line of sight to the enclosing
         //                          square brackets's closing side.
         await executor.typeText(',');
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(false);
         await executor.assertPairs([ { line: 0, sides: [12, 31] } ]);
         await executor.assertCursors([ [0, 22] ]);
 
@@ -300,8 +300,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.hasLineOfSight`: `true` since the cursor has line of sight to the pair that it is
         //                          about to leap out of.
         await executor.moveCursors('right', { repetitions: 8 });
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
         await executor.assertPairs([ { line: 0, sides: [12, 31] } ]);
         await executor.assertCursors([ [0, 30] ]);
 
@@ -319,8 +319,8 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.inLeaperMode`: `false` since there are no more pairs being tracked.
         // `leaper.hasLineOfSight`: `false` since there are no pairs to have line of sight to.
         await executor.leap();
-        await executor.assertMRBInLeaperModeContext(false);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(false);
+        await executor.assertMostRecentHasLineOfSightContext(false);
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [0, 32] ]);
     }
@@ -351,8 +351,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 0b. Since the initial text editor is empty, the engine should have disabled both of the 
         //     keybinding contexts when it took focus.
-        await executor.assertMRBInLeaperModeContext(false);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(false);
+        await executor.assertMostRecentHasLineOfSightContext(false);
 
     },
     task: async (executor) => {
@@ -375,8 +375,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 1b. We expect both keybinding contexts to be enabled since the initial text editor is in
         //     focus.
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
 
         // 2a. Now open the Plaintext file from Workspace Folder 1.
         //
@@ -398,8 +398,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 2b. Because the opened text editor has no pairs being tracked for it, we expect both 
         //     contexts to be disabled when it takes focus.
-        await executor.assertMRBInLeaperModeContext(false);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(false);
+        await executor.assertMostRecentHasLineOfSightContext(false);
 
         // 3a. Attempt to insert some pairs into the file from Workspace Folder 1.
         //
@@ -423,8 +423,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 3b. Since none of the inserted pairs were tracked, both keybinding contexts should remain 
         ///    disabled.
-        await executor.assertMRBInLeaperModeContext(false);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(false);
+        await executor.assertMostRecentHasLineOfSightContext(false);
 
         // 4a. Now open the Typescript file from Workspace Folder 2.
         //
@@ -446,8 +446,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 4b. Because the opened text editor has no pairs being tracked for it, we expect both 
         //     keybinding contexts to be disabled when it takes focus.
-        await executor.assertMRBInLeaperModeContext(false);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(false);
+        await executor.assertMostRecentHasLineOfSightContext(false);
 
         // 5a. Insert some pairs into the file from Workspace Folder 2.
         //
@@ -469,8 +469,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         await executor.assertCursors([ [0, 10] ]);
 
         // 5b. The inserted pairs are tracked, causing both keybinding contexts to be enabled.
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
 
         // 6a. Switch to view column 2.
         //
@@ -490,8 +490,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 6b. We expect both keybinding contexts to be disabled upon switching to it, since there 
         //     are no pairs being tracked for Workspace Folder 1's text editor.
-        await executor.assertMRBInLeaperModeContext(false);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(false);
+        await executor.assertMostRecentHasLineOfSightContext(false);
 
         // 7a. Switch to view column 1.
         //
@@ -511,8 +511,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 7b. We expect both keybinding contexts to be enabled upon returning to view column 1, 
         //     since there are 10 pairs being tracked for the text editor in it.
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
 
         // 8a. Simulate the user triggering the 'Leap' command a few times.
         //
@@ -531,8 +531,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         await executor.assertCursors([ [0, 15] ]);
 
         // 8b. No change in keybinding contexts is expected since there are still 5 pairs remaining.
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
 
         // 9a. Open another text editor in view column 1.
         //
@@ -552,8 +552,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 9b. The above should cause both keybinding contexts to be disabled, since the new text 
         //     editor does not have any pairs within it. 
-        await executor.assertMRBInLeaperModeContext(false);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(false);
+        await executor.assertMostRecentHasLineOfSightContext(false);
 
         // 10a. Switch view column 1 back to the original initial text editor.
         //
@@ -577,13 +577,13 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 10b. Since there are no pairs for the active text editor (the initial text editor), both 
         //      keybinding contexts should remain disabled.
-        await executor.assertMRBInLeaperModeContext(false);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(false);
+        await executor.assertMostRecentHasLineOfSightContext(false);
 
         // 11a. Type a few pairs into the initial text editor.
         //
-        // This tests that context broadcasts still work correctly even after we switched between 
-        // text editors within a tab group. 
+        // This tests that keybinding contexts are still correctly updated even after we have 
+        // switched between text editors within a tab group. 
         //
         // State of visible text editors after this step:
         //
@@ -602,8 +602,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 11b. Now that there are pairs (and line of sight), both keybinding contexts should be 
         //      enabled.
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
 
         // 12a. Delete the pairs in Workspace Folder 2's text editor without view column 3 being in 
         //      focus.
@@ -629,8 +629,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 12b. Since view column 3 is not in focus, the fact that there are no longer any pairs in 
         //      view column 3 does not affect the keybinding contexts.
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
 
         // 13a. Switch to view column 3.
         //
@@ -650,8 +650,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 13b. Since we deleted the pairs in view column 3 in the previous step, switching to it 
         //      now means we are switching to a text editor without pairs.
-        await executor.assertMRBInLeaperModeContext(false);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(false);
+        await executor.assertMostRecentHasLineOfSightContext(false);
 
         // 14a. Now open the Markdown file from Workspace Folder 3.
         //
@@ -673,8 +673,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 14b. Clearly the newly opened text editor has no pairs within it, so both keybinding 
         //      contexts should remain disabled.
-        await executor.assertMRBInLeaperModeContext(false);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(false);
+        await executor.assertMostRecentHasLineOfSightContext(false);
 
         // 15a. Type a few pairs into Workspace Folder 3's text editor.
         //
@@ -697,8 +697,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 15b. Both keybinding contexts should be enabled, now that Workspace Folder 3's text 
         //      editor has pairs and line of sight.
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
 
         // 16a. Type some text in between the pairs in Workspace Folder 3's text editor.
         // 
@@ -717,8 +717,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         await executor.assertCursors([ [0, 22] ]);
 
         // 16b. Line of sight should still be maintained.
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
 
         // 17a. Move the cursor back a little bit to break line of sight.
         //
@@ -738,8 +738,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 17b. Since line of sight was broken, but there are still pairs, we expect only the line 
         //      of sight keybinding context to be disabled.
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(false);
 
         // 18a. Insert some text into the initial text editor without view column 1 being in focus. 
         //
@@ -777,8 +777,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         // 18b. Since the text was inserted into a view column that is not in focus, it should not
         //      affect the keybinding contexts, since the keybinding contexts are only synchronized 
         //      to the active text editor.
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(false);
 
         // 19a. Switch to view column 1.
         //
@@ -802,10 +802,10 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
 
         // 19b. Since the text edit applied to the initial text editor only translated the pairs and 
         //      cursor, line of sight is still maintained within the initial text editor. Thus we 
-        //      expect truthy values for both keybinding contexts to be broadcasted upon focusing 
-        //      back on view column 1.
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(true);
+        //      expect truthy values for both keybinding contexts to be enabled upon focusing back 
+        //      on view column 1.
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(true);
 
         // 20a. Switch back to view column 4.
         //
@@ -832,8 +832,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //
         //      Meanwhile, since there are still pairs, we expect the `leaper.inLeaperMode` to
         //      remain enabled.
-        await executor.assertMRBInLeaperModeContext(true);
-        await executor.assertMRBHasLineOfSightContext(false);
+        await executor.assertMostRecentInLeaperModeContext(true);
+        await executor.assertMostRecentHasLineOfSightContext(false);
     }
 });
 

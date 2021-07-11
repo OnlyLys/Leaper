@@ -1,4 +1,4 @@
-import { TextDocumentChangeEvent, TextDocumentContentChangeEvent } from 'vscode';
+import { TextDocumentContentChangeEvent } from 'vscode';
 
 /** 
  * An adaptor over the immutable content change array to make it behave like a mutable stack. 
@@ -120,7 +120,7 @@ export class ContentChangeStack {
         return this._horzCarry;
     }
 
-    public constructor(contentChangeEvent: TextDocumentChangeEvent) {
+    public constructor(contentChanges: ReadonlyArray<TextDocumentContentChangeEvent>) {
 
         // We do not have to sort the content changes array from a `TextDocumentChangeEvent` because 
         // it was discovered that whether it be replacing a bunch of text via the 'Find and Replace' 
@@ -142,8 +142,8 @@ export class ContentChangeStack {
         // 
         // However, do note that there is no explicit guarantee from vscode's API that content 
         // change events will yield contain content changes with such a sort order.
-        this.src = contentChangeEvent.contentChanges;
-        this.top = contentChangeEvent.contentChanges.length;
+        this.src = contentChanges;
+        this.top = contentChanges.length;
     }
 
     /** 

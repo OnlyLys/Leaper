@@ -1,11 +1,11 @@
 import { ExtensionContext } from 'vscode';
 import { Engine } from './engine/engine';
-import { TestAPI } from './engine/test-api';
+import { TestHandle } from './engine/test-handle';
 
 /**
- * Handle to the running engine instance to allow tests to query the engine's state.
+ * Handle to allow tests to query the engine's state.
  */
-export let testHandle: TestAPI | undefined;
+export let testHandle: TestHandle;
 
 /**
  * This function is called by vscode in order to start the extension.

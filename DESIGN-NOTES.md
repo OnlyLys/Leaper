@@ -3,6 +3,26 @@
 The following document contains supplementary notes on important changes made to
 the code. 
 
+## 0.9.3 -> 0.10.0 _(Work in Progress)_
+
+### Improvement of Engine Code
+
+We greatly simplify the engine code by merging `TrackerCore` and `Tracker` into 
+one. The new `Tracker` no longer watches the text editor and relies entirely on 
+the engine to drive it. This makes clear the flow of execution.
+
+Furthermore, we simplify the way we deal with keybinding contexts. Now we only 
+have the engine deal with keybinding contexts. Doing this means we can dispense 
+with the notion of 'private' and 'global' keybinding contexts.
+
+Another simplification made is we no longer defer broadcasting of keybinding 
+context values to the end of event loop cycles. Just from manual testing, we see 
+that the total number of selection change or content change events within an event 
+loop cycle averages around 2, sometimes going up to 3 or 4 but never to a large 
+amount. Thus, we don't really gain anything by deferring context change broadcasts.
+We might even hurt performance by deferring since deferrals require registering
+Node.JS `immediate` timers, which also have a cost associated with them.
+
 ## 0.9.1 -> 0.9.2
 
 [esbuild](https://code.visualstudio.com/api/working-with-extensions/bundling-extension#using-esbuild) 

@@ -1,44 +1,25 @@
-import { commands, Disposable, TextEditor, window } from 'vscode';
-import { ResolvedViewColumn, TrackerSnapshot, TestAPI } from './test-api';
-import { ContextBroadcaster } from './context-broadcaster';
+import { commands, Disposable, TextEditor, window, workspace } from 'vscode';
+import { ResolvedViewColumn, TrackerSnapshot, TestHandle } from './test-handle';
+import { KeybindingContextSetter } from './keybinding-context-setter';
 import { Tracker } from './tracker/tracker';
+import { Configuration } from './configuration/configuration';
 
 /**
  * Creating an instance of this class starts the extension. 
  * 
- * # Overview
- * 
- * Firstly, an engine instance tracks which text editors are currently visible and gives each visible 
- * text editor its own "state" such that each text editor can separately track the pairs within it. 
- * 
- * Secondly, upon instantiation of this class, this extension's keybindings are registered with 
- * vscode.
- * 
- * Finally, an engine instance manages the toggling of the [keybinding contexts] for this extension's
- * keybindings to make sure that the keybindings are only enabled when they need to be. For instance,
- * the `Tab` keybinding to jump out of pairs is disabled when there is no pair to jump out of, and 
- * thus ensures that any `Tab` keypresses from the user is not intercepted when they do not need to 
- * be. To maintain correct keybinding toggling, the global keybinding contexts are always synchronized 
- * to the private keybinding contexts of the active text editor (for more info about 'global' and 
- * 'private' contexts, please see the `PrivateContext` type).
- * 
- * [keybinding contexts]: https://code.visualstudio.com/api/references/when-clause-contexts
+ * Once started, the engine continuously tracks each visible text editor for any changes. When 
+ * autoclosing pairs are inserted into a visible text editor, the engine begins tracking it and 
+ * provides the user the ability to 'leap' out of the pairs by triggering a command.
  * 
  * # Safety
  * 
- * Only one instance of this class should be active at any time. 
- * 
- * Any created instance must be disposed of when the extension is shut down.
+ * Only one instance of this class should be active at any time, and the created instance must be 
+ * disposed of when the extension is shut down.
  */
-export class Engine implements TestAPI {
+export class Engine implements TestHandle {
 
     /**
      * The trackers owned by each visible text editor.
-     * 
-     * Each tracker is responsible for listening to changes and applying decorations in its owning 
-     * text editor. See the `Tracker` type for more info.
-     * 
-     * # Why Does Each Visible Text Editor Have Its Own Tracker?
      * 
      * By giving each visible text editor its own `Tracker` instance, pairs within each visible
      * text editor can be independently tracked. For instance, say there are 2 open tabs. With 
@@ -47,67 +28,106 @@ export class Engine implements TestAPI {
      * insert more pairs or jump out pairs in the second tab), then come back to the first tab with
      * the pair previously inserted still being tracked, just as how it was when the user left it.
      * 
-     * Note that as decorations are managed by `Tracker` instances, it follows that decorations are
-     * also managed on a per-text editor basis, which greatly simplifies the decoration management
-     * logic. 
+     * The decorations for each text editor are also managed by its tracker, which greatly simplifies 
+     * the management of decorations.
      */
     private trackers: Map<TextEditor, Tracker>;
 
     /**
-     * A pointer to tracker of the text editor that is active (i.e. in focus).
-     * 
-     * This pointer exists so that the `leap` and `escapeLeaperMode` commands, when triggered, can
-     * be routed to the active text editor's tracker such that the intended command is executed in 
-     * the text editor that is in focus. (See `leapCommand` and `escapeLeaperModeCommand` for more
-     * info).
-     * 
-     * This is `undefined` if there is no active text editor.
-     */
-    private activeTracker: Tracker | undefined;
-
-    /**
-     * Keybinding to move the cursor in the active text editor past the nearest available pair.
-     * 
-     * This is the 'leap' or 'jump' out of pairs command.
+     * Command to move the cursor in the active text editor past the nearest available pair.
      */
     private readonly leapCommand = commands.registerTextEditorCommand(
         'leaper.leap', 
-        () => this.activeTracker?.leap()
+        (activeTextEditor) => this.trackers.get(activeTextEditor)?.leap()
     );
 
     /**
-     * Keybinding to untrack all the pairs in the active text editor.
+     * Command to untrack all the pairs in the active text editor.
      */
     private readonly escapeLeaperModeCommand = commands.registerTextEditorCommand(
         'leaper.escapeLeaperMode', 
-        () => this.activeTracker?.escapeLeaperMode()    
+        (activeTextEditor) => this.trackers.get(activeTextEditor)?.clear()
     );
 
-    /**
-     * Watcher to make sure that the engine is always aware of which text editor is currently active.
+    /** 
+     * Setter for the `leaper.inLeaperMode` [keybinding context].
+     * 
+     * The `leaper.inLeaperMode` keybinding context is used to toggle all of the extension's 
+     * keybindings. The keybinding context is only `true` when there are pairs being tracked in the
+     * active text editor. Otherwise, the keybinding context is `false`, which disables all of the
+     * extension's keybindings and allows this extension to "get out of the way" when there are no
+     * pairs being tracked.
      */
-    private readonly activeTextEditorChangeWatcher = window.onDidChangeActiveTextEditor(
-        (activeTextEditor) => {
-            this.activeTracker = activeTextEditor ? this.trackers.get(activeTextEditor): undefined;
-            this.resetGlobalContextsAutoSync();
-        }
+    private readonly inLeaperModeContext = new KeybindingContextSetter(
+        'leaper.inLeaperMode', 
+        false
+    );
+
+    /** 
+     * Setter for the `leaper.hasLineOfSight` [keybinding context].
+     * 
+     * # What The `leaper.hasLineOfSight` Keybinding Context is for
+     * 
+     * We need this keybinding context because the `Tab` key is very overloaded. We want the `Tab` 
+     * keybinding for the 'Leap' command to only be enabled when it is actually desirable for the 
+     * command to be triggered. When a leap is neither desirable nor possible, we disable the
+     * keybinding, which prevents this extension from intercepting `Tab` keypresses. 
+     * 
+     * For an example of a situation where a leap is undesirable, suppose there are pairs being
+     * tracked in the user's active text editor, and suppose that there is non-whitespace text 
+     * between the cursor and the nearest pair being tracked for that cursor. At that point, if the
+     * user presses `Tab`, clearly the intention was to insert an indentation and not to perform a
+     * leap. So, having the `Tab` keybinding for the 'Leap' command be disabled at that point prevents 
+     * this extension from intercepting any `Tab` keypresses, and allows any `Tab` keypress to 
+     * continue up the [keybinding rules file].
+     * 
+     * [keybinding context]: https://code.visualstudio.com/api/references/when-clause-contexts
+     * [keybinding rules file]: https://code.visualstudio.com/docs/getstarted/keybindings#_keyboard-rules
+     */
+    private readonly hasLineOfSightContext = new KeybindingContextSetter(
+        'leaper.hasLineOfSight', 
+        false
     );
 
     /**
-     * Watcher to make sure that the engine is keeping track of which text editors are currently 
-     * visible.
+     * Watcher to ensure the `leaper.inLeaperMode` keybinding context is synchronized to the 
+     * `hasPairs` property of the active text editor's tracker.
+     */
+    private activeTrackerHasPairsWatcher: Disposable | undefined;
+
+    /**
+      * Watcher to ensure the `leaper.hasLineOfSight` keybinding context is synchronized to the
+      * `hasLineOfSight` property of the active text editor's tracker.
+      */
+    private activeTrackerHasLineOfSightWatcher: Disposable | undefined;
+
+    /**
+     * Watcher to ensure that the keybinding contexts are synchronized to the correct tracker (i.e. 
+     * the active text editor's tracker).
+     */
+    private readonly activeTextEditorChangeWatcher = window.onDidChangeActiveTextEditor(() => 
+        this.resyncKeybindingContexts()
+    );
+
+    /**
+     * Watcher to keep track of which text editors are currently visible.
      */
     private readonly visibleTextEditorsChangeWatcher = window.onDidChangeVisibleTextEditors(
         (visibleTextEditors: ReadonlyArray<TextEditor>) => {
             const newTrackers = new Map<TextEditor, Tracker>();
 
-            // Preserve trackers for text editors that are still visible and assign fresh trackers
+            // Preserve trackers of text editors that are still visible and assign fresh trackers
             // to text editors that are newly visible.
             for (const editor of visibleTextEditors) {
-                newTrackers.set(editor, this.trackers.get(editor) ?? new Tracker(editor));
+                const existingTracker = this.trackers.get(editor);
+                if (existingTracker) {
+                    newTrackers.set(editor, existingTracker);
+                } else {
+                    newTrackers.set(editor, new Tracker(editor, Configuration.read(editor.document)));
+                }
             }
 
-            // Clean up the trackers for text editors that are no longer visible.
+            // Clean up the trackers of text editors that are no longer visible.
             for (const [editor, tracker] of this.trackers.entries()) {
                 if (!newTrackers.has(editor)) {
                     tracker.dispose();
@@ -118,109 +138,102 @@ export class Engine implements TestAPI {
         }
     )
 
-    private readonly inLeaperModeContextBroadcaster = new ContextBroadcaster(
-        'leaper.inLeaperMode',
-        () => this.activeTracker?.inLeaperModeContext.get() ?? false
-    );
+    /** 
+     * Watcher that notifies trackers when the cursors in their owning text editor has changed.
+     */
+    private readonly selectionChangeWatcher = window.onDidChangeTextEditorSelection((event) => {
+        this.trackers.get(event.textEditor)?.notifySelectionChanges(event.selections);
+    });
 
     /**
-     * Watcher to make sure that the global `leaper.inLeaperMode` keybinding context is always 
-     * synchronized to the private keybinding context of the active tracker.
+     * Watcher that notifies trackers when the text document of their owning text editor has changed.
      */
-    private activeInLeaperModeContextUpdateWatcher: Disposable | undefined;
-
-    private readonly hasLineOfSightContextBroadcaster = new ContextBroadcaster(
-        'leaper.hasLineOfSight',
-        () => this.activeTracker?.hasLineOfSightContext.get() ?? false
-    );
-
+    private readonly contentChangeWatcher = workspace.onDidChangeTextDocument((event) => {
+        for (const [owner, tracker] of this.trackers) {
+            if (event.document === owner.document) {
+                tracker.notifyContentChanges(event.contentChanges);
+            }
+        }
+    });
+    
     /**
-     * Watcher to make sure that the global `leaper.hasLineOfSight` keybinding context is always 
-     * synchronized to the private keybinding context of the active tracker.
+     * Watcher that reloads configurations and resets internal state if an effective configuration
+     * value has changed for the owning text editor.
      */
-    private activeHasLineOfSightContextUpdateWatcher: Disposable | undefined;
+    private readonly configurationChangeWatcher = workspace.onDidChangeConfiguration((event) => {
+        for (const [owner, tracker] of this.trackers) {
+            if (event.affectsConfiguration('leaper', owner.document)) {
+                tracker.notifyConfigurationChange(Configuration.read(owner.document));
+            }
+        }
+    });
     
     public constructor() {
-        this.trackers = new Map(window.visibleTextEditors.map(
-            (editor) => [editor, new Tracker(editor)]
+        this.trackers = new Map(window.visibleTextEditors.map(editor => 
+            [editor, new Tracker(editor, Configuration.read(editor.document))]
         ));
-        if (window.activeTextEditor !== undefined) {
-            this.activeTracker = this.trackers.get(window.activeTextEditor);
+        this.resyncKeybindingContexts();
+    }
+
+    private resyncKeybindingContexts(): void {
+
+        // Stop synchronizing the keybinding contexts to the previous active text editor's tracker.
+        this.activeTrackerHasPairsWatcher?.dispose();
+        this.activeTrackerHasLineOfSightWatcher?.dispose();
+
+        // Begin synchronizing the keybinding contexts to the new active text editor's tracker.
+        const activeTextEditor = window.activeTextEditor;
+        const activeTracker    = activeTextEditor ? this.trackers.get(activeTextEditor): undefined;
+        if (activeTracker) {
+            this.activeTrackerHasPairsWatcher = activeTracker.onDidUpdateHasPairs(() => 
+                this.inLeaperModeContext.set(activeTracker.hasPairs)
+            );
+            this.activeTrackerHasLineOfSightWatcher = activeTracker.onDidUpdateHasLineOfSight(() => 
+                this.hasLineOfSightContext.set(activeTracker.hasLineOfSight)
+            );
+            this.inLeaperModeContext.set(activeTracker.hasPairs);
+            this.hasLineOfSightContext.set(activeTracker.hasLineOfSight);
+        } else {
+            this.inLeaperModeContext.set(false);
+            this.hasLineOfSightContext.set(false);
         }
-        this.resetGlobalContextsAutoSync();
     }
 
     /**
-     * Set up automatic synchronization of the global keybinding contexts to the keybinding contexts 
-     * of the active text editor.
-     * 
-     * Calling this method will halt synchronization of the global keybinding contexts to any other
-     * text editor.
-     * 
-     * This method must be called if the active text editor has changed, otherwise the watchers
-     * responsible for synchronizing the global keybinding contexts might be synchronizing to a no
-     * longer extant or visible text editor.
-     */
-    private resetGlobalContextsAutoSync(): void {
-
-        // Stop the previous keybinding context watchers since they might be listening to a text 
-        // editor that is no longer active.
-        this.activeInLeaperModeContextUpdateWatcher?.dispose();
-        this.activeHasLineOfSightContextUpdateWatcher?.dispose();
-
-        // Set up watchers that synchronize the global keybinding contexts to the active text 
-        // editor's keybinding contexts.
-        this.activeInLeaperModeContextUpdateWatcher = this.activeTracker?.inLeaperModeContext.onDidUpdate(
-            () => this.inLeaperModeContextBroadcaster.requestBroadcast()
-        );
-        this.activeHasLineOfSightContextUpdateWatcher = this.activeTracker?.hasLineOfSightContext.onDidUpdate(
-            () => this.hasLineOfSightContextBroadcaster.requestBroadcast()
-        );
-            
-        // The watchers set up above do not fire upon instantiation, so we manually request for a
-        // broadcast to set the global keybinding context values.
-        this.inLeaperModeContextBroadcaster.requestBroadcast();
-        this.hasLineOfSightContextBroadcaster.requestBroadcast();
-    }
-
-    /**
-     * Terminate the engine and remove all traces of this extension.
+     * Terminate the engine.
      */
     public dispose(): void {
-
-        // Stop the tracking of any text editors.
         this.trackers.forEach((tracker) => tracker.dispose());  
-
-        // Unregister all keybinding commands.
         this.leapCommand.dispose();
         this.escapeLeaperModeCommand.dispose();
-
-        // Stop watching vscode for any changes in the window.
+        this.inLeaperModeContext.set(false);
+        this.hasLineOfSightContext.set(false);
+        this.activeTrackerHasPairsWatcher?.dispose();
+        this.activeTrackerHasLineOfSightWatcher?.dispose();
         this.activeTextEditorChangeWatcher.dispose();
         this.visibleTextEditorsChangeWatcher.dispose();
-
-        // Stop synchronizing and disable the global keybinding contexts.
-        this.activeInLeaperModeContextUpdateWatcher?.dispose();
-        this.activeHasLineOfSightContextUpdateWatcher?.dispose();
-        this.inLeaperModeContextBroadcaster.dispose();
-        this.hasLineOfSightContextBroadcaster.dispose();
+        this.selectionChangeWatcher.dispose();
+        this.contentChangeWatcher.dispose();
+        this.configurationChangeWatcher.dispose();
     }
 
-    // ------------------------------------------------------------------------------
-    // TEST API
-    //
-    // What follows are properties or methods exposed for testing purposes only. 
-    //
-    // Please consult the `TestAPI` interface for more info.
-
-    public get MRBInLeaperModeContext(): boolean | undefined {
-        return this.inLeaperModeContextBroadcaster.prevBroadcasted;
+    /** 
+     * **For Tests Only**
+     */
+    public get mostRecentInLeaperModeContext(): boolean {
+        return this.inLeaperModeContext.mostRecent;
     }
 
-    public get MRBHasLineOfSightContext(): boolean | undefined {
-        return this.hasLineOfSightContextBroadcaster.prevBroadcasted;
+    /**
+     * **For Tests Only**
+     */
+    public get mostRecentHasLineOfSightContext(): boolean {
+        return this.hasLineOfSightContext.mostRecent;
     }
 
+    /** 
+     * **For Tests Only**
+     */
     public snapshot(): Map<ResolvedViewColumn, TrackerSnapshot> {
         const map = new Map<ResolvedViewColumn, TrackerSnapshot>();
         for (const [{ viewColumn }, tracker] of this.trackers) {
@@ -228,7 +241,6 @@ export class Engine implements TestAPI {
 
                 // This cast is safe because vscode only stores resolved view column numbers.
                 const resolvedViewColumn = viewColumn as ResolvedViewColumn;
-
                 map.set(resolvedViewColumn, tracker.snapshot());
             }
         }

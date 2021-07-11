@@ -1,5 +1,5 @@
 import { ViewColumn } from 'vscode';
-import { Configuration } from '../../engine/tracker/configuration/configuration';
+import { Configuration } from '../../engine/configuration/configuration';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
 
 /**

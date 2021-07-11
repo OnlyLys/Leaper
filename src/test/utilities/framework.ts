@@ -3,7 +3,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, window, ViewColumn, Uri, ConfigurationTarget, WorkspaceEdit } from 'vscode';
-import { ResolvedViewColumn, TrackerSnapshot } from '../../engine/test-api';
+import { ResolvedViewColumn, TrackerSnapshot } from '../../engine/test-handle';
 import { CompactCluster, CompactRange, CompactPosition, CompactCursor, CompactSelection } from './compact';
 import { waitFor, zip } from './other';
 import { testHandle } from '../../extension';
@@ -208,9 +208,9 @@ class ExecutorFull {
     }
 
     /**
-     * Get the most recently broadcasted value of the `leaper.inLeaperMode` keybinding context.
+     * Get the most recently set value of the `leaper.inLeaperMode` keybinding context.
      */
-    private async getMRBInLeaperModeContext(): Promise<boolean | undefined> {
+    private async getMostRecentInLeaperModeContext(): Promise<boolean | undefined> {
         if (!testHandle) {
             throw new Error('Unable to access the running engine instance!');
         }
@@ -218,13 +218,13 @@ class ExecutorFull {
             await waitFor(ExecutorFull.QUERY_DELAY_MS);
             this.queryDelayRequired = false;
         }
-        return testHandle.MRBInLeaperModeContext;
+        return testHandle.mostRecentInLeaperModeContext;
     }
 
     /**
-     * Get the most recently broadcasted value of the `leaper.hasLineOfSight` keybinding context.
+     * Get the most recently set value of the `leaper.hasLineOfSight` keybinding context.
      */
-    private async getMRBHasLineOfSightContext(): Promise<boolean | undefined> {
+    private async getMostRecentHasLineOfSightContext(): Promise<boolean | undefined> {
         if (!testHandle) {
             throw new Error('Unable to access the running engine instance!');
         }
@@ -232,7 +232,7 @@ class ExecutorFull {
             await waitFor(ExecutorFull.QUERY_DELAY_MS);
             this.queryDelayRequired = false;
         }
-        return testHandle.MRBHasLineOfSightContext;
+        return testHandle.mostRecentHasLineOfSightContext;
     }
 
     /**
@@ -361,19 +361,19 @@ class ExecutorFull {
     }
 
     /**
-     * Assert the most recently broadcasted value of `leaper.inLeaperMode` keybinding context.
+     * Assert the most recently set value of the `leaper.inLeaperMode` keybinding context.
      */
-    public async assertMRBInLeaperModeContext(expect: boolean): Promise<void> {
-        const message = 'Most Recently Broadcasted `leaper.inLeaperMode` Context Mismatch';
-        this.assertEq(await this.getMRBInLeaperModeContext(), expect, message);
+    public async assertMostRecentInLeaperModeContext(expect: boolean): Promise<void> {
+        const message = 'Most Recently Set `leaper.inLeaperMode` Keybinding Context Mismatch';
+        this.assertEq(await this.getMostRecentInLeaperModeContext(), expect, message);
     }
 
     /**
-     * Assert the most recently broadcasted value of `leaper.hasLineOfSight` keybinding context.
+     * Assert the most recently set value of the `leaper.hasLineOfSight` keybinding context.
      */
-    public async assertMRBHasLineOfSightContext(expect: boolean): Promise<void> {
-        const message = 'Most Recently Broadcasted `leaper.hasLineOfSight` Context Mismatch';
-        this.assertEq(await this.getMRBHasLineOfSightContext(), expect, message);
+    public async assertMostRecentHasLineOfSightContext(expect: boolean): Promise<void> {
+        const message = 'Most Recently Set `leaper.hasLineOfSight` Keybinding Context Mismatch';
+        this.assertEq(await this.getMostRecentHasLineOfSightContext(), expect, message);
     }
 
     /** 
@@ -520,7 +520,7 @@ class ExecutorFull {
             for (const char of text) {
 
                 // Don't need delay after 'default:type' command calls, as vscode never omits any
-                // of them even in the case of rapid calls.
+                // of them even if large amount of calls are made in a short span of time.
                 await commands.executeCommand('default:type', { text: char });
             }
         }
