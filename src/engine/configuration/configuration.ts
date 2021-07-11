@@ -96,11 +96,14 @@ export class Configuration {
 
         name: `leaper.decorationOptions`,
 
-        // Note that the type validation for this configuration is just a check to see if it is a 
-        // non-null `Object`, because the actual `DecorationRenderOptions` type has too many properties 
-        // to manually typecheck. Furthermore, new properties are always being added to it by vscode, 
-        // so it is difficult to keep up. 
-        validate: (v: unknown): v is Object => typeof v === 'object' && v !== null,
+        // Note that the type validation for this configuration (aside from rejecting it if a range 
+        // behavior is specified) is just a check to see if it is a non-null `Object`, because the 
+        // actual `DecorationRenderOptions` type has too many properties to manually typecheck. 
+        // Furthermore, new properties are always being added to it by vscode, so it is difficult 
+        // for us to keep up with it. 
+        validate: (v: unknown): v is Object => {
+            return typeof v === 'object' && v !== null && !Reflect.has(v, 'rangeBehavior');
+        },
 
         transform: (v: Object): Unchecked<DecorationRenderOptions> => {
 
