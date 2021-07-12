@@ -23,7 +23,7 @@ export interface TestHandle {
      * The return value maps the view column of each visible text editor to a snapshot of its tracker. 
      * The snapshots can be mutated without affecting the engine's state.
      */
-    snapshot(): Map<ResolvedViewColumn, TrackerSnapshot>;
+    readonly snapshot: () => Map<ResolvedViewColumn, TrackerSnapshot>;
     
 }
 
