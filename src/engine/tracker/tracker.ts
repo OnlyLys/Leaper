@@ -1,7 +1,6 @@
 import * as v8 from 'v8';
 import { Range, Position, Selection, TextEditorDecorationType, window, TextEditor, DecorationRenderOptions, TextDocumentContentChangeEvent, EventEmitter, Event } from 'vscode';
-import { Configuration } from '../configuration/configuration';
-import { Unchecked } from '../configuration/unchecked';
+import { Unchecked } from '../configurations/unchecked';
 import { ImmediateReusable } from './immediate-reusable';
 import { ContentChangeStack } from './content-change-stack';
 import { TrackerSnapshot } from '../test-handle';
@@ -151,7 +150,12 @@ export class Tracker {
     }
 
     /**
-     * A timer that reapplies decorations at the end of the current event loop cycle.
+     * A timer that fixes decorations at the end of the current event loop cycle.
+     * 
+     * When this timer executes, it will go through all the pairs and ensure that every pair is 
+     * decorated if `decorateAll` is enabled. Otherwise, if `decorateAll` is disabled, this timer
+     * will ensure that the pairs nearest to each cursor is decorated and that every other pair is 
+     * not decorated.
      * 
      * This timer should be set whenever pairs are added or when pairs are dropped from a cluster 
      * such that the cluster has a new 'nearest pair'. This timer does not need to be set when the 
@@ -178,15 +182,14 @@ export class Tracker {
      * Therefore, by only applying decorations after all content changes in an event loop cycle have 
      * been processed, we ensure that the decorations will be applied at the correct positions.
      */
-    private readonly decorationReapplier = new ImmediateReusable(() => {
-        const { decorateAll, decorationOptions } = this.configuration;
+    private readonly decorationsFixer = new ImmediateReusable(() => {
         for (const cluster of this.clusters) {
-            if (decorateAll) {
+            if (this._decorateAll) {
 
                 // Make sure all pairs are decorated since `leaper.decorateAll` is enabled.
                 for (const pair of cluster) {
                     if (!pair.decoration) {
-                        pair.decoration = decorate(this.owner, pair, decorationOptions);
+                        pair.decoration = decorate(this.owner, pair, this._decorationOptions);
                     }
                 }
             } else {
@@ -200,12 +203,47 @@ export class Tracker {
                 if (cluster.length > 0) {
                     const nearest = cluster[cluster.length - 1];
                     if (!nearest.decoration) {
-                        nearest.decoration = decorate(this.owner, nearest, decorationOptions);
+                        nearest.decoration = decorate(this.owner, nearest, this._decorationOptions);
                     }
                 }
             }
         }
     });
+
+    private _decorateAll: boolean;
+
+    /**
+     * Whether to decorate all pairs or just the ones nearest to each cursor.
+     */
+    public set decorateAll(v: boolean) {
+        this._decorateAll = v;
+        this.decorationsFixer.set();
+    }
+
+    private _decorationOptions: Unchecked<DecorationRenderOptions>;
+
+    /**
+     * The style of the decorations applied.
+     */
+    public set decorationOptions(v: Unchecked<DecorationRenderOptions>) {
+        this._decorationOptions = v;
+
+        // Reapply all the decorations.
+        this.clusters.forEach(cluster => cluster.forEach(pair => {
+            pair.decoration?.dispose();
+            pair.decoration = undefined;
+        }));
+        this.decorationsFixer.set();
+    }
+    
+    private _detectedPairs: ReadonlyArray<string>;
+
+    /**
+     * Which pairs to detect and then track.
+     */
+    public set detectedPairs(v: ReadonlyArray<string>) {
+        this._detectedPairs = v;
+    }
 
     /**
      * @param owner The text editor that this tracker is assigned to (i.e. the owning text editor).
@@ -213,10 +251,23 @@ export class Tracker {
      */
     public constructor(
         private readonly owner: TextEditor,
-        private configuration: Configuration
+        configuration: {
+
+            /** Whether to decorate all pairs or just the ones nearest to each cursor. */
+            decorateAll: boolean,
+            
+            /** The style of the decorations applied. */
+            decorationOptions: Unchecked<DecorationRenderOptions>,
+
+            /** Which pairs to detect and then track. */
+            detectedPairs: ReadonlyArray<string>
+        }
     ) {
-        this.sortedCursors = sortCursors(this.owner.selections);
-        this.clusters      = Array(this.sortedCursors.length).fill([]);
+        this._decorateAll       = configuration.decorateAll;
+        this._decorationOptions = configuration.decorationOptions;
+        this._detectedPairs     = configuration.detectedPairs;
+        this.sortedCursors      = sortCursors(this.owner.selections);
+        this.clusters           = Array(this.sortedCursors.length).fill([]);
     }
 
     /** 
@@ -340,9 +391,9 @@ export class Tracker {
             }
 
             // If pairs were dropped from the cluster but the cluster still contains pairs afterwards, 
-            // then we have to reapply decorations as there is now a new nearest pair.
+            // then we have to fix the decorations as there is now a new nearest pair.
             if (pairsDropped && cluster.length > 0) {
-                this.decorationReapplier.set();
+                this.decorationsFixer.set();
             }
         }
 
@@ -492,7 +543,7 @@ export class Tracker {
                 && stack.peek()?.range.start.isEqual(cursor.anchor) 
                 && stack.peek()?.range.isEmpty
                 && cursor.isEmpty
-                && this.configuration.detectedPairs.includes(stack.peek()?.text ?? "")
+                && this._detectedPairs.includes(stack.peek()?.text ?? "")
             ) {
 
                 // The position of the cursor after the content changes have been applied.
@@ -553,7 +604,7 @@ export class Tracker {
             // If the previous 'nearest pair' was dropped, then we have to make sure the new nearest
             // pair is decorated.
             if (cluster.length > 0 && !cluster[cluster.length - 1]) {
-                this.decorationReapplier.set();
+                this.decorationsFixer.set();
             }
 
             // Append the new pair to the finalized cluster.
@@ -566,7 +617,7 @@ export class Tracker {
                 done.push(newPair);
 
                 // The newly inserted pair needs decorating.
-                this.decorationReapplier.set();
+                this.decorationsFixer.set();
             }
 
             return done;
@@ -582,16 +633,6 @@ export class Tracker {
             this._hasLineOfSight.stale = true;
             this.onDidUpdateHasLineOfSightEventEmitter.fire(undefined);
         }
-    }
-
-    /**
-     * Notify this tracker of a change in configuration values.
-     * 
-     * Calling this method will clear this tracker.
-     */
-    public notifyConfigurationChange(newConfiguration: Configuration): void {
-        this.clear();
-        this.configuration = newConfiguration;
     }
     
     /** 
@@ -678,7 +719,7 @@ export class Tracker {
         this._hasLineOfSight.stale = true;
         this.onDidUpdateHasPairsEventEmitter.fire(undefined);
         this.onDidUpdateHasLineOfSightEventEmitter.fire(undefined);
-        this.decorationReapplier.clear();
+        this.decorationsFixer.clear();
     }
 
     /**
@@ -713,7 +754,7 @@ export class Tracker {
 
         // Make a deep copy so that there is no risk of someone being able to affect the state of 
         // this tracker through mutating the decoration options object that we return.
-        const decorationOptions = v8.deserialize(v8.serialize(this.configuration.decorationOptions));
+        const decorationOptions = v8.deserialize(v8.serialize(this._decorationOptions));
 
         return { pairs, decorationOptions };
     }

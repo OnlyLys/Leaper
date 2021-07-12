@@ -2,7 +2,7 @@ import { commands, Disposable, TextEditor, window, workspace } from 'vscode';
 import { ResolvedViewColumn, TrackerSnapshot, TestHandle } from './test-handle';
 import { KeybindingContextSetter } from './keybinding-context-setter';
 import { Tracker } from './tracker/tracker';
-import { Configuration } from './configuration/configuration';
+import { Configurations } from './configurations/configurations';
 
 /**
  * Creating an instance of this class starts the extension. 
@@ -123,7 +123,11 @@ export class Engine implements TestHandle {
                 if (existingTracker) {
                     newTrackers.set(editor, existingTracker);
                 } else {
-                    newTrackers.set(editor, new Tracker(editor, Configuration.read(editor.document)));
+                    newTrackers.set(editor, new Tracker(editor, {
+                        decorateAll:       Configurations.decorateAll.read(editor.document),
+                        decorationOptions: Configurations.decorationOptions.read(editor.document),
+                        detectedPairs:     Configurations.detectedPairs.read(editor.document)
+                    }));
                 }
             }
 
@@ -162,15 +166,37 @@ export class Engine implements TestHandle {
      */
     private readonly configurationChangeWatcher = workspace.onDidChangeConfiguration((event) => {
         for (const [owner, tracker] of this.trackers) {
-            if (event.affectsConfiguration('leaper', owner.document)) {
-                tracker.notifyConfigurationChange(Configuration.read(owner.document));
+            if (!event.affectsConfiguration('leaper', owner.document)) {
+                continue;
+            }
+            if (
+                   event.affectsConfiguration(Configurations.decorateAll.name, owner.document)
+                || event.affectsConfiguration(Configurations.decorateAll.deprName, owner.document)
+            ) {
+                tracker.decorateAll = Configurations.decorateAll.read(owner.document);
+            }
+            if (
+                event.affectsConfiguration(Configurations.decorationOptions.name, owner.document)
+             || event.affectsConfiguration(Configurations.decorationOptions.deprName, owner.document)
+            ) {
+                tracker.decorationOptions = Configurations.decorationOptions.read(owner.document);
+            }
+            if (
+                   event.affectsConfiguration(Configurations.detectedPairs.name, owner.document)
+                || event.affectsConfiguration(Configurations.detectedPairs.deprName, owner.document)
+            ) {
+                tracker.detectedPairs = Configurations.detectedPairs.read(owner.document);
             }
         }
     });
     
     public constructor() {
         this.trackers = new Map(window.visibleTextEditors.map(editor => 
-            [editor, new Tracker(editor, Configuration.read(editor.document))]
+            [editor, new Tracker(editor, {
+                decorateAll:       Configurations.decorateAll.read(editor.document),
+                decorationOptions: Configurations.decorationOptions.read(editor.document),
+                detectedPairs:     Configurations.detectedPairs.read(editor.document)
+            })]
         ));
         this.resyncKeybindingContexts();
     }

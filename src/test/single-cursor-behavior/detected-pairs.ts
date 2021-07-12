@@ -1,5 +1,5 @@
 import { ViewColumn } from 'vscode';
-import { Configuration } from '../../engine/configuration/configuration';
+import { Configurations } from '../../engine/configurations/configurations';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
 
 /**
@@ -556,7 +556,7 @@ const REJECT_VALUE_IF_MAX_ITEMS_EXCEEDED_TEST_CASE: TestCase = new TestCase({
 
         // Set the configuration value in Workspace Folder 0 to one that exceeds the limit. 
         const tooManyItemsValue = [];
-        for (let i = 0; i < Configuration.DETECTED_PAIRS_MAX_ITEMS + 1; ++i) {
+        for (let i = 0; i < Configurations.DETECTED_PAIRS_MAX_ITEMS + 1; ++i) {
             tooManyItemsValue.push("()");
         }
         await executor.setConfiguration({

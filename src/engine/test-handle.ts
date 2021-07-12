@@ -1,6 +1,6 @@
 import { DecorationRenderOptions, ViewColumn } from 'vscode';
 import { CompactPair } from '../test/utilities/compact';
-import { Unchecked } from './configuration/unchecked';
+import { Unchecked } from './configurations/unchecked';
 
 /**
  * The parts of the engine exposed to tests.
