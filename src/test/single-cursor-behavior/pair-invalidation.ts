@@ -1,7 +1,7 @@
 import { SnippetString, ViewColumn } from 'vscode';
 import { CompactCluster, CompactCursor } from '../utilities/compact';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
-import { range } from '../utilities/other';
+import { range } from '../utilities/helpers';
 
 /**
  * In this prelude that is shared across multiple test cases in this module, a Typescript document 

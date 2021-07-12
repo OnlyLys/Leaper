@@ -3,7 +3,7 @@
 //! text was involved.
 
 import { CompactCluster } from '../utilities/compact';
-import { range, sliceAdd, sliceSub } from '../utilities/other';
+import { range, sliceAdd, sliceSub } from '../utilities/helpers';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
 import { SnippetString, ViewColumn } from 'vscode';
 import { ALICE_TEXT_1, ALICE_TEXT_2, LOREM_IPSUM_1 } from '../utilities/placeholder-texts';

@@ -1,5 +1,5 @@
 import { TestCase, TestGroup } from '../utilities/framework';
-import { range } from '../utilities/other';
+import { range } from '../utilities/helpers';
 import { ALICE_TEXT_1, ALICE_TEXT_2, } from '../utilities/placeholder-texts';
 
 const SINGLE_LEAP_TEST_CASE = new TestCase({

@@ -1,7 +1,7 @@
 import { ViewColumn } from 'vscode';
 import { CompactCluster, CompactCursor } from '../utilities/compact';
 import { TestCase, TestGroup } from '../utilities/framework';
-import { range } from '../utilities/other';
+import { range } from '../utilities/helpers';
 
 /**
  * Text that is typed in by each of the test case preludes.

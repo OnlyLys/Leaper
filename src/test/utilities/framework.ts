@@ -5,7 +5,7 @@ import * as path from 'path';
 import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, window, ViewColumn, Uri, ConfigurationTarget, WorkspaceEdit } from 'vscode';
 import { ResolvedViewColumn, TrackerSnapshot } from '../../engine/test-handle';
 import { CompactCluster, CompactRange, CompactPosition, CompactCursor, CompactSelection, CompactPair } from './compact';
-import { waitFor, zip } from './other';
+import { waitFor, zip } from './helpers';
 import { testHandle } from '../../extension';
 
 /**
