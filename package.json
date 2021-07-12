@@ -75,10 +75,35 @@
                     "type": "object",
                     "default": {
                         "outlineColor": "editorWarning.foreground",
-                        "outlineWidth": "1px",
                         "outlineStyle": "solid",
+                        "outlineWidth": "1px",
                         "fontWeight": "bolder"
                     },
+                    "examples": [
+                        {
+                            "outlineColor": "editorBracketMatch.border",
+                            "outlineStyle": "solid",
+                            "outlineWidth": "1px",
+                            "fontWeight": "bold"
+                        },
+                        {
+                            "letterSpacing": "2px",
+                            "borderColor": "editorWarning.foreground",
+                            "borderStyle": "none solid none none",
+                            "borderWidth": "2px",
+                            "fontWeight": "bolder"
+                        },
+                        {
+                            "backgroundColor": "#0000FF9E",
+                            "outlineColor": "editorBracketMatch.border",
+                            "outlineStyle": "outset",
+                            "outlineWidth": "1px",
+                            "fontWeight": "bolder",
+                            "light": {
+                                "backgroundColor": "#0000001A"
+                            }
+                        }
+                    ],
                     "properties": {
                         "backgroundColor": {
                             "type": "string",
