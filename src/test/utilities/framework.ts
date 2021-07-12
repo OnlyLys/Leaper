@@ -560,33 +560,88 @@ class ExecutorFull {
      * values for each available file:
      * 
      * ```      
-     * -------------------------------------------------------------------------------------------------            
+     * -------------------------------------------------------------------------------------------------
      * Workspace Folder               | 0          | 1          | 2          | 3          | 4          |
      * File                           | text.ts    | text.txt   | text.ts    | text.md    | text.ts    |
      * -------------------------------------------------------------------------------------------------
      * Language                       | Typescript | Plaintext  | Typescript | Markdown   | Typescript |
-     * Autoclosing Pairs              | (A1)       | (A3)       | (A1)       | (A2)       | (A1)       |
+     * Autoclosing Pairs              | (AP-1)     | (AP-3)     | (AP-1)     | (AP-2)     | (AP-1)     |
      *                                |            |            |            |            |            |
      * leaper.decorateAll Value       |            |            |            |            |            |
      *   - Workspace                  | false      | false      | false      | false      | false      |
      *   - Workspace Folder           | undefined  | undefined  | undefined  | undefined  | true       |
-     *   - Language Workspace         | undefined  | undefined  | undefined  | undefined  | undefined  | 
-     *   - Language Workspace Folder  | undefined  | undefined  | undefined  | undefined  | undefined  | 
-     *   - Effective                  | false      | false      | false      | false      | true       | 
+     *   - Language Workspace         | undefined  | undefined  | undefined  | undefined  | undefined  |
+     *   - Language Workspace Folder  | undefined  | undefined  | undefined  | undefined  | undefined  |
+     *   - Effective                  | false      | false      | false      | false      | true       |
      *                                |            |            |            |            |            |
      * leaper.detectedPairs Value     |            |            |            |            |            |
-     *   - Workspace                  | (P1)       | (P1)       | (P1)       | (P1)       | (P1)       | 
-     *   - Workspace Folder           | undefined  | undefined  | [ "()" ]   | []         | undefined  | 
-     *   - Language Workspace         | undefined  | []         | undefined  | undefined  | undefined  | 
-     *   - Language Workspace Folder  | undefined  | undefined  | undefined  | (P2)       | undefined  | 
-     *   - Effective                  | (P1)       | []         | [ "()" ]   | (P2)       | (P1)       | 
+     *   - Workspace                  | (DP-1)     | (DP-1)     | (DP-1)     | (DP-1)     | (DP-1)     |
+     *   - Workspace Folder           | undefined  | undefined  | [ "()" ]   | []         | undefined  |
+     *   - Language Workspace         | undefined  | []         | undefined  | undefined  | undefined  |
+     *   - Language Workspace Folder  | undefined  | undefined  | undefined  | (DP-2)     | undefined  |
+     *   - Effective                  | (DP-1)     | []         | [ "()" ]   | (DP-2)     | (DP-1)     |
+     *                                |            |            |            |            |            |
+     * leaper.decorationOptions Value |            |            |            |            |            |
+     *   - Workspace                  | (DO-1)     | (DO-1)     | (DO-1)     | (DO-1)     | (DO-1)     |
+     *   - Workspace Folder           | undefined  | {}         | (DO-4)     | undefined  | undefined  |
+     *   - Language Workspace         | undefined  | undefined  | undefined  | (DO-2)     | undefined  |
+     *   - Language Workspace Folder  | undefined  | (DO-3)     | (DO-5)     | undefined  | undefined  |
+     *   - Effective                  | (DO-1)     | (DO-3)     | (DO-5)     | (DO-2)     | (DO-1)     |
      * -------------------------------------------------------------------------------------------------
      * 
-     * (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-     * *(A2): [ "()", "[]", "{}", "<>" ]
-     * (A3): [ "()", "[]", "{}" ]
-     * (P1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
-     * (P2): [ "{}", "<>" ]
+     * (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+     * *(AP-2): [ "()", "[]", "{}", "<>" ]
+     * (AP-3): [ "()", "[]", "{}" ]
+     * 
+     * (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+     * (DP-2): [ "{}", "<>" ]
+     * 
+     * (DO-1): {
+     *              "outlineColor": "editorWarning.foreground",
+     *              "outlineStyle": "solid",
+     *              "outlineWidth": "1px",
+     *              "fontWeight": "bolder"
+     *         }
+     * (DO-2): {
+     *              "outlineColor": "editorInfo.foreground",
+     *              "outlineStyle": "solid",
+     *              "outlineWidth": "1px",
+     *              "dark": {
+     *                  "after": {
+     *                      "contentText": "🖚",
+     *                      "color": "editorInfo.foreground",
+     *                  },
+     *              },
+     *              "light": {
+     *                  "before": {
+     *                      "contentText": "➝",
+     *                      "color": "editorInfo.foreground"
+     *                  },
+     *              }
+     *         }
+     * (DO-3): {
+     *              "backgroundColor": "#0000FF9E",
+     *              "outlineColor": "editorBracketMatch.border",
+     *              "outlineStyle": "outset",
+     *              "outlineWidth": "1px",
+     *              "fontWeight": "bolder",
+     *              "light": {
+     *                  "backgroundColor": "#0000001A",
+     *              }
+     *         }
+     * (DO-4): {
+     *              "outlineColor": "editorBracketMatch.border",
+     *              "outlineStyle": "solid",
+     *              "outlineWidth": "1px",
+     *              "fontWeight": "bold"
+     *         }
+     * (DO-5): {
+     *              "letterSpacing": "2px",
+     *              "borderColor": "editorWarning.foreground",
+     *              "borderStyle": "none solid none none",
+     *              "borderWidth": "2px",
+     *              "fontWeight": "bolder"
+     *         }
      * 
      * *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
      * consistently autoclosed.

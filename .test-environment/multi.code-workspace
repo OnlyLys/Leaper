@@ -1,58 +1,87 @@
 {
-	"folders": [
-		{
-			"path": "workspace-0"
-		},
-		{
-			"path": "workspace-1"
-		},
-		{
-			"path": "workspace-2"
-		},
-		{
-			"path": "workspace-3"
-		},
-		{
-			"path": "workspace-4"
-		}
-	],
-	"settings": {
-		"leaper.detectedPairs": [
-			"()",
-			"[]",
-			"{}",
-			"<>",
-			"``",
-			"''",
-			"\"\""
-		],
-		"editor.autoClosingBrackets": "languageDefined",
-		"editor.autoClosingQuotes": "languageDefined",
-		"editor.autoIndent": "full",
-		// Snippet suggestions are disabled because we will be testing autocompletions, and we do 
-		// not want user defined snippets to affect it. 
-		"editor.snippetSuggestions": "none",
-		// Standardize the tab size to 4-spaces.
-		"editor.insertSpaces": true,
-		"editor.detectIndentation": false,
-		"editor.tabSize": 4,
-		// Disable autosave since we don't want to save files while testing.
-		"files.autoSave": "off",
-		"[plaintext]": {
-			"leaper.detectedPairs": []
-		},
-		// Reduce the overhead in the test instance by disabling git.
-		"git.enabled": false,
-		// Some test cases rely on this being set to "auto".
-		"editor.autoClosingOvertype": "auto",
-		// Test cases rely on this being the default value in the test workspace.
-		"leaper.decorateAll": false,
-		// Make sure that when we open files in the test workspace, they are open as intended 
-		// languages.
-		"files.associations": {
-			"*.ts": "typescript",
-			"*.md": "markdown",
-			"*.txt": "plaintext"
-		},
-	}
+    "folders": [
+        {
+            "path": "workspace-0"
+        },
+        {
+            "path": "workspace-1"
+        },
+        {
+            "path": "workspace-2"
+        },
+        {
+            "path": "workspace-3"
+        },
+        {
+            "path": "workspace-4"
+        }
+    ],
+    "settings": {
+        // Test cases expect these.
+        "editor.autoClosingBrackets": "languageDefined",
+        "editor.autoClosingDelete": "auto",
+        "editor.autoClosingOvertype": "auto",
+        "editor.autoClosingQuotes": "languageDefined",
+        "editor.autoIndent": "full",
+        "workbench.editor.closeEmptyGroups": true,
+        "workbench.editor.limit.enabled": false,
+        // Snippet suggestions are disabled because we will be triggering autocompletions, and we do 
+        // not want user defined snippets to affect it. 
+        "editor.snippetSuggestions": "none",
+        // Standardize the tab size to 4-spaces.
+        "editor.detectIndentation": false,
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4,
+        // We don't need autosave and git.
+        "files.autoSave": "off",
+        "git.enabled": false,
+        // Make sure that when we open files in the test workspace, they open with the expected
+        // languages.
+        "files.associations": {
+            "*.ts": "typescript",
+            "*.md": "markdown",
+            "*.txt": "plaintext"
+        },
+        "leaper.decorateAll": false,
+        // (DP-1).
+        "leaper.detectedPairs": [
+            "()",
+            "[]",
+            "{}",
+            "<>",
+            "``",
+            "''",
+            "\"\""
+        ],
+        "[plaintext]": {
+            "leaper.detectedPairs": [],
+        },
+        // (DO-1).
+        "leaper.decorationOptions": {
+            "outlineColor": "editorWarning.foreground",
+            "outlineStyle": "solid",
+            "outlineWidth": "1px",
+            "fontWeight": "bolder"
+        },
+        "[markdown]": {
+            // (DO-2).
+            "leaper.decorationOptions": {
+                "outlineColor": "editorInfo.foreground",
+                "outlineStyle": "solid",
+                "outlineWidth": "1px",
+                "dark": {
+                    "after": {
+                        "contentText": "🖚",
+                        "color": "editorInfo.foreground",
+                    },
+                },
+                "light": {
+                    "before": {
+                        "contentText": "➝",
+                        "color": "editorInfo.foreground"
+                    },
+                }
+            },
+        }
+    }
 }

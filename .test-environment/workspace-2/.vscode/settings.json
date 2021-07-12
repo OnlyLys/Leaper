@@ -1,3 +1,20 @@
 {
-    "leaper.detectedPairs": [ "()" ]
+    "leaper.detectedPairs": [ "()" ],
+    "leaper.decorationOptions": {
+        // (DO-4).
+        "outlineColor": "editorBracketMatch.border",
+        "outlineStyle": "solid",
+        "outlineWidth": "1px",
+        "fontWeight": "bold"
+    },
+    "[typescript]": {
+        // (DO-5).
+        "leaper.decorationOptions": {
+            "letterSpacing": "2px",
+            "borderColor": "editorWarning.foreground",
+            "borderStyle": "none solid none none",
+            "borderWidth": "2px",
+            "fontWeight": "bolder"
+        }
+    }
 }

@@ -1027,7 +1027,7 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
         //     File                           | text.ts    | text.ts    | text.md    | text.ts    |
         //     ------------------------------------------------------------------------------------
         //     Language                       | Typescript | Typescript | Markdown   | Typescript |
-        //     Autoclosing Pairs              | (A1)       | (A1)       | (A2)       | (A1)       |
+        //     Autoclosing Pairs              | (AP-1)     | (AP-1)     | (AP-2)     | (AP-1)     |
         //                                    |            |            |            |            |
         //     leaper.decorateAll Value       |            |            |            |            |
         //       - Workspace                  | false      | false      | false      | false      |
@@ -1037,17 +1037,18 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
         //       - Effective                  | false      | false      | false      | true       |
         //                                    |            |            |            |            |
         //     leaper.detectedPairs Value     |            |            |            |            |
-        //       - Workspace                  | (P1)       | (P1)       | (P1)       | (P1)       |
+        //       - Workspace                  | (DP-1)     | (DP-1)     | (DP-1)     | (DP-1)     |
         //       - Workspace Folder           | undefined  | [ "()" ]   | []         | undefined  |
         //       - Language Workspace         | undefined  | undefined  | undefined  | undefined  |
-        //       - Language Workspace Folder  | undefined  | undefined  | (P2)       | undefined  |
-        //       - Effective                  | (P1)       | [ "()" ]   | (P2)       | (P1)       |
+        //       - Language Workspace Folder  | undefined  | undefined  | (DP-2)     | undefined  |
+        //       - Effective                  | (DP-1)     | [ "()" ]   | (DP-2)     | (DP-1)     |
         //     ------------------------------------------------------------------------------------
         //     
-        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-        //     *(A2): [ "()", "[]", "{}", "<>" ]
-        //     (P1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
-        //     (P2): [ "{}", "<>" ]
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
+        //     
+        //     (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+        //     (DP-2): [ "{}", "<>" ]
         //
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
         //     not consistently autoclosed.
@@ -1135,7 +1136,7 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
         //     File                           | text.ts    | text.ts    | text.md    | text.ts    |
         //     ------------------------------------------------------------------------------------
         //     Language                       | Typescript | Typescript | Markdown   | Typescript |
-        //     Autoclosing Pairs              | (A1)       | (A1)       | (A2)       | (A1)       |
+        //     Autoclosing Pairs              | (AP-1)     | (AP-1)     | (AP-2)     | (AP-1)     |
         //                                    |            |            |            |            |
         //     leaper.decorateAll Value       |            |            |            |            |
         //       - Workspace                  | false      | false      | false      | false      |
@@ -1148,13 +1149,14 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
         //       - Workspace                  | [ "()" ]   | [ "()" ]   | [ "()" ]   | [ "()" ]   |
         //       - Workspace Folder           | undefined  | [ "()" ]   | []         | undefined  |
         //       - Language Workspace         | undefined  | undefined  | undefined  | undefined  |
-        //       - Language Workspace Folder  | undefined  | undefined  | (P2)       | undefined  |
-        //       - Effective                  | [ "()" ]   | [ "()" ]   | (P2)       | [ "()" ]   |
+        //       - Language Workspace Folder  | undefined  | undefined  | (DP-2)     | undefined  |
+        //       - Effective                  | [ "()" ]   | [ "()" ]   | (DP-2)     | [ "()" ]   |
         //     ------------------------------------------------------------------------------------
         //     
-        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-        //     *(A2): [ "()", "[]", "{}", "<>" ]
-        //     (P2): [ "{}", "<>" ]
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
+        //
+        //     (DP-2): [ "{}", "<>" ]
         //
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
         //     not consistently autoclosed.
@@ -1191,7 +1193,7 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
         //     File                           | text.ts    | text.ts    | text.md    | text.ts    |
         //     ------------------------------------------------------------------------------------
         //     Language                       | Typescript | Typescript | Markdown   | Typescript |
-        //     Autoclosing Pairs              | (A1)       | (A1)       | (A2)       | (A1)       |
+        //     Autoclosing Pairs              | (AP-1)     | (AP-1)     | (AP-2)     | (AP-1)     |
         //                                    |            |            |            |            |
         //     leaper.decorateAll Value       |            |            |            |            |
         //       - Workspace                  | false      | false      | false      | false      |
@@ -1208,8 +1210,8 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
         //       - Effective                  | [ "()" ]   | [ "()" ]   | [ "<>" ]   | [ "()" ]   |
         //     ------------------------------------------------------------------------------------
         //     
-        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-        //     *(A2): [ "()", "[]", "{}", "<>" ]
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
         //
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
         //     not consistently autoclosed.
@@ -1248,7 +1250,7 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
         //     File                           | text.ts    | text.ts    | text.md    | text.ts    |
         //     ------------------------------------------------------------------------------------
         //     Language                       | Typescript | Typescript | Markdown   | Typescript |
-        //     Autoclosing Pairs              | (A1)       | (A1)       | (A2)       | (A1)       |
+        //     Autoclosing Pairs              | (AP-1)     | (AP-1)     | (AP-2)     | (AP-1)     |
         //                                    |            |            |            |            |
         //     leaper.decorateAll Value       |            |            |            |            |
         //       - Workspace                  | false      | false      | false      | false      |
@@ -1265,8 +1267,8 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
         //       - Effective                  | [ "()" ]   | [ "()" ]   | [ "<>" ]   | [ "()" ]   |
         //     ------------------------------------------------------------------------------------
         //     
-        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-        //     *(A2): [ "()", "[]", "{}", "<>" ]
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
         //
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
         //     not consistently autoclosed.
@@ -1304,7 +1306,7 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
         //     File                           | text.ts    | text.ts    | text.md    | text.ts    |
         //     ------------------------------------------------------------------------------------
         //     Language                       | Typescript | Typescript | Markdown   | Typescript |
-        //     Autoclosing Pairs              | (A1)       | (A1)       | (A2)       | (A1)       |
+        //     Autoclosing Pairs              | (AP-1)     | (AP-1)     | (AP-2)     | (AP-1)     |
         //                                    |            |            |            |            |
         //     leaper.decorateAll Value       |            |            |            |            |
         //       - Workspace                  | false      | false      | false      | false      |
@@ -1321,8 +1323,8 @@ const INVALIDATION_DUE_TO_CHANGE_IN_EFFECTIVE_CONFIGURATION_VALUE_TEST_CASE = ne
         //       - Effective                  | [ "()" ]   | [ "()" ]   | [ "<>" ]   | [ "()" ]   |
         //     ------------------------------------------------------------------------------------
         //     
-        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-        //     *(A2): [ "()", "[]", "{}", "<>" ]
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
         //
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
         //     not consistently autoclosed.

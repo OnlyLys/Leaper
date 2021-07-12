@@ -82,10 +82,9 @@ async function testDetection(
 }
 
 /**
- * Open four text editors in exclusive view columns.
- *
- * The following table shows the relevant configuration values for the text editors in each view 
- * column:
+ * Open four files in exclusive view columns.
+ * 
+ * The following table shows the relevant configuration values for each file:
  * 
  *     View Column                       1            2            3            4          
  *     -------------------------------------------------------------------------------------
@@ -93,21 +92,22 @@ async function testDetection(
  *     File                            | text.ts    | text.txt   | text.ts    | text.md    |
  *     -------------------------------------------------------------------------------------
  *     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
- *     Autoclosing Pairs               | (A1)       | (A3)       | (A1)       | (A2)       |
+ *     Autoclosing Pairs               | (AP-1)     | (AP-3)     | (AP-1)     | (AP-2)     |
  *                                     |            |            |            |            |
  *     leaper.detectedPairs Value      |            |            |            |            |
- *       - Workspace                   | (P1)       | (P1)       | (P1)       | (P1)       |
+ *       - Workspace                   | (DP-1)     | (DP-1)     | (DP-1)     | (DP-1)     |
  *       - Workspace Folder            | undefined  | undefined  | [ "()" ]   | []         |
  *       - Language Workspace          | undefined  | []         | undefined  | undefined  |
- *       - Language Workspace Folder   | undefined  | undefined  | undefined  | (P2)       |
- *       - Effective                   | (P1)       | []         | [ "()" ]   | (P2)       |
+ *       - Language Workspace Folder   | undefined  | undefined  | undefined  | (DP-2)     |
+ *       - Effective                   | (DP-1)     | []         | [ "()" ]   | (DP-2)     |
  *     -------------------------------------------------------------------------------------
  *     
- *     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
- *     *(A2): [ "()", "[]", "{}", "<>" ]
- *     (A3): [ "()", "[]", "{}" ]
- *     (P1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
- *     (P2): [ "{}", "<>" ]
+ *     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+ *     *(AP-2): [ "()", "[]", "{}", "<>" ]
+ *     (AP-3): [ "()", "[]", "{}" ]
+ * 
+ *     (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+ *     (DP-2): [ "{}", "<>" ]
  *     
  *     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
  *     consistently autoclosed.
@@ -285,20 +285,21 @@ const AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE = new TestCase({
         //     File                            | text.ts    | text.txt   | text.ts    | text.md    |
         //     -------------------------------------------------------------------------------------
         //     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
-        //     Autoclosing Pairs               | (A1)       | (A3)       | (A1)       | (A2)       |
+        //     Autoclosing Pairs               | (AP-1)     | (AP-3)     | (AP-1)     | (AP-2)     |
         //                                     |            |            |            |            |
         //     leaper.detectedPairs Value      |            |            |            |            |
         //       - Workspace                   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   |
         //       - Workspace Folder            | undefined  | undefined  | [ "()" ]   | []         |
         //       - Language Workspace          | undefined  | []         | undefined  | undefined  |
-        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (P2)       |
-        //       - Effective                   | [ "{}" ]   | []         | [ "()" ]   | (P2)       |
+        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (DP-2)     |
+        //       - Effective                   | [ "{}" ]   | []         | [ "()" ]   | (DP-2)     |
         //     -------------------------------------------------------------------------------------
         //     
-        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-        //     *(A2): [ "()", "[]", "{}", "<>" ]
-        //     (A3): [ "()", "[]", "{}" ]
-        //     (P2): [ "{}", "<>" ]
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
+        //     (AP-3): [ "()", "[]", "{}" ]
+        //
+        //     (DP-2): [ "{}", "<>" ]
         //     
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
         //     consistently autoclosed.
@@ -342,21 +343,22 @@ const AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE = new TestCase({
         //     File                            | text.ts    | text.txt   | text.ts    | text.md    |
         //     -------------------------------------------------------------------------------------
         //     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
-        //     Autoclosing Pairs               | (A1)       | (A3)       | (A1)       | (A2)       |
+        //     Autoclosing Pairs               | (AP-1)     | (AP-3)     | (AP-1)     | (AP-2)     |
         //                                     |            |            |            |            |
         //     leaper.detectedPairs Value      |            |            |            |            |
         //       - Workspace                   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   |
         //       - Workspace Folder            | undefined  | undefined  | [ "()" ]   | []         |
-        //       - Language Workspace          | undefined  | (P3)       | undefined  | undefined  |
-        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (P2)       |
-        //       - Effective                   | [ "{}" ]   | (P3)       | [ "()" ]   | (P2)       |
+        //       - Language Workspace          | undefined  | (DP-3)     | undefined  | undefined  |
+        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (DP-2)     |
+        //       - Effective                   | [ "{}" ]   | (DP-3)     | [ "()" ]   | (DP-2)     |
         //     -------------------------------------------------------------------------------------
         //     
-        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-        //     *(A2): [ "()", "[]", "{}", "<>" ]
-        //     (A3): [ "()", "[]", "{}" ]
-        //     (P2): [ "{}", "<>" ]
-        //     (P3): [ "[]", "()" ]
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
+        //     (AP-3): [ "()", "[]", "{}" ]
+        // 
+        //     (DP-2): [ "{}", "<>" ]
+        //     (DP-3): [ "[]", "()" ]
         //     
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
         //     consistently autoclosed.
@@ -401,22 +403,23 @@ const AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE = new TestCase({
         //     File                            | text.ts    | text.txt   | text.ts    | text.md    |
         //     -------------------------------------------------------------------------------------
         //     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
-        //     Autoclosing Pairs               | (A1)       | (A3)       | (A1)       | (A2)       |
+        //     Autoclosing Pairs               | (AP-1)     | (AP-3)     | (AP-1)     | (AP-2)     |
         //                                     |            |            |            |            |
         //     leaper.detectedPairs Value      |            |            |            |            |
         //       - Workspace                   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   |
-        //       - Workspace Folder            | undefined  | undefined  | (P4)       | []         |
-        //       - Language Workspace          | undefined  | (P3)       | undefined  | undefined  |
-        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (P2)       |
-        //       - Effective                   | [ "{}" ]   | (P3)       | (P4)       | (P2)       |
+        //       - Workspace Folder            | undefined  | undefined  | (DP-4)     | []         |
+        //       - Language Workspace          | undefined  | (DP-3)     | undefined  | undefined  |
+        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (DP-2)     |
+        //       - Effective                   | [ "{}" ]   | (DP-3)     | (DP-4)     | (DP-2)     |
         //     -------------------------------------------------------------------------------------
         //     
-        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-        //     *(A2): [ "()", "[]", "{}", "<>" ]
-        //     (A3): [ "()", "[]", "{}" ]
-        //     (P2): [ "{}", "<>" ]
-        //     (P3): [ "[]", "()" ]
-        //     (P4): [ "''", "\"\"", "``" ]
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
+        //     (AP-3): [ "()", "[]", "{}" ]
+        //
+        //     (DP-2): [ "{}", "<>" ]
+        //     (DP-3): [ "[]", "()" ]
+        //     (DP-4): [ "''", "\"\"", "``" ]
         //     
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
         //     consistently autoclosed.
@@ -461,23 +464,24 @@ const AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE = new TestCase({
         //     File                            | text.ts    | text.txt   | text.ts    | text.md    |
         //     -------------------------------------------------------------------------------------
         //     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
-        //     Autoclosing Pairs               | (A1)       | (A3)       | (A1)       | (A2)       |
+        //     Autoclosing Pairs               | (AP-1)     | (AP-3)     | (AP-1)     | (AP-2)     |
         //                                     |            |            |            |            |
         //     leaper.detectedPairs Value      |            |            |            |            |
         //       - Workspace                   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   |
-        //       - Workspace Folder            | undefined  | undefined  | (P4)       | []         |
-        //       - Language Workspace          | undefined  | (P3)       | undefined  | undefined  |
-        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (P5)       |
-        //       - Effective                   | [ "{}" ]   | (P3)       | (P4)       | (P5)       |
+        //       - Workspace Folder            | undefined  | undefined  | (DP-4)     | []         |
+        //       - Language Workspace          | undefined  | (DP-3)     | undefined  | undefined  |
+        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (DP-5)     |
+        //       - Effective                   | [ "{}" ]   | (DP-3)     | (DP-4)     | (DP-5)     |
         //     -------------------------------------------------------------------------------------
         //     
-        //     (A1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-        //     *(A2): [ "()", "[]", "{}", "<>" ]
-        //     (A3): [ "()", "[]", "{}" ]
-        //     (P2): [ "{}", "<>" ]
-        //     (P3): [ "[]", "()" ]
-        //     (P4): [ "''", "\"\"", "``" ]
-        //     (P5): [ "{}", "()", "<>", "[]" ]
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
+        //     (AP-3): [ "()", "[]", "{}" ]
+        //
+        //     (DP-2): [ "{}", "<>" ]
+        //     (DP-3): [ "[]", "()" ]
+        //     (DP-4): [ "''", "\"\"", "``" ]
+        //     (DP-5): [ "{}", "()", "<>", "[]" ]
         //     
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
         //     consistently autoclosed.
