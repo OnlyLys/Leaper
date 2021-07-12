@@ -130,10 +130,9 @@ export class Configuration {
                         convertColors(value); 
                     } else if (typeof key === 'string' && /color$/i.test(key) && typeof value === 'string') {
 
-                        // To differentiate between a hex RGB(A) value and a theme color identifier, 
-                        // we look at the first character in the string. If the string starts with a 
-                        // `#`, we treat it as a hex RGB(A) value and leave it as is. Otherwise, we 
-                        // treat it as a theme color identifier.
+                        // If a string specifying a color starts with a `#`, we treat it as a hex
+                        // RGB(A) value and leave it as is. Otherwise, we treat it as a theme color 
+                        // identifier.
                         if (value.length === 0 || value[0] !== '#') {
                             Reflect.set(obj, key, new ThemeColor(value));
                         }

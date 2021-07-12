@@ -120,8 +120,8 @@ async function prelude(executor: Executor): Promise<void> {
 }
 
 /**
- * Test whether the configuration value for `leaper.detectedPairs` is being correctly read and that 
- * its value appropriately affects the behavior of the engine.
+ * Check that the value configured for `leaper.detectedPairs` appropriately affects the behavior of 
+ * the engine.
  */
 const IT_WORKS_TEST_CASE = new TestCase({
     name: 'It Works',
