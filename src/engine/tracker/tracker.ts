@@ -36,7 +36,7 @@ export class Tracker {
      * array of sorted cursors without worrying about cursor reordering operations messing things 
      * up. 
      * 
-     * # `anchort` as Sort Key
+     * # `anchor` as Sort Key
      * 
      * A cursor in vscode is actually a `Selection` type, which has two positions, an `active` and
      * and `anchor` position. When there is no selection being made, both positions point to the 
