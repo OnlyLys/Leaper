@@ -198,7 +198,8 @@ export class Configurations {
             // The value is wrapped in `Unchecked` as a reminder that it has not been typechecked.
             const decorationOptions = new Unchecked<DecorationRenderOptions>(v);
 
-            // This is something we have always enforced.
+            // This is something we have always enforced, since we never want the decorations to
+            // expand when text is inserted next to them.
             decorationOptions.value.rangeBehavior = DecorationRangeBehavior.ClosedClosed;
 
             return decorationOptions;
