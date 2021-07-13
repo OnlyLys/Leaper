@@ -158,7 +158,7 @@ export class Configurations {
                     const value = Reflect.get(obj, key);
                     if (typeof value === 'object' && value !== null) {
                         convertColors(value); 
-                    } else if (typeof key === 'string' && /color$/i.test(key) && typeof value === 'string') {
+                    } else if (typeof key === 'string' && /[cC]olor$/.test(key) && typeof value === 'string') {
 
                         // If a string specifying a color starts with a `#`, we treat it as a hex
                         // RGB(A) value and leave it as is. Otherwise, we treat it as a theme color 
