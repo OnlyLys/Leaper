@@ -43,7 +43,7 @@ export interface TrackerSnapshot {
     /**
      * The style of the decorations.
      */
-    decorationOptions: Unchecked<DecorationRenderOptions>;
+    decorationOptions: Readonly<Unchecked<DecorationRenderOptions>>;
 
 }
 
