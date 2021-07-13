@@ -253,21 +253,20 @@ const ENGINE_CAN_HANDLE_RAPID_CALLS = new TestCase({
         // 2. Test whether the engine is resilient to more 'Leap' calls than is necessary.
         //
         // To do this test, we move the cursor to a position that has line-of-sight, then call more 
-        // 'Leap' commands than is necessary. We check that all that happens is the cursors are 
-        // leapt out of all available pairs, and that nothing more is done after that.
+        // 'Leap' commands than is necessary. We check that all that happens is the cursor is moved 
+        // out of all available pairs and that nothing more happens after that.
+        //
+        // In a way, this tests the ability of the engine to handle the 'Leap' key being held down.
         await executor.moveCursors('right', { repetitions: 3 });
-        await executor.leap({ repetitions: 50 });
+        await executor.leap({ repetitions: 10 });
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [2, 37] ]);
 
-        // 3. Test whether the engine is resilient to many valid 'Leap' calls.
-        //
-        // To do this test, we type in 50 pairs then consecutively leap out of all of them. In a way,
-        // this tests the ability of the engine to handle the 'Leap' key being held down.
+        // 3. Type in many more pairs and repeat a check similar to step 2's.
         await executor.typeText('{', { repetitions: 50 });
         await executor.assertPairs([ { line: 2, sides: range(37, 137) } ]);
         await executor.assertCursors([ [2, 87] ]);
-        await executor.leap({ repetitions: 50 });
+        await executor.leap({ repetitions: 60 });
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [2, 137] ]);
     }
