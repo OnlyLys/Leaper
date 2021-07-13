@@ -134,12 +134,12 @@ class ExecutorFull {
     private configurationRestorers: (() => Promise<void>)[] = [];
 
     /**
-     * The minimum amount of delay to apply before querying the engine.
+     * The amount of delay to apply before querying the engine.
      * 
      * This delay exists because it may take a while for changes we have made to be reflected in the
      * engine as the engine receives information asynchronously.
      */
-    private static readonly PRE_ENGINE_QUERY_MIN_DELAY_MS = 50;
+    private static readonly PRE_ENGINE_QUERY_DELAY_MS = 50;
 
     /**
      * The delay to apply after each repetition of a command.
@@ -215,7 +215,7 @@ class ExecutorFull {
     ): Promise<void> {
     
         // Wait in case the engine has not caught up.
-        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_MIN_DELAY_MS);
+        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS * 2);
 
         // The actual pairs being tracked for the target text editor.
         const actual = getSnapshot(options?.viewColumn).pairs;
@@ -290,7 +290,7 @@ class ExecutorFull {
     public async assertMostRecentInLeaperModeContext(expect: boolean): Promise<void> {
         
         // Wait in case the engine has not caught up.
-        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_MIN_DELAY_MS);
+        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
 
         const message = 'Most Recently Set `leaper.inLeaperMode` Keybinding Context Mismatch';
         this.assertEq(getMostRecentInLeaperModeContext(), expect, message);
@@ -302,7 +302,7 @@ class ExecutorFull {
     public async assertMostRecentHasLineOfSightContext(expect: boolean): Promise<void> {
 
         // Wait in case the engine has not caught up.
-        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_MIN_DELAY_MS);
+        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
 
         const message = 'Most Recently Set `leaper.hasLineOfSight` Keybinding Context Mismatch';
         this.assertEq(getMostRecentHasLineOfSightContext(), expect, message);
