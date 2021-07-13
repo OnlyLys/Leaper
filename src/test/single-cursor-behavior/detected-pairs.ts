@@ -1,21 +1,23 @@
 import { ViewColumn } from 'vscode';
 import { Configurations } from '../../engine/configurations/configurations';
+import { CompactCluster, CompactCursor } from '../utilities/compact';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
 
 /**
- * Test the effective `leaper.detectedPairs` configuration in a visible text editor by asserting 
+ * Test the effective `leaper.detectedPairs` configuration for a visible text editor by asserting 
  * that:
  * 
  *  - The autoclosing pairs in `should` are detected.
  *  - The autoclosing pairs in `shouldNot` are not detected.
  * 
- * Because different languages have different autoclosing pairs, the pairs that you can specify in
- * `should` and `shouldNot` also depends on the language of the target text editor.
+ * Because different languages have different autoclosing pairs, the pairs that you should specify 
+ * in `should` and `shouldNot` depends on the language of the target text editor.
  * 
- * Note that this function takes focus of and overwrites the target text editor.
+ * Note that this function takes focus of and overwrites the target text editor. When this function
+ * is done, the target text editor will be empty.
  */
 async function testDetection(
-    executor: Executor,
+    executor:          Executor,
     targetViewColumn: 'first' | 'second' | 'third' | 'fourth',
     args: {
             language: 'typescript',
@@ -253,265 +255,368 @@ const IT_WORKS_TEST_CASE = new TestCase({
 });
 
 /**
- * Check that when the effective value of `leaper.detectedPairs` has changed that the new effective
- * value is automatically reloaded.
+ * Check that new effective values of `leaper.detectedPairs` are automatically hot reloaded.
  */
-const AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE = new TestCase({
-    name: 'Automatic Reload of Latest Effective Value',
-    prelude,
+const HOT_RELOAD_TEST_CASE = new TestCase({
+    name: 'Hot Reload',
+    prelude: async (executor) => {
+
+        // Open two text editors in exclusive view columns.
+        //
+        // The following table shows the relevant configuration values for the text editor in each 
+        // view column:
+        //
+        //     View Column                      1            2
+        //     ----------------------------------------------------------
+        //     Workspace Folder               | 1          | 4          |
+        //     File                           | text.txt   | text.ts    |
+        //     ----------------------------------------------------------
+        //     Language                       | Plaintext  | Typescript |
+        //     Autoclosing Pairs              | (AP-3)     | (AP-1)     |
+        //                                    |            |            |
+        //     leaper.detectedPairs Value     |            |            |
+        //       - Workspace                  | (DP-1)     | (DP-1)     |
+        //       - Workspace Folder           | undefined  | undefined  |
+        //       - Language Workspace         | []         | undefined  |
+        //       - Language Workspace Folder  | undefined  | undefined  |
+        //       - Effective                  | []         | (DP-1)     |
+        //     ----------------------------------------------------------
+        //     
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     (AP-3): [ "()", "[]", "{}" ]
+        //     
+        //     (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+        //
+        await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.One });
+        await executor.openFile('./workspace-4/text.ts',  { viewColumn: ViewColumn.Two });
+
+        // As a precaution we check that the two text editors have been correctly preconfigured.
+        await testDetection(executor, 'first', { 
+            language:  'plaintext',
+            should:    [],
+            shouldNot: ["()", "[]", "{}"] 
+        });
+        await testDetection(executor, 'second', { 
+            language:  'typescript',
+            should:    [ "()", "[]", "{}", "``", "''", "\"\"" ],
+            shouldNot: [] 
+        });
+
+        // For variety's sake, type some filler text into both text editors.
+        //
+        // Both text editors will have the following state after this step:
+        //
+        // ```
+        // FILLER TEXT 
+        // FILLER TEXT 
+        // FILLER TEXT ^(cursor position) 
+        // ```
+        //
+        await executor.focusEditorGroup('first');
+        await executor.typeText('FILLER TEXT \nFILLER TEXT \nFILLER TEXT ');
+        await executor.setCursors([ [1, 12] ]);
+        await executor.focusEditorGroup('second');
+        await executor.typeText('FILLER TEXT \nFILLER TEXT \nFILLER TEXT ');
+        await executor.setCursors([ [1, 12] ]);
+    },
     task: async (executor) => {
 
-        // Within this test case, we will modify the configuration's values at various scopes within 
-        // the test workspace. We check after each change that the effective values are as expected.
+        async function typeThenCheck(
+            executor:        Executor,
+            whichTextEditor: 'first' | 'second',
+            textToTypeIn:    string,
+            expectPairs:     CompactCluster[],
+            expectCursors:   CompactCursor[]
+        ): Promise<void> {
+            await executor.focusEditorGroup(whichTextEditor);
+            await executor.typeText(textToTypeIn);
+            await executor.assertPairs(expectPairs);
+            await executor.assertCursors(expectCursors);
+        }
+
+        // 1. Change the root workspace's configuration value.
         //
-        // For the sake of brevity, we will not be writing specific comments explaining why we expect 
-        // certain pairs to be detected and certain pairs to not be detected. The general approach 
-        // for a given text editor is that the pairs that should be detected is the intersection 
-        // between the set of pairs autoclosed by the language of that text editor with the effective 
-        // value of `leaper.detectedPairs`, while the pairs that should not be detected is the set 
-        // of pairs autoclosed by the language of that text editor less the effective value of 
-        // `leaper.detectedPairs`. Please consult the 'It Works' test case for detailed examples.
-        
-        // 1. Change the workspace configuration value.
-        //
-        // This changes the effective value of the text editor in view column 1. The other text 
-        // editors maintain their effective values.
+        // This changes the effective value for view column 2's text editor.
         // 
         // The relevant configuration values after this change:
         // 
-        //     View Column                       1            2            3            4          
-        //     -------------------------------------------------------------------------------------
-        //     Workspace Folder                | 0          | 1          | 2          | 3          |
-        //     File                            | text.ts    | text.txt   | text.ts    | text.md    |
-        //     -------------------------------------------------------------------------------------
-        //     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
-        //     Autoclosing Pairs               | (AP-1)     | (AP-3)     | (AP-1)     | (AP-2)     |
-        //                                     |            |            |            |            |
-        //     leaper.detectedPairs Value      |            |            |            |            |
-        //       - Workspace                   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   |
-        //       - Workspace Folder            | undefined  | undefined  | [ "()" ]   | []         |
-        //       - Language Workspace          | undefined  | []         | undefined  | undefined  |
-        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (DP-2)     |
-        //       - Effective                   | [ "{}" ]   | []         | [ "()" ]   | (DP-2)     |
-        //     -------------------------------------------------------------------------------------
+        //     View Column                      1            2
+        //     ----------------------------------------------------------
+        //     Workspace Folder               | 1          | 4          |
+        //     File                           | text.txt   | text.ts    |
+        //     ----------------------------------------------------------
+        //     Language                       | Plaintext  | Typescript |
+        //     Autoclosing Pairs              | (AP-3)     | (AP-1)     |
+        //                                    |            |            |
+        //     leaper.detectedPairs Value     |            |            |
+        //       - Workspace                  | [ "{}" ]   | [ "{}" ]   |
+        //       - Workspace Folder           | undefined  | undefined  |
+        //       - Language Workspace         | []         | undefined  |
+        //       - Language Workspace Folder  | undefined  | undefined  |
+        //       - Effective                  | []         | [ "{}" ]   |
+        //     ----------------------------------------------------------
         //     
         //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
         //     (AP-3): [ "()", "[]", "{}" ]
-        //
-        //     (DP-2): [ "{}", "<>" ]
-        //     
-        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
-        //     consistently autoclosed.
         //
         await executor.setConfiguration({
             partialName: 'detectedPairs', 
             value:       [ "{}" ],
         });
-        await testDetection(executor, 'first', {
-            language:  'typescript',
-            should:    [ "{}" ], 
-            shouldNot: [ "[]", "()", "''", "\"\"", "``" ]
-        });
-        await testDetection(executor, 'second', {
-            language:  'plaintext',
-            should:    [], 
-            shouldNot: [ "{}", "[]", "()" ]
-        });
-        await testDetection(executor, 'third', { 
-            language:  'typescript',
-            should:    [ "()" ], 
-            shouldNot: [ "{}", "[]", "''", "\"\"", "``" ]
-        });
-        await testDetection(executor, 'fourth', { 
-            language:  'markdown',
-            should:    [ "{}", "<>" ], 
-            shouldNot: [ "()", "[]" ]
-        });
 
-        // 2. Change a language-specific workspace configuration value.
+        // Type some pairs into both text editors and check that view column 2's text editor now 
+        // only detects newly inserted `{}` pairs, while view column 1's text editor does not detect 
+        // any newly inserted pair. 
         //
-        // For this, we change the Plaintext specific configuration value in the root workspace.
-        // This changes the effective value of the text editor in view column 2. The other text
-        // editors maintain their effective values.
+        // Both text editors will have the following state after this step:
+        //
+        // ```
+        // FILLER TEXT 
+        // FILLER TEXT ([{}])
+        // FILLER TEXT    ^(cursor position) 
+        // ```
+        //
+        await typeThenCheck(executor, 'first',  '([{', [ 'None' ], [ [1, 15] ]);
+        await typeThenCheck(executor, 'second', '([{', [ { line: 1, sides: [14, 15] } ], [ [1, 15] ]);
+
+        // Type more filler text into both text editors and check that the tracking behaves as 
+        // expected for the one previously detected pair.
+        //
+        // Both text editors will have the following state after this step:
+        //
+        // ```
+        // FILLER TEXT 
+        // FILLER TEXT ([{ HELLO }])
+        // FILLER TEXT           ^(cursor position) 
+        // ```
+        //
+        await typeThenCheck(executor, 'first',  ' HELLO ', [ 'None' ], [ [1, 22] ]);
+        await typeThenCheck(executor, 'second', ' HELLO ', [ { line: 1, sides: [14, 22] } ], [ [1, 22] ]);
+
+        // 2. Change the Plaintext specific workspace configuration value.
+        //
+        // This changes the effective value for view column 1's text editor.
         // 
-        // The relevant configuration values after this change:
-        // 
-        //     View Column                       1            2            3            4          
-        //     -------------------------------------------------------------------------------------
-        //     Workspace Folder                | 0          | 1          | 2          | 3          |
-        //     File                            | text.ts    | text.txt   | text.ts    | text.md    |
-        //     -------------------------------------------------------------------------------------
-        //     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
-        //     Autoclosing Pairs               | (AP-1)     | (AP-3)     | (AP-1)     | (AP-2)     |
-        //                                     |            |            |            |            |
-        //     leaper.detectedPairs Value      |            |            |            |            |
-        //       - Workspace                   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   |
-        //       - Workspace Folder            | undefined  | undefined  | [ "()" ]   | []         |
-        //       - Language Workspace          | undefined  | (DP-3)     | undefined  | undefined  |
-        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (DP-2)     |
-        //       - Effective                   | [ "{}" ]   | (DP-3)     | [ "()" ]   | (DP-2)     |
-        //     -------------------------------------------------------------------------------------
+        //     View Column                      1            2
+        //     ----------------------------------------------------------
+        //     Workspace Folder               | 1          | 4          |
+        //     File                           | text.txt   | text.ts    |
+        //     ----------------------------------------------------------
+        //     Language                       | Plaintext  | Typescript |
+        //     Autoclosing Pairs              | (AP-3)     | (AP-1)     |
+        //                                    |            |            |
+        //     leaper.detectedPairs Value     |            |            |
+        //       - Workspace                  | [ "{}" ]   | [ "{}" ]   |
+        //       - Workspace Folder           | undefined  | undefined  |
+        //       - Language Workspace         | (DP-3)     | undefined  |
+        //       - Language Workspace Folder  | undefined  | undefined  |
+        //       - Effective                  | (DP-3)     | [ "{}" ]   |
+        //     ----------------------------------------------------------
         //     
         //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
         //     (AP-3): [ "()", "[]", "{}" ]
-        // 
-        //     (DP-2): [ "{}", "<>" ]
+        //   
         //     (DP-3): [ "[]", "()" ]
-        //     
-        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
-        //     consistently autoclosed.
         //
         await executor.setConfiguration({
             partialName:    'detectedPairs',
             value:          [ "[]", "()" ],
             targetLanguage: 'plaintext',
         });
-        await testDetection(executor, 'first', {
-            language:  'typescript',
-            should:    [ "{}" ], 
-            shouldNot: [ "[]", "()", "''", "\"\"", "``" ]
-        });
-        await testDetection(executor, 'second', {
-            language:  'plaintext',
-            should:    [ "[]", "()" ], 
-            shouldNot: [ "{}" ]
-        });
-        await testDetection(executor, 'third', { 
-            language:  'typescript',
-            should:    [ "()" ], 
-            shouldNot: [ "{}", "[]", "''", "\"\"", "``" ]
-        });
-        await testDetection(executor, 'fourth', { 
-            language:  'markdown',
-            should:    [ "{}", "<>" ], 
-            shouldNot: [ "()", "[]" ]
-        });
 
-        // 3. Change a workspace folder configuration value.
+        // Type more pairs into both text editors and check that view column 1's text editor now 
+        // detects newly inserted `[]` and `()` pairs, while nothing changes for view column 2's
+        // text editor continues to only detect newly inserted `{}` pairs.
         //
-        // For this, we change the configuration value in Workspace Folder 2. This changes the 
-        // effective value of the text editor in view column 3. The other text editors maintain 
-        // their effective values.
-        // 
-        // The relevant configuration values after this change:
-        // 
-        //     View Column                       1            2            3            4          
-        //     -------------------------------------------------------------------------------------
-        //     Workspace Folder                | 0          | 1          | 2          | 3          |
-        //     File                            | text.ts    | text.txt   | text.ts    | text.md    |
-        //     -------------------------------------------------------------------------------------
-        //     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
-        //     Autoclosing Pairs               | (AP-1)     | (AP-3)     | (AP-1)     | (AP-2)     |
-        //                                     |            |            |            |            |
-        //     leaper.detectedPairs Value      |            |            |            |            |
-        //       - Workspace                   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   |
-        //       - Workspace Folder            | undefined  | undefined  | (DP-4)     | []         |
-        //       - Language Workspace          | undefined  | (DP-3)     | undefined  | undefined  |
-        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (DP-2)     |
-        //       - Effective                   | [ "{}" ]   | (DP-3)     | (DP-4)     | (DP-2)     |
-        //     -------------------------------------------------------------------------------------
+        // Both text editors will have the following state after this step:
+        //
+        // ```
+        // FILLER TEXT 
+        // FILLER TEXT ([{ HELLO ([{}])}])
+        // FILLER TEXT              ^(cursor position) 
+        // ```
+        //
+        await typeThenCheck(executor, 'first', '([{', 
+            [ { line: 1, sides: [22, 23, 26, 27] } ], 
+            [ [1, 25] ]
+        );
+        await typeThenCheck(executor, 'second', '([{', 
+            [ { line: 1, sides: [14, 24, 25, 28] } ], 
+            [ [1, 25] ]
+        );
+
+        // Type more filler text into both text editors and check that the tracking behaves as 
+        // expected for all detected pairs so far.
+        //
+        // Both text editors will have the following state after this step:
+        //
+        // ```
+        // FILLER TEXT 
+        // FILLER TEXT ([{ HELLO ([{ WORLD }])}])
+        // FILLER TEXT                     ^(cursor position) 
+        // ```
+        //
+        await typeThenCheck(executor, 'first', ' WORLD ', 
+            [ { line: 1, sides: [22, 23, 33, 34] } ], 
+            [ [1, 32] ]
+        );
+        await typeThenCheck(executor, 'second', ' WORLD ', 
+            [ { line: 1, sides: [14, 24, 32, 35] } ], 
+            [ [1, 32] ]
+        );
+
+        // 3. Change Workspace Folder 4's configuration value.
+        //
+        // This changes the effective value for view column 2's text editor.
+        //
+        //     View Column                      1            2
+        //     ----------------------------------------------------------
+        //     Workspace Folder               | 1          | 4          |
+        //     File                           | text.txt   | text.ts    |
+        //     ----------------------------------------------------------
+        //     Language                       | Plaintext  | Typescript |
+        //     Autoclosing Pairs              | (AP-3)     | (AP-1)     |
+        //                                    |            |            |
+        //     leaper.detectedPairs Value     |            |            |
+        //       - Workspace                  | [ "{}" ]   | [ "{}" ]   |
+        //       - Workspace Folder           | undefined  | (DP-3)     |
+        //       - Language Workspace         | (DP-3)     | undefined  |
+        //       - Language Workspace Folder  | undefined  | undefined  |
+        //       - Effective                  | (DP-3)     | (DP-3)     |
+        //     ----------------------------------------------------------
         //     
         //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
         //     (AP-3): [ "()", "[]", "{}" ]
-        //
-        //     (DP-2): [ "{}", "<>" ]
+        //   
         //     (DP-3): [ "[]", "()" ]
-        //     (DP-4): [ "''", "\"\"", "``" ]
-        //     
-        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
-        //     consistently autoclosed.
         //
         await executor.setConfiguration({
             partialName:           'detectedPairs',
-            value:                 [ "''", "\"\"", "``" ],
-            targetWorkspaceFolder: 'workspace-2'
-        });
-        await testDetection(executor, 'first', {
-            language:  'typescript',
-            should:    [ "{}" ], 
-            shouldNot: [ "[]", "()", "''", "\"\"", "``" ]
-        });
-        await testDetection(executor, 'second', {
-            language:  'plaintext',
-            should:    [ "[]", "()" ], 
-            shouldNot: [ "{}" ]
-        });
-        await testDetection(executor, 'third', { 
-            language:  'typescript',
-            should:    [ "''", "\"\"", "``" ], 
-            shouldNot: [ "{}", "[]", "()" ]
-        });
-        await testDetection(executor, 'fourth', { 
-            language:  'markdown',
-            should:    [ "{}", "<>" ], 
-            shouldNot: [ "()", "[]" ]
+            value:                 [ "[]", "()" ],
+            targetWorkspaceFolder: 'workspace-4'
         });
 
-        // 4. Change a language-specific workspace folder configuration value.
+        // Type more pairs into both text editors and check both text editors only detect newly 
+        // inserted `[]` and `()` pairs.
         //
-        // For this, we change the Markdown specific configuration value in Workspace Folder 3. This 
-        // changes the effective value of the text editor in view column 4. The other text editors 
-        // maintain their effective values.
-        // 
-        // The relevant configuration values after this change:
-        // 
-        //     View Column                       1            2            3            4          
-        //     -------------------------------------------------------------------------------------
-        //     Workspace Folder                | 0          | 1          | 2          | 3          |
-        //     File                            | text.ts    | text.txt   | text.ts    | text.md    |
-        //     -------------------------------------------------------------------------------------
-        //     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
-        //     Autoclosing Pairs               | (AP-1)     | (AP-3)     | (AP-1)     | (AP-2)     |
-        //                                     |            |            |            |            |
-        //     leaper.detectedPairs Value      |            |            |            |            |
-        //       - Workspace                   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   | [ "{}" ]   |
-        //       - Workspace Folder            | undefined  | undefined  | (DP-4)     | []         |
-        //       - Language Workspace          | undefined  | (DP-3)     | undefined  | undefined  |
-        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (DP-5)     |
-        //       - Effective                   | [ "{}" ]   | (DP-3)     | (DP-4)     | (DP-5)     |
-        //     -------------------------------------------------------------------------------------
+        // Both text editors will have the following state after this step:
+        //
+        // ```
+        // FILLER TEXT 
+        // FILLER TEXT ([{ HELLO ([{ WORLD ( [ { }])}])}])
+        // FILLER TEXT                           ^(cursor position) 
+        // ```
+        //
+        await typeThenCheck(executor, 'first', '( [ { ', 
+            [ { line: 1, sides: [22, 23, 32, 34, 39, 40, 42, 43] } ], 
+            [ [1, 38] ]
+        );
+        await typeThenCheck(executor, 'second', '( [ { ', 
+            [ { line: 1, sides: [14, 24, 32, 34, 39, 40, 41, 44] } ], 
+            [ [1, 38] ]
+        );
+
+        // Leap and move out of some pairs while typing some filler indentations in, then check that 
+        // tracking behaves as expected.
+        //
+        // Both text editors will have the following state after this step:
+        //
+        // ```
+        // FILLER TEXT 
+        // FILLER TEXT ([{ HELLO ([{ WORLD ( [ { } ] ) }])}])
+        // FILLER TEXT                           ^(cursor position) 
+        // ```
+        //
+        async function typeFillerIndentation(): Promise<void> {
+            await executor.moveCursors('right');
+            await executor.typeText(' ');
+            await executor.leap();
+            await executor.typeText(' ');
+            await executor.leap();
+            await executor.typeText(' ');
+            await executor.moveCursors('left', { repetitions: 6 });
+        }
+        await executor.focusEditorGroup('first');
+        await typeFillerIndentation();
+        await executor.assertPairs([ { line: 1, sides: [22, 23, 45, 46] } ]);
+        await executor.assertCursors([ [1, 38] ]);
+        await executor.focusEditorGroup('second');
+        await typeFillerIndentation();
+        await executor.assertPairs([ { line: 1, sides: [14, 24, 44, 47] } ]);
+        await executor.assertCursors([ [1, 38] ]);
+
+        // 4. Change Workspace Folder 4's Typescript specific configuration value.
+        //
+        // This changes the effective value for view column 2's text editor.
+        //
+        //     View Column                      1            2
+        //     ----------------------------------------------------------
+        //     Workspace Folder               | 1          | 4          |
+        //     File                           | text.txt   | text.ts    |
+        //     ----------------------------------------------------------
+        //     Language                       | Plaintext  | Typescript |
+        //     Autoclosing Pairs              | (AP-3)     | (AP-1)     |
+        //                                    |            |            |
+        //     leaper.detectedPairs Value     |            |            |
+        //       - Workspace                  | [ "{}" ]   | [ "{}" ]   |
+        //       - Workspace Folder           | undefined  | (DP-3)     |
+        //       - Language Workspace         | (DP-3)     | undefined  |
+        //       - Language Workspace Folder  | undefined  | [ "()" ]   |
+        //       - Effective                  | (DP-3)     | [ "()" ]   |
+        //     ----------------------------------------------------------
         //     
         //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
-        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
         //     (AP-3): [ "()", "[]", "{}" ]
-        //
-        //     (DP-2): [ "{}", "<>" ]
+        //   
         //     (DP-3): [ "[]", "()" ]
-        //     (DP-4): [ "''", "\"\"", "``" ]
-        //     (DP-5): [ "{}", "()", "<>", "[]" ]
-        //     
-        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
-        //     consistently autoclosed.
         //
         await executor.setConfiguration({
             partialName:           'detectedPairs',
-            value:                 [ "{}", "()", "<>", "[]" ],
-            targetWorkspaceFolder: 'workspace-3',
-            targetLanguage:        'markdown',
+            value:                 [ "()" ],
+            targetWorkspaceFolder: 'workspace-4',
+            targetLanguage:        'typescript',
         });
-        await testDetection(executor, 'first', {
-            language:  'typescript',
-            should:    [ "{}" ], 
-            shouldNot: [ "[]", "()", "''", "\"\"", "``" ]
-        });
-        await testDetection(executor, 'second', {
-            language:  'plaintext',
-            should:    [ "[]", "()" ], 
-            shouldNot: [ "{}" ]
-        });
-        await testDetection(executor, 'third', { 
-            language:  'typescript',
-            should:    [ "''", "\"\"", "``" ], 
-            shouldNot: [ "{}", "[]", "()" ]
-        });
-        await testDetection(executor, 'fourth', { 
-            language:  'markdown',
-            should:    [ "{}", "()", "<>", "[]" ], 
-            shouldNot: []
-        });
+
+        // Type more pairs into both text editors and check that both text editors detect newly 
+        // inserted `()` pairs, but only the text editor in view column 1 detects newly inserted
+        // `[]` pairs.
+        // 
+        // Both text editors will have the following state after this step:
+        //
+        // ```
+        // FILLER TEXT 
+        // FILLER TEXT ([{ HELLO ([{ WORLD ( [ { {{[[(())]]}}} ] ) }])}])
+        // FILLER TEXT                                 ^(cursor position) 
+        // ```
+        //
+        await typeThenCheck(executor, 'first', '{{[[((',
+            [ { line: 1, sides: [22, 23, 40, 41, 42, 43, 44, 45, 46, 47, 57, 58] } ],
+            [ [1, 44] ]
+        );
+        await typeThenCheck(executor, 'second', '{{[[((', 
+            [ { line: 1, sides: [14, 24, 42, 43, 44, 45, 56, 59] } ],
+            [ [1, 44] ]
+        );
+        
+        // Type more filler text into both text editors and check that the tracking behaves as 
+        // expected for all the pairs that have been detected.
+        //
+        // Both text editors will have the following state after this step:
+        //
+        // ```
+        // FILLER TEXT 
+        // FILLER TEXT ([{ HELLO ([{ WORLD ( [ { {{[[(( GOODBYE ))]]}}} ] ) }])}])
+        // FILLER TEXT                                          ^(cursor position) 
+        // ```
+        //
+        await typeThenCheck(executor, 'first', ' GOODBYE ',
+            [ { line: 1, sides: [22, 23, 40, 41, 42, 43, 53, 54, 55, 56, 66, 67] } ],
+            [ [1, 53] ]
+        );
+        await typeThenCheck(executor, 'second', ' GOODBYE ', 
+            [ { line: 1, sides: [14, 24, 42, 43, 53, 54, 65, 68] } ],
+            [ [1, 53] ]
+        );
     }
 });
 
@@ -583,7 +688,7 @@ export const SINGLE_CURSOR_DETECTED_PAIRS_TEST_GROUP: TestGroup = new TestGroup(
     '`leaper.detectedPairs` Configuration',
     [
         IT_WORKS_TEST_CASE,
-        AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE,
+        HOT_RELOAD_TEST_CASE,
         REJECT_VALUE_IF_ITEMS_ARE_NOT_UNIQUE_TEST_CASE,
         REJECT_VALUE_IF_MAX_ITEMS_EXCEEDED_TEST_CASE,
     ]

@@ -1,5 +1,6 @@
 import { ViewColumn } from 'vscode';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
+import { range } from '../utilities/helpers';
 
 /**
  * Test the effective `leaper.decorateAll` configuration in a visible text editor by checking that
@@ -499,189 +500,304 @@ const DECORATE_ALL_PAIRS_TEST_CASE = new TestCase({
 });
 
 /**
- * Test whether the configuration value of `leaper.decorateAll` is automatically reloaded when a 
- * change in the effective value is detected.
- * 
- * Within this test case, we shall modify the configuration's values at various scopes within the 
- * test workspace. We check after each change that the new values are in effect.
+ * Check that new effective values of `leaper.decorateAll` are automatically hot reloaded.
  */
-const AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE = new TestCase({
-    name: 'Automatic Reload of Latest Effective Value',
+const HOT_RELOAD_TEST_CASE = new TestCase({
+    name: 'Hot Reload',
     prelude: async (executor) => {
 
-        // Open three text editors in exclusive view columns.
+        // Open two text editors in exclusive view columns.
         //
-        // The following table shows the relevant configuration values for the text editors in each 
+        // The following table shows the relevant configuration values for the text editor in each 
         // view column:
         // 
-        //     View Column                      1            2            3
-        //     -----------------------------------------------------------------------
-        //     Workspace Folder               | 0          | 2          | 4          |
-        //     File                           | text.ts    | text.ts    | text.ts    |
-        //     -----------------------------------------------------------------------
-        //     Language                       | Typescript | Typescript | Typescript |
-        //                                    |            |            |            |
-        //     leaper.decorateAll Value       |            |            |            |
-        //       - Workspace                  | false      | false      | false      |
-        //       - Workspace Folder           | undefined  | undefined  | true       |
-        //       - Language Workspace         | undefined  | undefined  | undefined  | 
-        //       - Language Workspace Folder  | undefined  | undefined  | undefined  | 
-        //       - Effective                  | false      | false      | true       | 
-        //     -----------------------------------------------------------------------
+        //     View Column                      1            2
+        //     ----------------------------------------------------------
+        //     Workspace Folder               | 3          | 4          |
+        //     File                           | text.md    | text.ts    |
+        //     ----------------------------------------------------------
+        //     Language                       | Markdown   | Typescript |
+        //     Autoclosing Pairs              | (AP-2)     | (AP-1)     |
+        //                                    |            |            |
+        //     leaper.detectedPairs Value     |            |            |
+        //       - Effective                  | (DP-2)     | (DP-1)     |
+        //                                    |            |            | 
+        //     leaper.decorateAll Value       |            |            |
+        //       - Workspace                  | false      | false      |
+        //       - Workspace Folder           | undefined  | true       |
+        //       - Language Workspace         | undefined  | undefined  | 
+        //       - Language Workspace Folder  | undefined  | undefined  | 
+        //       - Effective                  | false      | true       | 
+        //     ----------------------------------------------------------
         //
-        await executor.openFile('./workspace-0/text.ts');
-        await executor.openFile('./workspace-2/text.ts', { viewColumn: ViewColumn.Two   });
-        await executor.openFile('./workspace-4/text.ts', { viewColumn: ViewColumn.Three });
-
-        // The `testDecorations` function requires that the effective value of `leaper.detectedPairs`
-        // be at least `[ "()", "[]", "{}" ]` for all of the text editors.
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
+        // 
+        //     (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+        //     (DP-2): [ "{}", "<>" ]
         //
-        // The first and third text editors already have at least this effective value as they 
-        // inherit the value from the root workspace. But Workspace Folder 2 overrides that value, 
-        // so we have to clear the value of `leaper.detectedPairs` in Workspace Folder 2 so that the 
-        // second text editor also inherits the value from the root workspace.
-        await executor.setConfiguration({
-            partialName:           'detectedPairs',
-            targetWorkspaceFolder: 'workspace-2',
-            value:                 undefined
-        });
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
+        //     not consistently autoclosed.
+        await executor.openFile('./workspace-3/text.md',  { viewColumn: ViewColumn.One });
+        await executor.openFile('./workspace-4/text.ts',  { viewColumn: ViewColumn.Two });
 
-        // As a precaution, test that the preconfigured values of `leaper.decorateAll` are as 
-        // expected.
-        await testDecorations(executor, 'first',  'nearest');
-        await testDecorations(executor, 'second', 'nearest');
-        await testDecorations(executor, 'third',  'all');
+        // As a precaution, test that the effective values of `leaper.decorateAll` for the two 
+        // opened files are as expected.
+        await executor.focusEditorGroup('first');
+        await executor.typeText('{', { repetitions: 3 });
+        await executor.assertPairs([ { line: 0, sides: range(0, 6) } ], { expectDecorations: 'nearest' });
+        await executor.assertCursors([ [ 0, 3 ] ]);
+        await executor.focusEditorGroup('second');
+        await executor.typeText('{', { repetitions: 3 });
+        await executor.assertPairs([ { line: 0, sides: range(0, 6) } ], { expectDecorations: 'all' });
+        await executor.assertCursors([ [ 0, 3 ] ]);
     },
     task: async (executor) => {
 
-        // 1. Enable the configuration in a workspace folder. 
+        // 1. Clear the configuration in Workspace Folder 2. 
         //
-        // For this, we enable the configuration in Workspace Folder 2.
-        //
+        // This will cause view column 2's text editor to fall back on the root workspace's value.
+        // 
         // The relevant configuration values after this step:
         //
-        //     View Column                      1            2            3
-        //     -----------------------------------------------------------------------
-        //     Workspace Folder               | 0          | 2          | 4          |
-        //     File                           | text.ts    | text.ts    | text.ts    |
-        //     -----------------------------------------------------------------------
-        //     Language                       | Typescript | Typescript | Typescript |
-        //                                    |            |            |            |
-        //     leaper.decorateAll Value       |            |            |            |
-        //       - Workspace                  | false      | false      | false      |
-        //       - Workspace Folder           | undefined  | true       | true       |
-        //       - Language Workspace         | undefined  | undefined  | undefined  | 
-        //       - Language Workspace Folder  | undefined  | undefined  | undefined  | 
-        //       - Effective                  | false      | true       | true       | 
-        //     -----------------------------------------------------------------------
+        //     View Column                      1            2
+        //     ----------------------------------------------------------
+        //     Workspace Folder               | 3          | 4          |
+        //     File                           | text.md    | text.ts    |
+        //     ----------------------------------------------------------
+        //     Language                       | Markdown   | Typescript |
+        //     Autoclosing Pairs              | (AP-2)     | (AP-1)     |
+        //                                    |            |            |
+        //     leaper.detectedPairs Value     |            |            |
+        //       - Effective                  | (DP-2)     | (DP-1)     |
+        //                                    |            |            | 
+        //     leaper.decorateAll Value       |            |            |
+        //       - Workspace                  | false      | false      |
+        //       - Workspace Folder           | undefined  | undefined  |
+        //       - Language Workspace         | undefined  | undefined  | 
+        //       - Language Workspace Folder  | undefined  | undefined  | 
+        //       - Effective                  | false      | false      | 
+        //     ----------------------------------------------------------
         //
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
+        // 
+        //     (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+        //     (DP-2): [ "{}", "<>" ]
+        //
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
+        //     not consistently autoclosed.
         await executor.setConfiguration({
             partialName:           'decorateAll',
-            targetWorkspaceFolder: 'workspace-2',
-            value:                 true
+            targetWorkspaceFolder: 'workspace-4',
+            value:                 undefined
         });
 
-        // `leaper.decorateAll` should now be enabled for the second text editor, while remaining 
-        // disabled for the first and enabled for the third.
-        await testDecorations(executor, 'first',  'nearest');
-        await testDecorations(executor, 'second', 'all');
-        await testDecorations(executor, 'third',  'all');
+        // The existing pairs in view column 2's text editor should now have all pairs nearest to 
+        // the cursor decorated, just like view column 1's text editor.
+        await executor.assertPairs(
+            [ { line: 0, sides: range(0, 6) } ], 
+            { expectDecorations: 'nearest', viewColumn: ViewColumn.One }
+        );
+        await executor.assertPairs(
+            [ { line: 0, sides: range(0, 6) } ], 
+            { expectDecorations: 'nearest', viewColumn: ViewColumn.Two }
+        );
+
+        // Type more pairs into both text editors to see that the proper decoration behavior is
+        // enforced for newly inserted pairs as well.
+        await executor.focusEditorGroup('first');
+        await executor.typeText('{', { repetitions: 3 });
+        await executor.assertPairs([ { line: 0, sides: range(0, 12) } ], { expectDecorations: 'nearest' });
+        await executor.assertCursors([ [0, 6] ]);
+        await executor.focusEditorGroup('second');
+        await executor.typeText('{', { repetitions: 3 });
+        await executor.assertPairs([ { line: 0, sides: range(0, 12) } ], { expectDecorations: 'nearest' });
+        await executor.assertCursors([ [0, 6] ]);
 
         // 2. Enable the configuration in the root workspace.
         //
+        // This will enable the configuration for both text editors.
+        //
         // The relevant configuration values after this step:
         //
-        //     View Column                      1            2            3
-        //     -----------------------------------------------------------------------
-        //     Workspace Folder               | 0          | 2          | 4          |
-        //     File                           | text.ts    | text.ts    | text.ts    |
-        //     -----------------------------------------------------------------------
-        //     Language                       | Typescript | Typescript | Typescript |
-        //                                    |            |            |            |
-        //     leaper.decorateAll Value       |            |            |            |
-        //       - Workspace                  | true       | true       | true       |
-        //       - Workspace Folder           | undefined  | true       | true       |
-        //       - Language Workspace         | undefined  | undefined  | undefined  | 
-        //       - Language Workspace Folder  | undefined  | undefined  | undefined  | 
-        //       - Effective                  | true       | true       | true       | 
-        //     -----------------------------------------------------------------------
+        //     View Column                      1            2
+        //     ----------------------------------------------------------
+        //     Workspace Folder               | 3          | 4          |
+        //     File                           | text.md    | text.ts    |
+        //     ----------------------------------------------------------
+        //     Language                       | Markdown   | Typescript |
+        //     Autoclosing Pairs              | (AP-2)     | (AP-1)     |
+        //                                    |            |            |
+        //     leaper.detectedPairs Value     |            |            |
+        //       - Effective                  | (DP-2)     | (DP-1)     |
+        //                                    |            |            | 
+        //     leaper.decorateAll Value       |            |            |
+        //       - Workspace                  | true       | true       |
+        //       - Workspace Folder           | undefined  | undefined  |
+        //       - Language Workspace         | undefined  | undefined  | 
+        //       - Language Workspace Folder  | undefined  | undefined  | 
+        //       - Effective                  | true       | true       |
+        //     ----------------------------------------------------------
         //
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
+        // 
+        //     (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+        //     (DP-2): [ "{}", "<>" ]
+        //
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
+        //     not consistently autoclosed.
         await executor.setConfiguration({
             partialName: 'decorateAll',
             value:       true
         });
 
-        // The configuration should now be enabled for all three text editors.
-        await testDecorations(executor, 'first',  'all');
-        await testDecorations(executor, 'second', 'all');
-        await testDecorations(executor, 'third',  'all');
+        // The existing pairs in both text editors should now all be decorated. 
+        await executor.assertPairs(
+            [ { line: 0, sides: range(0, 12) } ], 
+            { expectDecorations: 'all', viewColumn: ViewColumn.One }
+        );
+        await executor.assertPairs(
+            [ { line: 0, sides: range(0, 12) } ], 
+            { expectDecorations: 'all', viewColumn: ViewColumn.Two }
+        );
 
-        // 3. Disable the configuration for specific language in the root workspace.
+        // Type more pairs into both text editors to see that the proper decoration behavior is
+        // enforced for newly inserted pairs as well.
+        await executor.focusEditorGroup('first');
+        await executor.typeText('{', { repetitions: 3 });
+        await executor.assertPairs([ { line: 0, sides: range(0, 18) } ], { expectDecorations: 'all' });
+        await executor.assertCursors([ [0, 9] ]);
+        await executor.focusEditorGroup('second');
+        await executor.typeText('{', { repetitions: 3 });
+        await executor.assertPairs([ { line: 0, sides: range(0, 18) } ], { expectDecorations: 'all' });
+        await executor.assertCursors([ [0, 9] ]);
+
+        // 3. Disable the configuration for Typescript in the root workspace.
         //
-        // For this, we disable the configuration for Typescript in the root workspace.
+        // This will cause the configuration to be disabled for view column 2's text editor.
         //
         // The relevant configuration values after this step:
         //
-        //     View Column                      1            2            3
-        //     -----------------------------------------------------------------------
-        //     Workspace Folder               | 0          | 2          | 4          |
-        //     File                           | text.ts    | text.ts    | text.ts    |
-        //     -----------------------------------------------------------------------
-        //     Language                       | Typescript | Typescript | Typescript |
-        //                                    |            |            |            |
-        //     leaper.decorateAll Value       |            |            |            |
-        //       - Workspace                  | true       | true       | true       |
-        //       - Workspace Folder           | undefined  | true       | true       |
-        //       - Language Workspace         | false      | false      | false      |
-        //       - Language Workspace Folder  | undefined  | undefined  | undefined  | 
-        //       - Effective                  | false      | false      | false      |
-        //     -----------------------------------------------------------------------
+        //     View Column                      1            2
+        //     ----------------------------------------------------------
+        //     Workspace Folder               | 3          | 4          |
+        //     File                           | text.md    | text.ts    |
+        //     ----------------------------------------------------------
+        //     Language                       | Markdown   | Typescript |
+        //     Autoclosing Pairs              | (AP-2)     | (AP-1)     |
+        //                                    |            |            |
+        //     leaper.detectedPairs Value     |            |            |
+        //       - Effective                  | (DP-2)     | (DP-1)     |
+        //                                    |            |            | 
+        //     leaper.decorateAll Value       |            |            |
+        //       - Workspace                  | true       | true       |
+        //       - Workspace Folder           | undefined  | undefined  |
+        //       - Language Workspace         | undefined  | false      | 
+        //       - Language Workspace Folder  | undefined  | undefined  | 
+        //       - Effective                  | true       | false      |
+        //     ----------------------------------------------------------
         //
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
+        // 
+        //     (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+        //     (DP-2): [ "{}", "<>" ]
+        //
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
+        //     not consistently autoclosed.
         await executor.setConfiguration({
             partialName:    'decorateAll',
             value:          false,
             targetLanguage: 'typescript'
         });
 
-        // Since all three text editors are Typescript, the configuration should now be disabled for 
-        // all of them.
-        await testDecorations(executor, 'first',  'nearest');
-        await testDecorations(executor, 'second', 'nearest');
-        await testDecorations(executor, 'third',  'nearest');
+        // The existing pairs in view column 2's text editor should now have only the pair closest
+        // to the cursor decorated, while the decorations in view column 1's text editor should 
+        // remain unaffected.
+        await executor.assertPairs(
+            [ { line: 0, sides: range(0, 18) } ], 
+            { expectDecorations: 'all', viewColumn: ViewColumn.One }
+        );
+        await executor.assertPairs(
+            [ { line: 0, sides: range(0, 18) } ], 
+            { expectDecorations: 'nearest', viewColumn: ViewColumn.Two }
+        );
 
-        // 4. Enable the configuration for a specific language in a workspace folder.
+        // Type more pairs into both text editors to see that the proper decoration behavior is
+        // enforced for newly inserted pairs as well.
+        await executor.focusEditorGroup('first');
+        await executor.typeText('{', { repetitions: 3 });
+        await executor.assertPairs([ { line: 0, sides: range(0, 24) } ], { expectDecorations: 'all' });
+        await executor.assertCursors([ [0, 12] ]);
+        await executor.focusEditorGroup('second');
+        await executor.typeText('{', { repetitions: 3 });
+        await executor.assertPairs([ { line: 0, sides: range(0, 24) } ], { expectDecorations: 'nearest' });
+        await executor.assertCursors([ [0, 12] ]);
+
+        // 4. Disable the configuration for Markdown in Workspace Folder 3.
         //
-        // For this, we enable the configuration for Typescript in Workspace Folder 2.
-        // 
+        // This will cause the configuration to be disabled for view column 1's text editor.
+        //
         // The relevant configuration values after this step:
         //
-        //     View Column                      1            2            3
-        //     -----------------------------------------------------------------------
-        //     Workspace Folder               | 0          | 2          | 4          |
-        //     File                           | text.ts    | text.ts    | text.ts    |
-        //     -----------------------------------------------------------------------
-        //     Language                       | Typescript | Typescript | Typescript |
-        //                                    |            |            |            |
-        //     leaper.decorateAll Value       |            |            |            |
-        //       - Workspace                  | true       | true       | true       |
-        //       - Workspace Folder           | undefined  | true       | true       |
-        //       - Language Workspace         | false      | false      | false      |
-        //       - Language Workspace Folder  | undefined  | true       | undefined  | 
-        //       - Effective                  | false      | true       | false      |
-        //     -----------------------------------------------------------------------
-
+        //     View Column                      1            2
+        //     ----------------------------------------------------------
+        //     Workspace Folder               | 3          | 4          |
+        //     File                           | text.md    | text.ts    |
+        //     ----------------------------------------------------------
+        //     Language                       | Markdown   | Typescript |
+        //     Autoclosing Pairs              | (AP-2)     | (AP-1)     |
+        //                                    |            |            |
+        //     leaper.detectedPairs Value     |            |            |
+        //       - Effective                  | (DP-2)     | (DP-1)     |
+        //                                    |            |            | 
+        //     leaper.decorateAll Value       |            |            |
+        //       - Workspace                  | true       | true       |
+        //       - Workspace Folder           | undefined  | undefined  |
+        //       - Language Workspace         | undefined  | false      | 
+        //       - Language Workspace Folder  | false      | undefined  | 
+        //       - Effective                  | false      | false      |
+        //     ----------------------------------------------------------
+        //
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
+        // 
+        //     (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+        //     (DP-2): [ "{}", "<>" ]
+        //
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
+        //     not consistently autoclosed.
         await executor.setConfiguration({
             partialName:           'decorateAll',
-            value:                 true,
-            targetWorkspaceFolder: 'workspace-2',
-            targetLanguage:        'typescript'
+            value:                 false,
+            targetWorkspaceFolder: 'workspace-3',
+            targetLanguage:        'markdown'
         });
 
-        // The configuration should now be enabled for the second text editor, while remaining 
-        // disabled for the other two text editors.
-        await testDecorations(executor, 'first',  'nearest');
-        await testDecorations(executor, 'second', 'all');
-        await testDecorations(executor, 'third',  'nearest');
+        // The existing pairs in view column 1's text editor should now have only the pair closest
+        // to the cursor decorated, while the decorations in view column 2's text editor should 
+        // remain unaffected.
+        await executor.assertPairs(
+            [ { line: 0, sides: range(0, 24) } ], 
+            { expectDecorations: 'nearest', viewColumn: ViewColumn.One }
+        );
+        await executor.assertPairs(
+            [ { line: 0, sides: range(0, 24) } ], 
+            { expectDecorations: 'nearest', viewColumn: ViewColumn.Two }
+        );
+
+        // Type more pairs into both text editors to see that the proper decoration behavior is
+        // enforced for newly inserted pairs as well.
+        await executor.focusEditorGroup('first');
+        await executor.typeText('{', { repetitions: 3 });
+        await executor.assertPairs([ { line: 0, sides: range(0, 30) } ], { expectDecorations: 'nearest' });
+        await executor.assertCursors([ [0, 15] ]);
+        await executor.focusEditorGroup('second');
+        await executor.typeText('{', { repetitions: 3 });
+        await executor.assertPairs([ { line: 0, sides: range(0, 30) } ], { expectDecorations: 'nearest' });
+        await executor.assertCursors([ [0, 15] ]);
     }
 });
 
@@ -694,7 +810,7 @@ export const SINGLE_CURSOR_DECORATE_ALL_TEST_GROUP = new TestGroup(
     [
         DECORATE_ONLY_NEAREST_PAIR_TEST_CASE,
         DECORATE_ALL_PAIRS_TEST_CASE,
-        AUTOMATIC_RELOAD_OF_LATEST_EFFECTIVE_VALUE_TEST_CASE
+        HOT_RELOAD_TEST_CASE
     ]
 );
 
