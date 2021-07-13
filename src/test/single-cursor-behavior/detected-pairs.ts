@@ -84,50 +84,48 @@ async function testDetection(
 }
 
 /**
- * Open four files in exclusive view columns.
- * 
- * The following table shows the relevant configuration values for each file:
- * 
- *     View Column                       1            2            3            4          
- *     -------------------------------------------------------------------------------------
- *     Workspace Folder                | 0          | 1          | 2          | 3          |
- *     File                            | text.ts    | text.txt   | text.ts    | text.md    |
- *     -------------------------------------------------------------------------------------
- *     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
- *     Autoclosing Pairs               | (AP-1)     | (AP-3)     | (AP-1)     | (AP-2)     |
- *                                     |            |            |            |            |
- *     leaper.detectedPairs Value      |            |            |            |            |
- *       - Workspace                   | (DP-1)     | (DP-1)     | (DP-1)     | (DP-1)     |
- *       - Workspace Folder            | undefined  | undefined  | [ "()" ]   | []         |
- *       - Language Workspace          | undefined  | []         | undefined  | undefined  |
- *       - Language Workspace Folder   | undefined  | undefined  | undefined  | (DP-2)     |
- *       - Effective                   | (DP-1)     | []         | [ "()" ]   | (DP-2)     |
- *     -------------------------------------------------------------------------------------
- *     
- *     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
- *     *(AP-2): [ "()", "[]", "{}", "<>" ]
- *     (AP-3): [ "()", "[]", "{}" ]
- * 
- *     (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
- *     (DP-2): [ "{}", "<>" ]
- *     
- *     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
- *     consistently autoclosed.
- */
-async function prelude(executor: Executor): Promise<void> {
-    await executor.openFile('./workspace-0/text.ts');
-    await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.Two });
-    await executor.openFile('./workspace-2/text.ts',  { viewColumn: ViewColumn.Three });
-    await executor.openFile('./workspace-3/text.md',  { viewColumn: ViewColumn.Four });
-}
-
-/**
  * Check that the value configured for `leaper.detectedPairs` appropriately affects the behavior of 
  * the engine.
  */
 const IT_WORKS_TEST_CASE = new TestCase({
     name: 'It Works',
-    prelude,
+    prelude: async (executor) => {
+
+        // Open four files in exclusive view columns.
+        // 
+        // The following table shows the relevant configuration values for each file:
+        // 
+        //     View Column                       1            2            3            4          
+        //     -------------------------------------------------------------------------------------
+        //     Workspace Folder                | 0          | 1          | 2          | 3          |
+        //     File                            | text.ts    | text.txt   | text.ts    | text.md    |
+        //     -------------------------------------------------------------------------------------
+        //     Language                        | Typescript | Plaintext  | Typescript | Markdown   |
+        //     Autoclosing Pairs               | (AP-1)     | (AP-3)     | (AP-1)     | (AP-2)     |
+        //                                     |            |            |            |            |
+        //     leaper.detectedPairs Value      |            |            |            |            |
+        //       - Workspace                   | (DP-1)     | (DP-1)     | (DP-1)     | (DP-1)     |
+        //       - Workspace Folder            | undefined  | undefined  | [ "()" ]   | []         |
+        //       - Language Workspace          | undefined  | []         | undefined  | undefined  |
+        //       - Language Workspace Folder   | undefined  | undefined  | undefined  | (DP-2)     |
+        //       - Effective                   | (DP-1)     | []         | [ "()" ]   | (DP-2)     |
+        //     -------------------------------------------------------------------------------------
+        //     
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        //     *(AP-2): [ "()", "[]", "{}", "<>" ]
+        //     (AP-3): [ "()", "[]", "{}" ]
+        // 
+        //     (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+        //     (DP-2): [ "{}", "<>" ]
+        //     
+        //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
+        //     consistently autoclosed.
+        // 
+        await executor.openFile('./workspace-0/text.ts',  { viewColumn: ViewColumn.One });
+        await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.Two });
+        await executor.openFile('./workspace-2/text.ts',  { viewColumn: ViewColumn.Three });
+        await executor.openFile('./workspace-3/text.md',  { viewColumn: ViewColumn.Four });
+    },
     task: async (executor) => {
 
         // 1. Test effective value from workspace scope.
@@ -251,6 +249,112 @@ const IT_WORKS_TEST_CASE = new TestCase({
             should:    [], 
             shouldNot: [ "{}", "[]", "()" ]
         });   
+    }
+});
+
+/**
+ * Check that configuration values which do not have unique items are rejected.
+ */
+const REJECT_VALUE_IF_ITEMS_ARE_NOT_UNIQUE_TEST_CASE: TestCase = new TestCase({
+    name: 'Reject Value if Items Are Not Unique',
+    prelude: async (executor) => {
+        
+        // For this test case, we will only be using the Typescript file in Workspace Folder 0.
+        //
+        // The relevant configuration values for that file is:
+        //
+        //     ---------------------------------------------
+        //     Workspace Folder               | 0          |
+        //     File                           | text.ts    |
+        //     ---------------------------------------------
+        //     Language                       | Typescript |
+        //     Autoclosing Pairs              | (AP-1)     |
+        //                                    |            |
+        //     leaper.detectedPairs Value     |            |
+        //       - Workspace                  | (DP-1)     |
+        //       - Workspace Folder           | undefined  |
+        //       - Language Workspace         | undefined  |
+        //       - Language Workspace Folder  | undefined  |
+        //       - Effective                  | (DP-1)     |
+        //     ---------------------------------------------
+        //
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        // 
+        //     (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+        //
+        await executor.openFile('./workspace-0/text.ts');
+    },
+    task: async (executor) => {
+
+        // Set the configuration value in Workspace Folder 0 to one that does not have unique items.
+        await executor.setConfiguration({
+            partialName:           'detectedPairs',
+            value:                 [ "{}", "[]", "[]" ],
+            targetWorkspaceFolder: 'workspace-0'
+        });
+
+        // Since the workspace folder value does not have unique items, it will be ignored, and the 
+        // effective value will still come from the root workspace scope.
+        await testDetection(executor, 'first', {
+            language:  'typescript',
+            should:    [ "{}", "[]", "()", "''", "\"\"", "``" ], 
+            shouldNot: []
+        });
+    }
+});
+
+/**
+ * Check that configuration values which exceed the maximum items limit are rejected.
+ */
+const REJECT_VALUE_IF_MAX_ITEMS_EXCEEDED_TEST_CASE: TestCase = new TestCase({
+    name: 'Reject Value if Max Items Exceeded',
+    prelude: async (executor) => {
+
+        // For this test case, we will only be using the Typescript file in Workspace Folder 0.
+        //
+        // The relevant configuration values for that file is:
+        //
+        //     ---------------------------------------------
+        //     Workspace Folder               | 0          |
+        //     File                           | text.ts    |
+        //     ---------------------------------------------
+        //     Language                       | Typescript |
+        //     Autoclosing Pairs              | (AP-1)     |
+        //                                    |            |
+        //     leaper.detectedPairs Value     |            |
+        //       - Workspace                  | (DP-1)     |
+        //       - Workspace Folder           | undefined  |
+        //       - Language Workspace         | undefined  |
+        //       - Language Workspace Folder  | undefined  |
+        //       - Effective                  | (DP-1)     |
+        //     ---------------------------------------------
+        //
+        //     (AP-1): [ "()", "[]", "{}", "``", "''", "\"\"" ]
+        // 
+        //     (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+        //
+        await executor.openFile('./workspace-0/text.ts');
+    },
+    task: async (executor) => {
+
+        // Set the configuration value in Workspace Folder 0 to one that exceeds the limit. 
+        const tooManyItemsValue = [];
+        for (let i = 0; i < Configurations.DETECTED_PAIRS_MAX_ITEMS + 1; ++i) {
+            tooManyItemsValue.push("()");
+        }
+        await executor.setConfiguration({
+            partialName:           'detectedPairs',
+            value:                 tooManyItemsValue,
+            targetWorkspaceFolder: 'workspace-0'
+        });
+
+        // Since the workspace folder value exceeds the limit, it will be ignored, and the effective 
+        // value will still come from the root workspace scope.
+        await testDetection(executor, 'first', {
+            language:  'typescript',
+            should:    [ "{}", "[]", "()", "''", "\"\"", "``" ], 
+            shouldNot: []
+        });
     }
 });
 
@@ -620,66 +724,6 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
     }
 });
 
-/**
- * Check that configuration values which do not have unique items are rejected.
- */
-const REJECT_VALUE_IF_ITEMS_ARE_NOT_UNIQUE_TEST_CASE: TestCase = new TestCase({
-    name: 'Reject Value if Items Are Not Unique',
-    prelude,
-    task: async (executor) => {
-
-        // For this test case, we will only be using the Typescript document in Workspace Folder 0.
-        // The effective value is preconfigured to come from the root workspace scope.
-
-        // Set the configuration value in Workspace Folder 0 to one that does not have unique items.
-        await executor.setConfiguration({
-            partialName:           'detectedPairs',
-            value:                 [ "{}", "[]", "[]" ],
-            targetWorkspaceFolder: 'workspace-0'
-        });
-
-        // Since the workspace folder value does not have unique items, it will be ignored, and the 
-        // effective value will continue to come from the root workspace scope.
-        await testDetection(executor, 'first', {
-            language:  'typescript',
-            should:    [ "{}", "[]", "()", "''", "\"\"", "``" ], 
-            shouldNot: []
-        });
-    }
-});
-
-/**
- * Check that configuration values which exceed the maximum items limit are rejected.
- */
-const REJECT_VALUE_IF_MAX_ITEMS_EXCEEDED_TEST_CASE: TestCase = new TestCase({
-    name: 'Reject Value if Max Items Exceeded',
-    prelude,
-    task: async (executor) => {
-
-        // For this test case, we will only be using the Typescript document in Workspace Folder 0.
-        // The effective value is preconfigured to come from the root workspace scope.
-
-        // Set the configuration value in Workspace Folder 0 to one that exceeds the limit. 
-        const tooManyItemsValue = [];
-        for (let i = 0; i < Configurations.DETECTED_PAIRS_MAX_ITEMS + 1; ++i) {
-            tooManyItemsValue.push("()");
-        }
-        await executor.setConfiguration({
-            partialName:           'detectedPairs',
-            value:                 tooManyItemsValue,
-            targetWorkspaceFolder: 'workspace-0'
-        });
-
-        // Since the workspace folder value exceeds the limit, it will be ignored, and the effective 
-        // value will continue to come from the root workspace scope.
-        await testDetection(executor, 'first', {
-            language:  'typescript',
-            should:    [ "{}", "[]", "()", "''", "\"\"", "``" ], 
-            shouldNot: []
-        });
-    }
-});
-
 /** 
  * A collection of test cases that test the behavior of the `leaper.detectedPairs` configuration 
  * when there is a single cursor.
@@ -688,8 +732,8 @@ export const SINGLE_CURSOR_DETECTED_PAIRS_TEST_GROUP: TestGroup = new TestGroup(
     '`leaper.detectedPairs` Configuration',
     [
         IT_WORKS_TEST_CASE,
-        HOT_RELOAD_TEST_CASE,
         REJECT_VALUE_IF_ITEMS_ARE_NOT_UNIQUE_TEST_CASE,
         REJECT_VALUE_IF_MAX_ITEMS_EXCEEDED_TEST_CASE,
+        HOT_RELOAD_TEST_CASE
     ]
 );
