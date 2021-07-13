@@ -811,7 +811,7 @@ function decorate(
     pair:              Pair,
     decorationOptions: Unchecked<DecorationRenderOptions>
 ): TextEditorDecorationType {
-    const decoration = window.createTextEditorDecorationType(decorationOptions.value);
+    const decoration = window.createTextEditorDecorationType(decorationOptions.cast());
     editor.setDecorations(decoration, [ new Range(pair.close, pair.close.translate(0, 1)) ]);
     return decoration;
 };

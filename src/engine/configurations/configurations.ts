@@ -171,12 +171,11 @@ export class Configurations {
             }
             convertColors(v);
             
-            // Cast the object into a vscode `DecorationRenderOptions` type.
-            //
             // This cast is safe because all we ever do with this configuration, aside from the color 
             // conversion we did above and the setting of the `rangeBehavior` we shall do below, is 
-            // pass it to vscode as options when decorating pairs. Thus, there is no risk from the
-            // object having an incorrect structure since we never access it as part of any computation.
+            // to pass it to vscode as options when decorating pairs. Thus, there is no risk from 
+            // the object having an incorrect structure since we never access it as part of any 
+            // computation.
             //
             // Still, instead of casting directly into a `DecorationRenderOptions`, we wrap the 
             // object in an `Unchecked` type as a reminder to the rest of the code that the value
@@ -185,7 +184,7 @@ export class Configurations {
 
             // The decoration must be closed on both sides so that it will not expand when text is 
             // inserted next to it.
-            decorationOptions.value.rangeBehavior = DecorationRangeBehavior.ClosedClosed;
+            decorationOptions.cast().rangeBehavior = DecorationRangeBehavior.ClosedClosed;
 
             return decorationOptions;
         },
@@ -205,12 +204,12 @@ export class Configurations {
         // except for `rangeBehavior` as is.
         deprTransform: (v: Object): Unchecked<DecorationRenderOptions> => {
 
-            // The value is wrapped in `Unchecked` as a reminder that it has not been typechecked.
+            // Wrap the object in `Unchecked` as a reminder that the value has not been typechecked.
             const decorationOptions = new Unchecked<DecorationRenderOptions>(v);
 
             // This is something we have always enforced, since we never want the decorations to
             // expand when text is inserted next to them.
-            decorationOptions.value.rangeBehavior = DecorationRangeBehavior.ClosedClosed;
+            decorationOptions.cast().rangeBehavior = DecorationRangeBehavior.ClosedClosed;
 
             return decorationOptions;
         }   

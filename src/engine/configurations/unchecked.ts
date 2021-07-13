@@ -1,15 +1,15 @@
 /**
- * Anything which has been cast to `T` but has not been typechecked as such. 
+ * Anything which may be `T` but has not been typechecked as such. 
  */
 export class Unchecked<T> {
 
-    public constructor(v: unknown) {
-        this.value = v as T;
-    }
+    public constructor(private v: unknown) {}
 
     /**
-     * The unchecked value.
+     * Get the value casted to the target type.
      */
-    public readonly value: T;
+    public cast(): T {
+        return this.v as T;
+    }
 
 }
