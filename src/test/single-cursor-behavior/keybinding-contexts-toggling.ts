@@ -841,8 +841,8 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
  * A collection of test cases that test whether the keybinding contexts are being appropriately 
  * toggled when there is a single cursor.
  */
-export const SINGLE_CURSOR_KEYBINDING_CONTEXT_TOGGLING_TEST_GROUP = new TestGroup(
-    'Keybinding Context Toggling',
+export const SINGLE_CURSOR_KEYBINDING_CONTEXTS_TOGGLING_TEST_GROUP = new TestGroup(
+    'Keybinding Contexts Toggling',
     [
         WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE,
         WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE
