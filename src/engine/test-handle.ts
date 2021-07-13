@@ -18,7 +18,7 @@ export interface TestHandle {
     readonly mostRecentHasLineOfSightContext: boolean;
 
     /**
-     * Get a deep copy of the internal state of the engine.
+     * Get a snapshot of the internal state of the engine.
      * 
      * The return value maps the view column of each visible text editor to a snapshot of its tracker. 
      * The snapshots can be mutated without affecting the engine's state.
@@ -28,9 +28,7 @@ export interface TestHandle {
 }
 
 /** 
- * A deep copy of the internal state of a tracker.
- * 
- * A snapshot of a tracker can be mutated without affecting the tracker's state.
+ * A snapshot of the internal state of a tracker.
  */
 export interface TrackerSnapshot {
 

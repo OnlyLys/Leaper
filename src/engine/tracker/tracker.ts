@@ -1,4 +1,3 @@
-import * as v8 from 'v8';
 import { Range, Position, Selection, TextEditorDecorationType, window, TextEditor, DecorationRenderOptions, TextDocumentContentChangeEvent, EventEmitter, Event } from 'vscode';
 import { Unchecked } from '../configurations/unchecked';
 import { ImmediateReusable } from './immediate-reusable';
@@ -734,9 +733,7 @@ export class Tracker {
     /** 
      * **For tests only**
      * 
-     * Get a deep copy of the internal state of this tracker.
-     * 
-     * The returned snapshot can be mutated without affecting the state of this tracker.
+     * Get a snapshot of the internal state of this tracker.
      */
     public snapshot(): TrackerSnapshot {
         
@@ -752,11 +749,19 @@ export class Tracker {
             });
         }
 
-        // Make a deep copy so that there is no risk of someone being able to affect the state of 
-        // this tracker through mutating the decoration options object that we return.
-        const decorationOptions = v8.deserialize(v8.serialize(this._decorationOptions));
+        // So that the decoration options cannot be mutated by whoever requested the snapshot.
+        function recursiveFreeze(obj: any): void {
+            if (obj !== 'object' || obj === null) {
+                return;
+            }
+            for (const key of Reflect.ownKeys(obj)) {
+                recursiveFreeze(Reflect.get(obj, key));
+            }
+            Object.freeze(obj);
+        }
+        recursiveFreeze(this._decorationOptions);
 
-        return { pairs, decorationOptions };
+        return { pairs, decorationOptions: this._decorationOptions };
     }
 
 }
