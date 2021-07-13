@@ -1,6 +1,6 @@
 {
     "leaper.decorateAll": true,
     "[markdown]": {
-        "leaper.decorationOptions": {}       
+        "leaper.decorationOptions": null   
     }
 }

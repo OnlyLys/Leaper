@@ -116,16 +116,31 @@ export class Configurations {
 
         name: Configurations.decorationOptions.name,
 
-        // Note that the type validation for this configuration (aside from rejecting it if a range 
-        // behavior is specified) is just a check to see if it is a non-null `Object`, because the 
-        // actual `DecorationRenderOptions` type has too many properties to manually typecheck. 
-        // Furthermore, new properties are always being added to it by vscode, so it is difficult 
-        // for us to keep up with it. 
-        validate: (v: unknown): v is Object => {
-            return typeof v === 'object' && v !== null && !Reflect.has(v, 'rangeBehavior');
+        // Notes:
+        //
+        //   1. The type validation for this configuration is just a check to see if it is either an 
+        //      object without a `rangeBehavior` property or `null` (see the next point for why we
+        //      allow `null`), because the actual `DecorationRenderOptions` type has too many 
+        //      properties to manually typecheck. New properties are always being added to that type 
+        //      by vscode, so it is difficult for us to keep up with it. 
+        //
+        //   2. If the user wants to disable decorations, we require them to specify `null` instead 
+        //      of an empty object because of a bug in vscode (as of version 1.58.0) where if a 
+        //      configuration is set to `{}` in a workspace or workspace folder that previously did 
+        //      not have a value for that configuration, the `{}` will be ignored.
+        //
+        validate: (v: unknown): v is Object | null => {
+            return typeof v === 'object' && (v === null || !Reflect.has(v, 'rangeBehavior'));
         },
 
-        transform: (v: Object): Unchecked<DecorationRenderOptions> => {
+        transform: (v: Object | null): Unchecked<DecorationRenderOptions> => {
+
+            // When the user specifies `null`, it means they want decorations disabled, so we just
+            // convert `null` to an empty object. As for why we didn't just allow the user to specify 
+            // `{}` in the first place, please see the note for the `validate` callback above.
+            if (v === null) {
+                v = {};
+            }
 
             /**
              * Convert all theme color identifier strings to `ThemeColor` objects.
@@ -139,14 +154,9 @@ export class Configurations {
              * [theme color identifier]: https://code.visualstudio.com/api/references/vscode-api#ThemeColor
              */
             function convertColors(obj: Object): void {
-                if (obj === null) {
-                    return;
-                }
                 for (const key of Reflect.ownKeys(obj)) {
                     const value = Reflect.get(obj, key);
-                    if (typeof value === 'object') {
-
-                        // Recursively descend into subobjects.
+                    if (typeof value === 'object' && value !== null) {
                         convertColors(value); 
                     } else if (typeof key === 'string' && /color$/i.test(key) && typeof value === 'string') {
 

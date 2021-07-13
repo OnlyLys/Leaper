@@ -71,7 +71,8 @@
                     "scope": "language-overridable"
                 },
                 "leaper.decorationOptions": {
-                    "type": "object",
+                    "type": ["object", "null"],
+                    "minProperties": 1,
                     "default": {
                         "outlineColor": "editorWarning.foreground",
                         "outlineStyle": "solid",
@@ -623,7 +624,7 @@
                         "rangeBehavior": false
                     },
                     "uniqueItems": true,
-                    "markdownDescription": "The decoration style of the closing side of each pair. \n\nAccepts a subset of [`DecorationRenderOptions`](https://code.visualstudio.com/api/references/vscode-api#DecorationRenderOptions). Disables decorations when set to `{}`.",
+                    "markdownDescription": "The decoration style of the closing side of each pair. \n\nAccepts a subset of [`DecorationRenderOptions`](https://code.visualstudio.com/api/references/vscode-api#DecorationRenderOptions). Disables decorations when set to `null`.",
                     "scope": "language-overridable"
                 },
                 "leaper.decorateOnlyNearestPair": {

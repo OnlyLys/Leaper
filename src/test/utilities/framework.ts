@@ -583,7 +583,7 @@ class ExecutorFull {
      *                                |            |            |            |            |            |
      * leaper.decorationOptions Value |            |            |            |            |            |
      *   - Workspace                  | (DO-1)     | (DO-1)     | (DO-1)     | (DO-1)     | (DO-1)     |
-     *   - Workspace Folder           | undefined  | {}         | (DO-4)     | undefined  | undefined  |
+     *   - Workspace Folder           | undefined  | null       | (DO-4)     | undefined  | undefined  |
      *   - Language Workspace         | undefined  | undefined  | undefined  | (DO-2)     | undefined  |
      *   - Language Workspace Folder  | undefined  | (DO-3)     | (DO-5)     | undefined  | undefined  |
      *   - Effective                  | (DO-1)     | (DO-3)     | (DO-5)     | (DO-2)     | (DO-1)     |
@@ -667,19 +667,25 @@ class ExecutorFull {
      * folder within it.
      * 
      * @param name The full name of the configuration.
-     * @param value Value to set the configuration to.
+     * @param value Value to set the configuration to. **NOTE**: You may not set a configuration to
+     *              `{}` because setting a configuration to that value occasionally does not count 
+     *              as a change in value by vscode.
      * @param targetWorkspaceFolder The name of the workspace folder to set the configuration in. If
      *                              not specified, will set the configuration in the root workspace.
      * @param targetLanguage The language to scope the configuration to. If not specified, will not 
      *                       scope to any language.
      */
-    public async setConfiguration<T>(args: {
+    public async setConfiguration(args: {
         name:                   'leaper.decorateAll' | 'leaper.decorationOptions' | 'leaper.detectedPairs', 
-        value:                  T | undefined,
+        value:                  any,
         targetWorkspaceFolder?: 'workspace-0' | 'workspace-1' | 'workspace-2' | 'workspace-3' | 'workspace-4',
         targetLanguage?:        'typescript' | 'markdown' | 'plaintext'
     },): Promise<void> {
         const { name, value, targetWorkspaceFolder, targetLanguage } = args;
+
+        if (typeof value === 'object' && value !== null && Reflect.ownKeys(value).length === 0) {
+            throw new Error('Now allowed to set configuration value to `{}`!');
+        }
 
         // The name of the configuration after the `leaper.` prefix.
         const childName = name.slice(7);
