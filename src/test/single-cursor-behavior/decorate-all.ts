@@ -588,7 +588,7 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
         //     not consistently autoclosed.
         await executor.setConfiguration({
-            partialName:           'decorateAll',
+            name:                  'leaper.decorateAll',
             targetWorkspaceFolder: 'workspace-4',
             value:                 undefined
         });
@@ -649,8 +649,8 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
         //     not consistently autoclosed.
         await executor.setConfiguration({
-            partialName: 'decorateAll',
-            value:       true
+            name:  'leaper.decorateAll',
+            value: true
         });
 
         // The existing pairs in both text editors should now all be decorated. 
@@ -708,7 +708,7 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
         //     not consistently autoclosed.
         await executor.setConfiguration({
-            partialName:    'decorateAll',
+            name:           'leaper.decorateAll',
             value:          false,
             targetLanguage: 'typescript'
         });
@@ -770,7 +770,7 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
         //     not consistently autoclosed.
         await executor.setConfiguration({
-            partialName:           'decorateAll',
+            name:                  'leaper.decorateAll',
             value:                 false,
             targetWorkspaceFolder: 'workspace-3',
             targetLanguage:        'markdown'

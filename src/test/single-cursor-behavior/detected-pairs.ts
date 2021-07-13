@@ -288,7 +288,7 @@ const REJECT_VALUE_IF_ITEMS_ARE_NOT_UNIQUE_TEST_CASE: TestCase = new TestCase({
 
         // Set the configuration value in Workspace Folder 0 to one that does not have unique items.
         await executor.setConfiguration({
-            partialName:           'detectedPairs',
+            name:                  'leaper.detectedPairs',
             value:                 [ "{}", "[]", "[]" ],
             targetWorkspaceFolder: 'workspace-0'
         });
@@ -343,7 +343,7 @@ const REJECT_VALUE_IF_MAX_ITEMS_EXCEEDED_TEST_CASE: TestCase = new TestCase({
             tooManyItemsValue.push("()");
         }
         await executor.setConfiguration({
-            partialName:           'detectedPairs',
+            name:                  'leaper.detectedPairs',
             value:                 tooManyItemsValue,
             targetWorkspaceFolder: 'workspace-0'
         });
@@ -464,8 +464,8 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         //     (AP-3): [ "()", "[]", "{}" ]
         //
         await executor.setConfiguration({
-            partialName: 'detectedPairs', 
-            value:       [ "{}" ],
+            name:  'leaper.detectedPairs', 
+            value: [ "{}" ],
         });
 
         // Type some pairs into both text editors and check that view column 2's text editor now 
@@ -523,7 +523,7 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         //     (DP-3): [ "[]", "()" ]
         //
         await executor.setConfiguration({
-            partialName:    'detectedPairs',
+            name:           'leaper.detectedPairs',
             value:          [ "[]", "()" ],
             targetLanguage: 'plaintext',
         });
@@ -595,7 +595,7 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         //     (DP-3): [ "[]", "()" ]
         //
         await executor.setConfiguration({
-            partialName:           'detectedPairs',
+            name:                  'leaper.detectedPairs',
             value:                 [ "[]", "()" ],
             targetWorkspaceFolder: 'workspace-4'
         });
@@ -675,7 +675,7 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         //     (DP-3): [ "[]", "()" ]
         //
         await executor.setConfiguration({
-            partialName:           'detectedPairs',
+            name:                  'leaper.detectedPairs',
             value:                 [ "()" ],
             targetWorkspaceFolder: 'workspace-4',
             targetLanguage:        'typescript',

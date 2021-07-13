@@ -666,7 +666,7 @@ class ExecutorFull {
      * Set a configuration value, scoped to either the root of the test workspace or a workspace 
      * folder within it.
      * 
-     * @param partialName The name of the configuration after the `leaper.` prefix.
+     * @param name The full name of the configuration.
      * @param value Value to set the configuration to.
      * @param targetWorkspaceFolder The name of the workspace folder to set the configuration in. If
      *                              not specified, will set the configuration in the root workspace.
@@ -674,12 +674,15 @@ class ExecutorFull {
      *                       scope to any language.
      */
     public async setConfiguration<T>(args: {
-        partialName:            'decorateAll' | 'decorationOptions' | 'detectedPairs', 
+        name:                   'leaper.decorateAll' | 'leaper.decorationOptions' | 'leaper.detectedPairs', 
         value:                  T | undefined,
         targetWorkspaceFolder?: 'workspace-0' | 'workspace-1' | 'workspace-2' | 'workspace-3' | 'workspace-4',
         targetLanguage?:        'typescript' | 'markdown' | 'plaintext'
     },): Promise<void> {
-        const { partialName, value, targetWorkspaceFolder, targetLanguage } = args;
+        const { name, value, targetWorkspaceFolder, targetLanguage } = args;
+
+        // The name of the configuration after the `leaper.` prefix.
+        const childName = name.slice(7);
 
         let workspaceUri: Uri | undefined;
         if (targetWorkspaceFolder) {
@@ -703,7 +706,7 @@ class ExecutorFull {
 
         // Save the previous value so that we can restore it later.
         let prevValue: any;
-        const inspect = configuration.inspect(partialName);
+        const inspect = configuration.inspect(childName);
         if (targetWorkspaceFolder && targetLanguage) {
             prevValue = inspect?.workspaceFolderLanguageValue;
         } else if (targetWorkspaceFolder && !targetLanguage) {
@@ -715,12 +718,12 @@ class ExecutorFull {
         }
 
         // Set the configuration value.
-        await configuration.update(partialName, value, targetScope, !!targetLanguage);
+        await configuration.update(childName, value, targetScope, !!targetLanguage);
 
         // Store the callback that allows the configuration change we just did to be reverted.
         this.configurationRestorers.push(async () => {
             const configuration = workspace.getConfiguration('leaper', fullUri);
-            await configuration.update(partialName, prevValue, targetScope, !!targetLanguage);
+            await configuration.update(childName, prevValue, targetScope, !!targetLanguage);
         });
 
     }
