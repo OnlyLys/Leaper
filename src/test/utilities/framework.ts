@@ -2,7 +2,7 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
-import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, window, ViewColumn, Uri, ConfigurationTarget, WorkspaceEdit } from 'vscode';
+import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, window, ViewColumn, Uri, ConfigurationTarget, WorkspaceEdit, DecorationRenderOptions, DecorationRangeBehavior } from 'vscode';
 import { ResolvedViewColumn, TrackerSnapshot } from '../../engine/test-handle';
 import { CompactCluster, CompactRange, CompactPosition, CompactCursor, CompactSelection, CompactPair } from './compact';
 import { waitFor, zip } from './helpers';
@@ -306,6 +306,28 @@ class ExecutorFull {
 
         const message = 'Most Recently Set `leaper.hasLineOfSight` Keybinding Context Mismatch';
         this.assertEq(getMostRecentHasLineOfSightContext(), expect, message);
+    }
+
+    /**
+     * Assert the effective decoration options for a visible text editor.
+     * 
+     * Keep in mind that `expect` is not compared against the exact effective value specified by the 
+     * user, but rather against the effective value after it has been converted to the desired form 
+     * by the engine's configuration reader. For that reason, we do not allow `rangeBehavior` to be 
+     * specified in `expect` since we always expect it to be `ClosedClosed` as the engine's 
+     * configuration reader always forces it to that value. Please see `Configurations` for more info.
+     */
+    public async assertEffectiveDecorationOptions(
+        expect:   Readonly<Omit<DecorationRenderOptions, 'rangeBehavior'>>,
+        options?: ViewColumnOption
+    ): Promise<void> {
+
+        // Wait in case the engine has not caught up.
+        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
+
+        const actual  = getSnapshot(options?.viewColumn).decorationOptions.cast();
+        const _expect = { ...expect,  rangeBehavior: DecorationRangeBehavior.ClosedClosed };
+        this.assertEq(actual, _expect, 'Decoration Options Mismatch');
     }
 
     /** 
