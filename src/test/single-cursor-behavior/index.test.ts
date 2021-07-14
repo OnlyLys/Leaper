@@ -12,7 +12,7 @@ import { SINGLE_CURSOR_DECORATION_OPTIONS_TEST_GROUP } from './decoration-option
 /**
  * A collection of test groups that test how the engine behaves when there is a single cursor.
  */
-const TEST_CATEGORY = new TestCategory(
+const SINGLE_CURSOR_BEHAVIOR_TESTS = new TestCategory(
     'Single Cursor Behavior Tests',
     [
         SINGLE_CURSOR_DECORATE_ALL_TEST_GROUP,
@@ -27,4 +27,4 @@ const TEST_CATEGORY = new TestCategory(
     ]
 );
 
-TEST_CATEGORY.run();
+SINGLE_CURSOR_BEHAVIOR_TESTS.run();
