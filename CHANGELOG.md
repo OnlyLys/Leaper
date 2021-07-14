@@ -2,15 +2,19 @@
 
 ### 0.10.0 _(Work in Progress)_
 - Allow the extension to run in untrusted workspaces. 
-- Change the default decoration to something with more contrast.
+- Fix incorrect extension packaging. The fix in 0.9.3 did not work.
+- Hide the 'Leap' and 'Escape Leaper Mode' commands from the command palette.
 - Improve the `leaper.decorationOptions` configuration.
-  * Allow theme color identifiers to be specified with strings.
   * Add autocompletion and validation for most of the options.
-- Improve the README.
+  * Add a few examples of decoration options.
+  * Allow theme color identifiers to be specified with strings.
+  * Change the default decoration to something with more contrast.
+  * Require `null` instead of `{}` to disable decorations.
 - Improve the descriptions of configurations.
 - Improve the engine code.
-- Hide the 'Leap' and 'Escape Leaper Mode' commands from the command palette.
-- Fix incorrect extension packaging. The fix in 0.9.3 did not work.
+  * Allow configurations to be hot reloaded.
+  * Remove a lot of complexity from the code.
+- Improve the README.
 
 ### 0.9.3 _(Not published to marketplace)_
 - Fix incorrect extension packaging. This should reduce the file size.

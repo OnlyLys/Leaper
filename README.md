@@ -2,139 +2,150 @@
 
 This extension provides the ability to leap out of autoclosing pairs with `Tab`.
 
-## Leaper in Action
-
-![Leaper in Action Gif 1](images/leaper-in-action-1.gif)
-
-![Leaper in Action Gif 2](images/leaper-in-action-2.gif)
+![Leaper in Action Gif Single Cursor](images/leaper-in-action-single.gif)
 
 ## How It Works
 
-The user's input is monitored for the insertion of any autoclosing pairs. 
-
-By default, these are monitored:
+Whenever you insert any of the following autoclosing pairs:
 
     (), {}, [], <>, '', "", ``
 
-When any of the above autoclosing pairs are inserted, this extension will begin 
-to track its position in the document and provide the user the ability to leap 
-(i.e jump) out of it. 
+this extension will begin to track its position in the document and provide you
+the ability to leap (i.e. move) out of it with a `Tab` keypress. Pairs that are
+being tracked will have their closing sides decorated, and the decorations can 
+be customized with the `leaper.decorateAll` and `leaper.decorationOptions` 
+configurations.
 
-Once the user has jumped out of a pair, or has intentionally moved the cursor 
-out of a pair, then that pair will no longer the tracked by this extension.
+Once you have leaped out of a pair, or have intentionally moved the cursor out 
+of a pair, then that pair will no longer be tracked by this extension.
 
-## Keybindings
+You can customize which autoclosing pairs are tracked by this extension with the 
+`leaper.detectedPairs` configuration.
 
-### `Tab` - `leaper.leap` (Leap)
+## Commands
 
-This command causes the cursor to jump out of the nearest available pair.
+### `leaper.leap` (Keybinding: `Tab`)
+    
+This command moves the cursor out of the nearest available pair.
 
 By 'available' we mean:
 
  1. The pair must be a pair that is being tracked by this extension.
- 2. There is line of sight to the closing side of the pair, meaning there is 
-    no non-whitespace text between the cursor and the closing side of the pair.
+ 2. There is either no text or only whitespace text between the cursor and the 
+    closing side of said pair.
+
+This command works when there are multiple cursors as well. 
+
+![Leaper in Action Gif Multi Cursor](images/leaper-in-action-multi.gif)
 
 #### _Potential Conflict with Tab Completion Feature_
 
 `leaper.leap`'s default `Tab` keybinding, while suitable for most use cases, can 
-conflict with vscode's [_tab completion_] feature, since that feature requires 
-the user to press the `Tab` key, possibly at places where there are pairs that 
-can be leaped out of. 
+conflict with vscode's [tab completion] feature, since that feature requires 
+users to press the `Tab` key, possibly at places where there are pairs that can 
+be leaped out of. 
 
-To avoid conflicts, the keybindings of vscode's tab completion feature 
-(`insertBestCompletion` and `insertNextSugggestion`) could be rebound to another 
-key. Alternatively, `leaper.leap` could be rebound as well to avoid the conflict. 
+However, since vscode's tab completion feature is disabled by default, most users 
+should not experience any such keybinding conflicts.
 
 **Note that tab completion is not the same as quick suggestion, which is the 
-default vscode suggestion mode where a suggestion tooltip appears as the user is 
-typing.**
+default vscode suggestion mode.**
 
-[_tab completion_]: https://code.visualstudio.com/docs/editor/intellisense#_tab-completion
+[tab completion]: https://code.visualstudio.com/docs/editor/intellisense#_tab-completion
 
-### `Shift` + `Escape` - `leaper.escapeLeaperMode` (Escape Leaper Mode)
+### `leaper.escapeLeaperMode` (Keybinding: `Shift` + `Escape`)
 
-This command clears the list of pairs that are being tracked by this extension.
+This command clears the list of pairs that are being tracked.
+
+![Escape Leaper Mode](images/escape-leaper-mode.gif)
 
 ## Configurations
 
-### `leaper.decorationOptions`
-
-Use this configuration to specify the decoration of the closing side of a pair.
-
-Default value: 
-
-    {
-        "outlineColor": {
-            "id": "editorBracketMatch.border"
-        },
-        "outlineWidth": "1px",
-        "outlineStyle": "solid",
-        "fontWeight": "bold"
-    }
-
-All of the properties available in vscode's [`DecorationRenderOptions`] (with the
-exception of `rangeBehavior`) can be specified. 
-
-However, properties aside from the ones related to `outline`, `border` or `font`
-have not been tested, and use of them could cause unwanted side-effects such as 
-poor performance.
-
-To turn off decorations, just specify an empty object:
-
-    {}
-
-#### _Custom Types_
-
-Certain properties accept custom types, such as the `outlineColor` property which 
-accepts [`ThemeColor`] or the `dark` property which accepts [`ThemableDecorationRenderOptions`].
-
-Because Typescript has [_structural subtyping_], these custom types can be 
-specified via a JSON object containing the required properties. For instance, 
-see how we were able to supply a `ThemeColor` for the `outlineColor` property in 
-the default value of this configuration.
-
-[`DecorationRenderOptions`]: https://code.visualstudio.com/api/references/vscode-api#DecorationRenderOptions
-[`ThemeColor`]: https://code.visualstudio.com/api/references/vscode-api#ThemeColor
-[`ThemableDecorationRenderOptions`]: https://code.visualstudio.com/api/references/vscode-api#ThemableDecorationRenderOptions
-[_structural subtyping_]: https://www.typescriptlang.org/docs/handbook/type-compatibility.html
-
 ### `leaper.decorateAll`
 
-Use this configuration to specify whether decorations are applied to all pairs 
-that are being tracked or just the ones nearest to each cursor.
+This configuration specifies whether decorations are applied to all pairs that 
+are being tracked or just the ones nearest to each cursor.
 
-Default value:
-
-    false
-
-Here is what it looks like when this configuration is disabled:
+Here is what it looks like disabled:
 
 ![Decorate All False](images/decorate-all-false.gif)
 
-And here is what it looks like when it is enabled: 
+and here is what it looks like enabled: 
 
 ![Decorate All True](images/decorate-all-true.gif)
 
+This configuration is disabled by default.
+
+### `leaper.decorationOptions`
+
+This configuration specifies the style of the decorations.
+
+This configuration accepts a subset of vscode's [DecorationRenderOptions]. Most 
+of the properties in that type are supported. For properties relating to color, 
+you can specify a either a hex RGB(A) value string or a [theme color identifier] 
+string. Theme color identifers allow you to reference a color in the current theme 
+you are using. If a color string begins with a `#`, it is treated as a hex RGB(A) 
+value. Otherwise, it is treated as a theme color identifier.
+
+Suppose you want the following style in light themes:
+
+![Decoration Options Example 1](images/decoration-options-example-1.gif)
+
+and the following style in dark themes:
+
+![Decoration Options Example 2](images/decoration-options-example-2.gif)
+
+then you can set this configuration to:
+
+    {
+        "backgroundColor": "#0000FF9E",
+        "outlineColor": "editorBracketMatch.border",
+        "outlineStyle": "outset",
+        "outlineWidth": "1px",
+        "fontWeight": "bolder",
+        "light": {
+            "backgroundColor": "#0000001A"
+        }
+    }
+
+The default value of this configuration is:
+
+    {
+        "outlineColor": "editorWarning.foreground",
+        "outlineStyle": "solid",
+        "outlineWidth": "1px",
+        "fontWeight": "bolder"
+    }
+
+which applies a slight bolding and an outline using the current theme's color 
+for warning squiggles.
+
+To disable decorations, set this to `null`.
+
+[DecorationRenderOptions]: https://code.visualstudio.com/api/references/vscode-api#DecorationRenderOptions
+[theme color identifier]: https://code.visualstudio.com/api/references/theme-color
+
 ### `leaper.detectedPairs`
 
-Use this configuration to specify the autoclosing pairs that the extension 
-should detect.
+This configuration specifies which autoclosing pairs this extension should 
+detect.
 
-Default value:
+Suppose you want this extension to only detect `()`, `[]` and `{}` pairs. Then
+you can set this configuration to:
+
+    [ "()", "[]", "{}" ]
+
+Or suppose you are using a programming language that has `()`, `<>`, `[]`, `||` 
+and `$$` as autoclosing pairs. Then if you want this extension to only detect
+those pairs, you should set this configuration to:
+
+    [ "()", "<>", "[]", "||", "$$" ]
+
+The default value of this configuration is:
 
     [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
  
-For example, we can disable detection of `""` pairs by specifying:
-
-    [ "()", "[]", "{}", "<>", "``", "''" ]
-
-Or we can enable detection of `||` pairs by specifying: 
-
-    [ "()", "[]", "{}", "<>", "``", "''", "\"\"", "||" ]
-
-Note that there is no support for pairs that are more than 1 character wide on
-either side. This means that pairs like `(())` are not allowed.
+which includes the autoclosing pairs of most mainstream programming languages.
 
 ## Feedback and Help
 
