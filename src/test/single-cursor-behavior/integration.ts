@@ -1,5 +1,13 @@
-import { SnippetString } from 'vscode';
+import { SnippetString, ThemeColor } from 'vscode';
 import { TestCase, TestGroup } from '../utilities/framework';
+
+// The color converted (DO-1) preconfigured decoration options in the test workspace.
+const DO_1 = {
+    "outlineColor": new ThemeColor("editorWarning.foreground"),
+    "outlineStyle": "solid",
+    "outlineWidth": "1px",
+    "fontWeight": "bolder"
+};
 
 /** 
  * Here we simulate a typical usage scenario by typing code into a document as a user would.
@@ -38,11 +46,18 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
     prelude: async (executor) => {
         await executor.openFile('./workspace-0/text.ts');
 
-        // Since the text editor is empty, there should be no pairs in it, and we expect both 
-        // keybinding contexts to be disabled.
+        // Check that the document is empty as expected.
         await executor.assertPairsFull([ 'None' ], 'nearest');
         await executor.assertCursors([ [0, 0] ]);
+
+
+        // Since the text editor is empty, there should be no pairs in it, and we expect both 
+        // keybinding contexts to be disabled.
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+
+        // The effective decoration options for the file we just opened should come from the root 
+        // workspace.
+        await executor.assertEffectiveDecorationOptions(DO_1);
     },
     task: async (executor) => {
 
@@ -56,6 +71,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ 'None' ], 'nearest');
         await executor.assertCursors([ [0, 13] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -67,6 +83,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 0, sides: [13, 14] } ], 'nearest');
         await executor.assertCursors([ [0, 14] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -78,6 +95,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ 'None' ], 'nearest');
         await executor.assertCursors([ [0, 15] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         //
@@ -89,6 +107,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ 'None' ], 'nearest');
         await executor.assertCursors([ [0, 16] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: wrong bracket inserted.
             //
@@ -102,6 +121,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.assertPairsFull([ { line: 0, sides: [16, 17] } ], 'nearest');
             await executor.assertCursors([ [0, 17] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: wrong bracket inserted.
             //
@@ -116,6 +136,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.assertPairsFull([ 'None' ], 'nearest');
             await executor.assertCursors([ [1, 4] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: wrong bracket inserted.
             //
@@ -129,6 +150,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.assertPairsFull([ 'None' ], 'nearest');
             await executor.assertCursors([ [0, 16] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -140,6 +162,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 0, sides: [16, 17] } ], 'nearest');
         await executor.assertCursors([ [0, 17] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -152,6 +175,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ 'None' ], 'nearest');
         await executor.assertCursors([ [1, 4] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -166,6 +190,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.assertPairsFull([ 'None' ], 'nearest');
             await executor.assertCursors([ [1, 13] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -180,6 +205,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.assertPairsFull([ 'None' ], 'nearest');
             await executor.assertCursors([ [1, 7] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -194,6 +220,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.assertPairsFull([ 'None' ], 'nearest');
             await executor.assertCursors([ [1, 4] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: `let` instead of `const` specifier.
             // 
@@ -208,6 +235,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.assertPairsFull([ 'None' ], 'nearest');
             await executor.assertCursors([ [1, 9] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -222,6 +250,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.assertPairsFull([ 'None' ], 'nearest');
             await executor.assertCursors([ [1, 15] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -234,6 +263,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 1, sides: [15, 16] } ], 'nearest');
         await executor.assertCursors([ [1, 16] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -246,6 +276,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 1, sides: [15, 26] } ], 'nearest');
         await executor.assertCursors([ [1, 26] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -258,6 +289,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 1, sides: [15, 26, 27, 28] } ], 'nearest');
         await executor.assertCursors([ [1, 27] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -270,6 +302,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 32] } ], 'nearest');
         await executor.assertCursors([ [1, 31] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
           
             // Mistake simulation: wrong bracket inserted.
             //
@@ -284,6 +317,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 32, 33, 34] } ], 'nearest');
             await executor.assertCursors([ [1, 32] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: wrong bracket inserted.
             //
@@ -298,6 +332,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 32] } ], 'nearest');
             await executor.assertCursors([ [1, 31] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -310,6 +345,20 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 32, 33, 34] } ], 'nearest');
         await executor.assertCursors([ [1, 32] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
+
+        // User enables the `leaper.decorateAll` configuration.
+        //
+        // The document state is not expected to change from this. Only the decorations will be 
+        // affected.
+        await executor.setConfiguration({
+            name:  'leaper.decorateAll',
+            value: true
+        });
+        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 32, 33, 34] } ], 'all');
+        await executor.assertCursors([ [1, 32] ]);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -319,9 +368,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                   ^(cursor position)
         // ```
         await executor.typeText('TypeU, TypeV<TypeW, ');
-        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 52, 53, 54] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 52, 53, 54] } ], 'all');
         await executor.assertCursors([ [1, 52] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: wrong type argument.
             //
@@ -333,9 +383,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                        ^(cursor position)
             // ```
             await executor.typeText('TypeK');
-            await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 57, 58, 59] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 57, 58, 59] } ], 'all');
             await executor.assertCursors([ [1, 57] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: wrong type argument.
             //
@@ -347,9 +398,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                         ^(cursor position)
             // ```
             await executor.typeText('[');
-            await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 57, 58, 59, 60, 61] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 57, 58, 59, 60, 61] } ], 'all');
             await executor.assertCursors([ [1, 58] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: wrong type argument.
             //
@@ -361,9 +413,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                        ^(cursor position)
             // ```
             await executor.backspace(1);
-            await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 57, 58, 59] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 57, 58, 59] } ], 'all');
             await executor.assertCursors([ [1, 57] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
             
             // Mistake simulation: wrong type argument.
             //
@@ -375,9 +428,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                   ^(cursor position)
             // ```
             await executor.backspace(5);
-            await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 52, 53, 54] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 52, 53, 54] } ], 'all');
             await executor.assertCursors([ [1, 52] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         //
@@ -387,9 +441,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                         ^(cursor position)
         // ``` 
         await executor.typeText('TypeZ');
-        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 57, 58, 59] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 57, 58, 59] } ], 'all');
         await executor.assertCursors([ [1, 57] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         //
@@ -399,9 +454,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                         ^(cursor position)
         // ``` 
         await executor.typeText('[');
-        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 57, 58, 59, 60, 61] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 57, 58, 59, 60, 61] } ], 'all');
         await executor.assertCursors([ [1, 58] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -411,9 +467,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                          ^(cursor position)
         // ``` 
         await executor.leap();
-        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 59, 60, 61] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 59, 60, 61] } ], 'all');
         await executor.assertCursors([ [1, 59] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -423,9 +480,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                           ^(cursor position)
         // ``` 
         await executor.typeText('>');
-        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 60, 61, 62] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 31, 60, 61, 62] } ], 'all');
         await executor.assertCursors([ [1, 60] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -435,9 +493,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                            ^(cursor position)
         // ``` 
         await executor.leap();
-        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 61, 62] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 61, 62] } ], 'all');
         await executor.assertCursors([ [1, 61] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -447,9 +506,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                             ^(cursor position)
         // ``` 
         await executor.typeText(' ');
-        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 62, 63] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 1, sides: [15, 26, 62, 63] } ], 'all');
         await executor.assertCursors([ [1, 62] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -459,9 +519,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                              ^(cursor position)
         // ``` 
         await executor.leap();
-        await executor.assertPairsFull([ { line: 1, sides: [15, 63] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 1, sides: [15, 63] } ], 'all');
         await executor.assertCursors([ [1, 63] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -473,9 +534,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                                          ^(cursor position)
             // ``` 
             await executor.typeText(', n: string ');
-            await executor.assertPairsFull([ { line: 1, sides: [15, 75] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 75] } ], 'all');
             await executor.assertCursors([ [1, 75] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -487,9 +549,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                                         ^(cursor position)
             // ``` 
             await executor.moveCursors('left');
-            await executor.assertPairsFull([ { line: 1, sides: [15, 75] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 75] } ], 'all');
             await executor.assertCursors([ [1, 74] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -501,9 +564,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                                   ^(cursor position)
             // ``` 
             await executor.backspaceWord();
-            await executor.assertPairsFull([ { line: 1, sides: [15, 69] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 69] } ], 'all');
             await executor.assertCursors([ [1, 68] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -515,9 +579,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                                 ^(cursor position)
             // ``` 
             await executor.moveCursors('left', 2);
-            await executor.assertPairsFull([ { line: 1, sides: [15, 69] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 69] } ], 'all');
             await executor.assertCursors([ [1, 66] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -529,9 +594,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                              ^(cursor position)
             // ``` 
             await executor.moveCursors('left', 3);
-            await executor.assertPairsFull([ { line: 1, sides: [15, 69] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 69] } ], 'all');
             await executor.assertCursors([ [1, 63] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -543,9 +609,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                               ^(cursor position)
             // ``` 
             await executor.typeText('>');
-            await executor.assertPairsFull([ { line: 1, sides: [15, 70] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 70] } ], 'all');
             await executor.assertCursors([ [1, 64] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -560,9 +627,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                               ^(cursor position)
             // ``` 
             await executor.leap(10);
-            await executor.assertPairsFull([ { line: 1, sides: [15, 70] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 70] } ], 'all');
             await executor.assertCursors([ [1, 64] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -574,9 +642,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                                    ^(cursor position)
             // ``` 
             await executor.moveCursors('right', 5);
-            await executor.assertPairsFull([ { line: 1, sides: [15, 70] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 70] } ], 'all');
             await executor.assertCursors([ [1, 69] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -588,9 +657,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                                       ^(cursor position)
             // ``` 
             await executor.typeText('num');
-            await executor.assertPairsFull([ { line: 1, sides: [15, 73] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 73] } ], 'all');
             await executor.assertCursors([ [1, 72] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -604,9 +674,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                                          ^(cursor position)
             // ``` 
             await executor.triggerAndAcceptSuggestion();
-            await executor.assertPairsFull([ { line: 1, sides: [15, 76] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [15, 76] } ], 'all');
             await executor.assertCursors([ [1, 75] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
         // This leap tests whether the cursor can jump across whitespace.
         //
@@ -618,9 +689,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                            ^(cursor position)
         // ``` 
         await executor.leap();
-        await executor.assertPairsFull([ 'None' ], 'nearest');
+        await executor.assertPairsFull([ 'None' ], 'all');
         await executor.assertCursors([ [1, 77] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -630,9 +702,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                             ^(cursor position)
         // ``` 
         await executor.typeText('[');
-        await executor.assertPairsFull([ { line: 1, sides: [77, 78] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 1, sides: [77, 78] } ], 'all');
         await executor.assertCursors([ [1, 78] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: incorrect array type.
             //
@@ -644,9 +717,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                                              ^(cursor position)
             // ``` 
             await executor.typeText('[');
-            await executor.assertPairsFull([ { line: 1, sides: [77, 78, 79, 80] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [77, 78, 79, 80] } ], 'all');
             await executor.assertCursors([ [1, 79] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: incorrect array type.
             //
@@ -658,9 +732,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                                                             ^(cursor position)
             // ``` 
             await executor.backspace();
-            await executor.assertPairsFull([ { line: 1, sides: [77, 78] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 1, sides: [77, 78] } ], 'all');
             await executor.assertCursors([ [1, 78] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -670,9 +745,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                              ^(cursor position)
         // ``` 
         await executor.typeText(']');
-        await executor.assertPairsFull([ 'None' ], 'nearest');
+        await executor.assertPairsFull([ 'None' ], 'all');
         await executor.assertCursors([ [1, 79] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -682,9 +758,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                               ^(cursor position)
         // ``` 
         await executor.typeText('[');
-        await executor.assertPairsFull([ { line: 1, sides: [79, 80] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 1, sides: [79, 80] } ], 'all');
         await executor.assertCursors([ [1, 80] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -694,9 +771,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                                ^(cursor position)
         // ``` 
         await executor.leap();
-        await executor.assertPairsFull([ 'None' ], 'nearest');
+        await executor.assertPairsFull([ 'None' ], 'all');
         await executor.assertCursors([ [1, 81] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -706,9 +784,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                                         ^(cursor position)
         // ``` 
         await executor.typeText(' = getArr');
-        await executor.assertPairsFull([ 'None' ], 'nearest');
+        await executor.assertPairsFull([ 'None' ], 'all');
         await executor.assertCursors([ [1, 90] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -718,9 +797,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                                          ^(cursor position)
         // ``` 
         await executor.typeText('(');
-        await executor.assertPairsFull([ { line: 1, sides: [90, 91] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 1, sides: [90, 91] } ], 'all');
         await executor.assertCursors([ [1, 91] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -730,9 +810,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                                                           ^(cursor position)
         // ``` 
         await executor.leap();
-        await executor.assertPairsFull([ 'None' ], 'nearest');
+        await executor.assertPairsFull([ 'None' ], 'all');
         await executor.assertCursors([ [1, 92] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -743,9 +824,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }           ^(cursor position)
         // ``` 
         await executor.typeText(';\narr.flat');
-        await executor.assertPairsFull([ 'None' ], 'nearest');
+        await executor.assertPairsFull([ 'None' ], 'all');
         await executor.assertCursors([ [2, 12] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -756,9 +838,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }            ^(cursor position)
         // ``` 
         await executor.typeText('(');
-        await executor.assertPairsFull([ { line: 2, sides: [12, 13] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [12, 13] } ], 'all');
         await executor.assertCursors([ [2, 13] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -769,9 +852,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }             ^(cursor position)
         // ``` 
         await executor.typeText(')');
-        await executor.assertPairsFull([ 'None' ], 'nearest');
+        await executor.assertPairsFull([ 'None' ], 'all');
         await executor.assertCursors([ [2, 14] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -782,9 +866,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                     ^(cursor position)
         // ``` 
         await executor.typeText('.forEach');
-        await executor.assertPairsFull([ 'None' ], 'nearest');
+        await executor.assertPairsFull([ 'None' ], 'all');
         await executor.assertCursors([ [2, 22] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -795,9 +880,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                      ^(cursor position)
         // ``` 
         await executor.typeText('(');
-        await executor.assertPairsFull([ { line: 2, sides: [22, 23] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 23] } ], 'all');
         await executor.assertCursors([ [2, 23] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -808,9 +894,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                       ^(cursor position)
         // ``` 
         await executor.typeText('(');
-        await executor.assertPairsFull([ { line: 2, sides: [22, 23, 24, 25] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 23, 24, 25] } ], 'all');
         await executor.assertCursors([ [2, 24] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -821,9 +908,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                           ^(cursor position)
         // ``` 
         await executor.typeText('elem');
-        await executor.assertPairsFull([ { line: 2, sides: [22, 23, 28, 29] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 23, 28, 29] } ], 'all');
         await executor.assertCursors([ [2, 28] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -834,9 +922,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                            ^(cursor position)
         // ``` 
         await executor.leap();
-        await executor.assertPairsFull([ { line: 2, sides: [22, 29] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 29] } ], 'all');
         await executor.assertCursors([ [2, 29] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after:
         // 
@@ -847,9 +936,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                ^(cursor position)
         // ``` 
         await executor.typeText(' => ');
-        await executor.assertPairsFull([ { line: 2, sides: [22, 33] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 33] } ], 'all');
         await executor.assertCursors([ [2, 33] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: `console.log()` not inserted as snippet.
             //
@@ -862,9 +952,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                   ^(cursor position)
             // ``` 
             await executor.typeText('con');
-            await executor.assertPairsFull([ { line: 2, sides: [22, 36] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 2, sides: [22, 36] } ], 'all');
             await executor.assertCursors([ [2, 36] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
             // Mistake simulation: `console.log()` not inserted as snippet.
             //
@@ -879,9 +970,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                       ^(cursor position)
             // ``` 
             await executor.triggerAndAcceptSuggestion();
-            await executor.assertPairsFull([ { line: 2, sides: [22, 40] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 2, sides: [22, 40] } ], 'all');
             await executor.assertCursors([ [2, 40] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
             
             // Mistake simulation: `console.log()` not inserted as snippet.
             //
@@ -894,9 +986,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             // }                                ^(cursor position)
             // ``` 
             await executor.backspaceWord();
-            await executor.assertPairsFull([ { line: 2, sides: [22, 33] } ], 'nearest');
+            await executor.assertPairsFull([ { line: 2, sides: [22, 33] } ], 'all');
             await executor.assertCursors([ [2, 33] ]);
             await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+            await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after: 
         // 
@@ -909,9 +1002,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                            ^(cursor position)
         // ``` 
         await executor.insertSnippet(new SnippetString('console.log($1)$0'));
-        await executor.assertPairsFull([ { line: 2, sides: [22, 46] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 46] } ], 'all');
         await executor.assertCursors([ [2, 45] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after: 
         // 
@@ -924,9 +1018,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                             ^(cursor position)
         // ``` 
         await executor.typeText('`');
-        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 48] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 48] } ], 'all');
         await executor.assertCursors([ [2, 46] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after: 
         // 
@@ -939,9 +1034,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                              ^(cursor position)
         // ``` 
         await executor.typeText('{');
-        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 47, 48, 50] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 47, 48, 50] } ], 'all');
         await executor.assertCursors([ [2, 47] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after: 
         // 
@@ -954,9 +1050,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                        ^(cursor position)
         // ``` 
         await executor.typeText(' elem_t: $');
-        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 57, 58, 60] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 57, 58, 60] } ], 'all');
         await executor.assertCursors([ [2, 57] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after: 
         // 
@@ -967,9 +1064,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                         ^(cursor position)
         // ``` 
         await executor.typeText('{');
-        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 57, 58, 59, 60, 62] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 57, 58, 59, 60, 62] } ], 'all');
         await executor.assertCursors([ [2, 58] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after: 
         // 
@@ -980,9 +1078,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                               ^(cursor position)
         // ``` 
         await executor.typeText('elem.t');
-        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 57, 64, 65, 66, 68] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 57, 64, 65, 66, 68] } ], 'all');
         await executor.assertCursors([ [2, 64] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after: 
         // 
@@ -993,9 +1092,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                              ^(cursor position)
         // ``` 
         await executor.moveCursors('left');
-        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 57, 64, 65, 66, 68] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 57, 64, 65, 66, 68] } ], 'all');
         await executor.assertCursors([ [2, 63] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after: 
         // 
@@ -1006,9 +1106,10 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                         ^(cursor position)
         // ``` 
         await executor.moveCursors('left', 5);
-        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 57, 64, 65, 66, 68] } ], 'nearest');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 57, 64, 65, 66, 68] } ], 'all');
         await executor.assertCursors([ [2, 58] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // This step tests whether a pair is untracked if the cursor has moved out of it.
         //
@@ -1021,9 +1122,24 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // }                                                        ^(cursor position)
         // ``` 
         await executor.moveCursors('left');
+        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 65, 66, 68] } ], 'all');
+        await executor.assertCursors([ [2, 57] ]);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
+
+        // User disables the `leaper.decorateAll` configuration.
+        //
+        // The document state is not expected to change from this. Only the decorations will be 
+        // affected.
+        await executor.setConfiguration({
+            name:                  'leaper.decorateAll',
+            value:                 false,
+            targetWorkspaceFolder: 'workspace-0'
+        });
         await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 65, 66, 68] } ], 'nearest');
         await executor.assertCursors([ [2, 57] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after: 
         // 
@@ -1037,6 +1153,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 65, 66, 68] } ], 'nearest');
         await executor.assertCursors([ [2, 54] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after: 
         // 
@@ -1050,6 +1167,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 59, 60, 62] } ], 'nearest');
         await executor.assertCursors([ [2, 48] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after: 
         // 
@@ -1063,6 +1181,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 60, 61, 63] } ], 'nearest');
         await executor.assertCursors([ [2, 49] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // This step checks that Leap calls are ignored when there is no line of sight.
         //
@@ -1078,6 +1197,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 60, 61, 63] } ], 'nearest');
         await executor.assertCursors([ [2, 49] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // This step tests whether tracking can handle a direct cursor move.
         // 
@@ -1093,6 +1213,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 60, 61, 63] } ], 'nearest');
         await executor.assertCursors([ [2, 60] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after: 
         // 
@@ -1106,6 +1227,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 66, 67, 69] } ], 'nearest');
         await executor.assertCursors([ [2, 66] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
 
         // Document state after: 
         // 
@@ -1119,6 +1241,33 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 66, 67, 68, 69, 71] } ], 'nearest');
         await executor.assertCursors([ [2, 67] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(DO_1);
+
+        // User changes the decoration options.
+        //
+        // The document state is not expected to change from this. Only the decorations will be 
+        // affected.
+        await executor.setConfiguration({
+            name: 'leaper.decorationOptions',
+            value: {
+                "outlineColor": "editorError.foreground",
+                "outlineStyle": "solid",
+                "outlineWidth": "1px",
+                "fontWeight": "bolder"
+            },
+            targetWorkspaceFolder: 'workspace-0',
+            targetLanguage:        'typescript'
+        });
+        const newEffectiveDecorationOptions = {
+            "outlineColor": new ThemeColor("editorError.foreground"),
+            "outlineStyle": "solid",
+            "outlineWidth": "1px",
+            "fontWeight": "bolder"
+        };
+        await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 66, 67, 68, 69, 71] } ], 'nearest');
+        await executor.assertCursors([ [2, 67] ]);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(newEffectiveDecorationOptions);
 
         // Document state after: 
         // 
@@ -1132,6 +1281,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 66, 73, 74, 75, 77] } ], 'nearest');
         await executor.assertCursors([ [2, 73] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(newEffectiveDecorationOptions);
 
         // Document state after: 
         // 
@@ -1145,6 +1295,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 74, 75, 77] } ], 'nearest');
         await executor.assertCursors([ [2, 74] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(newEffectiveDecorationOptions);
 
         // Document state after: 
         // 
@@ -1158,6 +1309,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 2, sides: [22, 45, 46, 75, 76, 78] } ], 'nearest');
         await executor.assertCursors([ [2, 75] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(newEffectiveDecorationOptions);
 
         // Document state after: 
         // 
@@ -1171,6 +1323,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 2, sides: [22, 45, 76, 78] } ], 'nearest');
         await executor.assertCursors([ [2, 76] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(newEffectiveDecorationOptions);
 
         // Document state after: 
         // 
@@ -1184,6 +1337,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 2, sides: [22, 78] } ], 'nearest');
         await executor.assertCursors([ [2, 77] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(newEffectiveDecorationOptions);
 
         // Document state after: 
         // 
@@ -1199,6 +1353,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ { line: 2, sides: [22, 78] } ], 'nearest');
         await executor.assertCursors([ [2, 78] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
+        await executor.assertEffectiveDecorationOptions(newEffectiveDecorationOptions);
 
         // Document state after: 
         // 
@@ -1212,6 +1367,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ 'None' ], 'nearest');
         await executor.assertCursors([ [2, 79] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(newEffectiveDecorationOptions);
 
         // Document state after:
         // 
@@ -1225,6 +1381,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.assertPairsFull([ 'None' ], 'nearest');
         await executor.assertCursors([ [2, 80] ]);
         await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
+        await executor.assertEffectiveDecorationOptions(newEffectiveDecorationOptions);
     }
 });
 
