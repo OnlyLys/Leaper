@@ -379,6 +379,20 @@ class ExecutorFull {
     }
 
     /**
+     * Use smart select to expand the current selection of each cursor.
+     */
+    public async expandSelection(repetitions: number = 1): Promise<void> {
+        await this.execute('editor.action.smartSelect.expand', repetitions);
+    }
+    
+    /**
+     * Execute the 'Add Selection to Next Find Match' Command.
+     */
+    public async addSelectionToNextFindMatch(repetitions: number = 1): Promise<void> {
+        await this.execute('editor.action.addSelectionToNextFindMatch', repetitions);
+    }
+
+    /**
      * Call the 'Leap' command.
      */
     public async leap(repetitions: number = 1): Promise<void> {
