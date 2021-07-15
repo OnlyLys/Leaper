@@ -89,10 +89,10 @@ const DO_5 = {
  * 
  */
 async function openFourFiles(executor: Executor): Promise<void> {
-    await executor.openFile('./workspace-0/text.ts',  { viewColumn: ViewColumn.One });
-    await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.Two });
-    await executor.openFile('./workspace-2/text.ts',  { viewColumn: ViewColumn.Three });
-    await executor.openFile('./workspace-3/text.md',  { viewColumn: ViewColumn.Four });
+    await executor.openFile('./workspace-0/text.ts',  ViewColumn.One);
+    await executor.openFile('./workspace-1/text.txt', ViewColumn.Two);
+    await executor.openFile('./workspace-2/text.ts',  ViewColumn.Three);
+    await executor.openFile('./workspace-3/text.md',  ViewColumn.Four);
 }
 
 /**
@@ -103,10 +103,10 @@ const IS_BEING_READ_AND_THEME_COLOR_IDS_CORRECTLY_CONVERTED_TEST_CASE = new Test
     name: 'Is Being Read and Theme Color IDs Correctly Converted',
     prelude: openFourFiles,
     task: async (executor) => {
-        await executor.assertEffectiveDecorationOptions(DO_1, { viewColumn: ViewColumn.One });
-        await executor.assertEffectiveDecorationOptions(DO_3, { viewColumn: ViewColumn.Two });
-        await executor.assertEffectiveDecorationOptions(DO_5, { viewColumn: ViewColumn.Three });
-        await executor.assertEffectiveDecorationOptions(DO_2, { viewColumn: ViewColumn.Four });
+        await executor.assertEffectiveDecorationOptions(DO_1, ViewColumn.One);
+        await executor.assertEffectiveDecorationOptions(DO_3, ViewColumn.Two);
+        await executor.assertEffectiveDecorationOptions(DO_5, ViewColumn.Three);
+        await executor.assertEffectiveDecorationOptions(DO_2, ViewColumn.Four);
     }
 });
 
@@ -144,7 +144,7 @@ const REJECT_VALUE_IF_RANGE_BEHAVIOR_SPECIFIED_TEST_CASE = new TestCase({
         // The effective value for the text editor in view column 2 should now come from the 
         // workspace folder scope (which is `null`) since the Plaintext specific value would be 
         // rejected.
-        await executor.assertEffectiveDecorationOptions({}, { viewColumn: ViewColumn.Two });
+        await executor.assertEffectiveDecorationOptions({}, ViewColumn.Two);
 
         // 2. Replace the root workspace's Markdown specific value with one that specifies a 
         // `rangeBehavior`.
@@ -165,7 +165,7 @@ const REJECT_VALUE_IF_RANGE_BEHAVIOR_SPECIFIED_TEST_CASE = new TestCase({
         // engine requires it to be, the engine's configuration reader will still reject it. Thus, 
         // we expect the effective value for the text editor in view column 4 to come from the root
         // workspace scope.
-        await executor.assertEffectiveDecorationOptions(DO_1, { viewColumn: ViewColumn.Four });
+        await executor.assertEffectiveDecorationOptions(DO_1, ViewColumn.Four);
     }
 });
 
@@ -210,10 +210,10 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         });
 
         // Check the effective configuration values for each text editor.
-        await executor.assertEffectiveDecorationOptions(DO_6, { viewColumn: ViewColumn.One });
-        await executor.assertEffectiveDecorationOptions(DO_3, { viewColumn: ViewColumn.Two });
-        await executor.assertEffectiveDecorationOptions(DO_5, { viewColumn: ViewColumn.Three });
-        await executor.assertEffectiveDecorationOptions(DO_2, { viewColumn: ViewColumn.Four });
+        await executor.assertEffectiveDecorationOptions(DO_6, ViewColumn.One);
+        await executor.assertEffectiveDecorationOptions(DO_3, ViewColumn.Two);
+        await executor.assertEffectiveDecorationOptions(DO_5, ViewColumn.Three);
+        await executor.assertEffectiveDecorationOptions(DO_2, ViewColumn.Four);
 
         // 2. Change Workspace Folder 0's configuration value.
         //
@@ -243,10 +243,10 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         });
 
         // Check the effective configuration values for each text editor.
-        await executor.assertEffectiveDecorationOptions({},   { viewColumn: ViewColumn.One });
-        await executor.assertEffectiveDecorationOptions(DO_3, { viewColumn: ViewColumn.Two });
-        await executor.assertEffectiveDecorationOptions(DO_5, { viewColumn: ViewColumn.Three });
-        await executor.assertEffectiveDecorationOptions(DO_2, { viewColumn: ViewColumn.Four });
+        await executor.assertEffectiveDecorationOptions({},   ViewColumn.One);
+        await executor.assertEffectiveDecorationOptions(DO_3, ViewColumn.Two);
+        await executor.assertEffectiveDecorationOptions(DO_5, ViewColumn.Three);
+        await executor.assertEffectiveDecorationOptions(DO_2, ViewColumn.Four);
 
         // 3. Change the root workspace's Markdown specific configuration value.
         //
@@ -279,10 +279,10 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         });
 
         // Check the effective configuration values for each text editor.
-        await executor.assertEffectiveDecorationOptions({},   { viewColumn: ViewColumn.One });
-        await executor.assertEffectiveDecorationOptions(DO_3, { viewColumn: ViewColumn.Two });
-        await executor.assertEffectiveDecorationOptions(DO_5, { viewColumn: ViewColumn.Three });
-        await executor.assertEffectiveDecorationOptions(DO_7, { viewColumn: ViewColumn.Four });
+        await executor.assertEffectiveDecorationOptions({},   ViewColumn.One);
+        await executor.assertEffectiveDecorationOptions(DO_3, ViewColumn.Two);
+        await executor.assertEffectiveDecorationOptions(DO_5, ViewColumn.Three);
+        await executor.assertEffectiveDecorationOptions(DO_7, ViewColumn.Four);
         
         // 4. Clear Workspace Folder 2's Typescript specific configuration value.
         //
@@ -313,10 +313,10 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         });
 
         // Check the effective configuration values for each text editor.
-        await executor.assertEffectiveDecorationOptions({},   { viewColumn: ViewColumn.One });
-        await executor.assertEffectiveDecorationOptions(DO_3, { viewColumn: ViewColumn.Two });
-        await executor.assertEffectiveDecorationOptions(DO_4, { viewColumn: ViewColumn.Three });
-        await executor.assertEffectiveDecorationOptions(DO_7, { viewColumn: ViewColumn.Four });
+        await executor.assertEffectiveDecorationOptions({},   ViewColumn.One);
+        await executor.assertEffectiveDecorationOptions(DO_3, ViewColumn.Two);
+        await executor.assertEffectiveDecorationOptions(DO_4, ViewColumn.Three);
+        await executor.assertEffectiveDecorationOptions(DO_7, ViewColumn.Four);
     }
 });
 

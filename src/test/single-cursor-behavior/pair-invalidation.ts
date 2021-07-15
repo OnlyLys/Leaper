@@ -30,7 +30,7 @@ import { range } from '../utilities/helpers';
  *     [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
  */
 async function sharedPrelude(executor: Executor): Promise<void> {
-    await executor.openFile('./workspace-0/text.ts', { viewColumn: ViewColumn.One });
+    await executor.openFile('./workspace-0/text.ts', ViewColumn.One);
     await executor.editText([
         {
             kind: 'insert',
@@ -242,7 +242,7 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
         // }                                              ^(cursor position)
         // ```
-        await executor.moveCursors('left', { repetitions: 5 });
+        await executor.moveCursors('left', 5);
         await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 52, 54, 56, 58, 60, 61] } ]); 
         await executor.assertCursors([ [1, 47] ]);
 
@@ -268,7 +268,7 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
         // }                                ^(cursor position)
         // ```
-        await executor.moveCursors('left', { repetitions: 13 });
+        await executor.moveCursors('left', 13);
         await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 54, 56, 58, 60, 61] } ]);
         await executor.assertCursors([ [1, 33] ]);
 
@@ -320,7 +320,7 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
         // }                       ^(cursor position)
         // ```
-        await executor.moveCursors('left', { repetitions: 6 });
+        await executor.moveCursors('left', 6);
         await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 58, 60, 61] } ]);
         await executor.assertCursors([ [1, 24] ]);
             
@@ -346,7 +346,7 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
         //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
         // }                ^(cursor position)
         // ```
-        await executor.moveCursors('left', { repetitions: 6 });
+        await executor.moveCursors('left', 6);
         await executor.assertPairs([ { line: 1, sides: [15, 16, 60, 61] } ]);
         await executor.assertCursors([ [1, 17] ]);
 
@@ -469,7 +469,7 @@ const DELETION_OF_OPENING_SIDE_TEST_CASE = new TestCase({
         //     console.log({ obj: { arr: [ { prop: someFn1, 20) } ] } }); // Log object to console.
         // }                                             ^(cursor position)
         // ```
-        await executor.moveCursors('left', { repetitions: 5 });
+        await executor.moveCursors('left', 5);
         await executor.backspace();
         await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 53, 55, 57, 59, 60] } ]);
         await executor.assertCursors([ [1, 46] ]);
@@ -511,7 +511,7 @@ const DELETION_OF_OPENING_SIDE_TEST_CASE = new TestCase({
         //     { obj: cheesecake1, 20) } ] } }); // Log object to console.
         // }                    ^(cursor position)
         // ```
-        await executor.backspace({ repetitions: 14 });
+        await executor.backspace(14);
         await executor.assertPairs([ { line: 1, sides: [4, 34] } ]);
         await executor.assertCursors([ [1, 21] ]);
 
@@ -587,7 +587,7 @@ const DELETION_OF_CLOSING_SIDE_TEST_CASE = new TestCase({
         //     console.log({ obj: { arr: [ { prop: someFn(1, 20 cheesecake}
         // }                                                   ^(cursor position)
         // ```
-        await executor.deleteRight({ repetitions: 2 });
+        await executor.deleteRight(2);
         await executor.assertPairs([ { line: 1, sides: [16, 63] } ]);
         await executor.assertCursors([ [1, 52] ]);
         
@@ -698,7 +698,7 @@ const MULTI_LINE_SNIPPET_INSERTED_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         //     console.log({ obj: { arr: [ { prop: someFn(1, ) } ] } }); // Log object to console.
         // }                                                 ^(cursor position)
         // ```
-        await executor.backspace({ repetitions: 2 });
+        await executor.backspace(2);
         await executor.assertPairs([ { line: 1, sides: [15, 16, 23, 30, 32, 46, 50, 52, 54, 56, 58, 59] } ]);
         await executor.assertCursors([ [1, 50] ]);
 
@@ -816,7 +816,7 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         // During the tests, we will be switching focus to this text editor in order to defocus the 
         // text editor in view column 1. Then we will make changes (through the API) to the text 
         // editor in view column 1 and check that its pairs are appropriately invalidated.
-        await executor.openFile('./workspace-3/text.md', { viewColumn: ViewColumn.Two });
+        await executor.openFile('./workspace-3/text.md', ViewColumn.Two);
     },
     task: async (executor) => {
 
@@ -825,7 +825,7 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
          * 
          * This function effectively reruns the prelude.
          */
-        async function reset(executor: Executor): Promise<void> {
+        async function resetFirstThenFocusSecond(executor: Executor): Promise<void> {
             await executor.focusEditorGroup('first');
             await executor.deleteAll();
             await sharedPrelude(executor);
@@ -841,10 +841,10 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
         // }                                                            ^(cursor position)
         // ```
-        await reset(executor);
-        await executor.setCursors([ [1, 61] ], { viewColumn: ViewColumn.One });
-        await executor.assertPairs([ { line: 1, sides: [15, 61] } ], { viewColumn: ViewColumn.One });
-        await executor.assertCursors([ [1, 61] ],                    { viewColumn: ViewColumn.One });
+        await resetFirstThenFocusSecond(executor);
+        await executor.setCursors([ [1, 61] ],                       ViewColumn.One);
+        await executor.assertPairs([ { line: 1, sides: [15, 61] } ], ViewColumn.One);
+        await executor.assertCursors([ [1, 61] ],                    ViewColumn.One);
 
         // Test setting cursor out leftwards.
         //
@@ -855,16 +855,10 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
         // }           |-----^(cursor selection)
         // ```
-        await reset(executor);
-        await executor.setCursors(
-            [ { anchor: [1, 12], active: [1, 18] } ], 
-            { viewColumn: ViewColumn.One }
-        );
-        await executor.assertPairs([ 'None' ], { viewColumn: ViewColumn.One });
-        await executor.assertCursors(
-            [ { anchor: [1, 12], active: [1, 18] } ],
-            { viewColumn: ViewColumn.One }
-        );
+        await resetFirstThenFocusSecond(executor);
+        await executor.setCursors([ { anchor: [1, 12], active: [1, 18] } ],    ViewColumn.One);
+        await executor.assertPairs([ 'None' ],                                 ViewColumn.One);
+        await executor.assertCursors([ { anchor: [1, 12], active: [1, 18] } ], ViewColumn.One);
 
         // Test setting cursor out upwards.
         //
@@ -875,10 +869,10 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         //     console.log({ obj: { arr: [ { prop: someFn(1, 20) } ] } }); // Log object to console.
         // }
         // ```
-        await reset(executor);
-        await executor.setCursors([ [0, 10] ], { viewColumn: ViewColumn.One });
-        await executor.assertPairs([ 'None' ],    { viewColumn: ViewColumn.One });
-        await executor.assertCursors([ [0, 10] ], { viewColumn: ViewColumn.One });
+        await resetFirstThenFocusSecond(executor);
+        await executor.setCursors([ [0, 10] ],    ViewColumn.One);
+        await executor.assertPairs([ 'None' ],    ViewColumn.One);
+        await executor.assertCursors([ [0, 10] ], ViewColumn.One);
 
         // Test setting cursor out downwards.
         //
@@ -890,10 +884,10 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         // }
         //  ^(cursor position)
         // ```
-        await reset(executor);
-        await executor.setCursors([ [2, 1] ], { viewColumn: ViewColumn.One });
-        await executor.assertPairs([ 'None' ],   { viewColumn: ViewColumn.One });
-        await executor.assertCursors([ [2, 1] ], { viewColumn: ViewColumn.One });
+        await resetFirstThenFocusSecond(executor);
+        await executor.setCursors([ [2, 1] ],    ViewColumn.One);
+        await executor.assertPairs([ 'None' ],   ViewColumn.One);
+        await executor.assertCursors([ [2, 1] ], ViewColumn.One);
 
         // Test deletion of opening side.
         //
@@ -904,20 +898,17 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         //     console.log     { obj:  arr: [  prop: someFn(1, 20) } ] } }); // Log object to console.
         // }                                                     ^(cursor position)
         // ```
-        await reset(executor);
+        await resetFirstThenFocusSecond(executor);
         await executor.editText(
             [
                 { kind: 'delete',  range: { start: [1, 32], end: [1, 33] } },
                 { kind: 'delete',  range: { start: [1, 23], end: [1, 24] } },
                 { kind: 'replace', range: { start: [1, 15], end: [1, 16] }, with: '     ' },
             ],
-            { viewColumn: ViewColumn.One }
+            ViewColumn.One
         );
-        await executor.assertPairs(
-            [ { line: 1, sides: [20, 33, 48, 54, 58, 62] } ], 
-            { viewColumn: ViewColumn.One }
-        );
-        await executor.assertCursors([ [1, 54] ], { viewColumn: ViewColumn.One });
+        await executor.assertPairs([ { line: 1, sides: [20, 33, 48, 54, 58, 62] } ], ViewColumn.One);
+        await executor.assertCursors([ [1, 54] ],                                    ViewColumn.One);
 
         // Test deletion of closing side.
         //
@@ -928,20 +919,17 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         //     console.log({ obj: { arr: [ { prop: someFn( }  Woah!); // Log object to console.
         // }                                              ^(cursor position)
         // ```
-        await reset(executor);
+        await resetFirstThenFocusSecond(executor);
         await executor.editText(
             [
                 { kind: 'replace', range: { start: [1, 60], end: [1, 61] }, with: 'Woah!' },
                 { kind: 'delete',  range: { start: [1, 56], end: [1, 59] } },
                 { kind: 'delete',  range: { start: [1, 47], end: [1, 53] } },
             ],
-            { viewColumn: ViewColumn.One }
+            ViewColumn.One
         );
-        await executor.assertPairs(
-            [ { line: 1, sides: [15, 32, 48, 56] } ], 
-            { viewColumn: ViewColumn.One }
-        );
-        await executor.assertCursors([ [1, 47] ], { viewColumn: ViewColumn.One });
+        await executor.assertPairs([ { line: 1, sides: [15, 32, 48, 56] } ], ViewColumn.One);
+        await executor.assertCursors([ [1, 47] ],                            ViewColumn.One);
 
         // Test that multi-line text insertion between pairs untracks them.
         //
@@ -958,7 +946,7 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         //     ) } ] } }); // Log object to console.
         // }   ^(selection end)
         // ```
-        await reset(executor);
+        await resetFirstThenFocusSecond(executor);
         await executor.editText(
             [
                 { 
@@ -973,13 +961,10 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
                          + '    '
                 },
             ],
-            { viewColumn: ViewColumn.One }
+            ViewColumn.One
         );
-        await executor.assertPairs([ 'None' ], { viewColumn: ViewColumn.One });
-        await executor.assertCursors(
-            [ { anchor: [2, 4], active: [7, 4] } ], 
-            { viewColumn: ViewColumn.One }
-        );
+        await executor.assertPairs([ 'None' ],                               ViewColumn.One);
+        await executor.assertCursors([ { anchor: [2, 4], active: [7, 4] } ], ViewColumn.One);
 
         // Test that multi-line snippet insertion between pairs untracks them.
         // 
@@ -992,19 +977,17 @@ const INVALIDATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         //     ) } ] } }); // Log object to console.               ^(cursor position)
         // }
         // ```
-        await reset(executor);
+        await resetFirstThenFocusSecond(executor);
         await executor.insertSnippet(
             new SnippetString(
                 '\n'
               + '    [1, 20, 300, 4000, 50000].reduce((acc, curr) => $1)$0\n'
             ),
-            {
-                at: { start: [1, 47], end: [1, 52] },
-                viewColumn: ViewColumn.One
-            }
+            ViewColumn.One,
+            { start: [1, 47], end: [1, 52] }
         );
-        await executor.assertPairs([ 'None' ],    { viewColumn: ViewColumn.One });
-        await executor.assertCursors([ [2, 56] ], { viewColumn: ViewColumn.One });
+        await executor.assertPairs([ 'None' ],    ViewColumn.One);
+        await executor.assertCursors([ [2, 56] ], ViewColumn.One);
     }
 });
 
@@ -1024,12 +1007,12 @@ const INVALIDATION_DUE_TO_TEXT_EDITOR_BEING_CLOSED = new TestCase({
         // editor in view column 3 then move it to view column 2. Otherwise, if we open two files
         // in view column 2, it will cause the second file to replace the first one in that view
         // column.
-        await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.Two });
-        await executor.openFile('./workspace-2/text.ts',  { viewColumn: ViewColumn.Three });
+        await executor.openFile('./workspace-1/text.txt', ViewColumn.Two);
+        await executor.openFile('./workspace-2/text.ts',  ViewColumn.Three);
         await executor.moveEditorToGroup('left');
 
         // Type some pairs into the Typescript text editor that is on display in view column 2.
-        await executor.typeText('(', { repetitions: 10 });
+        await executor.typeText('(', 10);
         await executor.assertPairs([ { line: 0, sides: range(0, 20) }]);
         await executor.assertCursors([ [0, 10] ]);
     },
@@ -1078,14 +1061,14 @@ const NO_INVALIDATION_DUE_TO_FOCUS_SWITCH_TEST_CASE = new TestCase({
         // 1. Open another text editor in view column 2, which takes focus.
         //
         // Check that the pairs in the first text editor have not been invalidated.
-        await executor.openFile('./workspace-2/text.ts', { viewColumn: ViewColumn.Two });
-        await executor.assertPairs(firstEditorPairs,     { viewColumn: ViewColumn.One });
-        await executor.assertCursors(firstEditorCursors, { viewColumn: ViewColumn.One });
+        await executor.openFile('./workspace-2/text.ts', ViewColumn.Two);
+        await executor.assertPairs(firstEditorPairs,     ViewColumn.One);
+        await executor.assertCursors(firstEditorCursors, ViewColumn.One);
 
         // Might as well check that the newly opened text editor in view column 2 has no pairs being 
         // tracked for it.
-        await executor.assertPairs([ 'None' ]);
-        await executor.assertCursors([ [0, 0] ]);
+        await executor.assertPairs([ 'None' ],   ViewColumn.Two);
+        await executor.assertCursors([ [0, 0] ], ViewColumn.Two);
 
         // 2. Type some pairs into the text editor in view column 2.
         //
@@ -1094,27 +1077,27 @@ const NO_INVALIDATION_DUE_TO_FOCUS_SWITCH_TEST_CASE = new TestCase({
         // 
         // We only type in `()` pairs because the effective value of the `leaper.detectedPairs`
         // configuration for the text editor in view column 2 is `['()']`.
-        await executor.typeText('(', { repetitions: 20 });
+        await executor.typeText('(', 20);
         const secondEditorPairs: CompactCluster[]  = [ { line: 0, sides: range(0, 40) } ];
         const secondEditorCursors: CompactCursor[] = [ [0, 20] ];
-        await executor.assertPairs(firstEditorPairs,     { viewColumn: ViewColumn.One });
-        await executor.assertCursors(firstEditorCursors, { viewColumn: ViewColumn.One });
-        await executor.assertPairs(secondEditorPairs);
-        await executor.assertCursors(secondEditorCursors);
+        await executor.assertPairs(firstEditorPairs,      ViewColumn.One);
+        await executor.assertCursors(firstEditorCursors,  ViewColumn.One);
+        await executor.assertPairs(secondEditorPairs,     ViewColumn.Two);
+        await executor.assertCursors(secondEditorCursors, ViewColumn.Two);
 
         // 3. Open another text document in view column 3, which takes focus.
         //
         // Check that the pairs in the first two text editors have not been invalidated.
-        await executor.openFile('./workspace-3/text.md', { viewColumn: ViewColumn.Three });
-        await executor.assertPairs(firstEditorPairs,      { viewColumn: ViewColumn.One });
-        await executor.assertCursors(firstEditorCursors,  { viewColumn: ViewColumn.One });
-        await executor.assertPairs(secondEditorPairs,     { viewColumn: ViewColumn.Two });
-        await executor.assertCursors(secondEditorCursors, { viewColumn: ViewColumn.Two });
+        await executor.openFile('./workspace-3/text.md',  ViewColumn.Three);
+        await executor.assertPairs(firstEditorPairs,      ViewColumn.One);
+        await executor.assertCursors(firstEditorCursors,  ViewColumn.One);
+        await executor.assertPairs(secondEditorPairs,     ViewColumn.Two);
+        await executor.assertCursors(secondEditorCursors, ViewColumn.Two);
 
         // Might as well check that the newly opened text editor in view column 3 has no pairs being 
         // tracked for it.
-        await executor.assertPairs([ 'None' ]);
-        await executor.assertCursors([ [0, 0] ]);
+        await executor.assertPairs([ 'None' ],   ViewColumn.Three);
+        await executor.assertCursors([ [0, 0] ], ViewColumn.Three);
 
         // 4. Switch focus to the text editor in view column 1.
         //
@@ -1122,12 +1105,12 @@ const NO_INVALIDATION_DUE_TO_FOCUS_SWITCH_TEST_CASE = new TestCase({
         // new pairs have been created in the third text editor.
         await executor.focusEditorGroup('first');
         async function stepFourChecks(): Promise<void> {
-            await executor.assertPairs(firstEditorPairs,      { viewColumn: ViewColumn.One });
-            await executor.assertCursors(firstEditorCursors,  { viewColumn: ViewColumn.One });
-            await executor.assertPairs(secondEditorPairs,     { viewColumn: ViewColumn.Two });
-            await executor.assertCursors(secondEditorCursors, { viewColumn: ViewColumn.Two });
-            await executor.assertPairs([ 'None' ],            { viewColumn: ViewColumn.Three });
-            await executor.assertCursors([ [0, 0] ],          { viewColumn: ViewColumn.Three });    
+            await executor.assertPairs(firstEditorPairs,      ViewColumn.One);
+            await executor.assertCursors(firstEditorCursors,  ViewColumn.One);
+            await executor.assertPairs(secondEditorPairs,     ViewColumn.Two);
+            await executor.assertCursors(secondEditorCursors, ViewColumn.Two);
+            await executor.assertPairs([ 'None' ],            ViewColumn.Three);
+            await executor.assertCursors([ [0, 0] ],          ViewColumn.Three);  
         }
         await stepFourChecks();
 

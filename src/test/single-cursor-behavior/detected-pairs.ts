@@ -121,10 +121,10 @@ const IT_WORKS_TEST_CASE = new TestCase({
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are not 
         //     consistently autoclosed.
         // 
-        await executor.openFile('./workspace-0/text.ts',  { viewColumn: ViewColumn.One });
-        await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.Two });
-        await executor.openFile('./workspace-2/text.ts',  { viewColumn: ViewColumn.Three });
-        await executor.openFile('./workspace-3/text.md',  { viewColumn: ViewColumn.Four });
+        await executor.openFile('./workspace-0/text.ts',  ViewColumn.One);
+        await executor.openFile('./workspace-1/text.txt', ViewColumn.Two);
+        await executor.openFile('./workspace-2/text.ts',  ViewColumn.Three);
+        await executor.openFile('./workspace-3/text.md',  ViewColumn.Four);
     },
     task: async (executor) => {
 
@@ -391,8 +391,8 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         //     
         //     (DP-1): [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
         //
-        await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.One });
-        await executor.openFile('./workspace-4/text.ts',  { viewColumn: ViewColumn.Two });
+        await executor.openFile('./workspace-1/text.txt', ViewColumn.One);
+        await executor.openFile('./workspace-4/text.ts',  ViewColumn.Two);
 
         // As a precaution we check that the two text editors have been correctly preconfigured.
         await testDetection(executor, 'first', { 
@@ -638,7 +638,7 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
             await executor.typeText(' ');
             await executor.leap();
             await executor.typeText(' ');
-            await executor.moveCursors('left', { repetitions: 6 });
+            await executor.moveCursors('left', 6);
         }
         await executor.focusEditorGroup('first');
         await typeFillerIndentation();

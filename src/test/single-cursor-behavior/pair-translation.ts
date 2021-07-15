@@ -27,7 +27,7 @@ const TEXT_MODIFICATIONS_BEFORE_PAIRS_TEST_CASE = new TestCase({
         //
         await executor.openFile('./workspace-0/text.ts');
         await executor.typeText('function main() {\n');
-        await executor.typeText('[', { repetitions: 10 });
+        await executor.typeText('[', 10);
         await executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
         await executor.assertCursors([ [1, 14] ]);
     },
@@ -509,7 +509,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         await executor.typeText('\nblah-blah\n');
         await executor.moveCursors('up');
         await executor.moveCursors('end');
-        await executor.typeText('[', { repetitions: 10 });
+        await executor.typeText('[', 10);
         await executor.assertPairs([ { line: 1, sides: range(9, 29) } ]);
         await executor.assertCursors([ [1, 19] ]);
     },
@@ -626,7 +626,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[[[[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊人、在水一方。😮😣]]]]]]H᭭a᭰p⃠p᭬ỳ֑]]]]
         //                                                                                      ^(cursor position)
         // ```
-        await executor.backspace({ repetitions: 2 });
+        await executor.backspace(2);
         sliceSub(pairs.sides, 10, 20, 4);
         await executor.assertPairs([ pairs ]);
         await executor.assertCursors([ [1, 70] ]);
@@ -770,7 +770,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[Ice[[Tea 🧋[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊人、在]🥰😍🤫🤓]🙏🙏🙏🙏🙏]]]]]]]]
         //                                                                                    ^(cursor position)
         // ```
-        await executor.backspace({ repetitions: 6 });
+        await executor.backspace(6);
         sliceSub(pairs.sides, 10, 20, 8);
         await executor.assertPairs([ pairs ]);
         await executor.assertCursors([ [1, 71] ]);
@@ -788,7 +788,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛💚💙💜🤎🖤🤍[[[[[[Ice[[Tea 🧋[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊人、在]🥰😍🤫🤓]🙏🙏🙏🙏🙏]]]]]]]]
         //                                                                               ^(cursor position)
         // ```
-        await executor.moveCursors('left', { repetitions: 3 });
+        await executor.moveCursors('left', 3);
         await executor.assertPairs([ pairs ]);
         await executor.assertCursors([ [1, 68] ]);
 
@@ -898,7 +898,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛🫀🖤🤍[Popcorn 🍿[[[[[Ice[[Tea 🧋[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊Fire 🔥人、在]🥰😍🤫🤓]🙏🙏]]]]]Chicken 🍗]]]
         //                                                                                   ^(cursor position)
         // ```
-        await executor.moveCursors('left', { repetitions: 6 });
+        await executor.moveCursors('left', 6);
         await executor.assertPairs([ pairs ]);
         await executor.assertCursors([ [1, 72] ]);
 
@@ -915,7 +915,7 @@ const SINGLE_LINE_TEXT_MODIFICATIONS_BETWEEN_PAIRS_TEST_CASE = new TestCase({
         // blah-blah[❤🧡💛🫀🖤🤍[Popcorn 🍿[[[[[Ice[[Tea 🧋[Pretzel 🥨蒹葭蒼蒼、白露為霜。所謂伊🔥人、在]🥰😍🤫🤓]🙏🙏]]]]]Chicken 🍗]]]
         //                                                                                   ^(cursor position)
         // ```
-        await executor.deleteRight({ repetitions: 5 });
+        await executor.deleteRight(5);
         sliceSub(pairs.sides, 10, 20, 5);
         await executor.assertPairs([ pairs ]);
         await executor.assertCursors([ [1, 72] ]);
@@ -1012,7 +1012,7 @@ const AUTOCOMPLETIONS_TEST_CASE = new TestCase({
             }
         ]);
         await executor.setCursors([ [2, 4] ]);
-        await executor.typeText('[', { repetitions: 10 });
+        await executor.typeText('[', 10);
         await executor.assertPairs([ { line: 2, sides: range(4, 24) } ]);
         await executor.assertCursors([ [2, 14] ]);
     },
@@ -1867,12 +1867,12 @@ export const TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         // ```
         await executor.openFile('./workspace-0/text.ts');
         await executor.typeText('function main() {\n');
-        await executor.typeText('[', { repetitions: 10 });
+        await executor.typeText('[', 10);
         await executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
         await executor.assertCursors([ [1, 14] ]);
 
         // Open another text editor (which will immediately take focus).
-        await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.Two });
+        await executor.openFile('./workspace-1/text.txt', ViewColumn.Two);
     },
     task: async (executor) => {
 
@@ -1922,13 +1922,13 @@ export const TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
                 { kind: 'insert',  at: [0, 16], text: '=> ' },
                 { kind: 'replace', range: { start: [0, 0], end: [0, 13] }, with: 'const main = ' }
             ],
-            { viewColumn: ViewColumn.One }
+            ViewColumn.One
         );
         await executor.assertPairs(
             [ { line: 3, sides: [...range(19, 29), ...range(47, 57)] } ],
-            { viewColumn: ViewColumn.One }
+            ViewColumn.One
         );
-        await executor.assertCursors([ [3, 47] ], { viewColumn: ViewColumn.One });
+        await executor.assertCursors([ [3, 47] ], ViewColumn.One);
 
         // Perform more text modifications before, between and after pairs in the out-of-focus text 
         // editor in view column 1.
@@ -1962,13 +1962,13 @@ export const TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
                 { kind: 'delete',  range: { start: [0, 15], end: [0, 18] } },
                 { kind: 'replace', range: { start: [0, 0],  end: [0, 13] }, with: 'function f' },
             ],
-            { viewColumn: ViewColumn.One }
+            ViewColumn.One
         );
         await executor.assertPairs(
             [ { line: 2, sides: [...range(15, 25), ...range(36, 46)] } ],
-            { viewColumn: ViewColumn.One }
+            ViewColumn.One
         );
-        await executor.assertCursors([ [2, 36] ], { viewColumn: ViewColumn.One });
+        await executor.assertCursors([ [2, 36] ], ViewColumn.One);
 
         // Clear the text editor in view column 1, then set it up to have the following state:
         //
@@ -1997,16 +1997,10 @@ export const TRANSLATION_IN_OUT_OF_FOCUS_TEXT_EDITOR_TEST_CASE = new TestCase({
         await executor.focusEditorGroup('second');
         await executor.insertSnippet(
             new SnippetString('fn1({ arg1: `$3`, arg2: fn2(${1:float}, ${2:binary}), arg3: $4 })$0'),
-            { viewColumn: ViewColumn.One }
+            ViewColumn.One
         );
-        await executor.assertPairs(
-            [ { line: 1, sides: [20, 21, 30, 90, 91, 92] } ],
-            { viewColumn: ViewColumn.One }
-        );
-        await executor.assertCursors(
-            [ { anchor: [1, 65], active: [1, 70] } ],
-            { viewColumn: ViewColumn.One }
-        );
+        await executor.assertPairs([ { line: 1, sides: [20, 21, 30, 90, 91, 92] } ], ViewColumn.One);
+        await executor.assertCursors([ { anchor: [1, 65], active: [1, 70] } ],       ViewColumn.One);
     }
 });
 

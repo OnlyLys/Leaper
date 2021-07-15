@@ -22,8 +22,8 @@ const SINGLE_LEAP_ACROSS_WHITESPACE_TEST_CASE = new TestCase({
     prelude: async (executor) => { 
         await executor.openFile('./workspace-0/text.ts');
         await executor.typeText('(');
-        await executor.typeText(' ', { repetitions: 5 });
-        await executor.moveCursors('left', { repetitions: 5 });
+        await executor.typeText(' ', 5);
+        await executor.moveCursors('left', 5);
         await executor.assertPairs([ { line: 0, sides: [0, 6] } ]);
         await executor.assertCursors([ [0, 1] ]);
     },
@@ -71,8 +71,8 @@ const CONSECUTIVE_LEAPS_ACROSS_WHITESPACE = new TestCase({
         await executor.typeText('some text\n\nfunction ');
         for (let i = 0; i < 6; ++i) {
             await executor.typeText('{');
-            await executor.typeText(' ', { repetitions: 5 });
-            await executor.moveCursors('left', { repetitions: 5 });
+            await executor.typeText(' ', 5);
+            await executor.moveCursors('left', 5);
         }
         await executor.assertPairs([ { line: 2, sides: [9, 10, 11, 12, 13, 14, 20, 26, 32, 38, 44, 50] } ]);
         await executor.assertCursors([ [2, 15] ]);
@@ -115,7 +115,7 @@ const CALL_IGNORED_WHEN_NO_PAIRS = new TestCase({
         await executor.assertCursors([ [2, 16] ]);
 
         // Leap out of all of the inserted pairs.
-        await executor.leap({ repetitions: 5 });
+        await executor.leap(5);
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [2, 21] ]);
 
@@ -139,11 +139,11 @@ const CALL_IGNORED_WHEN_NO_LINE_OF_SIGHT = new TestCase({
 
         // Insert `{ { Hello { Markdown } is } Awesome }` into the text.
         await executor.typeText(' {  Awesome ');
-        await executor.moveCursors('left', { repetitions: 9 });
+        await executor.moveCursors('left', 9);
         await executor.typeText('{ Hello  is ');
-        await executor.moveCursors('left', { repetitions: 4 });
+        await executor.moveCursors('left', 4);
         await executor.typeText('{ Markdown ');
-        await executor.moveCursors('left', { repetitions: 10 });
+        await executor.moveCursors('left', 10);
         await executor.assertPairs([ { line: 2, sides: [12, 14, 22, 33, 38, 48] } ]);
         await executor.assertCursors([ [2, 23] ]);
     },
@@ -159,7 +159,7 @@ const CALL_IGNORED_WHEN_NO_LINE_OF_SIGHT = new TestCase({
         }
 
         // Move past the ' Markdown ' obstacle.
-        await executor.moveCursors('right', { repetitions: 10 });
+        await executor.moveCursors('right', 10);
         await executor.assertPairs([ { line: 2, sides: [12, 14, 22, 33, 38, 48] } ]);
         await executor.assertCursors([ [2, 33] ]);
 
@@ -176,7 +176,7 @@ const CALL_IGNORED_WHEN_NO_LINE_OF_SIGHT = new TestCase({
         }
 
         // Move past the ' is ' obstacle.
-        await executor.moveCursors('right', { repetitions: 4 });
+        await executor.moveCursors('right', 4);
         await executor.assertPairs([ { line: 2, sides: [12, 14, 38, 48] } ]);
         await executor.assertCursors([ [2, 38] ]);
 
@@ -193,7 +193,7 @@ const CALL_IGNORED_WHEN_NO_LINE_OF_SIGHT = new TestCase({
         }
 
         // Move past the ' Awesome ' obstacle.
-        await executor.moveCursors('right', { repetitions: 9 });
+        await executor.moveCursors('right', 9);
         await executor.assertPairs([ { line: 2, sides: [12, 48] } ]);
         await executor.assertCursors([ [2, 48] ]);
 
@@ -227,7 +227,7 @@ const ENGINE_CAN_HANDLE_RAPID_CALLS = new TestCase({
            +    'function inner() {\n'
            +        'return [ { a: { b: [ 100 '
         );
-        await executor.moveCursors('left', { repetitions: 4 });
+        await executor.moveCursors('left', 4);
         await executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
         await executor.assertCursors([ [2, 29] ]);
     },
@@ -246,7 +246,7 @@ const ENGINE_CAN_HANDLE_RAPID_CALLS = new TestCase({
         // To do this test, we call the 'Leap' command many times when there is no line-of-sight, 
         // then check that neither the pairs being tracked nor the cursor position has changed, 
         // since we expect the engine to do nothing.
-        await executor.leap({ repetitions: 50 });
+        await executor.leap(50);
         await executor.assertPairs([ { line: 2, sides: [15, 17, 22, 27, 33, 34, 35, 36] } ]);
         await executor.assertCursors([ [2, 29] ]);
 
@@ -257,16 +257,16 @@ const ENGINE_CAN_HANDLE_RAPID_CALLS = new TestCase({
         // out of all available pairs and that nothing more happens after that.
         //
         // In a way, this tests the ability of the engine to handle the 'Leap' key being held down.
-        await executor.moveCursors('right', { repetitions: 3 });
-        await executor.leap({ repetitions: 10 });
+        await executor.moveCursors('right', 3);
+        await executor.leap(10);
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [2, 37] ]);
 
         // 3. Type in many more pairs and repeat a check similar to step 2's.
-        await executor.typeText('{', { repetitions: 50 });
+        await executor.typeText('{', 50);
         await executor.assertPairs([ { line: 2, sides: range(37, 137) } ]);
         await executor.assertCursors([ [2, 87] ]);
-        await executor.leap({ repetitions: 60 });
+        await executor.leap(60);
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [2, 137] ]);
     }

@@ -64,7 +64,7 @@ const ENGINE_CAN_HANDLE_RAPID_CALLS = new TestCase({
     task: async (executor) => {
 
         // This should remove all pairs from being tracked and do nothing else.
-        await executor.escapeLeaperMode({ repetitions: 50 }); 
+        await executor.escapeLeaperMode(50); 
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [2, 28] ]);
     }
@@ -83,15 +83,15 @@ const ONLY_CLEARS_ACTIVE_TEXT_EDITOR = new TestCase({
                 { kind: 'insert', at: [0, 0], text: 'function main(): void {\n    \n}' }
             ]);
             await executor.setCursors([ [1, 4] ]);
-            await executor.typeText('(', { repetitions: 10 });
+            await executor.typeText('(', 10);
             await executor.assertPairs([ { line: 1, sides: range(4, 24) } ]);
             await executor.assertCursors([ [1, 14] ]);
         }
         
         // Open three Typescript text editors in exclusive view columns.
         await executor.openFile('./workspace-0/text.ts');
-        await executor.openFile('./workspace-2/text.ts', { viewColumn: ViewColumn.Two });
-        await executor.openFile('./workspace-4/text.ts', { viewColumn: ViewColumn.Three });
+        await executor.openFile('./workspace-2/text.ts', ViewColumn.Two);
+        await executor.openFile('./workspace-4/text.ts', ViewColumn.Three);
 
         // Set all three text editors to the same state.
         //
@@ -116,10 +116,10 @@ const ONLY_CLEARS_ACTIVE_TEXT_EDITOR = new TestCase({
         // Verify that only the pairs in the active text editor were cleared.
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors(cursors);
-        await executor.assertPairs(pairs,     { viewColumn: ViewColumn.Two });
-        await executor.assertCursors(cursors, { viewColumn: ViewColumn.Two });
-        await executor.assertPairs(pairs,     { viewColumn: ViewColumn.Three });
-        await executor.assertCursors(cursors, { viewColumn: ViewColumn.Three });
+        await executor.assertPairs(pairs,     ViewColumn.Two);
+        await executor.assertCursors(cursors, ViewColumn.Two);
+        await executor.assertPairs(pairs,     ViewColumn.Three);
+        await executor.assertCursors(cursors, ViewColumn.Three);
     }
 
 });

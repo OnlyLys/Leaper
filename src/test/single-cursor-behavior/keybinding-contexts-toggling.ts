@@ -66,7 +66,7 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.inLeaperMode`: `true` since there is still a pair being tracked.
         // `leaper.hasLineOfSight`: `true` since the cursor is still next to the closing side of the
         //                          pair being tracked.
-        await executor.typeText(' ', { repetitions: 2 });
+        await executor.typeText(' ', 2);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
         await executor.assertPairs([ { line: 0, sides: [12, 15] } ]);
         await executor.assertCursors([ [0, 15] ]);
@@ -154,7 +154,7 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.inLeaperMode`: `true` since there are still two pairs being tracked.
         // `leaper.hasLineOfSight`: `false` since there is a word `World` preventing line of sight
         //                          from the cursor to the nearest pair's closing side.
-        await executor.moveCursors('left', { repetitions: 4 });
+        await executor.moveCursors('left', 4);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
         await executor.assertPairs([ { line: 0, sides: [12, 14, 20, 22] } ]);
         await executor.assertCursors([ [0, 15] ]);
@@ -284,7 +284,7 @@ const WORKS_FOR_A_GIVEN_TEXT_EDITOR_TEST_CASE = new TestCase({
         // `leaper.inLeaperMode`: `true` since there is still one pair being tracked.
         // `leaper.hasLineOfSight`: `true` since the cursor has line of sight to the pair that it is
         //                          about to leap out of.
-        await executor.moveCursors('right', { repetitions: 8 });
+        await executor.moveCursors('right', 8);
         await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
         await executor.assertPairs([ { line: 0, sides: [12, 31] } ]);
         await executor.assertCursors([ [0, 30] ]);
@@ -373,7 +373,7 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //     Cursor Position  | [0, 10]    | [0, 0]     |
         //     Line of Sight    | Yes        | No         |
         //
-        await executor.openFile('./workspace-1/text.txt', { viewColumn: ViewColumn.Two });
+        await executor.openFile('./workspace-1/text.txt', ViewColumn.Two);
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [0, 0] ]);
 
@@ -419,7 +419,7 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //     Cursor Position  | [0, 10]    | [0, 10]    | [0, 0]     |
         //     Line of Sight    | Yes        | No         | No         |
         //
-        await executor.openFile('./workspace-2/text.ts', { viewColumn: ViewColumn.Three });
+        await executor.openFile('./workspace-2/text.ts', ViewColumn.Three);
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [0, 0] ]);
 
@@ -442,7 +442,7 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //     Cursor Position  | [0, 10]    | [0, 10]    | [0, 10]    |
         //     Line of Sight    | Yes        | No         | Yes        |
         //
-        await executor.typeText('(', { repetitions: 10 });
+        await executor.typeText('(', 10);
         await executor.assertPairs([ { line: 0, sides: range(0, 20) } ]);
         await executor.assertCursors([ [0, 10] ]);
 
@@ -501,7 +501,7 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //     Cursor Position  | [0, 15]    | [0, 10]    | [0, 10]    |
         //     Line of Sight    | Yes        | No         | Yes        |
         //
-        await executor.leap({ repetitions: 5 });
+        await executor.leap(5);
         await executor.assertPairs([ { line: 0, sides: [0, 1, 2, 3, 4, 15, 16, 17, 18, 19] } ]);
         await executor.assertCursors([ [0, 15] ]);
 
@@ -520,7 +520,7 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //     Cursor Position  | [0, 0]     | [0, 10]    | [0, 10]    |
         //     Line of Sight    | No         | No         | Yes        |
         //
-        await executor.openFile('./workspace-4/text.ts', { viewColumn: ViewColumn.One });
+        await executor.openFile('./workspace-4/text.ts', ViewColumn.One);
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [0, 0] ]);
 
@@ -593,10 +593,10 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
             [
                 { kind: 'delete', range: { start: [0, 0], end: [0, 20] } }
             ], 
-            { viewColumn: ViewColumn.Three }
+            ViewColumn.Three
         );
-        await executor.assertPairs([ 'None' ],   { viewColumn: ViewColumn.Three });
-        await executor.assertCursors([ [0, 0] ], { viewColumn: ViewColumn.Three });
+        await executor.assertPairs([ 'None' ],   ViewColumn.Three);
+        await executor.assertCursors([ [0, 0] ], ViewColumn.Three);
 
         // 12b. Since view column 3 is not in focus, the fact that there are no longer any pairs in 
         //      view column 3 does not affect the keybinding contexts.
@@ -636,7 +636,7 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //     Cursor Position  | [0, 23]    | [0, 10]    | [0, 0]     | [0, 0]     |
         //     Line of Sight    | Yes        | No         | No         | No         |
         //
-        await executor.openFile('./workspace-3/text.md', { viewColumn: ViewColumn.Four });
+        await executor.openFile('./workspace-3/text.md', ViewColumn.Four);
         await executor.assertPairs([ 'None' ]);
         await executor.assertCursors([ [0, 0] ]);
 
@@ -698,7 +698,7 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
         //     Cursor Position  | [0, 23]    | [0, 10]    | [0, 0]     | [0, 17]    |
         //     Line of Sight    | Yes        | No         | No         | No         |
         //
-        await executor.moveCursors('left', { repetitions: 5 });
+        await executor.moveCursors('left', 5);
         await executor.assertPairs([ { line: 0, sides: [ ...range(0, 10), ...range(22, 32)] } ]);
         await executor.assertCursors([ [0, 17] ]);
 
@@ -734,10 +734,10 @@ const WORKS_WHEN_SWITCHING_BETWEEN_TEXT_EDITORS_TEST_CASE = new TestCase({
                         + '// Filler text..........................................'
                 },
             ],
-            { viewColumn: ViewColumn.One }
+            ViewColumn.One
         );
-        await executor.assertPairs([ { line: 5, sides: range(76, 82) } ], { viewColumn: ViewColumn.One });
-        await executor.assertCursors([ [5, 79] ],                         { viewColumn: ViewColumn.One });
+        await executor.assertPairs([ { line: 5, sides: range(76, 82) } ], ViewColumn.One);
+        await executor.assertCursors([ [5, 79] ],                         ViewColumn.One);
 
         // 18b. Since the text was inserted into a view column that is not in focus, it should not
         //      affect the keybinding contexts, since the keybinding contexts are only synchronized 

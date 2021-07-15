@@ -2,7 +2,7 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
-import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextDocumentShowOptions, TextEditor, workspace, window, ViewColumn, Uri, ConfigurationTarget, WorkspaceEdit, DecorationRenderOptions, DecorationRangeBehavior } from 'vscode';
+import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextEditor, workspace, window, ViewColumn, Uri, ConfigurationTarget, WorkspaceEdit, DecorationRenderOptions, DecorationRangeBehavior } from 'vscode';
 import { ResolvedViewColumn, TrackerSnapshot } from '../../engine/test-handle';
 import { CompactCluster, CompactRange, CompactPosition, CompactCursor, CompactSelection, CompactPair } from './compact';
 import { waitFor, zip } from './helpers';
@@ -180,10 +180,8 @@ class ExecutorFull {
      * Execute a command `repetitions` amount of times.
      * 
      * A delay of `ExecutorFull.POST_REPETITION_DELAY_MS` is applied after each repetition.
-     * 
-     * `repetitions` defaults to `1` if not specified.
      */
-    private async execute(commandId: string, repetitions: number = 1): Promise<void> {
+    private async execute(commandId: string, repetitions: number): Promise<void> {
         while (repetitions-- > 0) {
             await commands.executeCommand(commandId);
             await waitFor(ExecutorFull.POST_REPETITION_DELAY_MS);
@@ -191,36 +189,65 @@ class ExecutorFull {
     }
 
     /**
-     * Assert the position of pairs being tracked for a visible text editor.
+     * Assert the positions of pairs being tracked for a visible text editor.
+     * 
+     * This method does not check for decorations. Please use `assertPairsFull` if that is required.
      */
     public async assertPairs(
-        expect: ReadonlyArray<CompactCluster>,
-        options?: ViewColumnOption & {
-
-            /**
-             * Determines whether decorations are checked:
-             * 
-             *  - `'all'` asserts that all pairs are decorated.
-             *  - `'nearest'` asserts that only the pairs nearest to each cursor are decorated.
-             *  - `undefined` means no decoration checks are performed.
-             * 
-             * This option defaults to `undefined`.
-             * 
-             * Note that this option only relates to checking for the presence of decorations (i.e. 
-             * checking whether decorations are applied or not). We do not check the style of the 
-             * decorations here.
-             */
-            expectDecorations?: 'all' | 'nearest' | undefined;
-        }
+        expect:     ReadonlyArray<CompactCluster>,
+        viewColumn: AllowedViewColumns = ViewColumn.Active
     ): Promise<void> {
     
         // Wait in case the engine has not caught up.
         await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS * 2);
 
-        // The actual pairs being tracked for the target text editor.
-        const actual = getSnapshot(options?.viewColumn).pairs;
+        // The actual pairs being tracked for the target text editor, with the `isDecorated` flags
+        // stripped since we are not checking for decorations.
+        const actual = getSnapshot(viewColumn).pairs.map(cluster => 
+            cluster.map(({ open, close }) => ({ open, close }))
+        );
 
-        // Convert the expected pairs to a form suited for comparison with the actual pairs.
+        // Convert the expected pairs to the same form as the actual pairs.
+        const _expect: { open: CompactPosition, close: CompactPosition }[][] = expect.map(cluster => {
+            if (cluster === 'None') {
+                return [];
+            } else {
+                const line    = cluster.line;
+                const openers = cluster.sides.slice(0, cluster.sides.length / 2);
+                const closers = cluster.sides.slice(cluster.sides.length / 2).reverse();
+                return [...zip(openers, closers)].map(([opener, closer]) => (
+                    { open: [line, opener], close: [line, closer] }
+                ));
+            }
+        });
+
+        this.assertEq(actual, _expect, 'Pairs Mismatch');
+    }
+
+    /**
+     * Assert the positions of pairs being tracked for a visible text editor and check their 
+     * decorations.
+     * 
+     * The `expectDecorations` parameter determines how decorations are checked:
+     * 
+     *  - `'all'` asserts that all pairs are decorated.
+     *  - `'nearest'` asserts that only the pairs nearest to each cursor are decorated.
+     * 
+     * Note that here we only check for the presence of decorations. We do not check the style of 
+     * the decorations.
+     */
+    public async assertPairsFull(
+        expect:             ReadonlyArray<CompactCluster>,
+        expectDecorations: 'all' | 'nearest',
+        viewColumn:         AllowedViewColumns = ViewColumn.Active
+    ): Promise<void> {
+
+        // Wait in case the engine has not caught up.
+        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS * 2);
+
+        const actual = getSnapshot(viewColumn).pairs;
+
+        // Convert the expected pairs to the same form as the actual pairs.
         const _expect: CompactPair[][] = expect.map(cluster => {
             if (cluster === 'None') {
                 return [];
@@ -233,43 +260,30 @@ class ExecutorFull {
                 ));
             }
         });
-
-        const assertionMsg = 'Pairs Mismatch';
-        if (options?.expectDecorations === 'all') {
-
-            // We expect every pair to be decorated.
+        if (expectDecorations === 'all') {
             _expect.forEach(cluster => cluster.forEach(pair => pair.isDecorated = true));
-            this.assertEq(actual, _expect, assertionMsg);
-        } else if (options?.expectDecorations === 'nearest') {
-
-            // We expect only the pair nearest to each cursor to be decorated.
+        } else if (expectDecorations === 'nearest') {
             _expect.forEach(cluster => {
                 cluster.forEach((pair, i) => pair.isDecorated = (i === cluster.length - 1));
             });
-            this.assertEq(actual, _expect, assertionMsg);
-        } else {
-            function stripIsDecoratedFlag(pairs: CompactPair[][]) {
-                return pairs.map(cluster => cluster.map(({ open, close }) => ({ open, close })));
-            }
-            
-            // We are not checking decorations here.
-            this.assertEq(stripIsDecoratedFlag(actual), stripIsDecoratedFlag(_expect), assertionMsg);
-        };
+        }
+
+        this.assertEq(actual, _expect, 'Pairs Mismatch');
     }
 
     /**
      * Assert the state of the cursors of a visible text editor.
      */
     public async assertCursors(
-        expect:   ReadonlyArray<CompactCursor>,
-        options?: ViewColumnOption
+        expect:     ReadonlyArray<CompactCursor>,
+        viewColumn: AllowedViewColumns = ViewColumn.Active
     ): Promise<void> {
 
         // Note that this function is not actually `async` since it does not wait on anything. But 
         // we keep the `async` in the function declaration in case in the future we want to wait on
         // something here.
 
-        const editor = getVisibleTextEditor(options?.viewColumn);
+        const editor = getVisibleTextEditor(viewColumn);
 
         // Convert the actual and expected cursors to a print friendly form before asserting them.
         const actual: CompactSelection[] = editor.selections.map((cursor) => {
@@ -287,10 +301,12 @@ class ExecutorFull {
     /**
      * Assert the most recently set values of this extension's keybinding contexts.
      */
-    public async assertMostRecentContexts(expect: { 
-        inLeaperMode:   boolean, 
-        hasLineOfSight: boolean
-    }): Promise<void> {
+    public async assertMostRecentContexts(
+        expect: { 
+            inLeaperMode:   boolean, 
+            hasLineOfSight: boolean
+        }
+    ): Promise<void> {
         
         // Wait in case the engine has not caught up.
         await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
@@ -312,14 +328,14 @@ class ExecutorFull {
      * configuration reader always forces it to that value. Please see `Configurations` for more info.
      */
     public async assertEffectiveDecorationOptions(
-        expect:   Readonly<Omit<DecorationRenderOptions, 'rangeBehavior'>>,
-        options?: ViewColumnOption
+        expect:     Readonly<Omit<DecorationRenderOptions, 'rangeBehavior'>>,
+        viewColumn: AllowedViewColumns = ViewColumn.Active
     ): Promise<void> {
 
         // Wait in case the engine has not caught up.
         await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
 
-        const actual  = getSnapshot(options?.viewColumn).decorationOptions.cast();
+        const actual  = getSnapshot(viewColumn).decorationOptions.cast();
         const _expect = { ...expect,  rangeBehavior: DecorationRangeBehavior.ClosedClosed };
         this.assertEq(actual, _expect, 'Decoration Options Mismatch');
     }
@@ -327,62 +343,62 @@ class ExecutorFull {
     /** 
      * Perform a backspace for each cursor in the active text editor.
      */
-    public async backspace(options?: RepetitionOption): Promise<void> {
-        await this.execute('deleteLeft', options?.repetitions);
+    public async backspace(repetitions: number = 1): Promise<void> {
+        await this.execute('deleteLeft', repetitions);
     }
 
     /**
      * Backspace a word for each cursor in the active text editor.
      */
-    public async backspaceWord(options?: RepetitionOption): Promise<void> {
-        await this.execute('deleteWordLeft', options?.repetitions);
+    public async backspaceWord(repetitions: number = 1): Promise<void> {
+        await this.execute('deleteWordLeft', repetitions);
     }
 
     /**
      * Delete a character to the right of each cursor in the active text editor.
      */
-    public async deleteRight(options?: RepetitionOption): Promise<void> {
-        await this.execute('deleteRight', options?.repetitions);
+    public async deleteRight(repetitions: number = 1): Promise<void> {
+        await this.execute('deleteRight', repetitions);
     }
 
     /**
      * Move each cursor in the active text editor.
      */
     public async moveCursors(
-        where:    'left' | 'right' | 'up' | 'down' | 'home' | 'end',
-        options?: RepetitionOption
+        where:       'left' | 'right' | 'up' | 'down' | 'home' | 'end',
+        repetitions: number = 1
     ): Promise<void> {
         switch (where) {
-            case 'left':  return this.execute('cursorLeft',  options?.repetitions);
-            case 'right': return this.execute('cursorRight', options?.repetitions);
-            case 'up':    return this.execute('cursorUp',    options?.repetitions);
-            case 'down':  return this.execute('cursorDown',  options?.repetitions);
-            case 'home':  return this.execute('cursorHome',  options?.repetitions);
-            case 'end':   return this.execute('cursorEnd',   options?.repetitions);
+            case 'left':  return this.execute('cursorLeft',  repetitions);
+            case 'right': return this.execute('cursorRight', repetitions);
+            case 'up':    return this.execute('cursorUp',    repetitions);
+            case 'down':  return this.execute('cursorDown',  repetitions);
+            case 'home':  return this.execute('cursorHome',  repetitions);
+            case 'end':   return this.execute('cursorEnd',   repetitions);
         }
     }
 
     /**
      * Call the 'Leap' command.
      */
-    public async leap(options?: RepetitionOption): Promise<void> {
-        await this.execute('leaper.leap', options?.repetitions);
+    public async leap(repetitions: number = 1): Promise<void> {
+        await this.execute('leaper.leap', repetitions);
     }
 
     /**
      * Call the 'Escape Leaper Mode' command.
      */
-    public async escapeLeaperMode(options?: RepetitionOption): Promise<void> {
-        await this.execute('leaper.escapeLeaperMode', options?.repetitions);
+    public async escapeLeaperMode(repetitions: number = 1): Promise<void> {
+        await this.execute('leaper.escapeLeaperMode', repetitions);
     }
 
     /**
      * Jump to a snippet tabstop in the active text editor. 
      */
-    public async jumpToTabstop(which: 'next' | 'prev', options?: RepetitionOption): Promise<void> {
+    public async jumpToTabstop(which: 'next' | 'prev', repetitions: number = 1): Promise<void> {
         switch (which) {
-            case 'next': return this.execute('jumpToNextSnippetPlaceholder', options?.repetitions);
-            case 'prev': return this.execute('jumpToPrevSnippetPlaceholder', options?.repetitions);
+            case 'next': return this.execute('jumpToNextSnippetPlaceholder', repetitions);
+            case 'prev': return this.execute('jumpToPrevSnippetPlaceholder', repetitions);
         }
     }
 
@@ -390,23 +406,22 @@ class ExecutorFull {
      * Trigger an autocomplete suggestion in the active text editor then accept the first suggestion.
      */
     public async triggerAndAcceptSuggestion(): Promise<void> {
-        await this.execute('editor.action.triggerSuggest');
+        await this.execute('editor.action.triggerSuggest', 1);
         await waitFor(100);    // Wait for the suggestion box to appear.
-        await this.execute('acceptSelectedSuggestion');
+        await this.execute('acceptSelectedSuggestion', 1);
     }
 
     /**
      * Perform an undo in the active text editor.
      */
-    public async undo(options?: RepetitionOption): Promise<void> {
-        await this.execute('undo', options?.repetitions);
+    public async undo(repetitions: number = 1): Promise<void> {
+        await this.execute('undo', repetitions);
     }
 
     /**
      * Type text into the active text editor, codepoint by codepoint.
      */
-    public async typeText(text: string, options?: RepetitionOption): Promise<void> {
-        let repetitions = options?.repetitions ?? 1;
+    public async typeText(text: string, repetitions: number = 1): Promise<void> {
         while (repetitions-- > 0) {
             for (const char of text) {
                 await commands.executeCommand('default:type', { text: char });
@@ -418,8 +433,8 @@ class ExecutorFull {
     /**
      * Delete all text in a visible text editor.
      */
-    public async deleteAll(options?: ViewColumnOption): Promise<void> {
-        const editor   = getVisibleTextEditor(options?.viewColumn);
+    public async deleteAll(viewColumn: AllowedViewColumns = ViewColumn.Active): Promise<void> {
+        const editor   = getVisibleTextEditor(viewColumn);
         const document = editor.document;
         const startPos = new Position(0, 0);
         const endPos   = document.lineAt(document.lineCount - 1).rangeIncludingLineBreak.end;
@@ -439,9 +454,9 @@ class ExecutorFull {
           | { kind: 'insert';  at: CompactPosition; text: string; } 
           | { kind: 'delete';  range: CompactRange; }
         >,
-        options?: ViewColumnOption
+        viewColumn: AllowedViewColumns = ViewColumn.Active
     ): Promise<void> {
-        const editor = getVisibleTextEditor(options?.viewColumn);
+        const editor = getVisibleTextEditor(viewColumn);
         await editor.edit((builder: TextEditorEdit) => {
             for (const edit of edits) {
                 if (edit.kind === 'replace') {
@@ -460,36 +475,34 @@ class ExecutorFull {
 
     /**
      * Insert a snippet into a visible text editor.
+     * 
+     * @param location Where to insert the snippet in the target text editor. Defaults to the target
+     *                 text editors' cursor(s).
      */
     public async insertSnippet(
-        snippet: SnippetString,
-        options?: ViewColumnOption & {
-
-            /**
-             * Where to insert the snippet.
-             * 
-             * Defaults to the target text editor's cursor(s).
-             */
-            at?: CompactPosition | CompactRange;
-        }
+        snippet:    SnippetString,
+        viewColumn: AllowedViewColumns = ViewColumn.Active,
+        location?:  CompactPosition | CompactRange
     ): Promise<void> {
-        const at = options?.at;
-        let location: Position | Range | undefined = undefined;
-        if (Array.isArray(at)) {
-            location = new Position(at[0], at[1]);
-        } else if (typeof at === 'object') {
-            location = new Range(at.start[0], at.start[1], at.end[0], at.end[1]);
+        let _location: Position | Range | undefined = undefined;
+        if (Array.isArray(location)) {
+            _location = new Position(location[0], location[1]);
+        } else if (typeof location === 'object') {
+            _location = new Range(location.start[0], location.start[1], location.end[0], location.end[1]);
         }       
-        const editor = getVisibleTextEditor(options?.viewColumn);
-        await editor.insertSnippet(snippet, location);
+        const editor = getVisibleTextEditor(viewColumn);
+        await editor.insertSnippet(snippet, _location);
         await waitFor(ExecutorFull.POST_REPETITION_DELAY_MS);
     }
     
     /**
      * Set the cursors in a visible text editor to specific positions.
      */
-    public async setCursors(to: CompactCursor[], options?: ViewColumnOption): Promise<void> {
-        const editor = getVisibleTextEditor(options?.viewColumn);
+    public async setCursors(
+        to:         CompactCursor[], 
+        viewColumn: AllowedViewColumns = ViewColumn.Active
+    ): Promise<void> {
+        const editor = getVisibleTextEditor(viewColumn);
         editor.selections = to.map((cursor) => {
             const anchorLine = Array.isArray(cursor) ? cursor[0] : cursor.anchor[0];
             const anchorChar = Array.isArray(cursor) ? cursor[1] : cursor.anchor[1];
@@ -505,9 +518,9 @@ class ExecutorFull {
      */
     public async switchToEditorInGroup(which: 'next' | 'prev'): Promise<void> {
         if (which === 'next') {
-            await this.execute('workbench.action.nextEditorInGroup');
+            await this.execute('workbench.action.nextEditorInGroup', 1);
         } else if (which === 'prev') {
-            await this.execute('workbench.action.previousEditorInGroup');
+            await this.execute('workbench.action.previousEditorInGroup', 1);
         }
         await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
     }
@@ -517,9 +530,9 @@ class ExecutorFull {
      */
     public async moveEditorToGroup(which: 'left' | 'right'): Promise<void> {
         if (which === 'left') {
-            await this.execute('workbench.action.moveEditorToLeftGroup');
+            await this.execute('workbench.action.moveEditorToLeftGroup', 1);
         } else if (which === 'right') {
-            await this.execute('workbench.action.moveEditorToRightGroup');
+            await this.execute('workbench.action.moveEditorToRightGroup', 1);
         }
         await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
     }
@@ -528,7 +541,7 @@ class ExecutorFull {
      * Focus on the explorer side bar.
      */
     public async focusExplorerSideBar(): Promise<void> {
-        await this.execute('workbench.view.explorer');
+        await this.execute('workbench.view.explorer', 1);
         await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
     }
 
@@ -548,7 +561,7 @@ class ExecutorFull {
                 case 'fourth': return 'workbench.action.focusFourthEditorGroup';
             }
         })();
-        await this.execute(commandId);
+        await this.execute(commandId, 1);
         await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
     }
 
@@ -556,7 +569,7 @@ class ExecutorFull {
      * Close the side bar.
      */
     public async closeSideBar(): Promise<void> {
-        await this.execute('workbench.action.closeSidebar');
+        await this.execute('workbench.action.closeSidebar', 1);
         await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
     }
 
@@ -564,7 +577,7 @@ class ExecutorFull {
      * Close the active text editor.
      */
     public async closeActiveEditor(): Promise<void> {
-        await this.execute('workbench.action.closeActiveEditor');
+        await this.execute('workbench.action.closeActiveEditor', 1);
         await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
     }
 
@@ -669,12 +682,12 @@ class ExecutorFull {
             | './workspace-2/text.ts'
             | './workspace-3/text.md'
             | './workspace-4/text.ts', 
-        options?: Pick<TextDocumentShowOptions, 'viewColumn'>
+        viewColumn: AllowedViewColumns = ViewColumn.Active
     ): Promise<void> {
         const rootPath = path.dirname(workspace.workspaceFile?.path ?? '');
         const filePath = path.join(rootPath, file);
         const document = await workspace.openTextDocument(filePath);
-        await window.showTextDocument(document, options);
+        await window.showTextDocument(document, viewColumn);
         await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
     }
 
@@ -801,11 +814,11 @@ function resolveViewColumn(viewColumn: AllowedViewColumns): ResolvedViewColumn {
  * Note that this function should not be called immediately after a executing command that affects 
  * the view state, because it takes a while for changes in the view state to become effective.
  */
-function getSnapshot(viewColumn?: AllowedViewColumns): TrackerSnapshot {
+function getSnapshot(viewColumn: AllowedViewColumns): TrackerSnapshot {
     if (!testHandle) {
         throw new Error('Unable to retrive test handle!');
     }
-    const resolved = resolveViewColumn(viewColumn ?? ViewColumn.Active);
+    const resolved = resolveViewColumn(viewColumn);
     const snapshot = testHandle.snapshot().get(resolved);
     if (!snapshot) {
         throw new Error(`Unable to get snapshot for view column ${viewColumn}`);
@@ -839,7 +852,6 @@ function getMostRecentHasLineOfSightContext(): boolean {
     return testHandle.mostRecentHasLineOfSightContext;
 }
 
-
 /**
  * Get a visible text editor at a specific view column.
  * 
@@ -848,8 +860,8 @@ function getMostRecentHasLineOfSightContext(): boolean {
  * Note that this function should not be called immediately after a executing command that affects 
  * the view state, because it takes a while for changes in the view state to become effective.
  */
-function getVisibleTextEditor(viewColumn?: AllowedViewColumns): TextEditor {
-    const resolved = resolveViewColumn(viewColumn ?? ViewColumn.Active);
+function getVisibleTextEditor(viewColumn: AllowedViewColumns): TextEditor {
+    const resolved = resolveViewColumn(viewColumn);
     const editor   = window.visibleTextEditors.find(editor => editor.viewColumn === resolved);
     if (!editor) {
         throw new Error(`No text editor in view column ${viewColumn}!`);
@@ -872,25 +884,3 @@ async function clearAllWorkspaceFiles(): Promise<void> {
 }
 
 type AllowedViewColumns = ViewColumn.Active | ViewColumn.One | ViewColumn.Two | ViewColumn.Three | ViewColumn.Four;
-
-interface ViewColumnOption {
-
-    /**
-     * The view column of the visible text editor to perform the check or action in.
-     * 
-     * Defaults to `ViewColumn.Active`.
-     */
-    viewColumn?: AllowedViewColumns;
-    
-}
-
-interface RepetitionOption {
-
-    /** 
-     * How many times to execute this action. 
-     * 
-     * Defaults to `1`. 
-     */
-    repetitions?: number;
-
-}

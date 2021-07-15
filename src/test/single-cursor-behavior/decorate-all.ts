@@ -45,8 +45,8 @@ import { range } from '../utilities/helpers';
  * with a pair cluster at `{ line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] }`.
  */
 async function testDecorations(
-    executor: Executor, 
-    targetViewColumn: 'first' | 'second' | 'third',
+    executor:          Executor, 
+    targetViewColumn:  'first' | 'second' | 'third',
     expectDecorations: 'all' | 'nearest'
 ): Promise<void> {
 
@@ -81,7 +81,7 @@ async function testDecorations(
         },
     ]); 
     await executor.setCursors([ [7, 10] ]);
-    await executor.assertPairs([ 'None' ], { expectDecorations });
+    await executor.assertPairsFull([ 'None' ], expectDecorations);
     await executor.assertCursors([ [7, 10] ]);
 
     // Document state after:
@@ -98,7 +98,7 @@ async function testDecorations(
     // }          ^(cursor position)
     // ```   
     await executor.typeText('(');
-    await executor.assertPairs([ { line: 7, sides: [10, 11] } ], { expectDecorations });
+    await executor.assertPairsFull([ { line: 7, sides: [10, 11] } ], expectDecorations);
     await executor.assertCursors([ [7, 11] ]);
 
     // Document state after:
@@ -115,7 +115,7 @@ async function testDecorations(
     // }                 ^(cursor position)
     // ```   
     await executor.typeText('async (');
-    await executor.assertPairs([ { line: 7, sides: [10, 17, 18, 19] } ], { expectDecorations });
+    await executor.assertPairsFull([ { line: 7, sides: [10, 17, 18, 19] } ], expectDecorations);
     await executor.assertCursors([ [7, 18] ]);
 
     // Document state after:
@@ -132,7 +132,7 @@ async function testDecorations(
     // }                  ^(cursor position)
     // ```   
     await executor.leap();
-    await executor.assertPairs([ { line: 7, sides: [10, 19] } ], { expectDecorations });
+    await executor.assertPairsFull([ { line: 7, sides: [10, 19] } ], expectDecorations);
     await executor.assertCursors([ [7, 19] ]);
 
     // Document state after:
@@ -149,7 +149,7 @@ async function testDecorations(
     // }                       ^(cursor position)
     // ```   
     await executor.typeText(' => {');
-    await executor.assertPairs([ { line: 7, sides: [10, 23, 24, 25] } ], { expectDecorations });
+    await executor.assertPairsFull([ { line: 7, sides: [10, 23, 24, 25] } ], expectDecorations);
     await executor.assertCursors([ [7, 24] ]);
 
     // Document state after:
@@ -165,8 +165,8 @@ async function testDecorations(
     //     await (async () => {  })
     // }                         ^(cursor position)
     // ```   
-    await executor.typeText(' ', { repetitions: 2 });
-    await executor.assertPairs([ { line: 7, sides: [10, 23, 26, 27] } ], { expectDecorations });
+    await executor.typeText(' ', 2);
+    await executor.assertPairsFull([ { line: 7, sides: [10, 23, 26, 27] } ], expectDecorations);
     await executor.assertCursors([ [7, 26] ]);
 
     // Document state after:
@@ -183,7 +183,7 @@ async function testDecorations(
     // }                        ^(cursor position)
     // ```   
     await executor.moveCursors('left');
-    await executor.assertPairs([ { line: 7, sides: [10, 23, 26, 27] } ], { expectDecorations });
+    await executor.assertPairsFull([ { line: 7, sides: [10, 23, 26, 27] } ], expectDecorations);
     await executor.assertCursors([ [7, 25] ]);
 
     // Document state after:
@@ -200,9 +200,9 @@ async function testDecorations(
     // }                                    ^(cursor position)
     // ```   
     await executor.typeText('console.log(');
-    await executor.assertPairs(
+    await executor.assertPairsFull(
         [ { line: 7, sides: [10, 23, 36, 37, 39, 40] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [7, 37] ]);
 
@@ -220,9 +220,9 @@ async function testDecorations(
     // }                                     ^(cursor position)
     // ```   
     await executor.typeText('{');
-    await executor.assertPairs(
+    await executor.assertPairsFull(
         [ { line: 7, sides: [10, 23, 36, 37, 38, 39, 41, 42] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [7, 38] ]);
 
@@ -239,10 +239,10 @@ async function testDecorations(
     //     await (async () => { console.log({  }) })
     // }                                       ^(cursor position)
     // ```   
-    await executor.typeText(' ', { repetitions: 2 });
-    await executor.assertPairs(
+    await executor.typeText(' ', 2);
+    await executor.assertPairsFull(
         [ { line: 7, sides: [10, 23, 36, 37, 40, 41, 43, 44] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [7, 40] ]);
 
@@ -260,9 +260,9 @@ async function testDecorations(
     // }                                      ^(cursor position)
     // ```   
     await executor.moveCursors('left');
-    await executor.assertPairs(
+    await executor.assertPairsFull(
         [ { line: 7, sides: [10, 23, 36, 37, 40, 41, 43, 44] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [7, 39] ]);
 
@@ -280,9 +280,9 @@ async function testDecorations(
     // }                                            ^(cursor position)
     // ```
     await executor.typeText('hey: [');
-    await executor.assertPairs(
+    await executor.assertPairsFull(
         [ { line: 7, sides: [10, 23, 36, 37, 44, 45, 47, 48, 50, 51] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [7, 45] ]);
     
@@ -299,10 +299,10 @@ async function testDecorations(
     //     await (async () => { console.log({ hey: [  ] }) })
     // }                                              ^(cursor position)
     // ```
-    await executor.typeText(' ', { repetitions: 2 });
-    await executor.assertPairs(
+    await executor.typeText(' ', 2);
+    await executor.assertPairsFull(
         [ { line: 7, sides: [10, 23, 36, 37, 44, 47, 49, 50, 52, 53] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [7, 47] ]);
 
@@ -320,9 +320,9 @@ async function testDecorations(
     // }                                             ^(cursor position)
     // ```
     await executor.moveCursors('left');
-    await executor.assertPairs(
+    await executor.assertPairsFull(
         [ { line: 7, sides: [10, 23, 36, 37, 44, 47, 49, 50, 52, 53] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [7, 46] ]);
 
@@ -340,9 +340,9 @@ async function testDecorations(
     // }                                              ^(cursor position)
     // ```
     await executor.typeText("'");
-    await executor.assertPairs(
+    await executor.assertPairsFull(
         [ { line: 7, sides: [10, 23, 36, 37, 44, 46, 47, 49, 51, 52, 54, 55] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [7, 47] ]);
 
@@ -360,9 +360,9 @@ async function testDecorations(
     // }                                                ^(cursor position)
     // ```
     await executor.typeText('😎');
-    await executor.assertPairs(
+    await executor.assertPairsFull(
         [ { line: 7, sides: [10, 23, 36, 37, 44, 46, 49, 51, 53, 54, 56, 57] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [7, 49] ]);
 
@@ -380,9 +380,9 @@ async function testDecorations(
     // }                                                 ^(cursor position)
     // ```
     await executor.leap();
-    await executor.assertPairs(
+    await executor.assertPairsFull(
         [ { line: 7, sides: [10, 23, 36, 37, 44, 51, 53, 54, 56, 57] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [7, 50] ]);
 
@@ -402,9 +402,9 @@ async function testDecorations(
     await executor.editText([
         { kind: 'insert', at: [7, 50], text: ', await helloWorld' }
     ]);
-    await executor.assertPairs(
+    await executor.assertPairsFull(
         [ { line: 7, sides: [10, 23, 36, 37, 44, 69, 71, 72, 74, 75] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [7, 68] ]);
 
@@ -422,9 +422,9 @@ async function testDecorations(
     // }                                                                    ^(cursor position)
     // ```
     await executor.typeText('(');
-    await executor.assertPairs(
+    await executor.assertPairsFull(
         [ { line: 7, sides: [10, 23, 36, 37, 44, 68, 69, 71, 73, 74, 76, 77] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [7, 69] ]);
 
@@ -445,9 +445,9 @@ async function testDecorations(
         { kind: 'insert', at: [7, 78], text: '();' },
         { kind: 'insert', at: [7, 75], text: ';'   }
     ]);
-    await executor.assertPairs(
+    await executor.assertPairsFull(
         [ { line: 7, sides: [10, 23, 36, 37, 44, 68, 69, 71, 73, 74, 77, 78] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [7, 69] ]);
 
@@ -474,9 +474,9 @@ async function testDecorations(
         { kind: 'insert', at: [7, 25], text: '\n            '   },
         { kind: 'insert', at: [7, 11], text: '\n        '       },
     ]);
-    await executor.assertPairs(
+    await executor.assertPairsFull(
         [ { line: 9, sides: [23, 24, 31, 55, 56, 58, 60, 61] } ], 
-        { expectDecorations }
+        expectDecorations
     );
     await executor.assertCursors([ [9, 56] ]);
 };
@@ -538,18 +538,18 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         //
         //     *Note that Markdown has an odd behavior where `<>` pairs within square brackets are 
         //     not consistently autoclosed.
-        await executor.openFile('./workspace-3/text.md',  { viewColumn: ViewColumn.One });
-        await executor.openFile('./workspace-4/text.ts',  { viewColumn: ViewColumn.Two });
+        await executor.openFile('./workspace-3/text.md', ViewColumn.One);
+        await executor.openFile('./workspace-4/text.ts', ViewColumn.Two);
 
         // As a precaution, test that the effective values of `leaper.decorateAll` for the two 
         // opened files are as expected.
         await executor.focusEditorGroup('first');
-        await executor.typeText('{', { repetitions: 3 });
-        await executor.assertPairs([ { line: 0, sides: range(0, 6) } ], { expectDecorations: 'nearest' });
+        await executor.typeText('{', 3);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 6) } ], 'nearest');
         await executor.assertCursors([ [ 0, 3 ] ]);
         await executor.focusEditorGroup('second');
-        await executor.typeText('{', { repetitions: 3 });
-        await executor.assertPairs([ { line: 0, sides: range(0, 6) } ], { expectDecorations: 'all' });
+        await executor.typeText('{', 3);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 6) } ], 'all');
         await executor.assertCursors([ [ 0, 3 ] ]);
     },
     task: async (executor) => {
@@ -595,24 +595,18 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
 
         // The existing pairs in view column 2's text editor should now have all pairs nearest to 
         // the cursor decorated, just like view column 1's text editor.
-        await executor.assertPairs(
-            [ { line: 0, sides: range(0, 6) } ], 
-            { expectDecorations: 'nearest', viewColumn: ViewColumn.One }
-        );
-        await executor.assertPairs(
-            [ { line: 0, sides: range(0, 6) } ], 
-            { expectDecorations: 'nearest', viewColumn: ViewColumn.Two }
-        );
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 6) } ], 'nearest', ViewColumn.One);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 6) } ], 'nearest', ViewColumn.Two);
 
         // Type more pairs into both text editors to see that the proper decoration behavior is
         // enforced for newly inserted pairs as well.
         await executor.focusEditorGroup('first');
-        await executor.typeText('{', { repetitions: 3 });
-        await executor.assertPairs([ { line: 0, sides: range(0, 12) } ], { expectDecorations: 'nearest' });
+        await executor.typeText('{', 3);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 12) } ], 'nearest');
         await executor.assertCursors([ [0, 6] ]);
         await executor.focusEditorGroup('second');
-        await executor.typeText('{', { repetitions: 3 });
-        await executor.assertPairs([ { line: 0, sides: range(0, 12) } ], { expectDecorations: 'nearest' });
+        await executor.typeText('{', 3);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 12) } ], 'nearest');
         await executor.assertCursors([ [0, 6] ]);
 
         // 2. Enable the configuration in the root workspace.
@@ -654,24 +648,18 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         });
 
         // The existing pairs in both text editors should now all be decorated. 
-        await executor.assertPairs(
-            [ { line: 0, sides: range(0, 12) } ], 
-            { expectDecorations: 'all', viewColumn: ViewColumn.One }
-        );
-        await executor.assertPairs(
-            [ { line: 0, sides: range(0, 12) } ], 
-            { expectDecorations: 'all', viewColumn: ViewColumn.Two }
-        );
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 12) } ], 'all', ViewColumn.One);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 12) } ], 'all', ViewColumn.Two);
 
         // Type more pairs into both text editors to see that the proper decoration behavior is
         // enforced for newly inserted pairs as well.
         await executor.focusEditorGroup('first');
-        await executor.typeText('{', { repetitions: 3 });
-        await executor.assertPairs([ { line: 0, sides: range(0, 18) } ], { expectDecorations: 'all' });
+        await executor.typeText('{', 3);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 18) } ], 'all');
         await executor.assertCursors([ [0, 9] ]);
         await executor.focusEditorGroup('second');
-        await executor.typeText('{', { repetitions: 3 });
-        await executor.assertPairs([ { line: 0, sides: range(0, 18) } ], { expectDecorations: 'all' });
+        await executor.typeText('{', 3);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 18) } ], 'all');
         await executor.assertCursors([ [0, 9] ]);
 
         // 3. Disable the configuration for Typescript in the root workspace.
@@ -716,24 +704,18 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         // The existing pairs in view column 2's text editor should now have only the pair closest
         // to the cursor decorated, while the decorations in view column 1's text editor should 
         // remain unaffected.
-        await executor.assertPairs(
-            [ { line: 0, sides: range(0, 18) } ], 
-            { expectDecorations: 'all', viewColumn: ViewColumn.One }
-        );
-        await executor.assertPairs(
-            [ { line: 0, sides: range(0, 18) } ], 
-            { expectDecorations: 'nearest', viewColumn: ViewColumn.Two }
-        );
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 18) } ], 'all',     ViewColumn.One);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 18) } ], 'nearest', ViewColumn.Two);
 
         // Type more pairs into both text editors to see that the proper decoration behavior is
         // enforced for newly inserted pairs as well.
         await executor.focusEditorGroup('first');
-        await executor.typeText('{', { repetitions: 3 });
-        await executor.assertPairs([ { line: 0, sides: range(0, 24) } ], { expectDecorations: 'all' });
+        await executor.typeText('{', 3);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 24) } ], 'all');
         await executor.assertCursors([ [0, 12] ]);
         await executor.focusEditorGroup('second');
-        await executor.typeText('{', { repetitions: 3 });
-        await executor.assertPairs([ { line: 0, sides: range(0, 24) } ], { expectDecorations: 'nearest' });
+        await executor.typeText('{', 3);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 24) } ], 'nearest');
         await executor.assertCursors([ [0, 12] ]);
 
         // 4. Disable the configuration for Markdown in Workspace Folder 3.
@@ -779,24 +761,18 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         // The existing pairs in view column 1's text editor should now have only the pair closest
         // to the cursor decorated, while the decorations in view column 2's text editor should 
         // remain unaffected.
-        await executor.assertPairs(
-            [ { line: 0, sides: range(0, 24) } ], 
-            { expectDecorations: 'nearest', viewColumn: ViewColumn.One }
-        );
-        await executor.assertPairs(
-            [ { line: 0, sides: range(0, 24) } ], 
-            { expectDecorations: 'nearest', viewColumn: ViewColumn.Two }
-        );
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 24) } ], 'nearest', ViewColumn.One);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 24) } ], 'nearest', ViewColumn.Two);
 
         // Type more pairs into both text editors to see that the proper decoration behavior is
         // enforced for newly inserted pairs as well.
         await executor.focusEditorGroup('first');
-        await executor.typeText('{', { repetitions: 3 });
-        await executor.assertPairs([ { line: 0, sides: range(0, 30) } ], { expectDecorations: 'nearest' });
+        await executor.typeText('{', 3);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 30) } ], 'nearest');
         await executor.assertCursors([ [0, 15] ]);
         await executor.focusEditorGroup('second');
-        await executor.typeText('{', { repetitions: 3 });
-        await executor.assertPairs([ { line: 0, sides: range(0, 30) } ], { expectDecorations: 'nearest' });
+        await executor.typeText('{', 3);
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 30) } ], 'nearest');
         await executor.assertCursors([ [0, 15] ]);
     }
 });
