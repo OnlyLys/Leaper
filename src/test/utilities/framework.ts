@@ -199,7 +199,7 @@ class ExecutorFull {
     ): Promise<void> {
     
         // Wait in case the engine has not caught up.
-        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS * 2);
+        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
 
         // The actual pairs being tracked for the target text editor, with the `isDecorated` flags
         // stripped since we are not checking for decorations.
@@ -243,7 +243,7 @@ class ExecutorFull {
     ): Promise<void> {
 
         // Wait in case the engine has not caught up.
-        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS * 2);
+        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
 
         const actual = getSnapshot(viewColumn).pairs;
 
