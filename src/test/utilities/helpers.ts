@@ -10,20 +10,20 @@ export function range(start: number, endNotInclusive: number): number[] {
 }
 
 /** 
- * Add a number to each element within `arr[start..endNotInclusive]`.
+ * Add `a` to each element within `arr[start..endNotInclusive]`.
  */
-export function sliceAdd(arr: number[], start: number, endNotInclusive: number, add: number): void {
+export function sliceAdd(arr: number[], start: number, endNotInclusive: number, a: number): void {
     for (let i = start; i < endNotInclusive; ++i) {
-        arr[i] += add;
+        arr[i] += a;
     }
 }
 
 /** 
- * Subtract a number from each element within `arr[start..endNotInclusive]`.
+ * Subtract `a` from each element within `arr[start..endNotInclusive]`.
  */
-export function sliceSub(arr: number[], start: number, endNotInclusive: number, sub: number): void {
+export function sliceSub(arr: number[], start: number, endNotInclusive: number, a: number): void {
     for (let i = start; i < endNotInclusive; ++i) {
-        arr[i] -= sub;
+        arr[i] -= a;
     }
 }
 
