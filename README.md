@@ -1,86 +1,151 @@
 # Leaper
 
-Leaper provides the ability to leap out of autoclosing pairs with `Tab`!
+This extension provides the ability to leap out of autoclosing pairs with `Tab`.
 
-## Leaper In Action
-
-![Leaper In Action](images/leaper-in-action.gif)
-
-![Leaper In Action 2](images/leaper-in-action-2.gif)
+![Leaper in Action Gif Single Cursor](images/leaper-in-action-single.gif)
 
 ## How It Works
 
-The user's input is monitored for the insertion of any autoclosing pairs. By default, these are monitored:
+Whenever you insert any of the following autoclosing pairs:
 
     (), {}, [], <>, '', "", ``
 
-When any of these autoclosing pairs are inserted, the extension will begin to track its position in the document and provide the user the ability to leap (i.e. jump) out of it. Once the cursor is moved outside the pair, it will no longer be tracked. 
+this extension will begin to track its position in the document and provide you
+the ability to leap (i.e. move) out of it with a `Tab` keypress. Pairs that are
+being tracked will have their closing sides decorated, and the decorations can 
+be customized with the `leaper.decorateAll` and `leaper.decorationOptions` 
+configurations.
 
-## Keybindings
+Once you have leaped out of a pair, or have intentionally moved the cursor out 
+of a pair, then that pair will no longer be tracked by this extension.
 
-### `Tab` - Leap
+You can customize which autoclosing pairs are tracked by this extension with the 
+`leaper.detectedPairs` configuration.
 
-Move the cursor to just past the closing character of the nearest available pair, **provided there is line of sight to the closing character of the pair**. If there is non-whitespace text between the cursor and the closing character then there is no line of sight.
+## Commands
 
-If there are multiple nested pairs, a single leap will only leap out of the nearest one.
+### `leaper.leap` (Keybinding: `Tab`)
+    
+This command moves the cursor out of the nearest available pair.
 
-#### _Potential Conflict With Tab Completion Feature_
+By 'available' we mean:
 
-`leaper.leap`'s default keybinding: 
+ 1. The pair must be a pair that is being tracked by this extension.
+ 2. There is either no text or only whitespace text between the cursor and the 
+    closing side of said pair.
 
-    {
-        "key": "tab",
-        "command": "leaper.leap",
-        "when": "leaper.inLeaperMode && leaper.hasLineOfSight && editorTextFocus && !editorHasSelection && !editorTabMovesFocus && !suggestWidgetVisible"
-    },
+This command works when there are multiple cursors as well. 
 
-while suitable for most use cases, can conflict with VS Code's [tab completion feature](https://code.visualstudio.com/docs/editor/intellisense#_tab-completion), since that requires the user to press the `Tab` key, possibly at places where there are pairs that can be leaped out of. Since [extension keybindings have higher priority than VS Code's default keybindings](https://code.visualstudio.com/docs/getstarted/keybindings#_keyboard-rules), this means that the `leaper.leap` will always occur even if the user's intention was to cycle to the next tab completion suggestion. 
+![Leaper in Action Gif Multi Cursor](images/leaper-in-action-multi.gif)
 
-The tab completion keybindings (`insertBestCompletion` and `insertNextSugggestion`) could be rebound to another key to avoid the conflict. Otherwise, `leaper.leap` could be rebound as well to avoid the conflict. 
+#### _Potential Conflict with Tab Completion Feature_
 
-Note that tab completion is not the same as quick suggestion, which is the default suggestion method in VS Code.
+`leaper.leap`'s default `Tab` keybinding, while suitable for most use cases, can 
+conflict with vscode's [tab completion] feature, since that feature requires 
+users to press the `Tab` key, possibly at places where there are pairs that can 
+be leaped out of. 
 
-### `Shift` + `Escape` - Escape Leaper Mode
+However, since vscode's tab completion feature is disabled by default, most users 
+should not experience any such keybinding conflicts.
 
-Clear the list of pairs that are being tracked by the extension.
+**Note that tab completion is not the same as quick suggestion, which is the 
+default vscode suggestion mode.**
+
+[tab completion]: https://code.visualstudio.com/docs/editor/intellisense#_tab-completion
+
+### `leaper.escapeLeaperMode` (Keybinding: `Shift` + `Escape`)
+
+This command clears the list of pairs that are being tracked.
+
+![Escape Leaper Mode](images/escape-leaper-mode.gif)
 
 ## Configurations
 
-### `leaper.customDecorationOptions`
+### `leaper.decorateAll`
 
-You can use this configuration to customize the decoration for the closing character of a pair. For instance, to have a black outline appear around it, it could be set to:
+This configuration specifies whether decorations are applied to all pairs that 
+are being tracked or just the ones nearest to each cursor.
 
-    "leaper.customDecorationOptions": {
-        "outlineColor": "black",
+Here is what it looks like disabled:
+
+![Decorate All False](images/decorate-all-false.gif)
+
+and here is what it looks like enabled: 
+
+![Decorate All True](images/decorate-all-true.gif)
+
+This configuration is disabled by default.
+
+### `leaper.decorationOptions`
+
+This configuration specifies the style of the decorations.
+
+This configuration accepts a subset of vscode's [DecorationRenderOptions]. Most 
+of the properties in that type are supported. For properties relating to color, 
+you can specify a either a hex RGB(A) value string or a [theme color identifier] 
+string. Theme color identifers allow you to reference a color in the current theme 
+you are using. If a color string begins with a `#`, it is treated as a hex RGB(A) 
+value. Otherwise, it is treated as a theme color identifier.
+
+Suppose you want the following style in light themes:
+
+![Decoration Options Example 1](images/decoration-options-example-1.gif)
+
+and the following style in dark themes:
+
+![Decoration Options Example 2](images/decoration-options-example-2.gif)
+
+then you can set this configuration to:
+
+    {
+        "backgroundColor": "#0000FF9E",
+        "outlineColor": "editorBracketMatch.border",
+        "outlineStyle": "outset",
         "outlineWidth": "1px",
-        "outlineStyle": "solid"
+        "fontWeight": "bolder",
+        "light": {
+            "backgroundColor": "#0000001A"
+        }
     }
 
-For the entire list of available properties, please see VS Code's [DecorationRenderOptions](https://code.visualstudio.com/api/references/vscode-api#DecorationRenderOptions).
+The default value of this configuration is:
 
-To turn off the decoration, just set it to an empty object:
+    {
+        "outlineColor": "editorWarning.foreground",
+        "outlineStyle": "solid",
+        "outlineWidth": "1px",
+        "fontWeight": "bolder"
+    }
 
-    "leaper.customDecorationOptions": {}
+which applies a slight bolding and an outline using the current theme's color 
+for warning squiggles.
 
-### `leaper.decorateOnlyNearestPair`
+To disable decorations, set this to `null`.
 
-The default behavior of Leaper is to decorate only the nearest pair that is being tracked. 
+[DecorationRenderOptions]: https://code.visualstudio.com/api/references/vscode-api#DecorationRenderOptions
+[theme color identifier]: https://code.visualstudio.com/api/references/theme-color
 
-To decorate all the pairs that are being tracked, set this to `false`. The decorations will then look like:
+### `leaper.detectedPairs`
 
-![Decorate All Pairs](images/decorate-all-pairs.gif)
+This configuration specifies which autoclosing pairs this extension should 
+detect.
 
-### `leaper.additionalTriggerPairs`
+Suppose you want this extension to only detect `()`, `[]` and `{}` pairs. Then
+you can set this configuration to:
 
-You can add use this configuration to add additional pairs to be detected. Pairs are specified with the format: 
+    [ "()", "[]", "{}" ]
 
-    { "open": "*open_character*", "close": "*close_character*" }
+Or suppose you are using a programming language that has `()`, `<>`, `[]`, `||` 
+and `$$` as autoclosing pairs. Then if you want this extension to only detect
+those pairs, you should set this configuration to:
 
-For instance, say we want to add detection for an autoclosing pair that is `||`. All we need to do is to set this configuration to:
+    [ "()", "<>", "[]", "||", "$$" ]
 
-    "leaper.additionalTriggerPairs": [
-        { "open": "|", "close": "|" }
-    ],
+The default value of this configuration is:
+
+    [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ]
+ 
+which includes the autoclosing pairs of most mainstream programming languages.
 
 ## Feedback and Help
 

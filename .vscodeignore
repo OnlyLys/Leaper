@@ -1,12 +1,19 @@
 .vscode/**
 .vscode-test/**
-out/test/**
-out/**/*.map
 src/**
 .gitignore
 tsconfig.json
-vsc-extension-quickstart.md
-tslint.json
 **/*.ts
 contributing.md
-images/unused/**
+.eslintrc.json
+.test-environment/
+.test-environment-tmp/
+DESIGN-NOTES.md
+.eslintignore
+images/raw
+
+# In release builds, the extension will be bundled into `out/extension.js`. All the other files in 
+# 'out' should therefore be ignored.
+out
+!out/extension.js
+node_modules

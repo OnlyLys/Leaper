@@ -4,17 +4,49 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "npm: build-release",
             "type": "npm",
-            "script": "watch",
-            "problemMatcher": "$tsc-watch",
-            "isBackground": true,
+            "script": "build-release",
+            "problemMatcher": [
+                "$eslint-stylish",
+                "$tsc"
+            ],
+            "isBackground": false,
             "presentation": {
-                "reveal": "never"
+                "reveal": "always"
+            },
+            "group": "build"
+        },
+        {
+            "label": "npm: build-dev",
+            "type": "npm",
+            "script": "build-dev",
+            "problemMatcher": [
+                "$eslint-stylish",
+                "$tsc"
+            ],
+            "isBackground": false,
+            "presentation": {
+                "reveal": "always"
             },
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "npm: pretest",
+            "type": "npm",
+            "script": "pretest",
+            "problemMatcher": [
+                "$eslint-stylish",
+                "$tsc",
+            ],
+            "isBackground": false,
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": "build"
         }
     ]
 }

@@ -1,4 +1,5 @@
+.vscode-test/
+.test-environment-tmp/
 out
 node_modules
-.vscode-test/
 *.vsix

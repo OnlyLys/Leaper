@@ -1,0 +1,16 @@
+{
+    "leaper.decorationOptions": null,
+    "[plaintext]": {
+        // (DO-3).
+        "leaper.decorationOptions": {
+            "backgroundColor": "#0000FF9E",
+            "outlineColor": "editorBracketMatch.border",
+            "outlineStyle": "outset",
+            "outlineWidth": "1px",
+            "fontWeight": "bolder",
+            "light": {
+                "backgroundColor": "#0000001A",
+            },
+        },
+    },
+}
