@@ -2,7 +2,7 @@
     "name": "leaper",
     "displayName": "Leaper",
     "description": "`Tab` to jump out of autoclosing pairs like braces and quotes.",
-    "version": "0.9.3",
+    "version": "0.10.0",
     "publisher": "OnlyLys",
     "license": "MIT",
     "icon": "images/icon.png",

@@ -1,6 +1,6 @@
 # CHANGELOG
 
-### 0.10.0 _(Work in Progress)_
+### 0.10.0
 - Allow the extension to run in untrusted workspaces. 
 - Fix incorrect extension packaging. The fix in 0.9.3 did not work.
 - Hide the 'Leap' and 'Escape Leaper Mode' commands from the command palette.
