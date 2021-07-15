@@ -22,7 +22,10 @@ async function main() {
 				testWorkspacePath,
 
 				// We do not want other extensions running in the background affecting our tests.
-				'--disable-extensions'
+				'--disable-extensions',
+
+				// We do not want the workspace trust dialog messing up our tests.
+				'--disable-workspace-trust'
 			] 
         });
 	} catch (err) {
