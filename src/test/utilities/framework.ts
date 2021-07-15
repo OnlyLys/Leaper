@@ -262,7 +262,7 @@ class ExecutorFull {
      */
     public async assertCursors(
         expect:   ReadonlyArray<CompactCursor>,
-        options?: RepetitionOption & ViewColumnOption
+        options?: ViewColumnOption
     ): Promise<void> {
 
         // Note that this function is not actually `async` since it does not wait on anything. But 
