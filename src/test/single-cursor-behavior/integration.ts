@@ -43,8 +43,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         // keybinding contexts to be disabled.
         await executor.assertPairs([ 'None' ], { expectDecorations: 'nearest' });
         await executor.assertCursors([ [0, 0] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
     },
     task: async (executor) => {
 
@@ -67,8 +66,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('function main');
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [0, 13] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
         // Document state after:
         // 
@@ -79,8 +77,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('(');
         await assertPairs(executor, [ { line: 0, sides: [13, 14] } ]);
         await executor.assertCursors([ [0, 14] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -91,8 +88,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.leap();
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [0, 15] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
         // Document state after:
         //
@@ -103,8 +99,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText(' ');
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [0, 16] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
             // Mistake simulation: wrong bracket inserted.
             //
@@ -117,8 +112,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.typeText('[');
             await assertPairs(executor, [ { line: 0, sides: [16, 17] } ]);
             await executor.assertCursors([ [0, 17] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: wrong bracket inserted.
             //
@@ -132,8 +126,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.typeText('\n');
             await assertPairs(executor, [ 'None' ]);
             await executor.assertCursors([ [1, 4] ]);
-            await executor.assertMostRecentInLeaperModeContext(false);
-            await executor.assertMostRecentHasLineOfSightContext(false);
+            await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
             // Mistake simulation: wrong bracket inserted.
             //
@@ -146,8 +139,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.undo({ repetitions: 2 });
             await assertPairs(executor, [ 'None' ]);
             await executor.assertCursors([ [0, 16] ]);
-            await executor.assertMostRecentInLeaperModeContext(false);
-            await executor.assertMostRecentHasLineOfSightContext(false);
+            await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
         // Document state after:
         // 
@@ -158,8 +150,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('{');
         await assertPairs(executor, [ { line: 0, sides: [16, 17] } ]);
         await executor.assertCursors([ [0, 17] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -171,8 +162,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('\n');
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [1, 4] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -186,8 +176,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.typeText('let arr: ');
             await assertPairs(executor, [ 'None' ]);
             await executor.assertCursors([ [1, 13] ]);
-            await executor.assertMostRecentInLeaperModeContext(false);
-            await executor.assertMostRecentHasLineOfSightContext(false);
+            await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -201,8 +190,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.setCursors([ [1, 7] ]);
             await assertPairs(executor, [ 'None' ]);
             await executor.assertCursors([ [1, 7] ]);
-            await executor.assertMostRecentInLeaperModeContext(false);
-            await executor.assertMostRecentHasLineOfSightContext(false);
+            await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -216,8 +204,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.backspaceWord();
             await assertPairs(executor, [ 'None' ]);
             await executor.assertCursors([ [1, 4] ]);
-            await executor.assertMostRecentInLeaperModeContext(false);
-            await executor.assertMostRecentHasLineOfSightContext(false);
+            await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
             // Mistake simulation: `let` instead of `const` specifier.
             // 
@@ -231,8 +218,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.typeText('const');
             await assertPairs(executor, [ 'None' ]);
             await executor.assertCursors([ [1, 9] ]);
-            await executor.assertMostRecentInLeaperModeContext(false);
-            await executor.assertMostRecentHasLineOfSightContext(false);
+            await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
             // Mistake simulation: `let` instead of `const` specifier.
             //
@@ -246,8 +232,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.moveCursors('right', { repetitions: 6 });
             await assertPairs(executor, [ 'None' ]);
             await executor.assertCursors([ [1, 15] ]);
-            await executor.assertMostRecentInLeaperModeContext(false);
-            await executor.assertMostRecentHasLineOfSightContext(false);
+            await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
         // Document state after:
         // 
@@ -259,8 +244,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('{');
         await assertPairs(executor, [ { line: 1, sides: [15, 16] } ]);
         await executor.assertCursors([ [1, 16] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -272,8 +256,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText(' t: TypeT<');
         await assertPairs(executor, [ { line: 1, sides: [15, 26] } ]);
         await executor.assertCursors([ [1, 26] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -285,8 +268,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('{');
         await assertPairs(executor, [ { line: 1, sides: [15, 26, 27, 28] } ]);
         await executor.assertCursors([ [1, 27] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -298,8 +280,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText(' u: ');
         await assertPairs(executor, [ { line: 1, sides: [15, 26, 31, 32] } ]);
         await executor.assertCursors([ [1, 31] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
           
             // Mistake simulation: wrong bracket inserted.
             //
@@ -313,8 +294,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.typeText('(');
             await assertPairs(executor, [ { line: 1, sides: [15, 26, 31, 32, 33, 34] } ]);
             await executor.assertCursors([ [1, 32] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: wrong bracket inserted.
             //
@@ -328,8 +308,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.backspace();
             await assertPairs(executor, [ { line: 1, sides: [15, 26, 31, 32] } ]);
             await executor.assertCursors([ [1, 31] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -341,8 +320,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('[');
         await assertPairs(executor, [ { line: 1, sides: [15, 26, 31, 32, 33, 34] } ]);
         await executor.assertCursors([ [1, 32] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -354,8 +332,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('TypeU, TypeV<TypeW, ');
         await assertPairs(executor, [ { line: 1, sides: [15, 26, 31, 52, 53, 54] } ]);
         await executor.assertCursors([ [1, 52] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: wrong type argument.
             //
@@ -369,8 +346,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.typeText('TypeK');
             await assertPairs(executor, [ { line: 1, sides: [15, 26, 31, 57, 58, 59] } ]);
             await executor.assertCursors([ [1, 57] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: wrong type argument.
             //
@@ -384,8 +360,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.typeText('[');
             await assertPairs(executor, [ { line: 1, sides: [15, 26, 31, 57, 58, 59, 60, 61] } ]);
             await executor.assertCursors([ [1, 58] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: wrong type argument.
             //
@@ -399,8 +374,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.backspace({ repetitions: 1 });
             await assertPairs(executor, [ { line: 1, sides: [15, 26, 31, 57, 58, 59] } ]);
             await executor.assertCursors([ [1, 57] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
             
             // Mistake simulation: wrong type argument.
             //
@@ -414,8 +388,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.backspace({ repetitions: 5 });
             await assertPairs(executor, [ { line: 1, sides: [15, 26, 31, 52, 53, 54] } ]);
             await executor.assertCursors([ [1, 52] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         //
@@ -427,8 +400,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('TypeZ');
         await assertPairs(executor, [ { line: 1, sides: [15, 26, 31, 57, 58, 59] } ]);
         await executor.assertCursors([ [1, 57] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         //
@@ -440,8 +412,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('[');
         await assertPairs(executor, [ { line: 1, sides: [15, 26, 31, 57, 58, 59, 60, 61] } ]);
         await executor.assertCursors([ [1, 58] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -453,8 +424,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.leap();
         await assertPairs(executor, [ { line: 1, sides: [15, 26, 31, 59, 60, 61] } ]);
         await executor.assertCursors([ [1, 59] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -466,8 +436,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('>');
         await assertPairs(executor, [ { line: 1, sides: [15, 26, 31, 60, 61, 62] } ]);
         await executor.assertCursors([ [1, 60] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -479,8 +448,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.leap();
         await assertPairs(executor, [ { line: 1, sides: [15, 26, 61, 62] } ]);
         await executor.assertCursors([ [1, 61] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -492,8 +460,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText(' ');
         await assertPairs(executor, [ { line: 1, sides: [15, 26, 62, 63] } ]);
         await executor.assertCursors([ [1, 62] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -505,8 +472,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.leap();
         await assertPairs(executor, [ { line: 1, sides: [15, 63] } ]);
         await executor.assertCursors([ [1, 63] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -520,8 +486,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.typeText(', n: string ');
             await assertPairs(executor, [ { line: 1, sides: [15, 75] } ]);
             await executor.assertCursors([ [1, 75] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -535,8 +500,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.moveCursors('left');
             await assertPairs(executor, [ { line: 1, sides: [15, 75] } ]);
             await executor.assertCursors([ [1, 74] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -550,8 +514,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.backspaceWord();
             await assertPairs(executor, [ { line: 1, sides: [15, 69] } ]);
             await executor.assertCursors([ [1, 68] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -565,8 +528,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.moveCursors('left', { repetitions: 2 });
             await assertPairs(executor, [ { line: 1, sides: [15, 69] } ]);
             await executor.assertCursors([ [1, 66] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(false);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -580,8 +542,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.moveCursors('left', { repetitions: 3 });
             await assertPairs(executor, [ { line: 1, sides: [15, 69] } ]);
             await executor.assertCursors([ [1, 63] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(false);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -595,8 +556,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.typeText('>');
             await assertPairs(executor, [ { line: 1, sides: [15, 70] } ]);
             await executor.assertCursors([ [1, 64] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(false);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -613,8 +573,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.leap({ repetitions: 10 });
             await assertPairs(executor, [ { line: 1, sides: [15, 70] } ]);
             await executor.assertCursors([ [1, 64] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(false);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -628,8 +587,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.moveCursors('right', { repetitions: 5 });
             await assertPairs(executor, [ { line: 1, sides: [15, 70] } ]);
             await executor.assertCursors([ [1, 69] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -643,8 +601,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.typeText('num');
             await assertPairs(executor, [ { line: 1, sides: [15, 73] } ]);
             await executor.assertCursors([ [1, 72] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: missing `>` sign and wrong type annotation for `n`.
             //
@@ -660,8 +617,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.triggerAndAcceptSuggestion();
             await assertPairs(executor, [ { line: 1, sides: [15, 76] } ]);
             await executor.assertCursors([ [1, 75] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // This leap tests whether the cursor can jump across whitespace.
         //
@@ -675,8 +631,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.leap();
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [1, 77] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
         // Document state after:
         // 
@@ -688,8 +643,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('[');
         await assertPairs(executor, [ { line: 1, sides: [77, 78] } ]);
         await executor.assertCursors([ [1, 78] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: incorrect array type.
             //
@@ -703,8 +657,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.typeText('[');
             await assertPairs(executor, [ { line: 1, sides: [77, 78, 79, 80] } ]);
             await executor.assertCursors([ [1, 79] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: incorrect array type.
             //
@@ -718,8 +671,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.backspace();
             await assertPairs(executor, [ { line: 1, sides: [77, 78] } ]);
             await executor.assertCursors([ [1, 78] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -731,8 +683,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText(']');
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [1, 79] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
         // Document state after:
         // 
@@ -744,8 +695,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('[');
         await assertPairs(executor, [ { line: 1, sides: [79, 80] } ]);
         await executor.assertCursors([ [1, 80] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -757,8 +707,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.leap();
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [1, 81] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
         // Document state after:
         // 
@@ -770,8 +719,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText(' = getArr');
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [1, 90] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
         // Document state after:
         // 
@@ -783,8 +731,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('(');
         await assertPairs(executor, [ { line: 1, sides: [90, 91] } ]);
         await executor.assertCursors([ [1, 91] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -796,8 +743,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.leap();
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [1, 92] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
         // Document state after:
         // 
@@ -810,8 +756,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText(';\narr.flat');
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [2, 12] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
         // Document state after:
         // 
@@ -824,8 +769,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('(');
         await assertPairs(executor, [ { line: 2, sides: [12, 13] } ]);
         await executor.assertCursors([ [2, 13] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -838,8 +782,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText(')');
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [2, 14] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
         // Document state after:
         // 
@@ -852,8 +795,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('.forEach');
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [2, 22] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
         // Document state after:
         // 
@@ -866,8 +808,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('(');
         await assertPairs(executor, [ { line: 2, sides: [22, 23] } ]);
         await executor.assertCursors([ [2, 23] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -880,8 +821,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('(');
         await assertPairs(executor, [ { line: 2, sides: [22, 23, 24, 25] } ]);
         await executor.assertCursors([ [2, 24] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -894,8 +834,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('elem');
         await assertPairs(executor, [ { line: 2, sides: [22, 23, 28, 29] } ]);
         await executor.assertCursors([ [2, 28] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -908,8 +847,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.leap();
         await assertPairs(executor, [ { line: 2, sides: [22, 29] } ]);
         await executor.assertCursors([ [2, 29] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after:
         // 
@@ -922,8 +860,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText(' => ');
         await assertPairs(executor, [ { line: 2, sides: [22, 33] } ]);
         await executor.assertCursors([ [2, 33] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: `console.log()` not inserted as snippet.
             //
@@ -938,8 +875,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.typeText('con');
             await assertPairs(executor, [ { line: 2, sides: [22, 36] } ]);
             await executor.assertCursors([ [2, 36] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
             // Mistake simulation: `console.log()` not inserted as snippet.
             //
@@ -956,8 +892,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.triggerAndAcceptSuggestion();
             await assertPairs(executor, [ { line: 2, sides: [22, 40] } ]);
             await executor.assertCursors([ [2, 40] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
             
             // Mistake simulation: `console.log()` not inserted as snippet.
             //
@@ -972,8 +907,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
             await executor.backspaceWord();
             await assertPairs(executor, [ { line: 2, sides: [22, 33] } ]);
             await executor.assertCursors([ [2, 33] ]);
-            await executor.assertMostRecentInLeaperModeContext(true);
-            await executor.assertMostRecentHasLineOfSightContext(true);
+            await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -988,8 +922,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.insertSnippet(new SnippetString('console.log($1)$0'));
         await assertPairs(executor, [ { line: 2, sides: [22, 46] } ]);
         await executor.assertCursors([ [2, 45] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
 
         // Document state after: 
         // 
@@ -1004,8 +937,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('`');
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 48] } ]);
         await executor.assertCursors([ [2, 46] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -1020,8 +952,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('{');
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 47, 48, 50] } ]);
         await executor.assertCursors([ [2, 47] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -1036,8 +967,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText(' elem_t: $');
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 57, 58, 60] } ]);
         await executor.assertCursors([ [2, 57] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -1050,8 +980,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('{');
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 57, 58, 59, 60, 62] } ]);
         await executor.assertCursors([ [2, 58] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -1064,8 +993,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('elem.t');
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 57, 64, 65, 66, 68] } ]);
         await executor.assertCursors([ [2, 64] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -1078,8 +1006,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.moveCursors('left');
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 57, 64, 65, 66, 68] } ]);
         await executor.assertCursors([ [2, 63] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
 
         // Document state after: 
         // 
@@ -1092,8 +1019,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.moveCursors('left', { repetitions: 5 });
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 57, 64, 65, 66, 68] } ]);
         await executor.assertCursors([ [2, 58] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
 
         // This step tests whether a pair is untracked if the cursor has moved out of it.
         //
@@ -1108,8 +1034,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.moveCursors('left');
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 65, 66, 68] } ]);
         await executor.assertCursors([ [2, 57] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
 
         // Document state after: 
         // 
@@ -1122,8 +1047,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.moveCursors('left', { repetitions: 3 });
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 65, 66, 68] } ]);
         await executor.assertCursors([ [2, 54] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
 
         // Document state after: 
         // 
@@ -1136,8 +1060,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.backspaceWord();
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 59, 60, 62] } ]);
         await executor.assertCursors([ [2, 48] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
 
         // Document state after: 
         // 
@@ -1150,8 +1073,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('t');
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 60, 61, 63] } ]);
         await executor.assertCursors([ [2, 49] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
 
         // This step checks that Leap calls are ignored when there is no line of sight.
         //
@@ -1166,8 +1088,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.leap({ repetitions: 10 });
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 60, 61, 63] } ]);
         await executor.assertCursors([ [2, 49] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
 
         // This step tests whether tracking can handle a direct cursor move.
         // 
@@ -1182,8 +1103,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.setCursors([ [2, 60] ]);
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 60, 61, 63] } ]);
         await executor.assertCursors([ [2, 60] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -1196,8 +1116,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText(', n: $');
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 66, 67, 69] } ]);
         await executor.assertCursors([ [2, 66] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -1210,8 +1129,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('{');
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 66, 67, 68, 69, 71] } ]);
         await executor.assertCursors([ [2, 67] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -1224,8 +1142,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('elem.n');
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 66, 73, 74, 75, 77] } ]);
         await executor.assertCursors([ [2, 73] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -1238,8 +1155,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText('}');
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 74, 75, 77] } ]);
         await executor.assertCursors([ [2, 74] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -1252,8 +1168,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText(' ');
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 46, 75, 76, 78] } ]);
         await executor.assertCursors([ [2, 75] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -1266,8 +1181,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.leap();
         await assertPairs(executor, [ { line: 2, sides: [22, 45, 76, 78] } ]);
         await executor.assertCursors([ [2, 76] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -1280,8 +1194,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.leap();
         await assertPairs(executor, [ { line: 2, sides: [22, 78] } ]);
         await executor.assertCursors([ [2, 77] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: false });
 
         // Document state after: 
         // 
@@ -1296,8 +1209,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.jumpToTabstop('next');
         await assertPairs(executor, [ { line: 2, sides: [22, 78] } ]);
         await executor.assertCursors([ [2, 78] ]);
-        await executor.assertMostRecentInLeaperModeContext(true);
-        await executor.assertMostRecentHasLineOfSightContext(true);
+        await executor.assertMostRecentContexts({ inLeaperMode: true, hasLineOfSight: true });
 
         // Document state after: 
         // 
@@ -1310,8 +1222,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.leap();
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [2, 79] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
 
         // Document state after:
         // 
@@ -1324,8 +1235,7 @@ const REAL_USER_SIMULATION_1_TEST_CASE = new TestCase({
         await executor.typeText(';');
         await assertPairs(executor, [ 'None' ]);
         await executor.assertCursors([ [2, 80] ]);
-        await executor.assertMostRecentInLeaperModeContext(false);
-        await executor.assertMostRecentHasLineOfSightContext(false);
+        await executor.assertMostRecentContexts({ inLeaperMode: false, hasLineOfSight: false });
     }
 });
 

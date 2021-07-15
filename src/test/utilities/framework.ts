@@ -285,27 +285,21 @@ class ExecutorFull {
     }
 
     /**
-     * Assert the most recently set value of the `leaper.inLeaperMode` keybinding context.
+     * Assert the most recently set values of this extension's keybinding contexts.
      */
-    public async assertMostRecentInLeaperModeContext(expect: boolean): Promise<void> {
+    public async assertMostRecentContexts(expect: { 
+        inLeaperMode:   boolean, 
+        hasLineOfSight: boolean
+    }): Promise<void> {
         
         // Wait in case the engine has not caught up.
         await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
+        
+        const message1 = 'Most Recently Set `leaper.inLeaperMode` Keybinding Context Mismatch';
+        this.assertEq(getMostRecentInLeaperModeContext(), expect.inLeaperMode, message1);
 
-        const message = 'Most Recently Set `leaper.inLeaperMode` Keybinding Context Mismatch';
-        this.assertEq(getMostRecentInLeaperModeContext(), expect, message);
-    }
-
-    /**
-     * Assert the most recently set value of the `leaper.hasLineOfSight` keybinding context.
-     */
-    public async assertMostRecentHasLineOfSightContext(expect: boolean): Promise<void> {
-
-        // Wait in case the engine has not caught up.
-        await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
-
-        const message = 'Most Recently Set `leaper.hasLineOfSight` Keybinding Context Mismatch';
-        this.assertEq(getMostRecentHasLineOfSightContext(), expect, message);
+        const message2 = 'Most Recently Set `leaper.hasLineOfSight` Keybinding Context Mismatch';
+        this.assertEq(getMostRecentHasLineOfSightContext(), expect.hasLineOfSight, message2);
     }
 
     /**
