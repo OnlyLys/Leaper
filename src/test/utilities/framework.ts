@@ -705,25 +705,14 @@ class ExecutorFull {
         await waitFor(ExecutorFull.POST_VIEW_STATE_CHANGE_DELAY_MS);
     }
 
-    /**
-     * Set a configuration value, scoped to either the root of the test workspace or a workspace 
-     * folder within it.
-     * 
-     * @param name The full name of the configuration.
-     * @param value Value to set the configuration to. **NOTE**: You may not set a configuration to
-     *              `{}` because setting a configuration to that value occasionally does not count 
-     *              as a change in value by vscode.
-     * @param targetWorkspaceFolder The name of the workspace folder to set the configuration in. If
-     *                              not specified, will set the configuration in the root workspace.
-     * @param targetLanguage The language to scope the configuration to. If not specified, will not 
-     *                       scope to any language.
-     */
-    public async setConfiguration(args: {
-        name:                   'leaper.decorateAll' | 'leaper.decorationOptions' | 'leaper.detectedPairs', 
-        value:                  any,
-        targetWorkspaceFolder?: 'workspace-0' | 'workspace-1' | 'workspace-2' | 'workspace-3' | 'workspace-4',
-        targetLanguage?:        'typescript' | 'markdown' | 'plaintext'
-    },): Promise<void> {
+    private async _setConfiguration(
+        args: {
+            name:                    ConfigurationNames | DeprecatedConfigurationNames,
+            value:                   any,
+            targetWorkspaceFolder?:  WorkspaceFolderNames,
+            targetLanguage?:         AllowedLanguages
+        }
+    ): Promise<void> {
         const { name, value, targetWorkspaceFolder, targetLanguage } = args;
 
         if (typeof value === 'object' && value !== null && Reflect.ownKeys(value).length === 0) {
@@ -775,6 +764,43 @@ class ExecutorFull {
             await configuration.update(childName, prevValue, targetScope, !!targetLanguage);
         });
 
+    }
+
+    /**
+     * Set a configuration value within the test workspace.
+     * 
+     * @param name The full name of the configuration.
+     * @param value Value to set the configuration to. **NOTE**: You may not set a configuration to
+     *              `{}` because setting a configuration to that value occasionally does not count 
+     *              as a change in value by vscode.
+     * @param targetWorkspaceFolder The name of the workspace folder to set the configuration in. If
+     *                              not specified, will set the configuration in the root workspace.
+     * @param targetLanguage The language to scope the configuration to. If not specified, will not 
+     *                       scope to any language.
+     */
+    public async setConfiguration(
+        args: {
+            name:                    ConfigurationNames,
+            value:                   any,
+            targetWorkspaceFolder?:  WorkspaceFolderNames,
+            targetLanguage?:         AllowedLanguages
+        }
+    ): Promise<void> {
+        await this._setConfiguration(args);
+    }
+
+    /**
+     * Set a deprecated configuration value within the test workspace.
+     * 
+     * The deprecated configurations do not support workspace folder or language-specific scopes.
+     */
+    public async setDeprecatedConfiguration(
+        args: {
+            name:  DeprecatedConfigurationNames,
+            value: any,
+        }
+    ): Promise<void> {
+        await this._setConfiguration(args);
     }
 
     /**
@@ -898,3 +924,11 @@ async function clearAllWorkspaceFiles(): Promise<void> {
 }
 
 type AllowedViewColumns = ViewColumn.Active | ViewColumn.One | ViewColumn.Two | ViewColumn.Three | ViewColumn.Four;
+
+type ConfigurationNames = 'leaper.decorateAll' | 'leaper.decorationOptions' | 'leaper.detectedPairs';
+
+type DeprecatedConfigurationNames = 'leaper.decorateOnlyNearestPair' | 'leaper.customDecorationOptions' | 'leaper.additionalTriggerPairs';
+
+type WorkspaceFolderNames = 'workspace-0' | 'workspace-1' | 'workspace-2' | 'workspace-3' | 'workspace-4';
+
+type AllowedLanguages = 'typescript' | 'markdown' | 'plaintext';

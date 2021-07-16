@@ -320,6 +320,52 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
     }
 });
 
+/**
+ * Just a cursory test to make sure that the deprecated configuration is being read.
+ */
+const DEPRECATED_CONFIGURATION_TEST_CASE = new TestCase({
+    name: 'Deprecated Configuration: `leaper.customDecorationOptions`',
+    prelude: async (executor) => {
+        await executor.openFile('./workspace-0/text.ts');
+
+        // Disable `leaper.decorationOptions` in the root workspace so that it does not shadow the 
+        // deprecated configuration.
+        await executor.setConfiguration({
+            name:  'leaper.decorationOptions',
+            value: undefined
+        });
+    },
+    task: async (executor) => {
+
+        // Set the deprecated configuration in the root workspace and check that the decoration 
+        // options are in effect.
+        const D1 = {
+            outlineColor: "#BBFA03FF",
+            outlineStyle: "inset",
+            outlineWidth: "1px",
+            fontWeight:   "bold"
+        };
+        await executor.setDeprecatedConfiguration({
+            name:  'leaper.customDecorationOptions',
+            value: D1
+        });
+        await executor.assertEffectiveDecorationOptions(D1);
+
+        // Change the deprecated configuration and check that it is hot reloaded.
+        const D2 = {
+            outlineColor: "#BBFA03FF",
+            outlineStyle: "inset",
+            outlineWidth: "1px",
+            fontWeight:   "bold"
+        };
+        await executor.setDeprecatedConfiguration({
+            name:  'leaper.customDecorationOptions',
+            value: D2
+        });
+        await executor.assertEffectiveDecorationOptions(D2);
+    }
+});
+
 
 export const SINGLE_CURSOR_DECORATION_OPTIONS_TEST_GROUP = new TestGroup(
     '`leaper.decorationOptions` Configuration',
@@ -327,5 +373,6 @@ export const SINGLE_CURSOR_DECORATION_OPTIONS_TEST_GROUP = new TestGroup(
         IS_BEING_READ_AND_THEME_COLOR_IDS_CORRECTLY_CONVERTED_TEST_CASE,
         REJECT_VALUE_IF_RANGE_BEHAVIOR_SPECIFIED_TEST_CASE,
         HOT_RELOAD_TEST_CASE,
+        DEPRECATED_CONFIGURATION_TEST_CASE
     ]
 );

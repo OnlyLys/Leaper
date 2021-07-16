@@ -2,6 +2,7 @@ import { ViewColumn } from 'vscode';
 import { Configurations } from '../../engine/configurations/configurations';
 import { CompactCluster, CompactCursor } from '../utilities/compact';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
+import * as assert from 'assert';
 
 /**
  * Test the effective `leaper.detectedPairs` configuration for a visible text editor by asserting 
@@ -724,6 +725,43 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
     }
 });
 
+/**
+ * Just a cursory test to make sure that the deprecated configuration is being read.
+ */
+ const DEPRECATED_CONFIGURATION_TEST_CASE = new TestCase({
+    name: 'Deprecated Configuration: `leaper.additionalTriggerPairs`',
+    prelude: async (executor) => {
+        await executor.openFile('./workspace-0/text.ts');
+
+        // Disable `leaper.detectedPairs` in the root workspace so that it does not shadow the 
+        // deprecated configuration.
+        await executor.setConfiguration({
+            name:  'leaper.detectedPairs',
+            value: undefined
+        });
+    },
+    task: async (executor) => {
+
+        // Set the deprecated configuration in the root workspace.
+        await executor.setDeprecatedConfiguration({
+            name:  'leaper.additionalTriggerPairs',
+            value: [
+                { open: "|", close: "|" },
+                { open: "*", close: "*" } 
+            ]
+        });
+
+        // Since I do not know of a language that has `||` or `**` as autoclosing pairs, I can only
+        // query the engine's configuration reader directly instead of inserting those pairs into
+        // the document and then calling `executor.assertPairs`.
+        assert.deepStrictEqual(
+            Configurations.detectedPairs.read().effectiveValue,
+            [ "()", "[]", "{}", "<>", "``", "''", "\"\"", "||", "**" ], 
+        );
+
+    }
+});
+
 /** 
  * A collection of test cases that test the behavior of the `leaper.detectedPairs` configuration 
  * when there is a single cursor.
@@ -734,6 +772,7 @@ export const SINGLE_CURSOR_DETECTED_PAIRS_TEST_GROUP: TestGroup = new TestGroup(
         IT_WORKS_TEST_CASE,
         REJECT_VALUE_IF_ITEMS_ARE_NOT_UNIQUE_TEST_CASE,
         REJECT_VALUE_IF_MAX_ITEMS_EXCEEDED_TEST_CASE,
-        HOT_RELOAD_TEST_CASE
+        HOT_RELOAD_TEST_CASE,
+        DEPRECATED_CONFIGURATION_TEST_CASE
     ]
 );

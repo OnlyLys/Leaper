@@ -778,6 +778,43 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
 });
 
 /**
+ * Just a cursory test to make sure that the deprecated configuration is being read.
+ */
+const DEPRECATED_CONFIGURATION_TEST_CASE = new TestCase({
+    name: 'Deprecated Configuration: `leaper.decorateOnlyNearestPair`',
+    prelude: async (executor) => { 
+        await executor.openFile('./workspace-0/text.ts');
+
+        // Disable `leaper.decorateAll` in the root workspace so that it does not shadow the 
+        // deprecated configuration.
+        await executor.setConfiguration({
+            name:  'leaper.decorateAll',
+            value: undefined
+        });
+    },
+    task: async (executor) => {
+
+        // Set the deprecated configuration in the root workspace and check that all pairs are 
+        // decorated as a result.
+        await executor.setDeprecatedConfiguration({
+            name:  'leaper.decorateOnlyNearestPair',
+            value: false
+        });
+        await executor.typeText('[({[({');
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 12) } ], 'all');
+        await executor.assertCursors([ [0, 6] ]);
+
+        // Change the deprecated configuration and check that it is hot reloaded.
+        await executor.setDeprecatedConfiguration({
+            name:  'leaper.decorateOnlyNearestPair',
+            value: true
+        });
+        await executor.assertPairsFull([ { line: 0, sides: range(0, 12) } ], 'nearest');
+        await executor.assertCursors([ [0, 6] ]);
+    }
+});
+
+/**
  * A collection of test cases that test the behavior of the `leaper.decorateAll` configuration when
  * there is a single cursor.
  */
@@ -786,7 +823,7 @@ export const SINGLE_CURSOR_DECORATE_ALL_TEST_GROUP = new TestGroup(
     [
         DECORATE_ONLY_NEAREST_PAIR_TEST_CASE,
         DECORATE_ALL_PAIRS_TEST_CASE,
-        HOT_RELOAD_TEST_CASE
+        HOT_RELOAD_TEST_CASE,
+        DEPRECATED_CONFIGURATION_TEST_CASE
     ]
 );
-
