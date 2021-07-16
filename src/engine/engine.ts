@@ -123,10 +123,11 @@ export class Engine implements TestHandle {
                 if (existingTracker) {
                     newTrackers.set(editor, existingTracker);
                 } else {
+                    const document = editor.document;
                     newTrackers.set(editor, new Tracker(editor, {
-                        decorateAll:       Configurations.decorateAll.read(editor.document),
-                        decorationOptions: Configurations.decorationOptions.read(editor.document),
-                        detectedPairs:     Configurations.detectedPairs.read(editor.document)
+                        decorateAll:       Configurations.decorateAll.read(document).effectiveValue,
+                        decorationOptions: Configurations.decorationOptions.read(document).effectiveValue,
+                        detectedPairs:     Configurations.detectedPairs.read(document).effectiveValue
                     }));
                 }
             }
@@ -166,38 +167,34 @@ export class Engine implements TestHandle {
      */
     private readonly configurationChangeWatcher = workspace.onDidChangeConfiguration((event) => {
         for (const [owner, tracker] of this.trackers) {
-            if (!event.affectsConfiguration('leaper', owner.document)) {
+            const document = owner.document;
+            if (!event.affectsConfiguration('leaper', document)) {
                 continue;
             }
-            if (
-                   event.affectsConfiguration(Configurations.decorateAll.name, owner.document)
-                || event.affectsConfiguration(Configurations.decorateAll.deprName, owner.document)
-            ) {
-                tracker.decorateAll = Configurations.decorateAll.read(owner.document);
+            if (event.affectsConfiguration(Configurations.decorateAll.name, document)
+             || event.affectsConfiguration(Configurations.decorateAll.deprName, document)) {
+                tracker.decorateAll = Configurations.decorateAll.read(document).effectiveValue;
             }
-            if (
-                event.affectsConfiguration(Configurations.decorationOptions.name, owner.document)
-             || event.affectsConfiguration(Configurations.decorationOptions.deprName, owner.document)
-            ) {
-                tracker.decorationOptions = Configurations.decorationOptions.read(owner.document);
+            if (event.affectsConfiguration(Configurations.decorationOptions.name, document)
+             || event.affectsConfiguration(Configurations.decorationOptions.deprName, document)) {
+                tracker.decorationOptions = Configurations.decorationOptions.read(document).effectiveValue;
             }
-            if (
-                   event.affectsConfiguration(Configurations.detectedPairs.name, owner.document)
-                || event.affectsConfiguration(Configurations.detectedPairs.deprName, owner.document)
-            ) {
-                tracker.detectedPairs = Configurations.detectedPairs.read(owner.document);
+            if (event.affectsConfiguration(Configurations.detectedPairs.name, document)
+             || event.affectsConfiguration(Configurations.detectedPairs.deprName, document)) {
+                tracker.detectedPairs = Configurations.detectedPairs.read(document).effectiveValue;
             }
         }
     });
     
     public constructor() {
-        this.trackers = new Map(window.visibleTextEditors.map(editor => 
-            [editor, new Tracker(editor, {
-                decorateAll:       Configurations.decorateAll.read(editor.document),
-                decorationOptions: Configurations.decorationOptions.read(editor.document),
-                detectedPairs:     Configurations.detectedPairs.read(editor.document)
-            })]
-        ));
+        this.trackers = new Map(window.visibleTextEditors.map((editor) => {
+            const document = editor.document;
+            return [editor, new Tracker(editor, {
+                decorateAll:       Configurations.decorateAll.read(document).effectiveValue,
+                decorationOptions: Configurations.decorationOptions.read(document).effectiveValue,
+                detectedPairs:     Configurations.detectedPairs.read(document).effectiveValue
+            })];
+        }));
         this.resyncKeybindingContexts();
     }
 

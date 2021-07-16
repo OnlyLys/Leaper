@@ -1,4 +1,4 @@
-import { DecorationRenderOptions, DecorationRangeBehavior, ConfigurationScope, ThemeColor } from 'vscode';
+import { DecorationRenderOptions, DecorationRangeBehavior, ThemeColor } from 'vscode';
 import { VCDualReader } from '@onlylys/vscode-validated-configuration-reader';
 import { Unchecked } from './unchecked';
 
@@ -13,11 +13,17 @@ export class Configurations {
      * This configuration determines whether all pairs or just the ones nearest to each cursor are
      * decorated. 
      */
-    public static readonly decorateAll: Configuration<boolean> = {
-        name:     'leaper.decorateAll',
-        deprName: 'leaper.decorateOnlyNearestPair',
-        read:     (scope) => Configurations.decorateAllReader.read(scope).effectiveValue
-    }
+    public static readonly decorateAll = new VCDualReader({
+
+        name:      'leaper.decorateAll',
+        validate:  (value: unknown): value is boolean => typeof value === 'boolean',
+        transform: (value: boolean) => value,
+
+        deprName:      'leaper.decorateOnlyNearestPair',
+        deprValidate:  (value: unknown): value is boolean => typeof value === 'boolean',
+        deprTransform: (deprValue: boolean) => !deprValue,
+
+    });
 
     /**
      * The `leaper.decorationOptions` configuration.
@@ -27,94 +33,9 @@ export class Configurations {
      * SAFETY NOTE: The value of this configuration should not be directly accessed since it has not
      * been typechecked. It should only be passed to vscode as options for decoration.
      */
-    public static readonly decorationOptions: Configuration<Unchecked<DecorationRenderOptions>> = {
-        name:     'leaper.decorationOptions',
-        deprName: 'leaper.customDecorationOptions',
-        read:     (scope) => Configurations.decorationOptionsReader.read(scope).effectiveValue
-    }
+    public static readonly decorationOptions = new VCDualReader({
 
-    /**
-     * The `leaper.detectedPairs` configuration.
-     * 
-     * This configuration determines which pairs are detected and then tracked. 
-     * 
-     * OPTIMIZATION NOTE: It might be tempting to replace the type of this configuration with a `Set`, 
-     * but micro benchmarks (https://jsbench.me/5qkqg886lo/1) show that for small array sizes (such 
-     * as the default value of this configuration), checking for inclusion is faster with an array 
-     * than it is with a set.
-     */
-    public static readonly detectedPairs: Configuration<ReadonlyArray<string>> = {
-        name:     'leaper.detectedPairs',
-        deprName: 'leaper.additionalTriggerPairs',
-        read:     (scope) => Configurations.detectedPairsReader.read(scope).effectiveValue
-    }
-
-    /**
-     * The max number of pairs that can be specified for the `leaper.detectedPairs` configuration.
-     * 
-     * We limit the max number of pairs that can be specified for the `leaper.detectedPairs` 
-     * configuration to prevent a malicious workspace from slowing down the extension by supplying
-     * a huge array for that configuration. With this limit in place, it should be safe to enable 
-     * the `leaper.detectedPairs` configuration in untrusted workspaces.
-     */
-    public static readonly DETECTED_PAIRS_MAX_ITEMS = 100;
-
-    private static readonly decorateAllReader = new VCDualReader({
-
-        name: Configurations.decorateAll.name,
-        validate: (value: unknown): value is boolean => typeof value === 'boolean',
-        transform: (value: boolean) => value,
-
-        deprName: Configurations.decorateAll.deprName,
-        deprValidate: (value: unknown): value is boolean => typeof value === 'boolean',
-        deprTransform: (deprValue: boolean) => !deprValue,
-
-    });
-
-    private static readonly detectedPairsReader = new VCDualReader({
-
-        name: Configurations.detectedPairs.name,
-        validate: (arr: unknown): arr is string[] => {
-            return Array.isArray(arr) 
-                && arr.length <= Configurations.DETECTED_PAIRS_MAX_ITEMS
-                && arr.every(pair => typeof pair === 'string' && pair.length === 2)
-                && arr.length === (new Set(arr)).size;  // Elements must be unique.
-        },
-        transform: (value: string[]) => value,
-
-        deprName: Configurations.detectedPairs.deprName,
-        deprValidate: (arr: unknown): arr is { open: string, close: string }[] => {
-            function checkElement(elem: any): elem is { open: string, close: string } {
-                return typeof elem === 'object'
-                    && elem !== null    // Need this because `null` is an object in JS.
-                    && Reflect.ownKeys(elem).length === 2
-                    && Reflect.has(elem, 'open')
-                    && Reflect.has(elem, 'close')
-                    && typeof elem.open  === 'string' 
-                    && typeof elem.close === 'string'
-                    && elem.open.length  === 1
-                    && elem.close.length === 1;
-            } 
-            return Array.isArray(arr) 
-                && arr.length <= Configurations.DETECTED_PAIRS_MAX_ITEMS
-                && arr.every(checkElement);
-        },
-        deprTransform: (deprValue: { open: string, close: string }[]) => {
-
-            // Prior to version 0.7.0, `leaper.additionalTriggerPairs` was the only way to configure
-            // which pair was to be tracked. However, that configuration only allowed the user to 
-            // specify _additional_ pairs to be tracked. There was a base set of pairs that could 
-            // not be changed; This is that set.
-            const BASE: ReadonlyArray<string> = [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ];
-
-            return BASE.concat(deprValue.map(({ open, close }) => `${open}${close}`));
-        }
-
-    });
-    
-    private static readonly decorationOptionsReader = new VCDualReader({
-
-        name: Configurations.decorationOptions.name,
+        name: 'leaper.decorationOptions',
 
         // Notes:
         //
@@ -189,7 +110,7 @@ export class Configurations {
             return decorationOptions;
         },
 
-        deprName: Configurations.decorationOptions.deprName,
+        deprName: 'leaper.customDecorationOptions',
         
         // The behavior of the deprecated configuration is to pass the object specified by the user
         // as is to vscode. Thus, as long as the object is non-null, we accept it.
@@ -216,25 +137,65 @@ export class Configurations {
 
     });
 
-}
-
-interface Configuration<T> {
-
     /**
-     * The full name of this configuration.
-     */
-    readonly name: string;
-
-    /**
-     * The full name of the deprecated configuration that this configuration supersedes.
-     */
-    readonly deprName: string;
-
-    /** 
-     * Get a copy of the current effective value of this configuration.
+     * The `leaper.detectedPairs` configuration.
      * 
-     * @param scope The scope to read the configuration value from.
+     * This configuration determines which pairs are detected and then tracked. 
+     * 
+     * OPTIMIZATION NOTE: It might be tempting to replace the type of this configuration with a `Set`, 
+     * but micro benchmarks (https://jsbench.me/5qkqg886lo/1) show that for small array sizes (such 
+     * as the default value of this configuration), checking for inclusion is faster with an array 
+     * than it is with a set.
      */
-    readonly read: (scope: ConfigurationScope) => T;
+    public static readonly detectedPairs = new VCDualReader({
 
-};
+        name: 'leaper.detectedPairs',
+        validate: (arr: unknown): arr is string[] => {
+            return Array.isArray(arr) 
+                && arr.length <= Configurations.DETECTED_PAIRS_MAX_ITEMS
+                && arr.every(pair => typeof pair === 'string' && pair.length === 2)
+                && arr.length === (new Set(arr)).size;  // Elements must be unique.
+        },
+        transform: (value: string[]) => value,
+
+        deprName: 'leaper.additionalTriggerPairs',
+        deprValidate: (arr: unknown): arr is { open: string, close: string }[] => {
+            function checkElement(elem: any): elem is { open: string, close: string } {
+                return typeof elem === 'object'
+                    && elem !== null    // Need this because `null` is an object in JS.
+                    && Reflect.ownKeys(elem).length === 2
+                    && Reflect.has(elem, 'open')
+                    && Reflect.has(elem, 'close')
+                    && typeof elem.open  === 'string' 
+                    && typeof elem.close === 'string'
+                    && elem.open.length  === 1
+                    && elem.close.length === 1;
+            } 
+            return Array.isArray(arr) 
+                && arr.length <= Configurations.DETECTED_PAIRS_MAX_ITEMS
+                && arr.every(checkElement);
+        },
+        deprTransform: (deprValue: { open: string, close: string }[]) => {
+
+            // Prior to version 0.7.0, `leaper.additionalTriggerPairs` was the only way to configure
+            // which pair was to be tracked. However, that configuration only allowed the user to 
+            // specify _additional_ pairs to be tracked. There was a base set of pairs that could 
+            // not be changed; This is that set.
+            const BASE: ReadonlyArray<string> = [ "()", "[]", "{}", "<>", "``", "''", "\"\"" ];
+
+            return BASE.concat(deprValue.map(({ open, close }) => `${open}${close}`));
+        }
+
+    });
+
+    /**
+     * The max number of pairs that can be specified for the `leaper.detectedPairs` configuration.
+     * 
+     * We limit the max number of pairs that can be specified for the `leaper.detectedPairs` 
+     * configuration to prevent a malicious workspace from slowing down the extension by supplying
+     * a huge array for that configuration. With this limit in place, it should be safe to enable 
+     * the `leaper.detectedPairs` configuration in untrusted workspaces.
+     */
+    public static readonly DETECTED_PAIRS_MAX_ITEMS = 100;
+
+}
