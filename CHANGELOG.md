@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### 0.10.1
+- Minor code improvements.
+
 ### 0.10.0
 - Allow the extension to run in untrusted workspaces. 
 - Fix incorrect extension packaging. The fix in 0.9.3 did not work.
