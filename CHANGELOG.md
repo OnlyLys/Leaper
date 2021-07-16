@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### 0.10.2
+- Tweak extension's package manifest.
+
 ### 0.10.1
 - Minor code improvements.
 
