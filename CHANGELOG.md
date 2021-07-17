@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### 0.10.5
+- Minor code improvements.
+
 ### 0.10.4
 - Upgrade output Javascript version to ES2020.
 
