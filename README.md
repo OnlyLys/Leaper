@@ -11,7 +11,7 @@ Whenever you insert any of the following autoclosing pairs:
     (), {}, [], <>, '', "", ``
 
 this extension will begin to track its position in the document and provide you
-the ability to leap (i.e. move) out of it with a `Tab` keypress. Pairs that are
+the ability to leap (i.e. jump) out of it with a `Tab` keypress. Pairs that are
 being tracked will have their closing sides decorated, and the decorations can 
 be customized with the `leaper.decorateAll` and `leaper.decorationOptions` 
 configurations.
