@@ -325,7 +325,8 @@ class ExecutorFull {
      * user, but rather against the effective value after it has been converted to the desired form 
      * by the engine's configuration reader. For that reason, we do not allow `rangeBehavior` to be 
      * specified in `expect` since we always expect it to be `ClosedClosed` as the engine's 
-     * configuration reader always forces it to that value. Please see `Configurations` for more info.
+     * configuration reader always forces it to that value. Please see the `configurations` module 
+     * for more info.
      */
     public async assertEffectiveDecorationOptions(
         expect:     Readonly<Omit<DecorationRenderOptions, 'rangeBehavior'>>,

@@ -2,7 +2,7 @@ import { commands, Disposable, TextEditor, window, workspace } from 'vscode';
 import { ResolvedViewColumn, TrackerSnapshot, TestHandle } from './test-handle';
 import { KeybindingContextSetter } from './keybinding-context-setter';
 import { Tracker } from './tracker/tracker';
-import { Configurations } from './configurations/configurations';
+import * as configurations from './configurations/configurations';
 
 /**
  * Creating an instance of this class starts the extension. 
@@ -125,9 +125,9 @@ export class Engine implements TestHandle {
                 } else {
                     const document = editor.document;
                     newTrackers.set(editor, new Tracker(editor, {
-                        decorateAll:       Configurations.decorateAll.read(document),
-                        decorationOptions: Configurations.decorationOptions.read(document),
-                        detectedPairs:     Configurations.detectedPairs.read(document)
+                        decorateAll:       configurations.decorateAll.read(document),
+                        decorationOptions: configurations.decorationOptions.read(document),
+                        detectedPairs:     configurations.detectedPairs.read(document)
                     }));
                 }
             }
@@ -171,17 +171,17 @@ export class Engine implements TestHandle {
             if (!event.affectsConfiguration('leaper', document)) {
                 continue;
             }
-            if (event.affectsConfiguration(Configurations.decorateAll.name, document)
-             || event.affectsConfiguration(Configurations.decorateAll.deprName, document)) {
-                tracker.decorateAll = Configurations.decorateAll.read(document);
+            if (event.affectsConfiguration(configurations.decorateAll.name, document)
+             || event.affectsConfiguration(configurations.decorateAll.deprName, document)) {
+                tracker.decorateAll = configurations.decorateAll.read(document);
             }
-            if (event.affectsConfiguration(Configurations.decorationOptions.name, document)
-             || event.affectsConfiguration(Configurations.decorationOptions.deprName, document)) {
-                tracker.decorationOptions = Configurations.decorationOptions.read(document);
+            if (event.affectsConfiguration(configurations.decorationOptions.name, document)
+             || event.affectsConfiguration(configurations.decorationOptions.deprName, document)) {
+                tracker.decorationOptions = configurations.decorationOptions.read(document);
             }
-            if (event.affectsConfiguration(Configurations.detectedPairs.name, document)
-             || event.affectsConfiguration(Configurations.detectedPairs.deprName, document)) {
-                tracker.detectedPairs = Configurations.detectedPairs.read(document);
+            if (event.affectsConfiguration(configurations.detectedPairs.name, document)
+             || event.affectsConfiguration(configurations.detectedPairs.deprName, document)) {
+                tracker.detectedPairs = configurations.detectedPairs.read(document);
             }
         }
     });
@@ -190,9 +190,9 @@ export class Engine implements TestHandle {
         this.trackers = new Map(window.visibleTextEditors.map((editor) => {
             const document = editor.document;
             return [editor, new Tracker(editor, {
-                decorateAll:       Configurations.decorateAll.read(document),
-                decorationOptions: Configurations.decorationOptions.read(document),
-                detectedPairs:     Configurations.detectedPairs.read(document)
+                decorateAll:       configurations.decorateAll.read(document),
+                decorationOptions: configurations.decorationOptions.read(document),
+                detectedPairs:     configurations.detectedPairs.read(document)
             })];
         }));
         this.resyncKeybindingContexts();

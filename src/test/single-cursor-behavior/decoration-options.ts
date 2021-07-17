@@ -119,7 +119,8 @@ const REJECT_VALUE_IF_RANGE_BEHAVIOR_SPECIFIED_TEST_CASE = new TestCase({
     task: async (executor) => {
 
         // This test case exists because the engine's configuration reader should reject decoration
-        // options with with `rangeBehavior` specified. For more info, see the `Configurations` type.
+        // options with with `rangeBehavior` specified. For more info, see the `configurations` 
+        // module.
 
         // 1. Modify the Plaintext specific value in Workspace Folder 1 to specify a `rangeBehavior`.
         //

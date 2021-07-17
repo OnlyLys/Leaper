@@ -1,5 +1,5 @@
 import { ViewColumn } from 'vscode';
-import { Configurations } from '../../engine/configurations/configurations';
+import * as configurations  from '../../engine/configurations/configurations';
 import { CompactCluster, CompactCursor } from '../utilities/compact';
 import { Executor, TestCase, TestGroup } from '../utilities/framework';
 import * as assert from 'assert';
@@ -340,7 +340,7 @@ const REJECT_VALUE_IF_MAX_ITEMS_EXCEEDED_TEST_CASE: TestCase = new TestCase({
 
         // Set the configuration value in Workspace Folder 0 to one that exceeds the limit. 
         const tooManyItemsValue = [];
-        for (let i = 0; i < Configurations.DETECTED_PAIRS_MAX_ITEMS + 1; ++i) {
+        for (let i = 0; i < configurations.DETECTED_PAIRS_MAX_ITEMS + 1; ++i) {
             tooManyItemsValue.push("()");
         }
         await executor.setConfiguration({
@@ -755,7 +755,7 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         // query the engine's configuration reader directly instead of inserting those pairs into
         // the document and then calling `executor.assertPairs`.
         assert.deepStrictEqual(
-            Configurations.detectedPairs.read(),
+            configurations.detectedPairs.read(),
             [ "()", "[]", "{}", "<>", "``", "''", "\"\"", "||", "**" ], 
         );
 
