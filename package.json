@@ -41,13 +41,11 @@
         "vscode": "^1.58.0"
     },
     "scripts": {
-        "build-release": "npm run lint && npm run typecheck && esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --minify",
+        "build-release": "eslint src --ext ts && tsc -noEmit -p ./ && esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --minify",
         "build-dev": "tsc -p ./ --allowUnusedLabels true --noUnusedParameters false --noUnusedLocals false",
-        "lint": "eslint src --ext ts",
         "postinstall": "npm run build-dev",
         "pretest": "npm run build-dev && node ./out/node-scripts/generate-test-environment.js",
         "test": "node ./out/test/run-tests.js",
-        "typecheck": "tsc -noEmit -p ./",
         "vscode:prepublish": "npm run build-release"
     },
     "dependencies": {
