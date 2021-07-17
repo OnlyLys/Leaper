@@ -125,9 +125,9 @@ export class Engine implements TestHandle {
                 } else {
                     const document = editor.document;
                     newTrackers.set(editor, new Tracker(editor, {
-                        decorateAll:       Configurations.decorateAll.read(document).effectiveValue,
-                        decorationOptions: Configurations.decorationOptions.read(document).effectiveValue,
-                        detectedPairs:     Configurations.detectedPairs.read(document).effectiveValue
+                        decorateAll:       Configurations.decorateAll.read(document),
+                        decorationOptions: Configurations.decorationOptions.read(document),
+                        detectedPairs:     Configurations.detectedPairs.read(document)
                     }));
                 }
             }
@@ -173,15 +173,15 @@ export class Engine implements TestHandle {
             }
             if (event.affectsConfiguration(Configurations.decorateAll.name, document)
              || event.affectsConfiguration(Configurations.decorateAll.deprName, document)) {
-                tracker.decorateAll = Configurations.decorateAll.read(document).effectiveValue;
+                tracker.decorateAll = Configurations.decorateAll.read(document);
             }
             if (event.affectsConfiguration(Configurations.decorationOptions.name, document)
              || event.affectsConfiguration(Configurations.decorationOptions.deprName, document)) {
-                tracker.decorationOptions = Configurations.decorationOptions.read(document).effectiveValue;
+                tracker.decorationOptions = Configurations.decorationOptions.read(document);
             }
             if (event.affectsConfiguration(Configurations.detectedPairs.name, document)
              || event.affectsConfiguration(Configurations.detectedPairs.deprName, document)) {
-                tracker.detectedPairs = Configurations.detectedPairs.read(document).effectiveValue;
+                tracker.detectedPairs = Configurations.detectedPairs.read(document);
             }
         }
     });
@@ -190,9 +190,9 @@ export class Engine implements TestHandle {
         this.trackers = new Map(window.visibleTextEditors.map((editor) => {
             const document = editor.document;
             return [editor, new Tracker(editor, {
-                decorateAll:       Configurations.decorateAll.read(document).effectiveValue,
-                decorationOptions: Configurations.decorationOptions.read(document).effectiveValue,
-                detectedPairs:     Configurations.detectedPairs.read(document).effectiveValue
+                decorateAll:       Configurations.decorateAll.read(document),
+                decorationOptions: Configurations.decorationOptions.read(document),
+                detectedPairs:     Configurations.detectedPairs.read(document)
             })];
         }));
         this.resyncKeybindingContexts();

@@ -755,7 +755,7 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
         // query the engine's configuration reader directly instead of inserting those pairs into
         // the document and then calling `executor.assertPairs`.
         assert.deepStrictEqual(
-            Configurations.detectedPairs.read().effectiveValue,
+            Configurations.detectedPairs.read(),
             [ "()", "[]", "{}", "<>", "``", "''", "\"\"", "||", "**" ], 
         );
 
