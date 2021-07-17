@@ -8,14 +8,9 @@ import { Unchecked } from './configurations/unchecked';
 export interface TestHandle {
     
     /**
-     * The most recently set value of the `leaper.inLeaperMode` keybinding context.
+     * The most recently set keybinding contexts.
      */
-    readonly mostRecentInLeaperModeContext: boolean;
-
-    /**
-     * The most recently set value of the `leaper.hasLineOfSight` keybinding context.
-     */
-    readonly mostRecentHasLineOfSightContext: boolean;
+    readonly mostRecentContexts: { inLeaperMode: boolean, hasLineOfSight: boolean };
 
     /**
      * Get a snapshot of the internal state of the engine.

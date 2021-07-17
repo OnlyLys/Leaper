@@ -750,17 +750,8 @@ export class Tracker {
         }
 
         // So that the decoration options cannot be mutated by whoever requested the snapshot.
-        function recursiveFreeze(obj: any): void {
-            if (obj !== 'object' || obj === null) {
-                return;
-            }
-            for (const key of Reflect.ownKeys(obj)) {
-                recursiveFreeze(Reflect.get(obj, key));
-            }
-            Object.freeze(obj);
-        }
-        recursiveFreeze(this._decorationOptions);
-
+        freeze(this._decorationOptions);
+        
         return { pairs, decorationOptions: this._decorationOptions };
     }
 
@@ -852,4 +843,14 @@ function shift(stack: ContentChangeStack, position: Position): Position | undefi
         stack.vertCarry,
         position.line === stack.horzCarry.affectsLine ? stack.horzCarry.value : 0
     );
+}
+
+/**
+ * Deep freeze an object.
+ */
+function freeze(obj: any): void {
+    if (obj === 'object' && obj !== null) {
+        Reflect.ownKeys(obj).forEach(key => freeze(Reflect.get(obj, key)));
+        Object.freeze(obj);
+    }
 }

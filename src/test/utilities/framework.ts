@@ -311,11 +311,7 @@ class ExecutorFull {
         // Wait in case the engine has not caught up.
         await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
         
-        const message1 = 'Most Recently Set `leaper.inLeaperMode` Keybinding Context Mismatch';
-        this.assertEq(getMostRecentInLeaperModeContext(), expect.inLeaperMode, message1);
-
-        const message2 = 'Most Recently Set `leaper.hasLineOfSight` Keybinding Context Mismatch';
-        this.assertEq(getMostRecentHasLineOfSightContext(), expect.hasLineOfSight, message2);
+        this.assertEq(getMostRecentContexts(), expect, 'Keybinding Context Mismatch');
     }
 
     /**
@@ -868,29 +864,16 @@ function getSnapshot(viewColumn: AllowedViewColumns): TrackerSnapshot {
 }
 
 /**
- * Get the most recently set value of the `leaper.inLeaperMode` keybinding context.
+ * Get the most recently set keybinding contexts.
  * 
  * Note that this function should not be called immediately after a executing command that affects 
  * the view state, because it takes a while for changes in the view state to become effective.
  */
-function getMostRecentInLeaperModeContext(): boolean {
+function getMostRecentContexts(): { inLeaperMode: boolean, hasLineOfSight: boolean } {
     if (!testHandle) {
         throw new Error('Unable to retrive test handle!');
     }
-    return testHandle.mostRecentInLeaperModeContext;
-}
-
-/**
- * Get the most recently set value of the `leaper.hasLineOfSight` keybinding context.
- * 
- * Note that this function should not be called immediately after a executing command that affects 
- * the view state, because it takes a while for changes in the view state to become effective.
- */
-function getMostRecentHasLineOfSightContext(): boolean {
-    if (!testHandle) {
-        throw new Error('Unable to retrive test handle!');
-    }
-    return testHandle.mostRecentHasLineOfSightContext;
+    return testHandle.mostRecentContexts;
 }
 
 /**

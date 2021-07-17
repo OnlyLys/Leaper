@@ -106,7 +106,7 @@ export class Engine implements TestHandle {
      * the active text editor's tracker).
      */
     private readonly activeTextEditorChangeWatcher = window.onDidChangeActiveTextEditor(() => 
-        this.resyncKeybindingContexts()
+        this.resyncContexts()
     );
 
     /**
@@ -195,10 +195,10 @@ export class Engine implements TestHandle {
                 detectedPairs:     configurations.detectedPairs.read(document)
             })];
         }));
-        this.resyncKeybindingContexts();
+        this.resyncContexts();
     }
 
-    private resyncKeybindingContexts(): void {
+    private resyncContexts(): void {
 
         // Stop synchronizing the keybinding contexts to the previous active text editor's tracker.
         this.activeTrackerHasPairsWatcher?.dispose();
@@ -243,15 +243,11 @@ export class Engine implements TestHandle {
     /** 
      * **For Tests Only**
      */
-    public get mostRecentInLeaperModeContext(): boolean {
-        return this.inLeaperModeContext.mostRecent;
-    }
-
-    /**
-     * **For Tests Only**
-     */
-    public get mostRecentHasLineOfSightContext(): boolean {
-        return this.hasLineOfSightContext.mostRecent;
+    public get mostRecentContexts(): { inLeaperMode: boolean, hasLineOfSight: boolean } {
+        return {
+            inLeaperMode:   this.inLeaperModeContext.mostRecent,
+            hasLineOfSight: this.hasLineOfSightContext.mostRecent
+        };
     }
 
     /** 
@@ -260,11 +256,11 @@ export class Engine implements TestHandle {
     public snapshot(): Map<ResolvedViewColumn, TrackerSnapshot> {
         const map = new Map<ResolvedViewColumn, TrackerSnapshot>();
         for (const [{ viewColumn }, tracker] of this.trackers) {
-            if (viewColumn !== undefined) {
+            if (viewColumn) {
 
-                // This cast is safe because vscode only stores resolved view column numbers.
-                const resolvedViewColumn = viewColumn as ResolvedViewColumn;
-                map.set(resolvedViewColumn, tracker.snapshot());
+                // The cast to `ResolvedViewColumn` is safe because vscode only stores resolved view 
+                // column numbers.
+                map.set(viewColumn as ResolvedViewColumn, tracker.snapshot());
             }
         }
         return map;
