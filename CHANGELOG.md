@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### 0.10.3
+- Tweak README.
+
 ### 0.10.2
 - Tweak extension's package manifest.
 
