@@ -43,7 +43,7 @@
     "scripts": {
         "build-release": "eslint src --ext ts && tsc -noEmit -p ./ && esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --minify",
         "build-dev": "tsc -p ./ --allowUnusedLabels true --noUnusedParameters false --noUnusedLocals false",
-        "postinstall": "npm run build-dev",
+        "postinstall": "npm run build-release",
         "pretest": "npm run build-dev && node ./out/node-scripts/generate-test-environment.js",
         "test": "node ./out/test/run-tests.js",
         "vscode:prepublish": "npm run build-release"
