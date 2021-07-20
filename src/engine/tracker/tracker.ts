@@ -785,6 +785,10 @@ interface Pair {
  * Return a new array containing the cursors sorted by increasing `anchor` positions. 
  * 
  * Accompanying each cursor in the return value is the index of the cursor before it was sorted.
+ * 
+ * # Time Complexity
+ * 
+ * This function delegates the sorting to V8, which uses [Timsort](https://v8.dev/blog/array-sort#timsort).
  */
 function sortCursors(unsorted: ReadonlyArray<Selection>): ReadonlyArray<{
     cursor:        Selection,
