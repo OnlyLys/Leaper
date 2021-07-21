@@ -432,8 +432,8 @@ export class Tracker {
         //     to the innermost pair's opening side, and then from the innermost pair's closing side 
         //     to the outermost pair's closing side.
         // 
-        // This means that there is no need to backtrack when going through the content changes, 
-        // making a stack a good choice.
+        // That means that there is no need to backtrack when going through the content changes, 
+        // which makes stack a good choice.
         const stack = new ContentChangeStack(contentChanges);
 
         // Apply the content changes.
@@ -450,12 +450,30 @@ export class Tracker {
             // processed. Pairs which have been deleted are `undefined`.
             for (let j = 0; j < cluster.length; ++j) {
                 const pair = cluster[j] as Pair;
-                const shiftedOpen = shift(stack, pair.open);
-                if (shiftedOpen) {
-                    pair.open = shiftedOpen;
+
+                // Pop the content change stack until a content change with an end position after 
+                // this pair's opening side is encountered.
+                while (stack.peek()?.range.end.isBeforeOrEqual(pair.open)) {
+                    stack.pop();
+                }
+                
+                if (stack.peek()?.range.start.isAfter(pair.open) ?? true) {
+
+                    // We get here when the stack is empty or if the content change at the top of the 
+                    // stack begins after the opening side of this pair. In either case, the opening 
+                    // side of this pair has not been deleted, but has possibly been shifted.
+                    //
+                    // Since content changes yielded by vscode do not overlap, all of the content 
+                    // changes remaining on the stack (if any) occurs after the opening side of this 
+                    // pair, so they cannot affect it. Thus, the accumulated carry values represent 
+                    // the net shift in position on the opening side of this pair.
+                    pair.open = pair.open.translate(
+                        stack.vertCarry,
+                        (pair.open.line === stack.horzCarry.affectsLine) ? stack.horzCarry.value : 0
+                    );
                 } else {
 
-                    // Pair deleted.
+                    // This pair has been deleted.
                     this.pairCount -= 1;
                     pair.decoration?.dispose();
                     cluster[j] = undefined;
@@ -576,20 +594,26 @@ export class Tracker {
             for (let j = cluster.length - 1; j >= 0; --j) {
                 const pair = cluster[j];
                 if (pair) {
-                    const shiftedClose = shift(stack, pair.close);
 
-                    // We additionally require that both sides of the pair are on the same line 
-                    // because want multi-line text insertions between pairs to cause the pairs to 
-                    // be invalidated.
-                    if (shiftedClose && shiftedClose.line === pair.open.line) {
-                        pair.close = shiftedClose;
-                    } else {
-
-                        // Pair deleted.
-                        this.pairCount -= 1;
-                        pair.decoration?.dispose();
-                        cluster[j] = undefined;
+                    // This procedure is analogous to the one done in STEP 1.
+                    while (stack.peek()?.range.end.isBeforeOrEqual(pair.close)) {
+                        stack.pop();
                     }
+                    if (stack.peek()?.range.start.isAfter(pair.close) ?? true) {
+                        pair.close = pair.close.translate(
+                            stack.vertCarry,
+                            (pair.close.line === stack.horzCarry.affectsLine) ? stack.horzCarry.value : 0
+                        );
+
+                        // Unlike STEP 1, we only keep pairs that end up with sides on the same line, 
+                        // since we want multiline text insertion between pairs to invalidate them.
+                        if (pair.open.line === pair.close.line) {
+                            continue;
+                        }
+                    }
+                    this.pairCount -= 1;
+                    pair.decoration?.dispose();
+                    cluster[j] = undefined;
                 }
             }
 
@@ -759,6 +783,11 @@ export class Tracker {
 
 /** 
  * An internal representation of a pair that is being tracked.
+ * 
+ * Note that both `line` and `character` indices in a `Position` are zero-based. Furthermore, `character` 
+ * indices are in units of UTF-16 code units, which notably does not have the same units as the column 
+ * number shown in the bottom right of vscode, as the latter corresponds to the physical width of 
+ * characters in the editor.
  */
 interface Pair {
 
@@ -810,44 +839,6 @@ function decorate(
     editor.setDecorations(decoration, [ new Range(pair.close, pair.close.translate(0, 1)) ]);
     return decoration;
 };
-
-/** 
- * Apply a shift in position due to content changes.
- * 
- * This function advances the content change stack. 
- *
- * The return value is `undefined` if the content changes overwrite `position`. 
- */
-function shift(stack: ContentChangeStack, position: Position): Position | undefined {
-
-    // Pop the content change stack until a content change that either overlaps or occurs after 
-    // `position` is encountered.
-    //  
-    // Doing this allows us to 'build up' all of the shifts that would apply to a position due to 
-    // content changes before it. The built up shift values can then be retrieved through the 
-    // `vertCarry` and `horzCarry` properties.
-    while (stack.peek()?.range.end.isBeforeOrEqual(position)) {
-        stack.pop();
-    }
-
-    // Return `undefined` if position is deleted.
-    if (stack.peek()?.range.start.isBeforeOrEqual(position)) {
-        return undefined;
-    }
-
-    // We get here if either the content change stack has been exhausted, or if the content change 
-    // at the top of the stack occurs after `position`. 
-    //
-    // Since content changes do not overlap, all of the content changes still remaining on the stack 
-    // must occur after `position`, and therefore cannot affect `position`.
-    // 
-    // The carry values on the content stack now represent the net shift that would applied
-    // on `position` by the content changes.
-    return position.translate(
-        stack.vertCarry,
-        position.line === stack.horzCarry.affectsLine ? stack.horzCarry.value : 0
-    );
-}
 
 /**
  * Deep freeze an object.
