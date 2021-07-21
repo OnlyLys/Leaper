@@ -819,7 +819,7 @@ const DEPRECATED_CONFIGURATION_TEST_CASE = new TestCase({
  * there is a single cursor.
  */
 export const SINGLE_CURSOR_DECORATE_ALL_TEST_GROUP = new TestGroup(
-    '`leaper.decorateAll` Configuration',
+    'Configuration: `leaper.decorateAll`',
     [
         DECORATE_ONLY_NEAREST_PAIR_TEST_CASE,
         DECORATE_ALL_PAIRS_TEST_CASE,

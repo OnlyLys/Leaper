@@ -369,7 +369,7 @@ const DEPRECATED_CONFIGURATION_TEST_CASE = new TestCase({
 
 
 export const SINGLE_CURSOR_DECORATION_OPTIONS_TEST_GROUP = new TestGroup(
-    '`leaper.decorationOptions` Configuration',
+    'Configuration: `leaper.decorationOptions`',
     [
         IS_BEING_READ_AND_THEME_COLOR_IDS_CORRECTLY_CONVERTED_TEST_CASE,
         REJECT_VALUE_IF_RANGE_BEHAVIOR_SPECIFIED_TEST_CASE,

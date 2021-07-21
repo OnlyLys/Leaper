@@ -193,7 +193,7 @@ const RIGHTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
 });
     
 const RIGHTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_CLICKING_OUT_TEST_CASE = new TestCase({
-    name: 'Rightwards Exit of Cursor (in One Go by Clicking Out)',
+    name: 'Rightwards Exit of Cursor (In One Go by Clicking Out)',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -211,7 +211,7 @@ const RIGHTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_CLICKING_OUT_TEST_CASE = new TestCa
 });
 
 const RIGHTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_PRESSING_END_KEY_TEST_CASE = new TestCase({
-    name: 'Rightwards Exit of Cursor (in One Go by Pressing `End` Key)',
+    name: 'Rightwards Exit of Cursor (In One Go by Pressing `End` Key)',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -379,7 +379,7 @@ const LEFTWARDS_EXIT_OF_CURSOR_INCREMENTAL_TEST_CASE = new TestCase({
 });
 
 const LEFTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_CLICKING_OUT_TEST_CASE = new TestCase({
-    name: 'Leftwards Exit of Cursor (in One Go by Clicking Out)',
+    name: 'Leftwards Exit of Cursor (In One Go by Clicking Out)',
     prelude: sharedPrelude,
     task: async (executor) => {
 
@@ -397,7 +397,7 @@ const LEFTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_CLICKING_OUT_TEST_CASE = new TestCas
 });
 
 const LEFTWARDS_EXIT_OF_CURSOR_IN_ONE_GO_BY_PRESSING_HOME_KEY_TEST_CASE = new TestCase({
-    name: 'Leftwards Exit of Cursor (in One Go by Pressing `Home` Key)',
+    name: 'Leftwards Exit of Cursor (In One Go by Pressing `Home` Key)',
     prelude: sharedPrelude,
     task: async (executor) => {
 

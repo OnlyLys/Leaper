@@ -767,7 +767,7 @@ const HOT_RELOAD_TEST_CASE = new TestCase({
  * when there is a single cursor.
  */
 export const SINGLE_CURSOR_DETECTED_PAIRS_TEST_GROUP: TestGroup = new TestGroup(
-    '`leaper.detectedPairs` Configuration',
+    'Configuration: `leaper.detectedPairs`',
     [
         IT_WORKS_TEST_CASE,
         REJECT_VALUE_IF_ITEMS_ARE_NOT_UNIQUE_TEST_CASE,

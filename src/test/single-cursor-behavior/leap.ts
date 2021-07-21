@@ -276,7 +276,7 @@ const ENGINE_CAN_HANDLE_RAPID_CALLS = new TestCase({
  * A collection of tests cases that test the `leaper.leap` command when there is a single cursor.
  */
 export const SINGLE_CURSOR_LEAP_COMMAND_TEST_GROUP: TestGroup = new TestGroup(
-    "'Leap' Command",
+    'Command: `leaper.leap`',
     [
         SINGLE_LEAP_TEST_CASE,
         SINGLE_LEAP_ACROSS_WHITESPACE_TEST_CASE,
