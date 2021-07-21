@@ -1,76 +1,55 @@
 import { TextDocumentContentChangeEvent } from 'vscode';
 
 /** 
- * An adaptor over the immutable content change array to make it behave like a mutable stack. 
+ * An adaptor over the immutable content change array yielded by vscode that accumulates the shifts
+ * due to prior content changes in the array.
  * 
- * # Ordering
+ * This adaptor behaves like a stack, yielding content changes ordered by increasing `start` positions
  *
- * This stack is ordered (from the top to bottom) by ascending starting position of the content 
- * changes. 
+ * # Why This Exists
  * 
- * # Carries
+ * With this stack, we can accumulate the effect of content changes without having to backtrack. 
  * 
- * This adaptor also provides access to carry values, which describe the shift in positions due to 
- * earlier content changes.
+ * For example, consider the following sentence:
  * 
- * We need this because the array of content changes obtained from the editor uses coordinates that 
- * would only be appropriate if the content changes were applied in reverse (starting from the end 
- * of the document until the start of the document). 
+ *     cat dog cat cat dog {} cat cat dog cat {}
  * 
- * However, because this stack goes through the content changes from the start of the document until
- * the end of the document, we need some way of keeping track of past content changes's effect on
- * items that come after them.
+ * where the two `{}` represent pairs that we want to know the positions of after some content changes. 
+ * Suppose we used the search-and-replace feature of vscode to replace all instances of the word "dog" 
+ * with "dinosaur". In that case, vscode will fire a content change event containing an array of 
+ * three content changes:
  * 
- * An example will make the above clearer. Consider the sentence:
+ *     1. { range: { start: { line: 0, character: 31 }, end: { line: 0, character: 34 } }, text "dinosaur" },
+ *     2. { range: { start: { line: 0, character: 16 }, end: { line: 0, character: 19 } }, text "dinosaur" },
+ *     3. { range: { start: { line: 0, character:  4 }, end: { line: 0, character:  7 } }, text "dinosaur" } 
  * 
- *     cat dog cat cat dog cat cat dog cat 
+ * which results in the following sentence:
  * 
- * If we used the search-and-replace feature of the editor to replace the words "dog" with "frog",
- * it will produce content changes in the following order:
+ *     cat dinosaur cat cat dinosaur {} cat cat dinosaur cat {}
  * 
- *     replace (line 0, character 22) to (line 0, character 25) with "frog",
- *     replace (line 0, character 13) to (line 0, character 16) with "frog",
- *     replace (line 0, character  4) to (line 0, character  7) with "frog" 
- * 
- * where 'line' is line index and 'character' is character index. 
- * 
- * Notice that if the content changes were applied in the order specified above, then it is fine. 
- * But if the content changes were applied the other way around, then the coordinates specified by 
- * the top two content changes would be incorrect, since applying the third content change would 
- * shift the text to the right of (line 0, character 7) by 1 unit, leaving the remaining content 
- * changes referencing stale positions.
- * 
- * # Character Indices
- * 
- * Character indices are in units of UTF-16 code units. 
- * 
- * Character indices do not have the same units as the column number shown in the bottom right of 
- * vscode, as the latter corresponds to physical width of characters in the editor, while the former
- * corresponds to the byte length of the characters in memory.
+ * Observe that the effect of content changes 2 and 3 on both `{}` pairs is the same: a rightwards 
+ * shift of 10 characters. Thus, if we were to consider the pairs from left to right, and if we were 
+ * to accumulate the effects of the content changes as we go along, when it comes time to consider 
+ * the second pair, we do not have to backtrack to recalculate the effects of content changes 2 and 
+ * 3 on it since they have already been accounted for in the accumulated value, and we can just apply 
+ * the accumulated value to get the effect that those content changes would have on the second pair.
  */
 export class ContentChangeStack {
 
-    /** 
-     * Index of the stack top.
+    /**
+     * Index of the top of the stack.
      */
     private top: number;
 
     /** 
-     * The immutable content change array that we are adapting over.
-     * 
-     * Our stack will yield content changes from this array, going from the end to the start of this
-     * array.
+     * The immutable content change array from vscode that we are adapting over.
      */
     private src: ReadonlyArray<TextDocumentContentChangeEvent>;
 
     private _vertCarry: number = 0;
 
     /** 
-     * Vertical shifts due to all content changes that have been popped from the stack.
-     *
-     * Because we are going through content changes from the start to the end of the document, we 
-     * have to take into account content changes that have been popped, since they might contribute 
-     * a change in line number to any items that are positioned after them.
+     * Vertical shift to apply to all items located after the most recently popped content change.
      */
     public get vertCarry(): number {
         return this._vertCarry;
@@ -78,11 +57,14 @@ export class ContentChangeStack {
 
     private _horzCarry: { affectsLine: number, value: number } = { affectsLine: -1, value: 0 };
 
-    /** 
-     * Horizontal shift due to the most recent content change that was popped from the stack.
+    /**
+     * Horizontal shift to apply to all items located on the last line affected by the most recently 
+     * popped content change.
      * 
-     * Aside from vertical shifts, content changes also contribute a change in character index to 
-     * any item that comes after them on the last line that was replaced by the content change. 
+     * # Why This Exists
+     * 
+     * Aside from vertical shifts, a content change also contributes a shift in character index to 
+     * any item that comes immediately after.
      *
      * For example, consider the document (where the numbers on the left denote line indices):
      *
@@ -92,25 +74,25 @@ export class ContentChangeStack {
      *     3 | 
      *     4 | Meow!
      *
-     * Consider a content change that replaces the range (line 0, char 6) to (line 2, char 7) with 
-     * the text "adorable ". The document after the content change is:
+     * Consider a content change that replaces the range:
+     * 
+     *     { start: { line: 0, character: 6 }, end: { line: 2, character: 7 } }
+     * 
+     * with the text "adorable ". The document after the content change is:
      *
      *     0 | Hello adorable cat!
      *     1 | 
      *     2 | Meow!
      *
      * As expected, the text to the right of the replaced range ("cat!") and the two lines below it 
-     * are shifted upwards (line index decreases). But notice that "cat" is shifted rightwards 
-     * (character index increases). The character index change is what we are recording as the 
+     * are shifted vertically (line index decreases). But notice that "cat" is shifted horizontally
+     * (character index increases). This character index change is what we are recording as the 
      * horizontal carry.
      */
     public get horzCarry(): { 
         
         /** 
-         * Which line the horizontal carry applies to.
-         *
-         * The horizontal carry only applies to items on the last line that the most recently popped
-         * content change replaced. See the doc-comment of `horzCarry` for more information.
+         * Which line this horizontal carry applies to.
          */
         affectsLine: number, 
         
@@ -122,26 +104,12 @@ export class ContentChangeStack {
 
     public constructor(contentChanges: ReadonlyArray<TextDocumentContentChangeEvent>) {
 
-        // We do not have to sort the content changes array from a `TextDocumentChangeEvent` because 
-        // it was discovered that whether it be replacing a bunch of text via the 'Find and Replace' 
-        // feature, or replacing a bunch of text via a single `edit` command, such as:
-        // 
-        //     window.activeTextEditor.edit(
-        //         (editBuilder) => {
-        //             editBuilder.replace(new Range(0, 10, 0, 20), 'hey');
-        //             editBuilder.replace(new Range(1, 50, 2, 90), '\nwoah!\n');
-        //             editBuilder.replace(new Range(0, 50, 0, 70), 'yo');
-        //             editBuilder.replace(new Range(10, 4, 11, 12), '');
-        //             editBuilder.replace(new Range(3, 0, 4, 30), '\n\n\n\t\d');
-        //         }
-        //     );
-        // 
-        // vscode will always fire a `TextDocumentChangeEvent` containing content changes ordered by 
-        // the range that they replace, from the end to the start of the document. The ordering that 
-        // vscode gives us is already what we want, albeit in reverse.
-        // 
-        // However, do note that there is no explicit guarantee from vscode's API that content 
-        // change events will yield contain content changes with such a sort order.
+        // A content change array yielded by vscode is always ordered by decreasing `range`s. Thus,
+        // to adapt it into a stack, all we have to do is have a `top` pointer that we decrement as
+        // we 'pop' the stack.
+        //
+        // However, do note that there is no explicit guarantee from vscode's API that content change
+        // arrays yielded by it will always have that ordering.
         this.src = contentChanges;
         this.top = contentChanges.length;
     }
@@ -299,7 +267,7 @@ export class ContentChangeStack {
     }
 
     /** 
-     * Get a reference to the content change at the top of the stack.
+     * Get the content change at the top of the stack.
      * 
      * The return value is `undefined` if the stack is empty.
      */
@@ -310,7 +278,7 @@ export class ContentChangeStack {
 }
 
 /** 
- * Count the number of lines of a string, as well as the length of its last line. 
+ * Count the number of lines in a string, as well as the length of its last line. 
  */
 function countLines(str: string): { lines: number, lastLineLen: number } {
     let lines       = 1;
