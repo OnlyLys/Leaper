@@ -70,6 +70,32 @@ export class Tracker {
      */
     private clusters: Pair[][];
 
+    /** 
+     * For each cursor, the possible autoclosing pairs that were inserted by characters behind dead 
+     * keys.
+     * 
+     * When autoclosing pairs are inserted with an opening character that is behind a dead key, and 
+     * the user's desktop is configured to insert previews of dead keys into the text editor, then 
+     * when the opening character is inserted and the pair autoclosed, vscode actually fires two 
+     * separate (but consecutive) content change events, where the first event replaces the dead key 
+     * preview with the opening side of the pair, and the second inserts the closing side of the pair.
+     * Such autoclosing behavior is different compared to the usual autoclosing behavior where both 
+     * sides of the pair is inserted in one content change event before the cursor is moved to between 
+     * the pair. 
+     * 
+     * In order to detect such autoclosing pairs (which we call _**dead key autoclosing pairs**_), 
+     * for each cursor, we store in this array a possible pair when we have detected what could be 
+     * the first of two events that make up a dead key autoclosing pair. The second event, if it 
+     * happens, can then check for the presence of the first event through this array to confirm that 
+     * a dead key autoclosing pair was indeed inserted.
+     * 
+     * Note that dead key autoclosing pairs are rarely encountered, as by default, Windows and Linux 
+     * IBus do not insert previews of dead keys. It seems that only MacOS has such behavior by default. 
+     * When autoclosing pairs are insert in a desktop environment where dead keys are not previewed, 
+     * then they will be autoclosed in the usual way.
+     */
+    private possibleDeadKeyPairs: (string | undefined)[];
+
     /**
      * The total number of pairs that are being tracked.
      */
@@ -262,11 +288,12 @@ export class Tracker {
             detectedPairs: ReadonlyArray<string>
         }
     ) {
-        this._decorateAll       = configuration.decorateAll;
-        this._decorationOptions = configuration.decorationOptions;
-        this._detectedPairs     = configuration.detectedPairs;
-        this.sortedCursors      = sortCursors(this.owner.selections);
-        this.clusters           = Array(this.sortedCursors.length).fill([]);
+        this._decorateAll         = configuration.decorateAll;
+        this._decorationOptions   = configuration.decorationOptions;
+        this._detectedPairs       = configuration.detectedPairs;
+        this.sortedCursors        = sortCursors(this.owner.selections);
+        this.clusters             = Array(this.sortedCursors.length).fill([]);
+        this.possibleDeadKeyPairs = Array(this.sortedCursors.length).fill(undefined);
     }
 
     /** 
@@ -356,6 +383,10 @@ export class Tracker {
                 this.pairCount -= prevClusters[i].length;
                 prevClusters[i++].forEach(pair => pair.decoration?.dispose());
             }
+
+            // The array of possible dead key autoclosing pairs is parallel to `sortedCursors`, and
+            // so should always have the same length as it.
+            this.possibleDeadKeyPairs.length = this.sortedCursors.length;
         }
 
         // --------------------------------
@@ -394,6 +425,13 @@ export class Tracker {
             if (pairsDropped && cluster.length > 0) {
                 this.decorationsFixer.set();
             }
+
+            // While we are at it, we clear the possible dead key autoclosing pair for this cursor.
+            //
+            // We should clear possible dead key autoclosing pairs whenever there is a selection
+            // change event since dead key autoclosing pairs only manifest as two consecutive content 
+            // change events.
+            this.possibleDeadKeyPairs[i] = undefined;
         }
 
         if (this.hasPairs !== prevHasPairs) {
@@ -437,10 +475,16 @@ export class Tracker {
         const stack = new ContentChangeStack(contentChanges);
 
         // Apply the content changes.
-        this.clusters = this.clusters.map((_cluster, i) => {
+        for (let cursorIndex = 0; cursorIndex < this.clusters.length; ++cursorIndex) {
 
             // So that we can delete array elements in place.
-            const cluster = _cluster as (Pair | undefined)[];
+            const cluster = this.clusters[cursorIndex] as (Pair | undefined)[];
+
+            // The cursor that is enclosed within the pairs of this cluster.
+            //
+            // Note that we consider a cursor to be enclosed by a pair when the `anchor` part of the 
+            // cursor is between the opening and closing sides of said pair.
+            const cursor = this.sortedCursors[cursorIndex].cursor;
 
             // --------------------------------
             // STEP 1 - Shift (or delete) the opening side of pairs.
@@ -467,10 +511,7 @@ export class Tracker {
                     // changes remaining on the stack (if any) occurs after the opening side of this 
                     // pair, so they cannot affect it. Thus, the accumulated carry values represent 
                     // the net shift in position on the opening side of this pair.
-                    pair.open = pair.open.translate(
-                        stack.vertCarry,
-                        (pair.open.line === stack.horzCarry.affectsLine) ? stack.horzCarry.value : 0
-                    );
+                    pair.open = shift(stack, pair.open);
                 } else {
 
                     // This pair has been deleted.
@@ -481,80 +522,102 @@ export class Tracker {
             }
 
             // --------------------------------
-            // STEP 2 - Check if an autoclosing pair has been inserted. 
+            // STEP 2 - Check if an opening side of a "dead key autoclosing pair" has been inserted.
+            // --------------------------------
+            //
+            // For what "dead key autoclosing pair" means, please see the `possibleDeadKeyPairs` 
+            // property of this class.
+
+            let possibleDeadkeyPairJustDetected = false;
+
+            // Advance the stack until the content change at the top of the stack is one that begins 
+            // at or after the cursor.
+            while (stack.peek()?.range.start.isBefore(cursor.anchor)) {
+                const popped = stack.pop() as TextDocumentContentChangeEvent;
+
+                // A content change that replaces one character of text right before the cursor with 
+                // the opening character of a pair is possibly the first content change involved in 
+                // the autoclosing of a dead key autoclosing pair.
+                if (
+                    popped.range.end.character === cursor.anchor.character
+                    && popped.range.end.character > 0
+                    && popped.range.start.character === cursor.anchor.character - 1
+                    && popped.text.length === 1
+                    && cursor.isEmpty
+                ) {
+                    const possible = this._detectedPairs.find(pair => pair[0] === popped.text);
+                    if (possible) {
+                        this.possibleDeadKeyPairs[cursorIndex] = possible;
+                        possibleDeadkeyPairJustDetected        = true;
+                    }
+                }
+            }
+
+            // --------------------------------
+            // STEP 3 - Check if an autoclosing pair has been inserted. 
             // --------------------------------
 
             // A possible new autoclosing pair.
             //
-            // Note that the position of this new pair (if detected) is already "finalized" and does 
+            // Note that the position of this new pair (if detected) is already finalized and does 
             // not require further shifting.
             let newPair: Pair | undefined;
-
-            // The cursor that is enclosed within the pairs of this cluster.
-            //
-            // Note that we consider a cursor to be enclosed by a pair when the `anchor` part of the 
-            // cursor is between the opening and closing sides of said pair.
-            const cursor = this.sortedCursors[i].cursor;
-
-            // Advance the stack until the content change at the top of the stack is one that begins 
-            // at or after the cursor.
-            //
-            // If, after this step, the stack is not empty, then the content change at the top of 
-            // the stack is the only content change that could possibly have inserted an autoclosing 
-            // pair since the rest of the content changes still in the stack are modifications of 
-            // text that come after the content change at the top of the stack.
-            while (stack.peek()?.range.start.isBefore(cursor.anchor)) {
-                stack.pop();
-            }
 
             // Check whether the content change at the top of the stack is one that inserted an 
             // autoclosing pair.
             //
-            // There are four conditions that have to be satisfied before a content change is
-            // considered an autoclosing pair insertion:
+            // The previous step will have advanced the content change stack until the top of the
+            // stack (if the stack is not empty) is a content change that either begins at the cursor 
+            // or after the cursor. If that content change begins at the cursor, then it could be 
+            // one that has inserted an autoclosing pair, so we check here whether it has. We do not 
+            // have to check whether any other content changes remaining on the stack has inserted 
+            // an autoclosing pair since content changes do not overlap, meaning that those remaining 
+            // content changes must begin after the content change currently at the top of the stack.
             //
-            //  1. The text insertion must have occurred at a cursor. 
-            //  2. The text inserted must have a length of 2.
-            //  3. The text inserted must not have overwritten any text in the document.
-            //  4. The cursor which inserted this pair must have an empty selection.
+            // There are three kinds of autoclosing pairs:
             //
-            // Before we explain why each condition is required, we must first mention that there 
-            // are two kinds of autoclosing pairs in vscode:
+            //   1. Regular
+            //     
+            //   This is the most common kind of autoclosing pair. Where when nothing is selected and 
+            //   the user presses an opener (such as `{`), vscode automatically inserts the closer 
+            //   (in this example, `}`), then moves the cursor to between the autoclosed pair.
+            //   
+            //   This kind of autoclosing pair always manifests as a single content change that 
+            //   inserts a pair (such as `{}`) at a cursor and overwrites no text in the document.
+            //   
+            //   2. Dead Key
+            //   
+            //   Please see the `possibleDeadKeyPairs` property for a description of this 
+            //   kind of pair.
+            //   
+            //   3. Wrap Around
+            //   
+            //   This kind of autoclosing pair occurs when there is text selected and the user presses 
+            //   an opener (such as `{`), vscode then automatically wraps the selected text on both 
+            //   sides (in this example, resulting in `{<selected_text>}`). 
+            //   
+            //   This kind of autoclosing pair always manifests as two content changes in one event, 
+            //   the first of which inserts the opening side of the pair and the second which inserts 
+            //   the closing side (for instance, the first one would insert `{` before the selected 
+            //   text and the second would insert `}` after the selected text).
+            //   
+            // Due to the complexity involved in tracking the third kind of autoclosing pair, we 
+            // choose not to track them in this extension.
+            
+            // Check for regular autoclosing pair insertion.
             //
-            //  - The first kind is when nothing is selected and the user presses an opener (such as 
-            //    `{`), vscode then automatically inserts the complementary closer (in this example, 
-            //    `}`), then moves the cursor to in between the autoclosed pair.
+            // Note that the conditions here would not be able to distinguish between a pasted pair 
+            // and an autoclosed one, and therefore we will end up tracking a pasted pair as well 
+            // (when really we only want to track an autoclosed one). But because the cursor ends up 
+            // at different positions afterwards (an autoclosed pair will have the cursor end up 
+            // between the pair, like so `{|}`, while a pasted one will have the cursor end up after 
+            // the pair, like so `{}|`), we can rely on a subsequent `Tracker.notifySelectionChanges` 
+            // call to untrack a pasted pair, meaning in practice we should not have issues by not
+            // being able to distinguish between the two.
             //
-            //    This kind of autoclosing pair always manifests as a single content change that 
-            //    inserts a pair (such as `{}`) at a cursor and overwrites no text in the document.
-            // 
-            //  - The second kind is when there is text selected and the user presses an opener
-            //    (such as `{`), vscode then automatically wraps the selected text on both sides 
-            //    (in this example, resulting in `{<selected_text>}`). 
-            //
-            //    This kind of autoclosing pair always manifests as two content changes, one which
-            //    inserts the opening side of the pair and another which inserts the closing side 
-            //    (for instance, the first one would insert `{` before the selected text and the 
-            //    second would insert `}` after the selected text).
-            //
-            // In this extension, we do not support tracking of the second kind of autoclosing pair 
-            // due to the complexity involved. Thus, by only considering one content change at a 
-            // time, we will have implicitly excluded the second kind of autoclosing pair.
-            //
-            // It is now clear why we require the conditions listed above. By filtering out content
-            // changes that do not satisfy the conditions, we can exclude content changes that are 
-            // not insertions of the first kind of autoclosing pair. However, note that the filtering
-            // is not perfect. The conditions listed above would not be able to help us distinguish 
-            // between a pasted pair and an autoclosed one, and therefore we will end up tracking 
-            // both kinds of pairs (when really we only want to track an autoclosed one). But because 
-            // the cursor ends up at different positions afterwards (an autoclosed pair will have 
-            // the cursor end up in between the pair, like so `{|}`, while a pasted one will have 
-            // the cursor end up after the pair, like so `{}|`), we can rely on the subsequent 
-            // `Tracker.notifySelectionChanges` call to untrack a pasted pair.
-            //
-            // OPTIMIZATION NOTE: We check for condition 2 first since the most common content 
-            // changes that occur are single alphbet text insertions at the cursor due to the user
-            // typing stuff into the editor.
+            // OPTIMIZATION: We check whether the text inserted has length of two first, since the 
+            // most common content changes that occur are single character text insertions at the 
+            // cursor due to the user typing stuff into the editor.
             if (
                 stack.peek()?.text.length === 2
                 && stack.peek()?.range.start.isEqual(cursor.anchor) 
@@ -565,14 +628,10 @@ export class Tracker {
 
                 // The position of the cursor after the content changes have been applied.
                 //
-                // The `cursor` object we have actually represents the position of the cursor before
-                // the content changes have been applied. Thus, we have to calculate the cursor's 
-                // position after the content changes have been applied so that we know where the 
-                // new autoclosed pair will be located.
-                const anchorAfter = cursor.anchor.translate(
-                    stack.vertCarry,
-                    cursor.anchor.line === stack.horzCarry.affectsLine ? stack.horzCarry.value : 0
-                );
+                // The `cursor` object we have contains the position of the cursor before the content 
+                // changes have been applied. By calculating the cursor's position after the content 
+                // changes have been applied, we know where the new autoclosing pair will be located.
+                const anchorAfter = shift(stack, cursor.anchor);
 
                 newPair = { 
                     open:       anchorAfter,
@@ -580,9 +639,37 @@ export class Tracker {
                     decoration: undefined
                 };
             }
+            
+            // Check for dead key autoclosing pair insertion.
+            //
+            // The second conditional (`!possibleDeadKeyPairJustDetected`) is there because if we 
+            // had just detected the opening side of a possible dead key autoclosing pair (in STEP 2), 
+            // then we have to wait until the next content change event before checking for the 
+            // closing side.
+            if (this.possibleDeadKeyPairs[cursorIndex] && !possibleDeadkeyPairJustDetected) {
+                if (
+                    stack.peek()?.text === (this.possibleDeadKeyPairs[cursorIndex] as string)[1]
+                    && stack.peek()?.range.start.isEqual(cursor.anchor) 
+                    && stack.peek()?.range.isEmpty
+                    && cursor.isEmpty
+                ) {
+                    
+                    // Same `anchorAfter` as when a new regular autoclosing pair is detected.
+                    const anchorAfter = shift(stack, cursor.anchor);
+
+                    newPair = { 
+                        open:       anchorAfter.translate(0, -1),
+                        close:      anchorAfter,
+                        decoration: undefined
+                    };
+                }
+
+                // So that we don't repeat this check in the future.
+                this.possibleDeadKeyPairs[cursorIndex] = undefined;
+            }
 
             // --------------------------------
-            // STEP 3 - Shift (or delete) the closing side of remaining pairs. 
+            // STEP 4 - Shift (or delete) the closing side of remaining pairs. 
             // --------------------------------
             //
             // After this step, `cluster` will contain pairs where both sides have been processed. 
@@ -600,10 +687,7 @@ export class Tracker {
                         stack.pop();
                     }
                     if (stack.peek()?.range.start.isAfter(pair.close) ?? true) {
-                        pair.close = pair.close.translate(
-                            stack.vertCarry,
-                            (pair.close.line === stack.horzCarry.affectsLine) ? stack.horzCarry.value : 0
-                        );
+                        pair.close = shift(stack, pair.close);
 
                         // Unlike STEP 1, we only keep pairs that end up with sides on the same line, 
                         // since we want multiline text insertion between pairs to invalidate them.
@@ -618,16 +702,15 @@ export class Tracker {
             }
 
             // --------------------------------
-            // STEP 4 - Complete the new cluster.
+            // STEP 5 - Complete the new cluster.
             // --------------------------------
 
             // Omit all the deleted pairs.
-            const done = cluster.filter(pair => !!pair) as Pair[];
-
-            // If the previous 'nearest pair' was dropped, then we have to make sure the new nearest
-            // pair is decorated.
-            if (cluster.length > 0 && !cluster[cluster.length - 1]) {
-                this.decorationsFixer.set();
+            const done: Pair[] = [];
+            for (const pair of cluster) {
+                if (pair) {
+                    done.push(pair);
+                }
             }
 
             // Append the new pair to the finalized cluster.
@@ -643,8 +726,14 @@ export class Tracker {
                 this.decorationsFixer.set();
             }
 
-            return done;
-        });
+            // If the previous 'nearest pair' was dropped, then we have to make sure the new nearest
+            // pair is decorated.
+            if (cluster.length > 0 && !cluster[cluster.length - 1]) {
+                this.decorationsFixer.set();
+            }
+
+            this.clusters[cursorIndex] = done;
+        };
 
         if (this.hasPairs !== prevHasPairs) {
             this.onDidUpdateHasPairsEmitter.fire(undefined);
@@ -739,6 +828,9 @@ export class Tracker {
         for (let i = 0; i < this.clusters.length; ++i) {
             this.clusters[i].forEach(pair => pair.decoration?.dispose());
             this.clusters[i] = [];
+        }
+        for (let i = 0; i < this.possibleDeadKeyPairs.length; ++i) {
+            this.possibleDeadKeyPairs[i] = undefined;
         }
         this.pairCount = 0;
         this._hasLineOfSight.stale = true;
@@ -851,3 +943,14 @@ function freeze(obj: any): void {
         Object.freeze(obj);
     }
 }
+
+/**
+ * Shift a position with the carry values of a stack.
+ */
+function shift(stack: ContentChangeStack, position: Position): Position {
+    return position.translate(
+        stack.vertCarry,
+        position.line === stack.horzCarry.affectsLine ? stack.horzCarry.value : 0
+    );
+}
+    
