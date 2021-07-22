@@ -45,7 +45,7 @@
         "build-dev": "tsc -p ./ --allowUnusedLabels true --noUnusedParameters false --noUnusedLocals false",
         "postinstall": "npm run build-release",
         "pretest": "npm run build-dev && node ./out/node-scripts/generate-test-environment.js",
-        "test": "node ./out/test/run-tests.js",
+        "test": "node ./out/tests/run.js",
         "vscode:prepublish": "npm run build-release"
     },
     "dependencies": {

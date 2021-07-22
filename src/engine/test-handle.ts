@@ -1,5 +1,5 @@
 import { DecorationRenderOptions, ViewColumn } from 'vscode';
-import { CompactPair } from '../test/utilities/compact';
+import { CompactPair } from '../tests/utilities/compact';
 import { Unchecked } from './configurations/unchecked';
 
 /**
