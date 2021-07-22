@@ -85,16 +85,16 @@ export class Tracker {
     /**
      * Notifies listeners of `onDidUpdateHasPairs`.
      * 
-     * For consistency with `onDidUpdateHasLineOfSightEventEmitter`, the updated value is not sent 
-     * when firing this event.
+     * For consistency with `onDidUpdateHasLineOfSightEmitter`, the updated value is not sent when 
+     * firing this event.
      */
-    private readonly onDidUpdateHasPairsEventEmitter = new EventEmitter<undefined>();
+    private readonly onDidUpdateHasPairsEmitter = new EventEmitter<undefined>();
 
     /**
      * Subscribe to be notified when the `hasPairs` property has been updated.
      */
     public get onDidUpdateHasPairs(): Event<undefined> {
-        return this.onDidUpdateHasPairsEventEmitter.event;
+        return this.onDidUpdateHasPairsEmitter.event;
     }
 
     /**
@@ -139,13 +139,13 @@ export class Tracker {
      * Note that we do not send the updated value when firing this event, because then we don't have
      * to calculate the updated value when no one is listening.
      */
-    private readonly onDidUpdateHasLineOfSightEventEmitter = new EventEmitter<undefined>();
+    private readonly onDidUpdateHasLineOfSightEmitter = new EventEmitter<undefined>();
 
     /**
      * Subscribe to be notified when the `hasLineOfSight` property has been updated.
      */
     public get onDidUpdateHasLineOfSight(): Event<undefined> {
-        return this.onDidUpdateHasLineOfSightEventEmitter.event;
+        return this.onDidUpdateHasLineOfSightEmitter.event;
     }
 
     /**
@@ -397,14 +397,14 @@ export class Tracker {
         }
 
         if (this.hasPairs !== prevHasPairs) {
-            this.onDidUpdateHasPairsEventEmitter.fire(undefined);
+            this.onDidUpdateHasPairsEmitter.fire(undefined);
         }
 
         // The `hasLineOfSight` property can only change if there were previously pairs, since 
         // changes in cursors never introduce new pairs.
         if (prevHasPairs) {
             this._hasLineOfSight.stale = true;
-            this.onDidUpdateHasLineOfSightEventEmitter.fire(undefined);
+            this.onDidUpdateHasLineOfSightEmitter.fire(undefined);
         }
 
     }
@@ -647,14 +647,14 @@ export class Tracker {
         });
 
         if (this.hasPairs !== prevHasPairs) {
-            this.onDidUpdateHasPairsEventEmitter.fire(undefined);
+            this.onDidUpdateHasPairsEmitter.fire(undefined);
         }
 
         // If there was previously no pairs, and no new pairs were added, then there is no way for
         // the `hasLineOfSight` property to change.
         if (prevHasPairs || newPairsAdded) {
             this._hasLineOfSight.stale = true;
-            this.onDidUpdateHasLineOfSightEventEmitter.fire(undefined);
+            this.onDidUpdateHasLineOfSightEmitter.fire(undefined);
         }
     }
     
@@ -740,8 +740,8 @@ export class Tracker {
         this.clusters.fill([]);
         this.pairCount = 0;
         this._hasLineOfSight.stale = true;
-        this.onDidUpdateHasPairsEventEmitter.fire(undefined);
-        this.onDidUpdateHasLineOfSightEventEmitter.fire(undefined);
+        this.onDidUpdateHasPairsEmitter.fire(undefined);
+        this.onDidUpdateHasLineOfSightEmitter.fire(undefined);
         this.decorationsFixer.clear();
     }
 
@@ -750,8 +750,8 @@ export class Tracker {
      */
     public dispose(): void {
         this.clear();
-        this.onDidUpdateHasPairsEventEmitter.dispose();
-        this.onDidUpdateHasLineOfSightEventEmitter.dispose();
+        this.onDidUpdateHasPairsEmitter.dispose();
+        this.onDidUpdateHasLineOfSightEmitter.dispose();
     }
 
     /** 
