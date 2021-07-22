@@ -117,14 +117,14 @@ export class ContentChangeStack {
     /** 
      * Pop the content change that's currently at the top of the stack.
      * 
-     * This method does nothing if the stack is empty.
+     * This method returns `undefined` if the stack is empty.
      * 
      * The carry values will be updated to include the popped content change.
      */
-    public pop(): void {
+    public pop(): TextDocumentContentChangeEvent | undefined {
 
         if (this.top === 0) {
-            return;
+            return undefined;
         }
 
         // Range that the top of stack content change replaced.
@@ -262,8 +262,7 @@ export class ContentChangeStack {
         }
 
         this._horzCarry = { affectsLine: replaced.end.line, value: horzCarry };
-        this.top       -= 1;
-        
+        return this.src[--this.top];
     }
 
     /** 
