@@ -42,6 +42,10 @@
             "*.md": "markdown",
             "*.txt": "plaintext"
         },
+        // Disable Typescript and Javascript validation since those may cause the editor to chug.
+        "javascript.validate.enable": false,
+        "typescript.validate.enable": false,
+        // Preconfigured values used for tests.
         "leaper.decorateAll": false,
         // (DP-1).
         "leaper.detectedPairs": [
