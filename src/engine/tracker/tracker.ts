@@ -446,8 +446,8 @@ export class Tracker {
             // STEP 1 - Shift (or delete) the opening side of pairs.
             // --------------------------------
             //
-            // After this step, `cluster` will contain pairs where only the opening side has been 
-            // processed. Pairs which have been deleted are `undefined`.
+            // After this step, `cluster` will contain pairs where only the opening sides have been 
+            // processed. Pairs which have been deleted are `undefined`. 
             for (let j = 0; j < cluster.length; ++j) {
                 const pair = cluster[j] as Pair;
 
@@ -692,8 +692,8 @@ export class Tracker {
         //
         // IMPORTANT: We perform a leap on the cursors that this tracker last saw (`this.sortedCursors`) 
         // instead of the current cursors of the owning text editor (`this.owner.selections`) because 
-        // the pairs in this tracker were synchronized to the cursors last seen, which might (at 
-        // this point in time) be slightly behind the current cursors of the owning text editor.
+        // the pairs in this tracker were synchronized to the cursors last seen, which might (at this 
+        // point in time) be slightly behind the current cursors of the owning text editor.
         const result: (Selection | undefined)[] = Array(this.sortedCursors.length).fill(undefined);
         for (const [i, { cursor, originalIndex }] of this.sortedCursors.entries()) {
 
