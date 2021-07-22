@@ -736,8 +736,10 @@ export class Tracker {
      * Reset this tracker by untracking all pairs and removing all decorations.
      */
     public clear(): void {
-        this.clusters.forEach(cluster => cluster.forEach(pair => pair.decoration?.dispose()));
-        this.clusters.fill([]);
+        for (let i = 0; i < this.clusters.length; ++i) {
+            this.clusters[i].forEach(pair => pair.decoration?.dispose());
+            this.clusters[i] = [];
+        }
         this.pairCount = 0;
         this._hasLineOfSight.stale = true;
         this.onDidUpdateHasPairsEmitter.fire(undefined);
