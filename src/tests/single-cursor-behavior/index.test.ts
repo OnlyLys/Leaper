@@ -8,6 +8,7 @@ import { SINGLE_CURSOR_LEAP_COMMAND_TEST_GROUP } from './leap';
 import { SINGLE_CURSOR_PAIR_INVALIDATION_TEST_GROUP } from './pair-invalidation';
 import { SINGLE_CURSOR_PAIR_TRANSLATION_TEST_GROUP } from './pair-translation';
 import { SINGLE_CURSOR_DECORATION_OPTIONS_TEST_GROUP } from './decoration-options';
+import { SINGLE_CURSOR_DEAD_KEY_AUTOCLOSING_PAIR_DETECTION_TEST_GROUP } from './dead-key-autoclosing-pair-detection';
 
 /**
  * A collection of test groups that test how the engine behaves when there is a single cursor.
@@ -15,6 +16,7 @@ import { SINGLE_CURSOR_DECORATION_OPTIONS_TEST_GROUP } from './decoration-option
 const SINGLE_CURSOR_BEHAVIOR_TESTS = new TestCategory(
     'Single Cursor Behavior Tests',
     [
+        SINGLE_CURSOR_DEAD_KEY_AUTOCLOSING_PAIR_DETECTION_TEST_GROUP,
         SINGLE_CURSOR_DECORATE_ALL_TEST_GROUP,
         SINGLE_CURSOR_DECORATION_OPTIONS_TEST_GROUP,
         SINGLE_CURSOR_DETECTED_PAIRS_TEST_GROUP,
