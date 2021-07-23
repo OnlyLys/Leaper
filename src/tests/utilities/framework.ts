@@ -442,6 +442,63 @@ class ExecutorFull {
     }
 
     /**
+     * Simulate inserting (into the active text editor) an autoclosing pair via an opening character 
+     * that is behind a dead key.
+     * 
+     * The pairs being simulated here are quotes, as quotation marks are commonly behind dead keys
+     * in "international" keyboard layouts.
+     * 
+     * Note that instead of relying on vscode to autoclose the pair, here we autoclose the pair 
+     * ourselves. This also means that this method is safe to call multiple times in a row for the
+     * same pair, as we are at no risk of the cursor being moved out of a previously inserted pair's 
+     * closing side when an opening side (which has the same character) is inserted, since vscode 
+     * only does that for pairs that it has autoclosed.
+     */
+    public async simulateDeadKeyAutoclosingPairInsertion(pair: "\'\'" | '""' | '``'): Promise<void> {
+        const activeTextEditor = getVisibleTextEditor(ViewColumn.Active);
+
+        if (activeTextEditor.selections.some(cursor => !cursor.isEmpty)) {
+            throw new Error('Cursors must be empty!');
+        }
+
+        // Simulate the dead key preview being inserted.
+        //
+        // Note that the dead key preview could be another character, or it could be the opening
+        // character of the pair itself. The exact preview character is determined by the user's
+        // language and keyboard layout. For convenience, we use the opening character of the pair 
+        // as the previewed dead key.
+        await activeTextEditor.edit(builder => {
+            activeTextEditor.selections.forEach(({ anchor }) => builder.insert(anchor, pair[0]));
+        });
+
+        // Now simulate the user choosing to insert the opening character of the pair which will
+        // replace the dead key preview in one content change event. While the closing side will be 
+        // inserted (automatically by vscode for the user, though we are doing it manually here) in 
+        // another content change event that immediately follows.
+        await activeTextEditor.edit(builder => {
+            activeTextEditor.selections.forEach(({ anchor }) => 
+                builder.replace(new Range(anchor.translate(0, -1), anchor), pair[0])
+            );
+        });
+        await activeTextEditor.edit(builder => {
+            activeTextEditor.selections.forEach(({ anchor }) => builder.replace(anchor, pair[1]));
+        });
+
+        // The last step we just did which inserted the closing sides of pairs will have caused each 
+        // cursor to expand into a selection, where the anchor is within the pairs but the active is 
+        // outside them. However, the pair we autoclosed should still be tracked, since the engine 
+        // uses a cursor's anchor as the basis for whether or not a cursor is enclosed by a pair. 
+        // 
+        // Cursors being expanded after the closing side is inserted is different from vscode's 
+        // behavior where the cursor is not expanded after the insertion, so our simulation here
+        // does not exactly simulate the way vscode does things. However, we can get close by
+        // cancelling the selection here.
+        await this.moveCursors('left');
+
+        await waitFor(ExecutorFull.POST_REPETITION_DELAY_MS);
+    }
+
+    /**
      * Delete all text in a visible text editor.
      */
     public async deleteAll(viewColumn: AllowedViewColumns = ViewColumn.Active): Promise<void> {
