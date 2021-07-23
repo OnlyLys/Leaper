@@ -840,10 +840,11 @@ export class Tracker {
     }
 
     /**
-     * Terminate this tracker by clearing it and ceasing further event emissions.
+     * Terminate this tracker.
      */
     public dispose(): void {
         this.clear();
+        this.decorationsFixer.dispose();
         this.onDidUpdateHasPairsEmitter.dispose();
         this.onDidUpdateHasLineOfSightEmitter.dispose();
     }

@@ -7,7 +7,7 @@ export class ImmediateReusable {
 
     private timer: NodeJS.Immediate | undefined = undefined;
 
-    public constructor(private readonly callback: () => void) {}
+    public constructor(private callback: () => void) {}
 
     public set(): void {
         if (!this.timer) {
@@ -23,6 +23,11 @@ export class ImmediateReusable {
             clearImmediate(this.timer);
             this.timer = undefined;
         }
+    }
+
+    public dispose(): void {
+        this.clear();
+        this.callback = () => {};
     }
 
 }
