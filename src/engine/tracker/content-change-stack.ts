@@ -280,19 +280,47 @@ export class ContentChangeStack {
  * Count the number of lines in a string, as well as the length of its last line. 
  */
 function countLines(str: string): { lines: number, lastLineLen: number } {
-    let lines       = 1;
-    let lastLineLen = 0;
 
-    // We have to count the length like this instead of using `for (const char of str) { ... } ` 
-    // because that way of iterating iterates through code points while this way iterates through
-    // 16-bit code units, which is the correct units for string length. 
-    for (let i = 0; i < str.length; ++i) {
-        if (str[i] === '\n') {
-            ++lines;
-            lastLineLen = 0;
-        } else {
-            ++lastLineLen;
+    // # Optimization on V8
+    // 
+    // When the string is short, counting is faster with a `for` loop:
+    // 
+    //  - https://jsbench.me/brkreuetca
+    //  - https://jsbench.me/5fkreuh2kb
+    //
+    // But when the string is long (around 40 characters or more), counting using the built-in 
+    // `split` method can be up to 10 times faster:
+    //
+    //  - https://jsbench.me/u0krfw819t
+    //  - https://jsbench.me/m0krfw2h3k
+    //  - https://jsbench.me/n9kreu03sr
+    // 
+    // Thus, we use a hybrid of both:
+    //
+    //  - https://jsbench.me/h4krfxs8n5/
+    //
+    if (str.length <= 40) {
+        let lines       = 1;
+        let lastLineLen = 0;
+    
+        // IMPORTANT: When counting with a `for` loop, we have to count like this instead of using 
+        // `for (const char of str) { ... }` because that way of iterating iterates through code 
+        // points while this way iterates through 16-bit code units, which is the correct units for 
+        // string length. 
+        for (let i = 0; i < str.length; ++i) {
+            if (str[i] === '\n') {
+                ++lines;
+                lastLineLen = 0;
+            } else {
+                ++lastLineLen;
+            }
         }
+        return { lines, lastLineLen };
+    } else {
+        const split = str.split('\n');
+        return {
+            lines:       split.length,
+            lastLineLen: split[split.length - 1].length
+        };
     }
-    return { lines, lastLineLen };
 }
