@@ -1,5 +1,12 @@
 # CHANGELOG
 
+### 0.11.0 (Work in Progress)
+- Code optimizations.
+- Add support for detecting autoclosing pairs when the opening character of the
+  pair replaces a previewed dead key:
+
+  ![Dead Key Autoclosing Pair Detection Gif](images/dead-key-autoclosing-pair-detection.gif)
+
 ### 0.10.5
 - Minor code improvements.
 
