@@ -429,8 +429,9 @@ export class Tracker {
             // While we are at it, we clear the possible dead key autoclosing pair for this cursor.
             //
             // We should clear possible dead key autoclosing pairs whenever there is a selection
-            // change event since dead key autoclosing pairs only manifest as two consecutive content 
-            // change events.
+            // change event since dead key autoclosing pairs manifest as two consecutive content 
+            // change events. The fact that this selection change event has occurred makes any
+            // possible dead key autoclosing pair no longer possible.
             this.possibleDeadKeyPairs[i] = undefined;
         }
 
