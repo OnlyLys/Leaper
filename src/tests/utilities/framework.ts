@@ -833,7 +833,7 @@ class ExecutorFull {
 function resolveViewColumn(viewColumn: AllowedViewColumns): ResolvedViewColumn {
     if (viewColumn === ViewColumn.Active) {
         if (!window.activeTextEditor|| window.activeTextEditor.viewColumn === undefined) {
-            throw new Error('Unable to resolve `ViewColumn.Active`!');
+            throw new Error('Unable to get active text editor!');
         }
 
         // vscode only stores resolved view column numbers in `TextEditor`s, so this cast is safe.
