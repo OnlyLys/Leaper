@@ -2,7 +2,7 @@
 
 This extension provides the ability to leap out of autoclosing pairs with `Tab`.
 
-![Leaper in Action Gif Single Cursor](images/leaper-in-action-single.gif)
+![Leaper in Action Single Cursor Gif](images/leaper-in-action-single.gif)
 
 ## How It Works
 
@@ -36,7 +36,7 @@ By 'available' we mean:
 
 This command works when there are multiple cursors as well. 
 
-![Leaper in Action Gif Multi Cursor](images/leaper-in-action-multi.gif)
+![Leaper in Action Multi Cursor Gif](images/leaper-in-action-multi.gif)
 
 #### _Potential Conflict with Tab Completion Feature_
 
@@ -57,7 +57,7 @@ default vscode suggestion mode.**
 
 This command clears the list of pairs that are being tracked.
 
-![Escape Leaper Mode](images/escape-leaper-mode.gif)
+![Escape Leaper Mode Gif](images/escape-leaper-mode.gif)
 
 ## Configurations
 
@@ -68,11 +68,11 @@ are being tracked or just the ones nearest to each cursor.
 
 Here is what it looks like disabled:
 
-![Decorate All False](images/decorate-all-false.gif)
+![Decorate All False Gif](images/decorate-all-false.gif)
 
 and here is what it looks like enabled: 
 
-![Decorate All True](images/decorate-all-true.gif)
+![Decorate All True Gif](images/decorate-all-true.gif)
 
 This configuration is disabled by default.
 
@@ -89,11 +89,11 @@ value. Otherwise, it is treated as a theme color identifier.
 
 Suppose you want the following style in light themes:
 
-![Decoration Options Example 1](images/decoration-options-example-1.gif)
+![Decoration Options Example 1 Gif](images/decoration-options-example-1.gif)
 
 and the following style in dark themes:
 
-![Decoration Options Example 2](images/decoration-options-example-2.gif)
+![Decoration Options Example 2 Gif](images/decoration-options-example-2.gif)
 
 then you can set this configuration to:
 
