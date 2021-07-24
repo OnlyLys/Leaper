@@ -2,7 +2,7 @@ import { Range, Position, Selection, TextEditorDecorationType, window, TextEdito
 import { Unchecked } from '../configurations/unchecked';
 import { ImmediateReusable } from './immediate-reusable';
 import { ContentChangeStack } from './content-change-stack';
-import { TrackerSnapshot } from '../test-handle';
+import { TrackerSnapshot } from '../../tests/utilities/test-handle';
 
 /** 
  * A 'tracker' assigned to a text editor that:

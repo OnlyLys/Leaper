@@ -3,7 +3,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextEditor, workspace, window, ViewColumn, Uri, ConfigurationTarget, WorkspaceEdit, DecorationRenderOptions, DecorationRangeBehavior } from 'vscode';
-import { ResolvedViewColumn, TrackerSnapshot } from '../../engine/test-handle';
+import { ResolvedViewColumn, TrackerSnapshot } from './test-handle';
 import { CompactCluster, CompactRange, CompactPosition, CompactCursor, CompactSelection, CompactPair } from './compact';
 import { waitFor, zip } from './helpers';
 import { testHandle } from '../../extension';

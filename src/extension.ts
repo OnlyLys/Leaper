@@ -1,6 +1,6 @@
 import { ExtensionContext } from 'vscode';
 import { Engine } from './engine/engine';
-import { TestHandle } from './engine/test-handle';
+import { TestHandle } from './tests/utilities/test-handle';
 
 /**
  * Handle to allow tests to query the engine's state.

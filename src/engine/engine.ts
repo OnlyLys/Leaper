@@ -1,5 +1,5 @@
 import { commands, Disposable, TextEditor, window, workspace } from 'vscode';
-import { ResolvedViewColumn, TrackerSnapshot, TestHandle } from './test-handle';
+import { ResolvedViewColumn, TrackerSnapshot, TestHandle } from '../tests/utilities/test-handle';
 import { KeybindingContextSetter } from './keybinding-context-setter';
 import { Tracker } from './tracker/tracker';
 import * as configurations from './configurations/configurations';
