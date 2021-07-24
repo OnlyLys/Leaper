@@ -44,19 +44,7 @@ export class Tracker {
      * matter whether we use the `active` or `anchor` position as the sort key, since no two cursors 
      * have overlapping selections. Sorting with either will yield the same result.
      */
-    private sortedCursors: ReadonlyArray<{ 
-
-        cursor: Selection,
-
-        /** 
-         * The index of the cursor before it was sorted. 
-         * 
-         * In other words, this is the index of this cursor in the `selections` array of the owning
-         * text editor.
-         */
-        originalIndex: number
-
-    }>;
+    private sortedCursors: ReadonlyArray<TaggedCursor>;
 
     /**
      * Pairs that are being tracked for each cursor.
@@ -65,8 +53,7 @@ export class Tracker {
      * ordered from least nested to most nested, and they always enclose the cursor that corresponds 
      * to that cluster. 
      * 
-     * This array is parallel to `sortedCursors`, meaning the `i`th cursor in `sortedCursors`
-     * corresponds to the `i`th cluster.
+     * This array is parallel to `sortedCursors`.
      */
     private clusters: Pair[][];
 
@@ -284,7 +271,7 @@ export class Tracker {
             /** The style of the decorations applied. */
             decorationOptions: Unchecked<DecorationRenderOptions>,
 
-            /** Which pairs to detect and then track. */
+            /** Which autoclosing pairs to detect and then track. */
             detectedPairs: ReadonlyArray<string>
         }
     ) {
@@ -830,9 +817,7 @@ export class Tracker {
             this.clusters[i].forEach(pair => pair.decoration?.dispose());
             this.clusters[i] = [];
         }
-        for (let i = 0; i < this.possibleDeadKeyPairs.length; ++i) {
-            this.possibleDeadKeyPairs[i] = undefined;
-        }
+        this.possibleDeadKeyPairs?.forEach((_, i, self) => self[i] = undefined);
         this.pairCount = 0;
         this._hasLineOfSight.stale = true;
         this.onDidUpdateHasPairsEmitter.fire(undefined);
@@ -845,9 +830,9 @@ export class Tracker {
      */
     public dispose(): void {
         this.clear();
-        this.decorationsFixer.dispose();
         this.onDidUpdateHasPairsEmitter.dispose();
         this.onDidUpdateHasLineOfSightEmitter.dispose();
+        this.decorationsFixer.dispose();
     }
 
     /** 
@@ -915,10 +900,7 @@ interface Pair {
  * 
  * This function delegates the sorting to V8, which uses [Timsort](https://v8.dev/blog/array-sort#timsort).
  */
-function sortCursors(unsorted: ReadonlyArray<Selection>): ReadonlyArray<{
-    cursor:        Selection,
-    originalIndex: number
-}> {
+function sortCursors(unsorted: ReadonlyArray<Selection>): ReadonlyArray<TaggedCursor> {
     return unsorted.map((cursor, i) => ({ cursor, originalIndex: i }))
                    .sort((a, b) => a.cursor.anchor.compareTo(b.cursor.anchor));
 }
@@ -955,4 +937,21 @@ function shift(stack: ContentChangeStack, position: Position): Position {
         position.line === stack.horzCarry.affectsLine ? stack.horzCarry.value : 0
     );
 }
-    
+
+/**
+ * A cursor tagged with its original index.
+ */
+interface TaggedCursor {
+
+    readonly cursor: Selection,
+
+    /** 
+     * The index of the cursor before it was sorted. 
+     * 
+     * In other words, this is the index of this cursor in the `selections` array of the owning
+     * text editor.
+     */
+    readonly originalIndex: number
+
+}
+
