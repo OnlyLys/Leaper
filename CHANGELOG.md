@@ -6,6 +6,8 @@
   pair replaces a previewed dead key:
 
   ![Dead Key Autoclosing Pair Detection Gif](images/dead-key-autoclosing-pair-detection.gif)
+- Wait a while before starting up this extension so that it does not slow down 
+  vscode's startup.
 
 ### 0.10.5
 - Minor code improvements.
