@@ -446,7 +446,10 @@ class ExecutorFull {
      * that is behind a dead key.
      * 
      * The pairs being simulated here are quotes, as quotation marks are commonly behind dead keys
-     * in "international" keyboard layouts.
+     * in "international" keyboard layouts. Pairs where the opening character is different than the
+     * dead key preview are Type-1 dead key autoclosing pairs, while pairs where the opening character 
+     * is the same are Type-2 dead key autoclosing pairs. Each type of dead key autoclosing pair is
+     * autoclosed in a different way. See the engine's `Tracker` class for more info.
      * 
      * Note that instead of relying on vscode to autoclose the pair, here we autoclose the pair 
      * ourselves. This also means that this method is safe to call multiple times in a row for the
@@ -454,32 +457,37 @@ class ExecutorFull {
      * closing side when an opening side (which has the same character) is inserted, since vscode 
      * only does that for pairs that it has autoclosed.
      */
-    public async simulateDeadKeyAutoclosingPairInsertion(pair: "\'\'" | '""' | '``'): Promise<void> {
-        const activeTextEditor = getVisibleTextEditor(ViewColumn.Active);
+    public async simulateDeadKeyAutoclosingPairInsertion(
+        simulate: { deadKey: "´", pair: "''"   }    // Type-1.
+                | { deadKey: "¨", pair: "\"\"" }    // Type-1.
+                | { deadKey: "`", pair: "``"   }    // Type-2.
+    ): Promise<void> {
+        const activeTextEditor  = getVisibleTextEditor(ViewColumn.Active);
+        const { deadKey, pair } = simulate;
 
         if (activeTextEditor.selections.some(cursor => !cursor.isEmpty)) {
             throw new Error('Cursors must be empty!');
         }
 
         // Simulate the dead key preview being inserted.
-        //
-        // Note that the dead key preview could be another character, or it could be the opening
-        // character of the pair itself. The exact preview character is determined by the user's
-        // language and keyboard layout. For convenience, we use the opening character of the pair 
-        // as the previewed dead key.
         await activeTextEditor.edit(builder => {
-            activeTextEditor.selections.forEach(({ anchor }) => builder.insert(anchor, pair[0]));
+            activeTextEditor.selections.forEach(({ anchor }) => builder.insert(anchor, deadKey));
         });
 
-        // Now simulate the user choosing to insert the opening character of the pair which will
-        // replace the dead key preview in one content change event. While the closing side will be 
-        // inserted (automatically by vscode for the user, though we are doing it manually here) in 
-        // another content change event that immediately follows.
-        await activeTextEditor.edit(builder => {
-            activeTextEditor.selections.forEach(({ anchor }) => 
-                builder.replace(new Range(anchor.translate(0, -1), anchor), pair[0])
-            );
-        });
+        // When the user chooses to insert the opening character of a pair, the dead key preview
+        // will be replaced if it is different than the opening character of the pair. 
+        //
+        // The dead key preview is left alone if it is the same as the opening character of the pair.
+        if (simulate.deadKey !== simulate.pair[0]) {
+            await activeTextEditor.edit(builder => {
+                activeTextEditor.selections.forEach(({ anchor }) => 
+                    builder.replace(new Range(anchor.translate(0, -1), anchor), pair[0])
+                );
+            });
+        }
+
+        // After the opening character has been sorted out, the closing character will be inserted
+        // in a content change event that follows.
         await activeTextEditor.edit(builder => {
             activeTextEditor.selections.forEach(({ anchor }) => builder.replace(anchor, pair[1]));
         });
@@ -491,7 +499,7 @@ class ExecutorFull {
         // 
         // Cursors being expanded after the closing side is inserted is different from vscode's 
         // behavior where the cursor is not expanded after the insertion, so our simulation here
-        // does not exactly simulate the way vscode does things. However, we can get close by
+        // does not exactly reflect the way vscode does things. However, we can get close by 
         // cancelling the selection here.
         await this.moveCursors('left');
 
