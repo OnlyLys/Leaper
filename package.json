@@ -25,7 +25,7 @@
         "Autoclosing Pairs"
     ],
     "activationEvents": [
-        "*"
+        "onStartupFinished"
     ],
     "main": "./out/extension",
     "capabilities": {
