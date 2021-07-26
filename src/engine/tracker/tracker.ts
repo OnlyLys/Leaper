@@ -22,7 +22,7 @@ import { TrackerSnapshot } from '../../tests/utilities/test-handle';
 export class Tracker {
 
     /**
-     * The most recently seen cursors, sorted by increasing `anchor` positions.
+     * The most recently seen cursors, **sorted by increasing `anchor` positions**.
      * 
      * # Why Sort the Cursors?
      * 
@@ -44,23 +44,19 @@ export class Tracker {
      * matter whether we use the `active` or `anchor` position as the sort key, since no two cursors 
      * have overlapping selections. Sorting with either will yield the same result.
      */
-    private sortedCursors: ReadonlyArray<TaggedCursor>;
+    private cursors: ReadonlyArray<TaggedCursor>;
 
     /**
-     * Pairs that are being tracked for each cursor.
+     * The pairs that are being tracked for each cursor.
      * 
-     * Each `Pair[]` subarray in this array is called a 'cluster'. All the pairs in a cluster are
-     * ordered from least nested to most nested, and they always enclose the cursor that corresponds 
-     * to that cluster. 
-     * 
-     * This array is parallel to `sortedCursors`.
+     * This array is parallel to `cursors`.
      */
-    private clusters: Pair[][];
+    private pairs: Cluster[];
 
     /**
      * Possible dead key autoclosing pairs for each cursor.
      * 
-     * This array is parallel to `sortedCursors`.
+     * This array is parallel to `cursors`.
      * 
      * # Why this Array Exists
      * 
@@ -118,12 +114,12 @@ export class Tracker {
     public get hasLineOfSight(): boolean {
         if (this._hasLineOfSight.stale) {
             const value = this.hasPairs 
-                       && this.sortedCursors.every(({ cursor }) => cursor.isEmpty)
-                       && this.clusters.some((cluster, i) => {
+                       && this.cursors.every(cursor => cursor.anchor.isEqual(cursor.active))
+                       && this.pairs.some((cluster, i) => {
                             if (cluster.length > 0) {
-                                const cursor       = this.sortedCursors[i].cursor;
+                                const anchor       = this.cursors[i].anchor;
                                 const nearestPair  = cluster[cluster.length - 1];
-                                const rangeBetween = new Range(cursor.anchor, nearestPair.close);
+                                const rangeBetween = new Range(anchor, nearestPair.close);
                                 return !this.owner.document.getText(rangeBetween).trim();
                             } else {
                                 return false;
@@ -152,10 +148,9 @@ export class Tracker {
     /**
      * A timer that fixes decorations at the end of the current event loop cycle.
      * 
-     * When this timer executes, it will go through all the pairs and ensure that every pair is 
-     * decorated if `decorateAll` is enabled. Otherwise, if `decorateAll` is disabled, this timer
-     * will ensure that the pairs nearest to each cursor is decorated and that every other pair is 
-     * not decorated.
+     * When this timer executes, it will ensure that every pair is decorated only if `decorateAll` 
+     * is enabled. Otherwise, this timer will ensure that the pairs nearest to each cursor is decorated 
+     * and that every other pair is not decorated.
      * 
      * This timer should be set whenever pairs are added or when pairs are dropped from a cluster 
      * such that the cluster has a new 'nearest pair'. This timer does not need to be set when the 
@@ -183,28 +178,28 @@ export class Tracker {
      * been processed, we ensure that the decorations will be applied at the correct positions.
      */
     private readonly decorationsFixer = new ImmediateReusable(() => {
-        for (const cluster of this.clusters) {
-            if (this._decorateAll) {
+        if (this._decorateAll) {
 
-                // Make sure all pairs are decorated since `leaper.decorateAll` is enabled.
+            // Make sure all pairs are decorated since `leaper.decorateAll` is enabled.
+            for (const cluster of this.pairs) {
                 for (const pair of cluster) {
                     if (!pair.decoration) {
                         pair.decoration = decorate(this.owner, pair, this._decorationOptions);
                     }
                 }
-            } else {
+            }
+        } else {
 
-                // Make sure every pair aside from the one nearest to the cursor is not decorated
-                // since `leaper.decorateAll` is disabled.
-                for (let i = 0; i < cluster.length - 1; ++i) {
+            // Make sure only the pairs nearest to each cursor are decorated since `leaper.decorateAll`
+            // is disabled.
+            for (const cluster of this.pairs) {
+                let i = 0;
+                while (i < cluster.length - 1) {
                     cluster[i].decoration?.dispose();
-                    cluster[i].decoration = undefined;
+                    cluster[i++].decoration = undefined;
                 }
                 if (cluster.length > 0) {
-                    const nearest = cluster[cluster.length - 1];
-                    if (!nearest.decoration) {
-                        nearest.decoration = decorate(this.owner, nearest, this._decorationOptions);
-                    }
+                    cluster[i].decoration = decorate(this.owner, cluster[i], this._decorationOptions);
                 }
             }
         }
@@ -229,10 +224,12 @@ export class Tracker {
         this._decorationOptions = v;
 
         // Reapply all the decorations.
-        this.clusters.forEach(cluster => cluster.forEach(pair => {
-            pair.decoration?.dispose();
-            pair.decoration = undefined;
-        }));
+        for (const cluster of this.pairs) {
+            for (let i = 0; i < cluster.length; ++i) {
+                cluster[i].decoration?.dispose();
+                cluster[i].decoration = undefined;
+            }
+        }
         this.decorationsFixer.set();
     }
     
@@ -266,15 +263,17 @@ export class Tracker {
         this._decorateAll         = configuration.decorateAll;
         this._decorationOptions   = configuration.decorationOptions;
         this._detectedPairs       = configuration.detectedPairs;
-        this.sortedCursors        = sortCursors(this.owner.selections);
-        this.clusters             = Array(this.sortedCursors.length).fill([]);
-        this.possibleDeadKeyPairs = Array(this.sortedCursors.length).fill(undefined);
+        this.cursors              = sortCursors(this.owner.selections);
+        this.pairs                = Array(this.cursors.length).fill([]);
+        this.possibleDeadKeyPairs = Array(this.cursors.length).fill(undefined);
     }
 
     /** 
      * Notify this tracker of cursor changes in the owning text editor.
      */
-    public notifySelectionChanges(newCursors: ReadonlyArray<Selection>): void {
+    public notifySelectionChanges(newSelections: ReadonlyArray<Selection>): void {
+
+        const prevHasPairs = this.hasPairs;
 
         // This method does the following:
         // 
@@ -282,9 +281,6 @@ export class Tracker {
         //    has clicked out of a tracked pair, the pair will cease to be tracked. 
         // 2. Adjusts the internal capacity to match number of active cursors. This step is required 
         //    for the `notifyContentChanges` method to correctly detect pairs that are inserted.
-
-        const prevCursors  = this.sortedCursors;
-        const prevHasPairs = this.hasPairs;
 
         // There are 4 possible kinds of selection changes. 
         //
@@ -294,7 +290,7 @@ export class Tracker {
         //  4. Reordering of cursors.
         //
         // By sorting the cursors here, we obviate the need for dealing with the fourth kind.
-        this.sortedCursors = sortCursors(newCursors);
+        const newCursors = sortCursors(newSelections);
 
         // --------------------------------
         // STEP 1 - Add or drop clusters to match the latest cursor count. 
@@ -316,80 +312,83 @@ export class Tracker {
         // Since selection changes due to extension commands are rare and unpredictable, we should
         // not support handling those here. Furthermore, the above assumption allows us to greatly 
         // simplify the logic of this code, since we can (with the assumption applied) compare the 
-        // latest sorted cursors to the previous sorted cursors to determine which cursor was 
-        // removed or added. 
-        if (this.sortedCursors.length !== prevCursors.length) {
+        // latest sorted cursors to the previous sorted cursors to determine which cursor was removed 
+        // or added. 
+        if (newCursors.length !== this.cursors.length) {
 
-            // The approach here is simple: We compare the latest sorted cursors with the previous
-            // sorted cursors. Where the two arrays intersect are cursors which were neither added 
-            // nor removed, so we just bring forward their clusters. Where the two arrays differ are 
-            // either cursors which were added (if the cursor is only in the latest sorted cursors
-            // array) or removed (if the cursor is only in the previous sorted cursors array). When
-            // a cursor is added, we give it a new empty cluster, while if a cursor is removed, we 
-            // drop its cluster.
-
-            const prevClusters  = this.clusters;
-            this.clusters       = [];
-
+            const newPairs = [];
+            
+            // Compare the latest sorted cursors with the previous sorted cursors.
             let i = 0;
-            for (const { cursor } of this.sortedCursors) {
+            for (const newCursor of newCursors) {
 
-                // Drop clusters for cursors which have been removed.
-                while (i < prevCursors.length && prevCursors[i].cursor.anchor.isBefore(cursor.anchor)) {
-                    this.pairCount -= prevClusters[i].length;
-                    prevClusters[i++].forEach(pair => pair.decoration?.dispose());
+                // Cursors which are only in the previous sorted cursors array are cursors which
+                // have been removed, thus we drop their pairs.
+                while (i < this.cursors.length && this.cursors[i].anchor.isBefore(newCursor.anchor)) {
+                    this.pairCount -= this.pairs[i].length;
+                    this.pairs[i++].forEach(pair => pair.decoration?.dispose());
                 }
 
-                // Note that we consider cursors to be equal as long as their `anchor`s match.
-                if (i < prevCursors.length && prevCursors[i].cursor.anchor.isEqual(cursor.anchor)) {
+                if (i < this.cursors.length && this.cursors[i].anchor.isEqual(newCursor.anchor)) {
 
-                    // Bring forward the clusters of cursors which were neither added nor deleted.
-                    this.clusters.push(prevClusters[i++]);
+                    // If a new cursor matches a previous cursor, that means the cursor survived the
+                    // cursor change operation, and so we bring forward its cluster.
+                    //
+                    // Note that we consider two cursors to be equal as long as their anchors match.
+                    newPairs.push(this.pairs[i++]);
                 } else {
 
-                    // Provide empty clusters for new cursors.
-                    this.clusters.push([]);
+                    // If a new cursor does not match a previous cursor, that means the new cursor
+                    // was newly created. In this case, we give it a fresh empty cluster.
+                    newPairs.push([]);
                 }
             }
     
-            // `prevCursors[i..]` does not intersect with the latest sorted cursors array. Therefore,
-            // it contains cursors that were removed.
-            while (i < prevCursors.length) {
-                this.pairCount -= prevClusters[i].length;
-                prevClusters[i++].forEach(pair => pair.decoration?.dispose());
+            // The cursors in `this.cursors[i..]` were removed in the cursor change operation since
+            // none of the cursors in that slice have a matching cursor in the latest sorted cursors
+            // array. Thus, we drop their pairs.
+            while (i < this.cursors.length) {
+                this.pairCount -= this.pairs[i].length;
+                this.pairs[i++].forEach(pair => pair.decoration?.dispose());
             }
 
-            // The array of possible dead key autoclosing pairs is parallel to `sortedCursors`, and
-            // so should always have the same length as it.
-            this.possibleDeadKeyPairs.length = this.sortedCursors.length;
+            // The array of possible dead key autoclosing pairs is parallel to `cursors`, and so 
+            // should always have the same length as it.
+            this.possibleDeadKeyPairs.length = newCursors.length;
+
+            this.pairs = newPairs;
         }
 
+        this.cursors = newCursors;
+
         // --------------------------------
-        // STEP 2 - For each cluster untrack any pairs that its cursor has moved out of.
+        // STEP 2 - For each cursor, untrack any pairs that it has moved out of.
         // --------------------------------
         //
-        // This step ensures that when the user has moved a cursor out of a pair that encloses it, 
-        // the pair will no longer be tracked.
-        for (const [i, cluster] of this.clusters.entries()) {
+        // This step ensures that when the user has moved a cursor out of an enclosing pair, that 
+        // pair will no longer be tracked.
+        //
+        // Note that here we use the anchor of a cursor to decide whether or not it has moved out of 
+        // a pair. The choice of using a cursor's anchor makes sense as we do not want to untrack a 
+        // cursor's pairs if the user is just making a selection from within a pair to outside of it.
+        for (const [i, { anchor } ] of this.cursors.entries()) {
 
-            // Here we use the `anchor` of the cursor to decide whether or not a cursor has moved 
-            // out of a pair. The choice of using the `anchor` position makes sense as we do not 
-            // want to untrack pairs if the user is just making a selection from within a pair to 
-            // outside of it.
-            const anchor = this.sortedCursors[i].cursor.anchor;
+            // The pairs being tracked for this cursor.
+            const cluster = this.pairs[i];
 
-            // Drop all pairs that do not enclose the cursor.
-            //
-            // Iterating in reverse is faster, since the pairs in each cluster are ordered from 
-            // least nested to most nested. By iterating in reverse, we can stop the iteraton once 
-            // we encounter a pair that encloses the cursor, since we know the remaining pairs also 
-            // enclose the cursor.
             let pairsDropped = false;
+
+            // Drop any pairs that do not enclose the cursor.
+            //
+            // Iterating in reverse is faster, since the pairs in each cluster are ordered from least 
+            // nested to most nested, meaning that we can stop the iteraton once we encounter a pair 
+            // that encloses the cursor, since we know that the remaining pairs also enclose the 
+            // cursor.
             for (let j = cluster.length - 1; j >= 0; --j) {
                 if (anchor.isBeforeOrEqual(cluster[j].open) || anchor.isAfter(cluster[j].close)) {
-                    this.pairCount -= 1;
                     cluster.pop()?.decoration?.dispose();
-                    pairsDropped = true;
+                    this.pairCount -= 1;
+                    pairsDropped    = true;
                 } else {
                     break;
                 }
@@ -415,7 +414,9 @@ export class Tracker {
         }
 
         // The `hasLineOfSight` property can only change if there were previously pairs, since 
-        // changes in cursors never introduce new pairs.
+        // cursor changes never introduce new pairs. If there were previously no pairs, then the
+        // `hasLineOfSight` property would have been `false` then and continue to be `false` now, so
+        // we don't have to mark the value as stale.
         if (prevHasPairs) {
             this._hasLineOfSight.stale = true;
             this.onDidUpdateHasLineOfSightEmitter.fire(undefined);
@@ -428,14 +429,13 @@ export class Tracker {
      */
     public notifyContentChanges(contentChanges: ReadonlyArray<TextDocumentContentChangeEvent>): void {
 
+        const prevHasPairs = this.hasPairs;
+
         // This method does the following:
         // 
         // 1. Stop tracking pairs that have been deleted.
         // 2. Start tracking new autoclosing pairs that have been inserted.
         // 3. Maintain tracking of pairs that have shifted in position due to changes in the document.
-
-        const prevHasPairs = this.hasPairs;
-        let newPairsAdded  = false;
 
         // Make the immutable content changes array behave like a mutable stack.
         //
@@ -451,49 +451,46 @@ export class Tracker {
         const stack = new ContentChangeStack(contentChanges);
 
         // Apply the content changes.
-        for (let cursorIndex = 0; cursorIndex < this.clusters.length; ++cursorIndex) {
+        for (const [i, cluster] of this.pairs.entries()) {
 
-            // So that we can delete array elements in place.
-            const cluster = this.clusters[cursorIndex] as (Pair | undefined)[];
-
-            // The cursor that is enclosed within the pairs of this cluster.
+            // The cursor that is enclosed by the pairs of this cluster.
             //
             // Note that we consider a cursor to be enclosed by a pair when the `anchor` part of the 
             // cursor is between the opening and closing sides of said pair.
-            const cursor = this.sortedCursors[cursorIndex].cursor;
+            const cursor = this.cursors[i];
+
+            // To mark pairs that have been deleted from this cluster.
+            const deleted = Array(cluster.length).fill(false);
 
             // --------------------------------
             // STEP 1 - Shift (or delete) the opening side of pairs.
             // --------------------------------
             //
-            // After this step, `cluster` will contain pairs where only the opening sides have been 
-            // processed. Pairs which have been deleted are `undefined`. 
-            for (let j = 0; j < cluster.length; ++j) {
-                const pair = cluster[j] as Pair;
+            // This step processes the opening sides of pairs in this cluster. Pairs which have been 
+            // deleted will marked in `deleted`.
+            for (const [j, pair] of cluster.entries()) {
 
-                // Pop the content change stack until a content change with an end position after 
-                // this pair's opening side is encountered.
-                while (stack.peek()?.range.end.isBeforeOrEqual(pair.open)) {
+                // Pop the content change stack until a content change that ends after this pair's 
+                // opening side is encountered.
+                while (stack.top && !stack.top.range.end.isAfter(pair.open)) {
                     stack.pop();
                 }
-                
-                if (stack.peek()?.range.start.isAfter(pair.open) ?? true) {
 
-                    // We get here when the stack is empty or if the content change at the top of the 
-                    // stack begins after the opening side of this pair. In either case, the opening 
-                    // side of this pair has not been deleted, but has possibly been shifted.
+                if (!stack.top || stack.top.range.start.isAfter(pair.open)) {
+
+                    // We get here when the stack is empty or if the content change currently at 
+                    // the top of the stack begins after the opening side of this pair. In either 
+                    // case, the opening side of this pair has survived.
                     //
-                    // Since content changes yielded by vscode do not overlap, all of the content 
-                    // changes remaining on the stack (if any) occurs after the opening side of this 
-                    // pair, so they cannot affect it. Thus, the accumulated carry values represent 
-                    // the net shift in position on the opening side of this pair.
+                    // We apply the accumulated carry values to find the position of the opening 
+                    // side of this pair after the content changes have been applied.
                     pair.open = shift(stack, pair.open);
                 } else {
 
-                    // This pair has been deleted.
-                    this.pairCount -= 1;
+                    // We get here when the content change at the top of the stack has overwritten
+                    // the opening side of this pair. Thus, we drop this pair.
                     pair.decoration?.dispose();
-                    cluster[j] = undefined;
+                    deleted[j] = true;
                 }
             }
 
@@ -559,75 +556,88 @@ export class Tracker {
             // STEP 2 - Check for opening side of a Type-1 dead key autoclosing pair.
             // --------------------------------
 
-            // A possible dead key autoclosing pair detected in this step.
+            // A possible dead key autoclosing pair detected for this cursor.
             let newPossibleDeadKeyPair: PossibleDeadKeyPair | undefined;
 
-            // Pop the stack until the content change at the top of the stack is one that begins at 
-            // or after the cursor.
-            //
-            // While popping the stack, we check for a content change that could possibly be the
-            // first content change involved in the autoclosing of a Type-1 dead key autoclosing pair.
-            while (stack.peek()?.range.start.isBefore(cursor.anchor)) {
-                const popped = stack.pop() as TextDocumentContentChangeEvent;
+            // We only check for the opening side of a Type-1 dead key autoclosing pair when the
+            // cursor's character index is non-zero since a Type-1 dead key autoclosing pair's 
+            // opening side replaces a character of text immediately before the cursor.
+            if (cursor.anchor.character > 0) {
+
+                // Pop the stack until the content change at the top of the stack is one that ends 
+                // at or after the cursor.
+                while (stack.top && !stack.top.range.end.isAfterOrEqual(cursor.anchor)) {
+                    stack.pop();
+                }
+
+                // If the content change currently at the top of the stack ends at the cursor and
+                // replaces exactly one character of text before the cursor, then it could possibly 
+                // be the first content change involved in the autoclosing of a Type-1 dead key 
+                // autoclosing pair. 
+                //
+                // We only need to check this one content change since content changes do not overlap.  
                 if (
-                       popped.range.end.character === cursor.anchor.character
-                    && popped.range.end.character > 0
-                    && popped.rangeLength === 1
-                    && popped.text.length === 1
-                    && cursor.isEmpty
+                    stack.top
+                    && stack.top.range.end.isEqual(cursor.anchor)
+                    && stack.top.rangeLength === 1
+                    && stack.top.text.length === 1
+                    && cursor.anchor.isEqual(cursor.active)
                 ) {
-                    const match = this._detectedPairs.find(pair => pair[0] === popped.text);
+                    const match = this._detectedPairs.find(pair => pair[0] === stack.top?.text);
                     if (match) {
 
-                        // Cursor position after all prior content changes have been applied.
-                        const shiftedAnchor = shift(stack, cursor.anchor);
+                        // Cursor position after all content changes have been applied.
+                        const newAnchor = shift(stack, cursor.anchor);
 
                         // A content change that replaces one character of text right before the 
                         // cursor with the opening character of a pair is possibly the first content 
                         // change involved in the autoclosing of a Type-1 dead key autoclosing pair.
-                        newPossibleDeadKeyPair = { pair: match, close: shiftedAnchor };
+                        newPossibleDeadKeyPair = { pair: match, close: newAnchor };
                     }
                 }
+
             }
 
             // --------------------------------
             // STEP 3 - Check insertion at cursor.
             // --------------------------------
-
-            // A new pair to begin tracking.
             //
-            // Note that the position of this new pair (if detected) is already finalized and does 
-            // not require further shifting.
+            // After this step, the content change stack will contain content changes that begin at
+            // or after the cursor.
+
+            // A new pair that is detected.
+            //
+            // Note that the opening and closing positions of this new pair (if detected) is already 
+            // finalized.
             let newPair: Pair | undefined;
 
-            // The previous step will have popped the content change stack until the top of the stack 
-            // (if it is not empty) is a content change that either begins at or after the cursor. 
-            // 
-            // If there is a content change at the top of the stack that begins at the cursor, then 
-            // it could be the insertion of:
+            // Pop the stack until the content change at the top of the stack is one that begins at 
+            // or after the cursor.
+            while (stack.top && !stack.top.range.start.isAfterOrEqual(cursor.anchor)) {
+                stack.pop();
+            }
+
+            // If the content change currently at the top of the stack that begins at the cursor 
+            // (i.e. a text insertion at the cursor), then it could be the insertion of:
             //
             //   - A regular autoclosing pair.
             //   - The closing side of either type of dead key autoclosing pair.
             //   - The opening side of a Type-2 dead key autoclosing pair.
             //
-            // We check for each possibility here. We do not perform this check for any other content 
-            // changes remaining on the stack since they all occur after the one currently at the 
-            // top of the stack (and consequently must occur after the cursor).
+            // and so check for each possibility here. We do not perform this check for any other 
+            // content changes remaining on the stack since they all occur after the one currently 
+            // at the top of the stack (and consequently must occur after the cursor).
             if (
-                stack.peek()
-                && (stack.peek() as TextDocumentContentChangeEvent).text.length <= 2
-                && (stack.peek() as TextDocumentContentChangeEvent).range.start.isEqual(cursor.anchor) 
-                && (stack.peek() as TextDocumentContentChangeEvent).range.isEmpty
-                && cursor.isEmpty
+                stack.top
+                && stack.top.range.start.isEqual(cursor.anchor) 
+                && stack.top.range.isEmpty
+                && cursor.anchor.isEqual(cursor.active)
             ) {
 
-                // Cursor position after all prior content changes have been applied.
-                const shiftedAnchor = shift(stack, cursor.anchor);
+                // Cursor position after all content changes have been applied.
+                const newAnchor = shift(stack, cursor.anchor);
 
-                // Text that was inserted at the cursor.
-                const insertedText = (stack.peek() as TextDocumentContentChangeEvent).text;
-
-                if (insertedText.length === 2 && this._detectedPairs.includes(insertedText)) {
+                if (stack.top.text.length === 2 && this._detectedPairs.includes(stack.top.text)) {
     
                     // Regular autoclosing pair detected.
                     //
@@ -641,11 +651,11 @@ export class Tracker {
                     // pair, meaning in practice we should not have issues by not being able to 
                     // distinguish between the two.
                     newPair = { 
-                        open:       shiftedAnchor,
-                        close:      shiftedAnchor.translate(0, 1),
+                        open:       newAnchor,
+                        close:      newAnchor.translate(0, 1),
                         decoration: undefined
                     };
-                } else if (insertedText.length === 1) {
+                } else if (stack.top.text.length === 1) {
                     
                     // When the autoclosing pair is a pair that has the same character on both sides
                     // (such as `''` or `""`), it can be ambiguous as to whether an inserted character 
@@ -654,86 +664,94 @@ export class Tracker {
                     // kinds, and allow a subsequent `Tracker.notifySelectionChanges` call to sort 
                     // out the ambiguity.
 
-                    if (insertedText === this.possibleDeadKeyPairs[cursorIndex]?.pair[1]) {
+                    // Check for closing side of a dead key autoclosing pair.
+                    if (stack.top.text === this.possibleDeadKeyPairs[i]?.pair[1]) {
 
-                        // Closing side of a dead key autoclosing pair detected.
                         newPair = { 
-                            open:       shiftedAnchor.translate(0, -1),
-                            close:      shiftedAnchor,
+                            open:       newAnchor.translate(0, -1),
+                            close:      newAnchor,
                             decoration: undefined
                         };
                     }
 
-                    const match = this._detectedPairs.find(pair => pair[0] === insertedText);
+                    // Check for opening side of a possible Type-2 autoclosing pair.
+                    const match = this._detectedPairs.find(pair => pair[0] === stack.top?.text);
                     if (match) {
-
-                        // Opening side of a possible Type-2 autoclosing pair detected.
-                        newPossibleDeadKeyPair = { pair: match, close: shiftedAnchor.translate(0, 1) };
+                        newPossibleDeadKeyPair = { pair: match, close: newAnchor.translate(0, 1) };
                     }
                 }
             }
 
             // --------------------------------
-            // STEP 4 - Shift (or delete) the closing side of remaining pairs. 
+            // STEP 4 - Shift (or delete) the closing side of pairs. 
             // --------------------------------
             //
-            // After this step, `cluster` will contain pairs where both sides have been processed. 
-            // Pairs which have been deleted are `undefined`.
+            // This step processes the closing sides of pairs in this cluster. Pairs which have been 
+            // deleted will be set to `undefined`.
 
-            // We iterate through `cluster` in reverse so that we can go through the closing side 
-            // of pairs from innermost to outermost. Doing so means we do not have to backtrack 
-            // when going through the content changes.
+            // We iterate through the pairs in reverse so that we can go through the closing side 
+            // of pairs from innermost to outermost. Doing so means we do not have to backtrack when 
+            // going through the content changes.
             for (let j = cluster.length - 1; j >= 0; --j) {
-                const pair = cluster[j];
-                if (pair) {
-
-                    // This procedure is analogous to the one done in STEP 1.
-                    while (stack.peek()?.range.end.isBeforeOrEqual(pair.close)) {
-                        stack.pop();
-                    }
-                    if (stack.peek()?.range.start.isAfter(pair.close) ?? true) {
-                        pair.close = shift(stack, pair.close);
-
-                        // Unlike STEP 1, we only keep pairs that end up with sides on the same line, 
-                        // since we want multiline text insertion between pairs to invalidate them.
-                        if (pair.open.line === pair.close.line) {
-                            continue;
-                        }
-                    }
-                    this.pairCount -= 1;
-                    pair.decoration?.dispose();
-                    cluster[j] = undefined;
+                if (deleted[j]) {
+                    continue;
                 }
+
+                // Pop the content change stack until a content change that ends after this pair's 
+                // closing side is encountered.
+                while (stack.top && !stack.top.range.end.isAfter(cluster[j].close)) {
+                    stack.pop();
+                }
+
+                if (!stack.top || stack.top.range.start.isAfter(cluster[j].close)) {
+
+                    // We get here when the stack is empty or if the content change currently at 
+                    // the top of the stack begins after the closing side of this pair. In either 
+                    // case, the closing side of this pair has survived.
+                    //
+                    // We apply the accumulated carry values to find the position of the closing 
+                    // side of this pair after the content changes have been applied.
+                    cluster[j].close = shift(stack, cluster[j].close);
+
+                    // We only keep pairs that end up with sides on the same line, since we want 
+                    // multi-line text insertion between pairs to invalidate them.
+                    if (cluster[j].open.line === cluster[j].close.line) {
+                        continue;
+                    }
+                } 
+
+                // We get here when there is either a content change at the top of the stack that
+                // has overwritten the closing side of this pair, or when the sides of this pair 
+                // have ended up on different lines. In either case, we drop this pair.
+                cluster[j].decoration?.dispose();
+                deleted[j] = true;
             }
 
             // --------------------------------
             // STEP 5 - Complete the new cluster.
             // --------------------------------
+            
+            const prevLength = cluster.length;
 
-            // Omit all the deleted pairs.
-            const done: Pair[] = [];
-            for (const pair of cluster) {
-                if (pair) {
-                    done.push(pair);
-                }
-            }
+            // Filter out all the deleted pairs.
+            this.pairs[i] = cluster.filter((_, j) => !deleted[j]);
 
-            // Append the new pair to the finalized cluster.
+            // Add the new pair to the finalized cluster.
             if (newPair) {
-                newPairsAdded = true;
-                this.pairCount += 1;
 
-                // We append the new pair to the end of the finalized cluster because the new pair 
-                // (being nearest to the cursor) is enclosed by all the other pairs in the cluster. 
-                done.push(newPair);
+                // The new pair is appended to the end of the finalized cluster because it (being 
+                // nearest to the cursor) is enclosed by all the other pairs in the cluster. 
+                this.pairs[i].push(newPair);
 
-                // The newly inserted pair needs decorating.
+                // The newly added pair needs decorating.
                 this.decorationsFixer.set();
-            }
+            } 
 
-            // If the previous 'nearest pair' was dropped, then we have to make sure the new nearest
-            // pair is decorated.
-            if (cluster.length > 0 && !cluster[cluster.length - 1]) {
+            this.pairCount = this.pairCount + this.pairs[i].length - prevLength;
+
+            // If the previous nearest pair was removed, then there is a new nearest pair, so we 
+            // have to reapply the decorations.
+            if (deleted.length > 0 && deleted[deleted.length - 1]) {
                 this.decorationsFixer.set();
             }
 
@@ -742,20 +760,18 @@ export class Tracker {
             //
             // Note that we did not immediately save a new possible dead key autoclosing pair into
             // `this.possibleDeadKeyPairs` had we detected one above, because a new possible dead 
-            // key autoclosing pair is always meant for the next call of the enclosing method and not 
-            // the current one.
-            this.possibleDeadKeyPairs[cursorIndex] = newPossibleDeadKeyPair;
-
-            this.clusters[cursorIndex] = done;
+            // key autoclosing pair is always meant for the next call of the enclosing method and 
+            // not the current one.
+            this.possibleDeadKeyPairs[i] = newPossibleDeadKeyPair;
         };
 
         if (this.hasPairs !== prevHasPairs) {
             this.onDidUpdateHasPairsEmitter.fire(undefined);
         }
 
-        // If there was previously no pairs, and no new pairs were added, then there is no way for
-        // the `hasLineOfSight` property to change.
-        if (prevHasPairs || newPairsAdded) {
+        // If there are now pairs, or if there are now no pairs but previously there were, then the
+        // `hasLineOfSight` property could have changed after the content changes have been applied.
+        if (this.hasPairs || prevHasPairs) {
             this._hasLineOfSight.stale = true;
             this.onDidUpdateHasLineOfSightEmitter.fire(undefined);
         }
@@ -793,16 +809,13 @@ export class Tracker {
         // The resulting array of cursors will have been restored to the "original order", i.e. an 
         // order parallel to the `selections` array of the owning text editor.
         //
-        // IMPORTANT: We perform a leap on the cursors that this tracker last saw (`this.sortedCursors`) 
+        // IMPORTANT: We perform a leap on the cursors that this tracker last saw (`this.cursors`) 
         // instead of the current cursors of the owning text editor (`this.owner.selections`) because 
         // the pairs in this tracker were synchronized to the cursors last seen, which might (at this 
         // point in time) be slightly behind the current cursors of the owning text editor.
-        const result: (Selection | undefined)[] = Array(this.sortedCursors.length).fill(undefined);
-        for (const [i, { cursor, originalIndex }] of this.sortedCursors.entries()) {
-
-            // The pairs being tracked for this cursor.
-            const cluster = this.clusters[i];
-            
+        const result: (Selection | undefined)[] = Array(this.cursors.length).fill(undefined);
+        for (const [i, { anchor, active, originalIndex }] of this.cursors.entries()) {
+            const cluster = this.pairs[i];
             if (cluster.length > 0) {
 
                 // For each cursor that has pairs being tracked for it, move the cursor out of the
@@ -813,7 +826,7 @@ export class Tracker {
             } else {
 
                 // Cursors which do not have pairs to leap out of are left alone.
-                result[originalIndex] = cursor;
+                result[originalIndex] = new Selection(anchor, active);
             }
         }
 
@@ -839,9 +852,9 @@ export class Tracker {
      * Reset this tracker by untracking all pairs and removing all decorations.
      */
     public clear(): void {
-        for (let i = 0; i < this.clusters.length; ++i) {
-            this.clusters[i].forEach(pair => pair.decoration?.dispose());
-            this.clusters[i] = [];
+        for (let i = 0; i < this.pairs.length; ++i) {
+            this.pairs[i].forEach(pair => pair.decoration?.dispose());
+            this.pairs[i] = [];
         }
         this.possibleDeadKeyPairs?.forEach((_, i, self) => self[i] = undefined);
         this.pairCount = 0;
@@ -867,14 +880,16 @@ export class Tracker {
      * Get a snapshot of the internal state of this tracker.
      */
     public snapshot(): TrackerSnapshot {
-        
-        // Arrange the clusters back into the original order such that they are parallel to the 
-        // `selections` array of the owning text editor.
-        const pairs = Array(this.clusters.length).fill(undefined);
-        for (const [i, cluster] of this.clusters.entries()) {
-            const originalIndex  = this.sortedCursors[i].originalIndex;
-            pairs[originalIndex] = cluster.map(pair => {
-                const open  = [pair.open.line, pair.open.character];
+
+        // Convert the pairs to the form used by tests.
+        //
+        // The converted clusters are also arranged back into the original order such that they are
+        // parallel to the `selections` array of the owning text editor.
+        const converted = Array(this.pairs.length).fill(undefined);
+        for (let i = 0; i < this.pairs.length; ++i) {
+            const originalIndex      = this.cursors[i].originalIndex;
+            converted[originalIndex] = this.pairs[i].map(pair => {
+                const open  = [pair.open.line,  pair.open.character];
                 const close = [pair.close.line, pair.close.character];
                 return { open, close, isDecorated: !!pair.decoration };
             });
@@ -883,56 +898,29 @@ export class Tracker {
         // So that the decoration options cannot be mutated by whoever requested the snapshot.
         freeze(this._decorationOptions);
         
-        return { pairs, decorationOptions: this._decorationOptions };
+        return { pairs: converted, decorationOptions: this._decorationOptions };
     }
-
-}
-
-/** 
- * An internal representation of a pair that is being tracked.
- * 
- * Note that both `line` and `character` indices in a `Position` are zero-based. Furthermore, `character` 
- * indices are in units of UTF-16 code units, which notably does not have the same units as the column 
- * number shown in the bottom right of vscode, as the latter corresponds to the physical width of 
- * characters in the editor.
- */
-interface Pair {
-
-    /**
-     * The opening (i.e. left) side of the pair.
-     */
-    open: Position,
-
-    /**
-     * The closing (i.e. right) side of the pair.
-     */
-    close: Position,
-
-    /**
-     * The decoration applied to the closing side of this pair. 
-     * 
-     * `undefined` if this pair is undecorated. 
-     */
-    decoration: TextEditorDecorationType | undefined;
 
 }
 
 /** 
  * Return a new array containing the cursors sorted by increasing `anchor` positions. 
  * 
- * Accompanying each cursor in the return value is the index of the cursor before it was sorted.
+ * Accompanying each cursor in the return array is the index of the cursor before it was sorted.
  * 
  * # Time Complexity
  * 
  * This function delegates the sorting to V8, which uses [Timsort](https://v8.dev/blog/array-sort#timsort).
+ * Therefore this sorting step should cost O(n) most of the time since the user's cursors is often
+ * already in sorted order.
  */
 function sortCursors(unsorted: ReadonlyArray<Selection>): ReadonlyArray<TaggedCursor> {
-    return unsorted.map((cursor, i) => ({ cursor, originalIndex: i }))
-                   .sort((a, b) => a.cursor.anchor.compareTo(b.cursor.anchor));
+    return unsorted.map(({ anchor, active }, originalIndex) => ({ anchor, active, originalIndex }))
+                   .sort((a, b) => a.anchor.compareTo(b.anchor));
 }
 
 /**
- * Decorate the closing side of a pair in a text editor.
+ * Decorate the closing side of a pair.
  */
 function decorate(
     editor:            TextEditor,
@@ -964,15 +952,62 @@ function shift(stack: ContentChangeStack, position: Position): Position {
     );
 }
 
+/** 
+ * A pair that is being tracked for a cursor.
+ * 
+ * # Indices
+ * 
+ * Both `line` and `character` indices in a `Position` are zero-based. Furthermore, `character` 
+ * indices are in units of UTF-16 code units, which notably does not have the same units as the 
+ * column number shown in the bottom right of vscode, as the latter corresponds to the physical 
+ * width of characters in the editor.
+ */
+interface Pair {
+
+    /**
+     * The position of the opening side of this pair.
+     */
+    open: Position,
+
+    /**
+     * The position of the closing side of this pair.
+     */
+    close: Position,
+
+    /**
+     * The decoration applied to the closing side of this pair. 
+     * 
+     * `undefined` if this pair is undecorated. 
+     */
+    decoration: TextEditorDecorationType | undefined;
+
+}
+
+/**
+ * The pairs that are being tracked for a cursor.
+ * 
+ * The pairs in a cluster are always ordered from least nested to most nested, and all of them always
+ * enclose the corresponding cursor.
+ */
+type Cluster = Pair[];
+
 /**
  * A cursor tagged with its original index.
  */
-interface TaggedCursor {
+interface TaggedCursor extends Pick<Selection, 'anchor' | 'active'> {
 
-    readonly cursor: Selection,
+    /**
+     * The anchor position of this cursor.
+     */
+    readonly anchor: Position,
+
+    /**
+     * The active position of this cursor.
+     */
+    readonly active: Position,
 
     /** 
-     * The index of the cursor before it was sorted. 
+     * The index of this cursor before it was sorted. 
      * 
      * In other words, this is the index of this cursor in the `selections` array of the owning
      * text editor.

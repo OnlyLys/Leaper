@@ -37,9 +37,18 @@ import { TextDocumentContentChangeEvent } from 'vscode';
 export class ContentChangeStack {
 
     /**
-     * Index of the top of the stack.
+     * The index one past the top of the stack.
      */
-    private top: number;
+    private end: number;
+
+    /** 
+     * The content change at the top of the stack.
+     * 
+     * This is `undefined` if the stack is empty.
+     */
+    public get top(): TextDocumentContentChangeEvent | undefined {
+        return this.end > 0 ? this.src[this.end - 1] : undefined;
+    }
 
     /** 
      * The immutable content change array from vscode that we are adapting over.
@@ -111,7 +120,7 @@ export class ContentChangeStack {
         // However, do note that there is no explicit guarantee from vscode's API that content change
         // arrays yielded by it will always have that ordering.
         this.src = contentChanges;
-        this.top = contentChanges.length;
+        this.end = contentChanges.length;
     }
 
     /** 
@@ -123,17 +132,17 @@ export class ContentChangeStack {
      */
     public pop(): TextDocumentContentChangeEvent | undefined {
 
-        if (this.top === 0) {
+        if (this.end === 0) {
             return undefined;
         }
 
         // Range that the top of stack content change replaced.
-        const replaced            = this.src[this.top - 1].range;
+        const replaced            = this.src[this.end - 1].range;
         const replacedLineCount   = replaced.end.line - replaced.start.line + 1;
         const replacedLastLineLen = replaced.end.character - (replacedLineCount === 1 ? replaced.start.character : 0);
 
         // Text that was inserted in place of the replaced range.
-        const inserted = this.src[this.top - 1].text;
+        const inserted = this.src[this.end - 1].text;
         const { lines: insertedLineCount, lastLineLen: insertedLastLineLen } = countLines(inserted);
 
         // This content change contributes to a change in line index to any item after it.
@@ -262,16 +271,7 @@ export class ContentChangeStack {
         }
 
         this._horzCarry = { affectsLine: replaced.end.line, value: horzCarry };
-        return this.src[--this.top];
-    }
-
-    /** 
-     * Get the content change at the top of the stack.
-     * 
-     * The return value is `undefined` if the stack is empty.
-     */
-    public peek(): TextDocumentContentChangeEvent | undefined {
-        return this.top > 0 ? this.src[this.top - 1] : undefined;
+        return this.src[--this.end];
     }
 
 }
