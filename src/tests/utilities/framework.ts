@@ -139,7 +139,7 @@ class ExecutorFull {
      * This delay exists because it may take a while for changes we have made to be reflected in the
      * engine as the engine receives information asynchronously.
      */
-    private static readonly PRE_ENGINE_QUERY_DELAY_MS = 50;
+    private static readonly PRE_ENGINE_QUERY_DELAY_MS = 60;
 
     /**
      * The delay to apply after each repetition of a command.
