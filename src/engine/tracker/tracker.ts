@@ -44,7 +44,7 @@ export class Tracker {
      * matter whether we use the `active` or `anchor` position as the sort key, since no two cursors 
      * have overlapping selections. Sorting with either will yield the same result.
      */
-    private cursors: ReadonlyArray<TaggedCursor>;
+    private cursors: TaggedCursor[];
 
     /**
      * The pairs that are being tracked for each cursor.
@@ -887,7 +887,7 @@ export class Tracker {
  * Therefore this sorting step should cost O(n) most of the time since the user's cursors is often
  * already in sorted order.
  */
-function sortCursors(unsorted: ReadonlyArray<Selection>): ReadonlyArray<TaggedCursor> {
+function sortCursors(unsorted: ReadonlyArray<Selection>): TaggedCursor[] {
     return unsorted.map(({ anchor, active }, originalIndex) => ({ anchor, active, originalIndex }))
                    .sort((a, b) => a.anchor.compareTo(b.anchor));
 }
