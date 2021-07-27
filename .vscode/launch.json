@@ -16,7 +16,8 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "npm: build-release"
+            "preLaunchTask": "npm: build-release",
+            "internalConsoleOptions": "openOnSessionStart"
         },
         {
             "name": "Development Build",
@@ -29,7 +30,8 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "npm: build-dev"
+            "preLaunchTask": "npm: build-dev",
+            "internalConsoleOptions": "openOnSessionStart"
         },
         {
             "name": "Tests",
