@@ -1,7 +1,8 @@
-import { Range, Position, Selection, TextEditorDecorationType, window, TextEditor, DecorationRenderOptions, TextDocumentContentChangeEvent, EventEmitter, Event } from 'vscode';
+import { Range, Position, Selection, TextEditor, DecorationRenderOptions, TextDocumentContentChangeEvent, EventEmitter, Event } from 'vscode';
 import { Unchecked } from '../configurations/unchecked';
-import { ImmediateReusable } from './immediate-reusable';
 import { ContentChangeStack } from './content-change-stack';
+import { Pair } from './pair';
+import { DecorationQueue } from './decoration-queue';
 
 /** 
  * A 'tracker' assigned to a text editor that:
@@ -49,8 +50,14 @@ export class Tracker {
      * The pairs that are being tracked for each cursor.
      * 
      * This array is parallel to `cursors`.
-     */
-    private pairs: Cluster[];
+     * 
+     * # Clusters
+     * 
+     * Each array of `Pair`s is called a cluster, and it contains the pairs being tracked for the
+     * corresponding cursor. The pairs in a cluster are always ordered from least to most nested
+     * and always enclose the corresponding cursor.
+      */
+    private pairs: Pair[][];
 
     /**
      * Possible dead key autoclosing pairs for each cursor.
@@ -145,17 +152,8 @@ export class Tracker {
     }
 
     /**
-     * A timer that fixes decorations at the end of the current event loop cycle.
+     * A queue that applies decorations at the end of the current event loop cycle.
      * 
-     * When this timer executes, it will ensure that every pair is decorated only if `decorateAll` 
-     * is enabled. Otherwise, this timer will ensure that the pairs nearest to each cursor is decorated 
-     * and that every other pair is not decorated.
-     * 
-     * This timer should be set whenever pairs are added or when pairs are dropped from a cluster 
-     * such that the cluster has a new 'nearest pair'. This timer does not need to be set when the 
-     * nearest pair for a cluster has not changed or when the entire cluster is dropped because in 
-     * both cases there are no pairs within it that need decorating.
-     *
      * # Why Do We Wait Until the End of Event Loop Cycles to Apply Decorations?
      * 
      * We cannot apply decorations within the `notifySelectionChanges` or `notifyContentChanges` 
@@ -176,33 +174,7 @@ export class Tracker {
      * Therefore, by only applying decorations after all content changes in an event loop cycle have 
      * been processed, we ensure that the decorations will be applied at the correct positions.
      */
-    private readonly decorationsFixer = new ImmediateReusable(() => {
-        if (this._decorateAll) {
-
-            // Make sure all pairs are decorated since `leaper.decorateAll` is enabled.
-            for (const cluster of this.pairs) {
-                for (const pair of cluster) {
-                    if (!pair.decoration) {
-                        pair.decoration = decorate(this.owner, pair, this._decorationOptions);
-                    }
-                }
-            }
-        } else {
-
-            // Make sure only the pairs nearest to each cursor are decorated since `leaper.decorateAll`
-            // is disabled.
-            for (const cluster of this.pairs) {
-                let i = 0;
-                while (i < cluster.length - 1) {
-                    cluster[i].decoration?.dispose();
-                    cluster[i++].decoration = undefined;
-                }
-                if (cluster.length > 0) {
-                    cluster[i].decoration = decorate(this.owner, cluster[i], this._decorationOptions);
-                }
-            }
-        }
-    });
+    private decorationQueue: DecorationQueue;
 
     private _decorateAll: boolean;
 
@@ -210,26 +182,30 @@ export class Tracker {
      * Whether to decorate all pairs or just the ones nearest to each cursor.
      */
     public set decorateAll(v: boolean) {
+        this.decorationQueue.clear();
         this._decorateAll = v;
-        this.decorationsFixer.set();
-    }
 
-    private _decorationOptions: Unchecked<DecorationRenderOptions>;
-
-    /**
-     * The style of the decorations applied.
-     */
-    public set decorationOptions(v: Unchecked<DecorationRenderOptions>) {
-        this._decorationOptions = v;
-
-        // Reapply all the decorations.
+        // Reapply the decorations appropriately.
         for (const cluster of this.pairs) {
             for (let i = 0; i < cluster.length; ++i) {
                 cluster[i].decoration?.dispose();
                 cluster[i].decoration = undefined;
+                if (this._decorateAll || (i === cluster.length - 1)) {
+                    this.decorationQueue.enqueue(cluster[i]);
+                }
             }
         }
-        this.decorationsFixer.set();
+    }
+
+    /**
+     * The style of the decorations applied.
+     */
+    public set decorationOptions(newOptions: Unchecked<DecorationRenderOptions>) {
+        this.decorationQueue.clear();
+        this.decorationQueue = new DecorationQueue(this.owner, newOptions);
+
+        // Use the setter for `decorateAll` to reapply the decorations.
+        this.decorateAll = this._decorateAll;
     }
     
     private _detectedPairs: ReadonlyArray<string>;
@@ -260,11 +236,11 @@ export class Tracker {
         }
     ) {
         this._decorateAll         = configuration.decorateAll;
-        this._decorationOptions   = configuration.decorationOptions;
         this._detectedPairs       = configuration.detectedPairs;
         this.cursors              = sortCursors(this.owner.selections);
         this.pairs                = Array(this.cursors.length).fill([]);
         this.possibleDeadKeyPairs = Array(this.cursors.length).fill(undefined);
+        this.decorationQueue      = new DecorationQueue(this.owner, configuration.decorationOptions);
     }
 
     /** 
@@ -370,12 +346,10 @@ export class Tracker {
         // Note that here we use the anchor of a cursor to decide whether or not it has moved out of 
         // a pair. The choice of using a cursor's anchor makes sense as we do not want to untrack a 
         // cursor's pairs if the user is just making a selection from within a pair to outside of it.
-        for (const [i, { anchor } ] of this.cursors.entries()) {
+        for (const [i, { anchor }] of this.cursors.entries()) {
 
             // The pairs being tracked for this cursor.
             const cluster = this.pairs[i];
-
-            let pairsDropped = false;
 
             // Drop any pairs that do not enclose the cursor.
             //
@@ -387,18 +361,19 @@ export class Tracker {
                 if (anchor.isBeforeOrEqual(cluster[j].open) || anchor.isAfter(cluster[j].close)) {
                     cluster.pop()?.decoration?.dispose();
                     this.pairCount -= 1;
-                    pairsDropped    = true;
                 } else {
                     break;
                 }
             }
 
-            // If pairs were dropped from the cluster but the cluster still contains pairs afterwards, 
-            // then we have to fix the decorations as there is now a new nearest pair.
-            if (pairsDropped && cluster.length > 0) {
-                this.decorationsFixer.set();
+            // Ensure that the pair nearest to the cursor is always decorated.
+            //
+            // This step is necessary just in case the previous nearest pair was dropped and we need 
+            // to decorate the new nearest pair.
+            if (cluster.length > 0 && !cluster[cluster.length - 1].decoration) {
+                this.decorationQueue.enqueue(cluster[cluster.length - 1]);
             }
-
+            
             // If this cursor has moved out of a possible dead key autoclosing pair, then that dead
             // key autoclosing pair is no longer possible, since the two stage process involved in 
             // autoclosing a dead key autoclosing pair has been interrupted.
@@ -730,32 +705,37 @@ export class Tracker {
             // STEP 5 - Complete the new cluster.
             // --------------------------------
             
-            const prevLength = cluster.length;
-
             // Filter out all the deleted pairs.
-            this.pairs[i] = cluster.filter((_, j) => !deleted[j]);
+            const newCluster = cluster.filter((_, j) => !deleted[j]);
 
-            // Add the new pair to the finalized cluster.
             if (newPair) {
 
+                // If `decorateAll` is disabled, then only the newly added pair should be decorated,
+                // so we undecorate the previous nearest pair (if it survived).
+                if (!this._decorateAll && newCluster.length > 0) {
+                    newCluster[newCluster.length - 1].decoration?.dispose();
+                    newCluster[newCluster.length - 1].decoration = undefined;
+                }
+
+                // Add the new pair to the finalized cluster.
+                //
                 // The new pair is appended to the end of the finalized cluster because it (being 
                 // nearest to the cursor) is enclosed by all the other pairs in the cluster. 
-                this.pairs[i].push(newPair);
-
-                // The newly added pair needs decorating.
-                this.decorationsFixer.set();
+                newCluster.push(newPair);
             } 
-
-            this.pairCount = this.pairCount + this.pairs[i].length - prevLength;
-
-            // If the previous nearest pair was removed, then there is a new nearest pair, so we 
-            // have to reapply the decorations.
-            if (deleted.length > 0 && deleted[deleted.length - 1]) {
-                this.decorationsFixer.set();
+            
+            // Ensure that the pair nearest to the cursor is always decorated.
+            // 
+            // This step is necessary just in case the nearest pair has changed and we need to 
+            // decorate the new nearest pair.
+            if (newCluster.length > 0 && !newCluster[newCluster.length - 1].decoration) {
+                this.decorationQueue.enqueue(newCluster[newCluster.length - 1]);
             }
+            
+            this.pairCount = this.pairCount + newCluster.length - cluster.length;
+            this.pairs[i]  = newCluster;
 
-            // Save a new possible dead key autoclosing pair for the next call of the enclosing
-            // method. 
+            // Save a new possible dead key autoclosing pair.
             //
             // Note that we did not immediately save a new possible dead key autoclosing pair into
             // `this.possibleDeadKeyPairs` had we detected one above, because a new possible dead 
@@ -860,7 +840,7 @@ export class Tracker {
         this._hasLineOfSight.stale = true;
         this.onDidUpdateHasPairsEmitter.fire(undefined);
         this.onDidUpdateHasLineOfSightEmitter.fire(undefined);
-        this.decorationsFixer.clear();
+        this.decorationQueue.clear();
     }
 
     /**
@@ -870,7 +850,6 @@ export class Tracker {
         this.clear();
         this.onDidUpdateHasPairsEmitter.dispose();
         this.onDidUpdateHasLineOfSightEmitter.dispose();
-        this.decorationsFixer.dispose();
     }
 
     /** 
@@ -890,9 +869,9 @@ export class Tracker {
         }
 
         // So that the decoration options cannot be mutated by whoever requested the snapshot.
-        freeze(this._decorationOptions);
+        freeze(this.decorationQueue.decorationOptions);
         
-        return { pairs: reordered, decorationOptions: this._decorationOptions };
+        return { pairs: reordered, decorationOptions: this.decorationQueue.decorationOptions };
     }
 
 }
@@ -914,19 +893,6 @@ function sortCursors(unsorted: ReadonlyArray<Selection>): ReadonlyArray<TaggedCu
 }
 
 /**
- * Decorate the closing side of a pair.
- */
-function decorate(
-    editor:            TextEditor,
-    pair:              Pair,
-    decorationOptions: Unchecked<DecorationRenderOptions>
-): TextEditorDecorationType {
-    const decoration = window.createTextEditorDecorationType(decorationOptions.cast());
-    editor.setDecorations(decoration, [ new Range(pair.close, pair.close.translate(0, 1)) ]);
-    return decoration;
-};
-
-/**
  * Deep freeze an object.
  */
 function freeze(obj: any): void {
@@ -945,45 +911,6 @@ function shift(stack: ContentChangeStack, position: Position): Position {
         position.line === stack.horzCarry.affectsLine ? stack.horzCarry.value : 0
     );
 }
-
-/** 
- * A pair that is being tracked for a cursor.
- * 
- * # Indices
- * 
- * Both `line` and `character` indices in a `Position` are zero-based. Furthermore, `character` 
- * indices are in units of UTF-16 code units, which notably does not have the same units as the 
- * column number shown in the bottom right of vscode, as the latter corresponds to the physical 
- * width of characters in the editor.
- */
-interface Pair {
-
-    /**
-     * The position of the opening side of this pair.
-     */
-    open: Position,
-
-    /**
-     * The position of the closing side of this pair.
-     */
-    close: Position,
-
-    /**
-     * The decoration applied to the closing side of this pair. 
-     * 
-     * `undefined` if this pair is undecorated. 
-     */
-    decoration: TextEditorDecorationType | undefined;
-
-}
-
-/**
- * The pairs that are being tracked for a cursor.
- * 
- * The pairs in a cluster are always ordered from least nested to most nested, and all of them always
- * enclose the corresponding cursor.
- */
-type Cluster = Pair[];
 
 /**
  * A cursor tagged with its original index.
