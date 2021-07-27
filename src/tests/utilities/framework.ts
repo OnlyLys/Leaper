@@ -3,7 +3,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import { commands, Range, Selection, Position, SnippetString, TextEditorEdit, TextEditor, workspace, window, ViewColumn, Uri, ConfigurationTarget, WorkspaceEdit, DecorationRenderOptions, DecorationRangeBehavior } from 'vscode';
-import { ResolvedViewColumn, TrackerSnapshot } from './test-handle';
+import { Tracker } from '../../engine/tracker/tracker';
 import { CompactCluster, CompactRange, CompactPosition, CompactCursor, CompactSelection, CompactPair } from './compact';
 import { waitFor, zip } from './helpers';
 import { testHandle } from '../../extension';
@@ -194,21 +194,24 @@ class ExecutorFull {
      * This method does not check for decorations. Please use `assertPairsFull` if that is required.
      */
     public async assertPairs(
-        expect:     ReadonlyArray<CompactCluster>,
-        viewColumn: AllowedViewColumns = ViewColumn.Active
+        _expect:    ReadonlyArray<CompactCluster>,
+        viewColumn: AllowedViewColumn = ViewColumn.Active
     ): Promise<void> {
     
         // Wait in case the engine has not caught up.
         await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
 
-        // The actual pairs being tracked for the target text editor, with the `isDecorated` flags
-        // stripped since we are not checking for decorations.
+        // Convert the actual pairs to the standardized form for comparison.
         const actual = getSnapshot(viewColumn).pairs.map(cluster => 
-            cluster.map(({ open, close }) => ({ open, close }))
+            cluster.map(pair => {
+                const open  = [pair.open.line,  pair.open.character];
+                const close = [pair.close.line, pair.close.character];
+                return { open, close };
+            })
         );
 
-        // Convert the expected pairs to the same form as the actual pairs.
-        const _expect: { open: CompactPosition, close: CompactPosition }[][] = expect.map(cluster => {
+        // Convert the expected pairs to the standardized form for comparison.
+        const expect: { open: CompactPosition, close: CompactPosition }[][] = _expect.map(cluster => {
             if (cluster === 'None') {
                 return [];
             } else {
@@ -221,7 +224,7 @@ class ExecutorFull {
             }
         });
 
-        this.assertEq(actual, _expect, 'Pairs Mismatch');
+        this.assertEq(actual, expect, 'Pairs Mismatch');
     }
 
     /**
@@ -237,18 +240,25 @@ class ExecutorFull {
      * the decorations.
      */
     public async assertPairsFull(
-        expect:             ReadonlyArray<CompactCluster>,
+        _expect:           ReadonlyArray<CompactCluster>,
         expectDecorations: 'all' | 'nearest',
-        viewColumn:         AllowedViewColumns = ViewColumn.Active
+        viewColumn:        AllowedViewColumn = ViewColumn.Active
     ): Promise<void> {
 
         // Wait in case the engine has not caught up.
         await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
 
-        const actual = getSnapshot(viewColumn).pairs;
+        // Convert the actual pairs to the standardized form for comparison.
+        const actual = getSnapshot(viewColumn).pairs.map(cluster => 
+            cluster.map(pair => {
+                const open  = [pair.open.line,  pair.open.character];
+                const close = [pair.close.line, pair.close.character];
+                return { open, close, isDecorated: pair.isDecorated };
+            })
+        );
 
         // Convert the expected pairs to the same form as the actual pairs.
-        const _expect: CompactPair[][] = expect.map(cluster => {
+        const expect: CompactPair[][] = _expect.map(cluster => {
             if (cluster === 'None') {
                 return [];
             } else {
@@ -261,22 +271,22 @@ class ExecutorFull {
             }
         });
         if (expectDecorations === 'all') {
-            _expect.forEach(cluster => cluster.forEach(pair => pair.isDecorated = true));
+            expect.forEach(cluster => cluster.forEach(pair => pair.isDecorated = true));
         } else if (expectDecorations === 'nearest') {
-            _expect.forEach(cluster => {
+            expect.forEach(cluster => {
                 cluster.forEach((pair, i) => pair.isDecorated = (i === cluster.length - 1));
             });
         }
 
-        this.assertEq(actual, _expect, 'Pairs Mismatch');
+        this.assertEq(actual, expect, 'Pairs Mismatch');
     }
 
     /**
      * Assert the state of the cursors of a visible text editor.
      */
     public async assertCursors(
-        expect:     ReadonlyArray<CompactCursor>,
-        viewColumn: AllowedViewColumns = ViewColumn.Active
+        _expect:    ReadonlyArray<CompactCursor>,
+        viewColumn: AllowedViewColumn = ViewColumn.Active
     ): Promise<void> {
 
         // Note that this function is not actually `async` since it does not wait on anything. But 
@@ -291,11 +301,11 @@ class ExecutorFull {
             const active: CompactPosition = [cursor.active.line, cursor.active.character];
             return { anchor, active };
         });
-        const _expect: CompactSelection[] = expect.map((cursor) => 
+        const expect: CompactSelection[] = _expect.map((cursor) => 
             Array.isArray(cursor) ? { anchor: cursor, active: cursor } : cursor
         );
 
-        this.assertEq(actual, _expect, 'Cursors Mismatch');
+        this.assertEq(actual, expect, 'Cursors Mismatch');
     }
 
     /**
@@ -325,16 +335,16 @@ class ExecutorFull {
      * for more info.
      */
     public async assertEffectiveDecorationOptions(
-        expect:     Readonly<Omit<DecorationRenderOptions, 'rangeBehavior'>>,
-        viewColumn: AllowedViewColumns = ViewColumn.Active
+        _expect:    Readonly<Omit<DecorationRenderOptions, 'rangeBehavior'>>,
+        viewColumn: AllowedViewColumn = ViewColumn.Active
     ): Promise<void> {
 
         // Wait in case the engine has not caught up.
         await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
 
         const actual  = getSnapshot(viewColumn).decorationOptions.cast();
-        const _expect = { ...expect,  rangeBehavior: DecorationRangeBehavior.ClosedClosed };
-        this.assertEq(actual, _expect, 'Decoration Options Mismatch');
+        const expect = { ..._expect,  rangeBehavior: DecorationRangeBehavior.ClosedClosed };
+        this.assertEq(actual, expect, 'Decoration Options Mismatch');
     }
 
     /** 
@@ -509,7 +519,7 @@ class ExecutorFull {
     /**
      * Delete all text in a visible text editor.
      */
-    public async deleteAll(viewColumn: AllowedViewColumns = ViewColumn.Active): Promise<void> {
+    public async deleteAll(viewColumn: AllowedViewColumn = ViewColumn.Active): Promise<void> {
         const editor   = getVisibleTextEditor(viewColumn);
         const document = editor.document;
         const startPos = new Position(0, 0);
@@ -530,7 +540,7 @@ class ExecutorFull {
           | { kind: 'insert';  at: CompactPosition; text: string; } 
           | { kind: 'delete';  range: CompactRange; }
         >,
-        viewColumn: AllowedViewColumns = ViewColumn.Active
+        viewColumn: AllowedViewColumn = ViewColumn.Active
     ): Promise<void> {
         const editor = getVisibleTextEditor(viewColumn);
         await editor.edit((builder: TextEditorEdit) => {
@@ -557,7 +567,7 @@ class ExecutorFull {
      */
     public async insertSnippet(
         snippet:    SnippetString,
-        viewColumn: AllowedViewColumns = ViewColumn.Active,
+        viewColumn: AllowedViewColumn = ViewColumn.Active,
         location?:  CompactPosition | CompactRange
     ): Promise<void> {
         let _location: Position | Range | undefined = undefined;
@@ -576,7 +586,7 @@ class ExecutorFull {
      */
     public async setCursors(
         to:         CompactCursor[], 
-        viewColumn: AllowedViewColumns = ViewColumn.Active
+        viewColumn: AllowedViewColumn = ViewColumn.Active
     ): Promise<void> {
         const editor = getVisibleTextEditor(viewColumn);
         editor.selections = to.map((cursor) => {
@@ -758,7 +768,7 @@ class ExecutorFull {
             | './workspace-2/text.ts'
             | './workspace-3/text.md'
             | './workspace-4/text.ts', 
-        viewColumn: AllowedViewColumns = ViewColumn.Active
+        viewColumn: AllowedViewColumn = ViewColumn.Active
     ): Promise<void> {
         const rootPath = path.dirname(workspace.workspaceFile?.path ?? '');
         const filePath = path.join(rootPath, file);
@@ -895,7 +905,7 @@ class ExecutorFull {
  * if this function is called too soon after a different text editor is focused, `window.activeTextEditor` 
  * might not yet have been updated to point at the new active text editor.
  */
-function resolveViewColumn(viewColumn: AllowedViewColumns): ResolvedViewColumn {
+function resolveViewColumn(viewColumn: AllowedViewColumn): ResolvedViewColumn {
     if (viewColumn === ViewColumn.Active) {
         if (!window.activeTextEditor|| window.activeTextEditor.viewColumn === undefined) {
             throw new Error('Unable to get active text editor!');
@@ -916,7 +926,7 @@ function resolveViewColumn(viewColumn: AllowedViewColumns): ResolvedViewColumn {
  * Note that this function should not be called immediately after a executing command that affects 
  * the view state, because it takes a while for changes in the view state to become effective.
  */
-function getSnapshot(viewColumn: AllowedViewColumns): TrackerSnapshot {
+function getSnapshot(viewColumn: AllowedViewColumn): ReturnType<Tracker['snapshot']> {
     if (!testHandle) {
         throw new Error('Unable to retrive test handle!');
     }
@@ -949,7 +959,7 @@ function getMostRecentContexts(): { inLeaperMode: boolean, hasLineOfSight: boole
  * Note that this function should not be called immediately after a executing command that affects 
  * the view state, because it takes a while for changes in the view state to become effective.
  */
-function getVisibleTextEditor(viewColumn: AllowedViewColumns): TextEditor {
+function getVisibleTextEditor(viewColumn: AllowedViewColumn): TextEditor {
     const resolved = resolveViewColumn(viewColumn);
     const editor   = window.visibleTextEditors.find(editor => editor.viewColumn === resolved);
     if (!editor) {
@@ -972,7 +982,16 @@ async function clearAllWorkspaceFiles(): Promise<void> {
     }
 }
 
-type AllowedViewColumns = ViewColumn.Active | ViewColumn.One | ViewColumn.Two | ViewColumn.Three | ViewColumn.Four;
+/**
+ * Absolute view column numbers.
+ * 
+ * A view column can be specified in absolute terms like `ViewColumn.Two` or in relative terms like 
+ * `ViewColumn.Active`. This type contains only view column numbers which have been resolved into
+ * absolute numbers.
+ */
+type ResolvedViewColumn = ViewColumn.One | ViewColumn.Two | ViewColumn.Three | ViewColumn.Four;
+
+type AllowedViewColumn = ViewColumn.Active | ResolvedViewColumn;
 
 type ConfigurationNames = 'leaper.decorateAll' | 'leaper.decorationOptions' | 'leaper.detectedPairs';
 

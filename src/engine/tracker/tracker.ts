@@ -2,7 +2,6 @@ import { Range, Position, Selection, TextEditorDecorationType, window, TextEdito
 import { Unchecked } from '../configurations/unchecked';
 import { ImmediateReusable } from './immediate-reusable';
 import { ContentChangeStack } from './content-change-stack';
-import { TrackerSnapshot } from '../../tests/utilities/test-handle';
 
 /** 
  * A 'tracker' assigned to a text editor that:
@@ -879,26 +878,21 @@ export class Tracker {
      * 
      * Get a snapshot of the internal state of this tracker.
      */
-    public snapshot(): TrackerSnapshot {
+    public snapshot(): Snapshot {
 
-        // Convert the pairs to the form used by tests.
-        //
-        // The converted clusters are also arranged back into the original order such that they are
+        // Clone each cluster and rearrange them back into the original order such that they are 
         // parallel to the `selections` array of the owning text editor.
-        const converted = Array(this.pairs.length).fill(undefined);
-        for (let i = 0; i < this.pairs.length; ++i) {
-            const originalIndex      = this.cursors[i].originalIndex;
-            converted[originalIndex] = this.pairs[i].map(pair => {
-                const open  = [pair.open.line,  pair.open.character];
-                const close = [pair.close.line, pair.close.character];
-                return { open, close, isDecorated: !!pair.decoration };
+        const reordered = Array(this.pairs.length).fill(undefined);
+        for (const [i, cluster] of this.pairs.entries()) {
+            reordered[this.cursors[i].originalIndex] = cluster.map(pair => {
+                return { open: pair.open, close: pair.close, isDecorated: !!pair.decoration };
             });
         }
 
         // So that the decoration options cannot be mutated by whoever requested the snapshot.
         freeze(this._decorationOptions);
         
-        return { pairs: converted, decorationOptions: this._decorationOptions };
+        return { pairs: reordered, decorationOptions: this._decorationOptions };
     }
 
 }
@@ -1030,5 +1024,16 @@ interface PossibleDeadKeyPair {
      * The expected position of the closing side of the pair.
      */
     readonly close: Position
+
+}
+
+/**
+ * A snapshot of the internal state of a tracker.
+ */
+type Snapshot = {
+
+    pairs: { open: Position, close: Position, isDecorated: boolean }[][],
+
+    readonly decorationOptions: Unchecked<DecorationRenderOptions>
 
 }

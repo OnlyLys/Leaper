@@ -1,5 +1,4 @@
-import { commands, Disposable, TextEditor, window, workspace } from 'vscode';
-import { ResolvedViewColumn, TrackerSnapshot, TestHandle } from '../tests/utilities/test-handle';
+import { commands, Disposable, TextEditor, ViewColumn, window, workspace } from 'vscode';
 import { KeybindingContextSetter } from './keybinding-context-setter';
 import { Tracker } from './tracker/tracker';
 import * as configurations from './configurations/configurations';
@@ -16,7 +15,7 @@ import * as configurations from './configurations/configurations';
  * Only one instance of this class should be active at any time, and the created instance must be 
  * disposed of when the extension is shut down.
  */
-export class Engine implements TestHandle {
+export class Engine {
 
     /**
      * The trackers owned by each visible text editor.
@@ -242,6 +241,8 @@ export class Engine implements TestHandle {
 
     /** 
      * **For Tests Only**
+     * 
+     * The most recently set keybinding contexts.
      */
     public get mostRecentContexts(): { inLeaperMode: boolean, hasLineOfSight: boolean } {
         return {
@@ -252,15 +253,16 @@ export class Engine implements TestHandle {
 
     /** 
      * **For Tests Only**
+     * 
+     * Get a snapshot of the internal state of the engine.
+     * 
+     * The return value maps the view column of each visible text editor to a snapshot of its tracker. 
      */
-    public snapshot(): Map<ResolvedViewColumn, TrackerSnapshot> {
-        const map = new Map<ResolvedViewColumn, TrackerSnapshot>();
-        for (const [{ viewColumn }, tracker] of this.trackers) {
-            if (viewColumn) {
-
-                // The cast to `ResolvedViewColumn` is safe because vscode only stores resolved view 
-                // column numbers.
-                map.set(viewColumn as ResolvedViewColumn, tracker.snapshot());
+    public snapshot(): Map<ViewColumn, ReturnType<Tracker['snapshot']>> {
+        const map = new Map();
+        for (const [editor, tracker] of this.trackers) {
+            if (editor.viewColumn) {
+                map.set(editor.viewColumn, tracker.snapshot());
             }
         }
         return map;

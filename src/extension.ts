@@ -1,11 +1,10 @@
 import { ExtensionContext } from 'vscode';
 import { Engine } from './engine/engine';
-import { TestHandle } from './tests/utilities/test-handle';
 
 /**
  * Handle to allow tests to query the engine's state.
  */
-export let testHandle: TestHandle;
+export let testHandle: Pick<Engine, 'mostRecentContexts' | 'snapshot'>;
 
 /**
  * This function is called by vscode in order to start the extension.
