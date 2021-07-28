@@ -55,7 +55,7 @@ export class DecorationQueue {
 
 }
 
-type PositionReadonlyPair = Pair & Readonly<Pick<Pair, 'open' | 'close'>>;
+type PositionReadonlyPair = Pair & Readonly<Omit<Pair, 'decoration'>>;
 
 /**
  * Deep freeze an object.
