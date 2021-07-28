@@ -546,10 +546,16 @@ export class Tracker {
 
                 // If the content change currently at the top of the stack ends at the cursor and
                 // replaces exactly one character of text before the cursor, then it could possibly 
-                // be the first content change involved in the autoclosing of a Type-1 dead key 
+                // be the first event involved in the two event autoclosing of a Type-1 dead key 
                 // autoclosing pair. 
                 //
-                // We only need to check this one content change since content changes do not overlap.  
+                // Note that since content changes do not overlap (meaning each subsequent content
+                // change must begin at or after the end of the previous content change), if the 
+                // stack is not empty, then the content change at the top of the stack is the only 
+                // one that could possibly introduce the opener of a Type-1 dead key autoclosing pair. 
+                // All content changes before this one ended before the cursor and all content changes 
+                // after this one begins after the cursor, so none of them could possibly replace a
+                // character before the cursor.
                 if (
                     stack.top
                     && stack.top.range.end.isEqual(cursor.anchor)
@@ -585,22 +591,54 @@ export class Tracker {
             // finalized.
             let newPair: Pair | undefined;
 
-            // Pop the stack until the content change at the top of the stack is one that begins at 
-            // or after the cursor.
-            while (stack.top && !stack.top.range.start.isAfterOrEqual(cursor.anchor)) {
+            // Pop the stack until the content change at the top of the stack is one that ends at or 
+            // after the cursor.
+            while (stack.top && !stack.top.range.end.isAfterOrEqual(cursor.anchor)) {
                 stack.pop();
             }
 
-            // If the content change currently at the top of the stack that begins at the cursor 
-            // (i.e. a text insertion at the cursor), then it could be the insertion of:
+            // If the content change at the top of the stack ends at the cursor then it could be 
+            // either an insertion at the cursor or a replacement that ends at the cursor. If it is 
+            // a replacement that ends at the cursor, then we skip it.
+            //
+            // Since content changes do not overlap, the next content change after this must begin
+            // at or after the cursor, and could possibly be the insertion we are looking for.
+            if (
+                stack.top 
+                && stack.top.range.end.isEqual(cursor.anchor) 
+                && stack.top.range.start.isBefore(cursor.anchor)
+            ) {
+                stack.pop();
+            }
+
+            // If the content change currently at the top of the stack that begins and ends at the 
+            // cursor (i.e. a text insertion at the cursor), then it is the first content change that
+            // begins at the cursor and could be the insertion of:
             //
             //   - A regular autoclosing pair.
             //   - The closing side of either type of dead key autoclosing pair.
             //   - The opening side of a Type-2 dead key autoclosing pair.
             //
-            // and so check for each possibility here. We do not perform this check for any other 
-            // content changes remaining on the stack since they all occur after the one currently 
-            // at the top of the stack (and consequently must occur after the cursor).
+            // and so check for each possibility here.
+            //
+            // We do not perform this check for any other content changes remaining on the stack since 
+            // the content change currently at the top of the stack (if it exists) is the only one 
+            // that could possibly have been an insertion at the cursor. Consider each possibility: 
+            //
+            //   - If the content change at the top of the stack does not begin at the cursor, then
+            //     it must begin after the cursor so it and all other remaining content changes are
+            //     not insertions at the cursor.
+            //   - If the content change at the top of the stack begins at the cursor but ends after
+            //     cursor, then since content changes do not overlap, all content changes after this
+            //     one must begin after the cursor and so cannot be insertions at the cursor.
+            //   - If the content change at the top of the stack begins and ends at the cursor (i.e. 
+            //     an insertion), then it is possible for there to also be other insertions at the
+            //     cursor. However, when there are multiple insertions within one content change event 
+            //     at the same position, vscode actually applies them in order (an order which our 
+            //     stack follows), meaning that only the first insertion is actually an insertion at 
+            //     the cursor. After the first insertion, the cursor would have been shifted, causing 
+            //     subsequent insertions to not end up inserting text at the cursor.
+            //
             if (
                 stack.top
                 && stack.top.range.start.isEqual(cursor.anchor) 
