@@ -446,7 +446,7 @@ export class Tracker {
 
                 // Pop the content change stack until a content change that ends after this pair's 
                 // opening side is encountered.
-                while (stack.top && !stack.top.range.end.isAfter(pair.open)) {
+                while (stack.top?.range.end.isBeforeOrEqual(pair.open)) {
                     stack.pop();
                 }
 
@@ -533,57 +533,45 @@ export class Tracker {
             // A possible dead key autoclosing pair detected for this cursor.
             let newPossibleDeadKeyPair: PossibleDeadKeyPair | undefined;
 
-            // We only check for the opening side of a Type-1 dead key autoclosing pair when the
-            // cursor's character index is non-zero since a Type-1 dead key autoclosing pair's 
-            // opening side replaces a character of text immediately before the cursor.
-            if (cursor.anchor.character > 0) {
+            // Pop the stack until the content change at the top of the stack is one that ends at or 
+            // after the cursor.
+            while (stack.top?.range.end.isBefore(cursor.anchor)) {
+                stack.pop();
+            }
 
-                // Pop the stack until the content change at the top of the stack is one that ends 
-                // at or after the cursor.
-                while (stack.top && !stack.top.range.end.isAfterOrEqual(cursor.anchor)) {
-                    stack.pop();
+            // If the content change currently at the top of the stack ends at the cursor and replaces 
+            // exactly one character of text before the cursor, then it could possibly be the first 
+            // event involved in the two event autoclosing of a Type-1 dead key autoclosing pair. 
+            //
+            // Note that since content changes do not overlap (meaning each subsequent content change 
+            // must begin at or after the end of the previous content change), if the stack is not 
+            // empty, then the content change at the top of the stack is the only one that could 
+            // possibly introduce the opener of a Type-1 dead key autoclosing pair. All content changes 
+            // before this one ended before the cursor and all content changes after this one begins 
+            // after the cursor, so none of them could possibly replace a character before the cursor.
+            if (
+                stack.top?.rangeLength === 1
+                && stack.top.range.end.isEqual(cursor.anchor)
+                && stack.top.text.length === 1
+                && cursor.anchor.character > 0
+                && cursor.anchor.isEqual(cursor.active)
+            ) {
+                const match = this._detectedPairs.find(pair => pair[0] === stack.top?.text);
+                if (match) {
+
+                    // Cursor position after all prior content changes have been applied.
+                    const newAnchor = shift(stack, cursor.anchor);
+
+                    // A content change that replaces one character of text right before the 
+                    // cursor with the opening character of a pair is possibly the first content 
+                    // change involved in the autoclosing of a Type-1 dead key autoclosing pair.
+                    newPossibleDeadKeyPair = { pair: match, close: newAnchor };
                 }
-
-                // If the content change currently at the top of the stack ends at the cursor and
-                // replaces exactly one character of text before the cursor, then it could possibly 
-                // be the first event involved in the two event autoclosing of a Type-1 dead key 
-                // autoclosing pair. 
-                //
-                // Note that since content changes do not overlap (meaning each subsequent content
-                // change must begin at or after the end of the previous content change), if the 
-                // stack is not empty, then the content change at the top of the stack is the only 
-                // one that could possibly introduce the opener of a Type-1 dead key autoclosing pair. 
-                // All content changes before this one ended before the cursor and all content changes 
-                // after this one begins after the cursor, so none of them could possibly replace a
-                // character before the cursor.
-                if (
-                    stack.top
-                    && stack.top.range.end.isEqual(cursor.anchor)
-                    && stack.top.rangeLength === 1
-                    && stack.top.text.length === 1
-                    && cursor.anchor.isEqual(cursor.active)
-                ) {
-                    const match = this._detectedPairs.find(pair => pair[0] === stack.top?.text);
-                    if (match) {
-
-                        // Cursor position after all content changes have been applied.
-                        const newAnchor = shift(stack, cursor.anchor);
-
-                        // A content change that replaces one character of text right before the 
-                        // cursor with the opening character of a pair is possibly the first content 
-                        // change involved in the autoclosing of a Type-1 dead key autoclosing pair.
-                        newPossibleDeadKeyPair = { pair: match, close: newAnchor };
-                    }
-                }
-
             }
 
             // --------------------------------
             // STEP 3 - Check insertion at cursor.
             // --------------------------------
-            //
-            // After this step, the content change stack will contain content changes that begin at
-            // or after the cursor.
 
             // A new pair that is detected.
             //
@@ -591,23 +579,13 @@ export class Tracker {
             // finalized.
             let newPair: Pair | undefined;
 
-            // Pop the stack until the content change at the top of the stack is one that ends at or 
-            // after the cursor.
-            while (stack.top && !stack.top.range.end.isAfterOrEqual(cursor.anchor)) {
-                stack.pop();
-            }
-
             // If the content change at the top of the stack ends at the cursor then it could be 
             // either an insertion at the cursor or a replacement that ends at the cursor. If it is 
             // a replacement that ends at the cursor, then we skip it.
             //
             // Since content changes do not overlap, the next content change after this must begin
             // at or after the cursor, and could possibly be the insertion we are looking for.
-            if (
-                stack.top 
-                && stack.top.range.end.isEqual(cursor.anchor) 
-                && stack.top.range.start.isBefore(cursor.anchor)
-            ) {
+            if (stack.top?.range.end.isEqual(cursor.anchor) && stack.top.range.start.isBefore(cursor.anchor)) {
                 stack.pop();
             }
 
@@ -640,13 +618,12 @@ export class Tracker {
             //     subsequent insertions to not end up inserting text at the cursor.
             //
             if (
-                stack.top
-                && stack.top.range.start.isEqual(cursor.anchor) 
+                stack.top?.range.start.isEqual(cursor.anchor) 
                 && stack.top.range.isEmpty
                 && cursor.anchor.isEqual(cursor.active)
             ) {
 
-                // Cursor position after all content changes have been applied.
+                // Cursor position after all prior content changes have been applied.
                 const newAnchor = shift(stack, cursor.anchor);
 
                 if (stack.top.text.length === 2 && this._detectedPairs.includes(stack.top.text)) {
@@ -705,13 +682,14 @@ export class Tracker {
             // of pairs from innermost to outermost. Doing so means we do not have to backtrack when 
             // going through the content changes.
             for (let j = cluster.length - 1; j >= 0; --j) {
+
                 if (deleted[j]) {
                     continue;
                 }
 
                 // Pop the content change stack until a content change that ends after this pair's 
                 // closing side is encountered.
-                while (stack.top && !stack.top.range.end.isAfter(cluster[j].close)) {
+                while (stack.top?.range.end.isBeforeOrEqual(cluster[j].close)) {
                     stack.pop();
                 }
 
