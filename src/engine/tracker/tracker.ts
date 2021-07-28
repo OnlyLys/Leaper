@@ -1,7 +1,7 @@
 import { Range, Position, Selection, TextEditor, DecorationRenderOptions, TextDocumentContentChangeEvent, EventEmitter, Event, TextEditorDecorationType, window } from 'vscode';
 import { Unchecked } from '../configurations/unchecked';
 import { ContentChangeStack } from './content-change-stack';
-import { ImmediateReusable } from './immediate-reusable';
+import { TimeoutReusable } from './timeout-reusable';
 
 /** 
  * A 'tracker' assigned to a text editor that:
@@ -150,58 +150,6 @@ export class Tracker {
         return this.onDidUpdateHasLineOfSightEmitter.event;
     }
 
-    /**
-     * A timer that applies decorations at the end of the current event loop cycle.
-     * 
-     * If `decorateAll` is disabled, then this timer only decorates the most nested pair (i.e. the
-     * 'nearest pair') in a cluster if it hasn't already been decorated. On the other hand, if 
-     * `decorateAll` is enabled, then this timer will decorate pairs starting from the most nested 
-     * pair to the least nested pair, only stopping when an already decorated pair is encountered, 
-     * since it can be assumed that the remaining pairs have all been decorated as well.
-     * 
-     * This timer should be set whenever pairs are added or when pairs are dropped from a cluster 
-     * such that the cluster has a new 'nearest pair'. This timer does not need to be set when the 
-     * nearest pair for a cluster has not changed or when the entire cluster is dropped because in 
-     * both cases there are no pairs within it that need decorating.
-     * 
-     * # Why Do We Wait Until the End of Event Loop Cycles to Apply Decorations?
-     * 
-     * We cannot apply decorations within the `notifySelectionChanges` or `notifyContentChanges` 
-     * methods because vscode does not immediately apply decorations when requested. Instead, it 
-     * waits until the next event loop cycle to apply decorations. 
-     * 
-     * The aforementioned behavior causes problems when we have an event loop cycle consisting of 
-     * multiple content changes. Consider for example an event loop cycle consisting of two content 
-     * change events, the first of which inserts a pair at line X, character Y and the second of 
-     * which inserts the text "hello" in between the pair. Had we applied decorations when processing
-     * the first content change event, we would have asked vscode to decorate the closing side of 
-     * the pair at line X, character Y + 1. However, when vscode finally processes the request to 
-     * decorate the pair, it will end up decorating the letter 'h' of the word "hello" since by the 
-     * time vscode gets around to processing the decoration request, the text document is in a state
-     * where both content changes have been applied and consequently the closing side of the pair is
-     * not at line X, character Y + 1 but at line X, character Y + 1 + "hello".length.
-     * 
-     * Therefore, by only applying decorations after all content changes in an event loop cycle have 
-     * been processed, we ensure that the decorations will be applied at the correct positions.
-     */
-    private readonly decorator = new ImmediateReusable(() => {
-        if (this._decorateAll) {
-            for (const cluster of this.pairs) {
-                for (let i = cluster.length - 1; i >= 0; --i) {
-                    if (!cluster[i].decoration) {
-                        decorate(this.owner, cluster[i], this._decorationOptions);
-                    }
-                }
-            }
-        } else {
-            for (const cluster of this.pairs) {
-                if (cluster.length > 0 && !cluster[cluster.length - 1].decoration) {
-                    decorate(this.owner, cluster[cluster.length - 1], this._decorationOptions);
-                }
-            }
-        }
-    });
-
     private _decorateAll: boolean;
 
     /**
@@ -240,6 +188,68 @@ export class Tracker {
     public set detectedPairs(v: ReadonlyArray<string>) {
         this._detectedPairs = v;
     }
+
+    private _waitBeforeDecorating: number = 30;
+
+    /** 
+     * How many milliseconds of inactivity before applying decorations. 
+     */
+    public set waitBeforeDecorating(ms: number) {
+        this._waitBeforeDecorating = ms;
+    }
+
+    /**
+     * A timer that applies decorations after a period of inactivity.
+     * 
+     * If `decorateAll` is disabled, then this timer only decorates the most nested pair (i.e. the
+     * 'nearest pair') in a cluster if it hasn't already been decorated. On the other hand, if 
+     * `decorateAll` is enabled, then this timer will decorate pairs starting from the most nested 
+     * pair to the least nested pair, only stopping when an already decorated pair is encountered, 
+     * since it can be assumed that the remaining pairs have all been decorated as well.
+     * 
+     * This timer should be set whenever pairs are added or when pairs are dropped from a cluster 
+     * such that the cluster has a new 'nearest pair'. This timer does not need to be set when the 
+     * nearest pair for a cluster has not changed or when the entire cluster is dropped because in 
+     * both cases there are no pairs within it that need decorating.
+     * 
+     * # Why Do We Only Apply Decorations After a Period of Inactivity?
+     * 
+     * We do not immediately decorate pairs when they are detected because vscode does not immediately
+     * apply decorations when requested. Instead, vscode applies decorations asynchronously, which 
+     * causes problems as a request to decorate a pair could be referencing a stale position once 
+     * vscode gets around to processing it. This is particularly an issue when there are content
+     * changes following immediately after a content change that inserted a pair.
+     * 
+     * Consider for example two consecutive content change events, the first of which inserts a pair 
+     * at line X, character Y and the second of which inserts a space " " in between the pair. Had 
+     * we applied decorations when processing the first content change event, we would have asked 
+     * vscode to decorate the closing side of the pair at line X, character Y + 1. However, by the 
+     * time vscode gets around to processing the decoration request, it is possible that the space 
+     * " " has already been inserted, meaning that the space will be decorated instead of the closing
+     * side of the pair which has been pushed 1 character to the right due to the insertion of the 
+     * space.
+     * 
+     * Therefore, by only applying decorations after a period of inactivity (i.e. no content changes), 
+     * we can reduce the likelihood of a pending content change making our requests to decorate pairs 
+     * stale.
+     */
+    private readonly decorator = new TimeoutReusable(() => {
+        if (this._decorateAll) {
+            for (const cluster of this.pairs) {
+                for (let i = cluster.length - 1; i >= 0; --i) {
+                    if (!cluster[i].decoration) {
+                        decorate(this.owner, cluster[i], this._decorationOptions);
+                    }
+                }
+            }
+        } else {
+            for (const cluster of this.pairs) {
+                if (cluster.length > 0 && !cluster[cluster.length - 1].decoration) {
+                    decorate(this.owner, cluster[cluster.length - 1], this._decorationOptions);
+                }
+            }
+        }
+    }, this._waitBeforeDecorating);
 
     /**
      * @param owner The text editor that this tracker is assigned to (i.e. the owning text editor).
@@ -420,13 +430,15 @@ export class Tracker {
             this._hasLineOfSight.stale = true;
             this.onDidUpdateHasLineOfSightEmitter.fire(undefined);
         }
-
     }
 
     /** 
      * Notify this tracker of text content changes in the owning text editor's document.
      */
     public notifyContentChanges(contentChanges: ReadonlyArray<TextDocumentContentChangeEvent>): void {
+
+        // Decorations should only be applied after a period of inactivity.
+        this.decorator.resetCountdown();
 
         const prevHasPairs = this.hasPairs;
 
