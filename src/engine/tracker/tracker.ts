@@ -906,9 +906,6 @@ export class Tracker {
             });
         }
 
-        // So that the decoration options cannot be mutated by whoever requested the snapshot.
-        freeze(this.decorationQueue.decorationOptions);
-        
         return { pairs: reordered, decorationOptions: this.decorationQueue.decorationOptions };
     }
 
@@ -928,16 +925,6 @@ export class Tracker {
 function sortCursors(unsorted: ReadonlyArray<Selection>): TaggedCursor[] {
     return unsorted.map(({ anchor, active }, originalIndex) => ({ anchor, active, originalIndex }))
                    .sort((a, b) => a.anchor.compareTo(b.anchor));
-}
-
-/**
- * Deep freeze an object.
- */
-function freeze(obj: any): void {
-    if (obj === 'object' && obj !== null) {
-        Reflect.ownKeys(obj).forEach(key => freeze(Reflect.get(obj, key)));
-        Object.freeze(obj);
-    }
 }
 
 /**

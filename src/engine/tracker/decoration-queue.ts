@@ -11,15 +11,20 @@ export class DecorationQueue {
 
     private queue: PositionReadonlyPair[] = [];
 
+    public get decorationOptions(): Readonly<Unchecked<DecorationRenderOptions>> {
+        freeze(this._decorationOptions);
+        return this._decorationOptions;
+    }
+
     public constructor(
         private readonly owner: TextEditor,
-        public readonly decorationOptions: Unchecked<DecorationRenderOptions>
+        private readonly _decorationOptions: Unchecked<DecorationRenderOptions>
     ) {}
 
     private applyDecorations(): void {
         for (const pair of this.queue) {
             if (!pair.decoration) {
-                pair.decoration = window.createTextEditorDecorationType(this.decorationOptions.cast());
+                pair.decoration = window.createTextEditorDecorationType(this._decorationOptions.cast());
                 this.owner.setDecorations(
                     pair.decoration,
                     [ new Range(pair.close, pair.close.translate(0, 1)) ]
@@ -51,3 +56,13 @@ export class DecorationQueue {
 }
 
 type PositionReadonlyPair = Pair & Readonly<Pick<Pair, 'open' | 'close'>>;
+
+/**
+ * Deep freeze an object.
+ */
+function freeze(obj: any): void {
+    if (obj === 'object' && obj !== null) {
+        Reflect.ownKeys(obj).forEach(key => freeze(Reflect.get(obj, key)));
+        Object.freeze(obj);
+    }
+}
