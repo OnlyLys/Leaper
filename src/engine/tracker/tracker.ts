@@ -1,8 +1,7 @@
-import { Range, Position, Selection, TextEditor, DecorationRenderOptions, TextDocumentContentChangeEvent, EventEmitter, Event } from 'vscode';
+import { Range, Position, Selection, TextEditor, DecorationRenderOptions, TextDocumentContentChangeEvent, EventEmitter, Event, TextEditorDecorationType, window } from 'vscode';
 import { Unchecked } from '../configurations/unchecked';
 import { ContentChangeStack } from './content-change-stack';
-import { Pair } from './pair';
-import { DecorationQueue } from './decoration-queue';
+import { ImmediateReusable } from './immediate-reusable';
 
 /** 
  * A 'tracker' assigned to a text editor that:
@@ -152,7 +151,18 @@ export class Tracker {
     }
 
     /**
-     * A queue that applies decorations at the end of the current event loop cycle.
+     * A timer that applies decorations at the end of the current event loop cycle.
+     * 
+     * If `decorateAll` is disabled, then this timer only decorates the most nested pair (i.e. the
+     * 'nearest pair') in a cluster if it hasn't already been decorated. On the other hand, if 
+     * `decorateAll` is enabled, then this timer will decorate pairs starting from the most nested 
+     * pair to the least nested pair, only stopping when an already decorated pair is encountered, 
+     * since it can be assumed that the remaining pairs have all been decorated as well.
+     * 
+     * This timer should be set whenever pairs are added or when pairs are dropped from a cluster 
+     * such that the cluster has a new 'nearest pair'. This timer does not need to be set when the 
+     * nearest pair for a cluster has not changed or when the entire cluster is dropped because in 
+     * both cases there are no pairs within it that need decorating.
      * 
      * # Why Do We Wait Until the End of Event Loop Cycles to Apply Decorations?
      * 
@@ -174,7 +184,23 @@ export class Tracker {
      * Therefore, by only applying decorations after all content changes in an event loop cycle have 
      * been processed, we ensure that the decorations will be applied at the correct positions.
      */
-    private decorationQueue: DecorationQueue;
+    private readonly decorator = new ImmediateReusable(() => {
+        if (this._decorateAll) {
+            for (const cluster of this.pairs) {
+                for (let i = cluster.length - 1; i >= 0; --i) {
+                    if (!cluster[i].decoration) {
+                        decorate(this.owner, cluster[i], this._decorationOptions);
+                    }
+                }
+            }
+        } else {
+            for (const cluster of this.pairs) {
+                if (cluster.length > 0 && !cluster[cluster.length - 1].decoration) {
+                    decorate(this.owner, cluster[cluster.length - 1], this._decorationOptions);
+                }
+            }
+        }
+    });
 
     private _decorateAll: boolean;
 
@@ -182,27 +208,25 @@ export class Tracker {
      * Whether to decorate all pairs or just the ones nearest to each cursor.
      */
     public set decorateAll(v: boolean) {
-        this.decorationQueue.clear();
         this._decorateAll = v;
 
-        // Reapply the decorations appropriately.
+        // Reapply all the decorations.
         for (const cluster of this.pairs) {
-            for (let i = 0; i < cluster.length; ++i) {
-                cluster[i].decoration?.dispose();
-                cluster[i].decoration = undefined;
-                if (this._decorateAll || (i === cluster.length - 1)) {
-                    this.decorationQueue.enqueue(cluster[i]);
-                }
+            for (const pair of cluster) {
+                pair.decoration?.dispose();
+                pair.decoration = undefined;
             }
         }
+        this.decorator.set();
     }
+
+    private _decorationOptions: Unchecked<DecorationRenderOptions>;
 
     /**
      * The style of the decorations applied.
      */
     public set decorationOptions(newOptions: Unchecked<DecorationRenderOptions>) {
-        this.decorationQueue.clear();
-        this.decorationQueue = new DecorationQueue(this.owner, newOptions);
+        this._decorationOptions = newOptions;
 
         // Use the setter for `decorateAll` to reapply the decorations.
         this.decorateAll = this._decorateAll;
@@ -237,10 +261,10 @@ export class Tracker {
     ) {
         this._decorateAll         = configuration.decorateAll;
         this._detectedPairs       = configuration.detectedPairs;
+        this._decorationOptions   = configuration.decorationOptions;
         this.cursors              = sortCursors(this.owner.selections);
         this.pairs                = Array(this.cursors.length).fill([]);
         this.possibleDeadKeyPairs = Array(this.cursors.length).fill(undefined);
-        this.decorationQueue      = new DecorationQueue(this.owner, configuration.decorationOptions);
     }
 
     /** 
@@ -351,6 +375,8 @@ export class Tracker {
             // The pairs being tracked for this cursor.
             const cluster = this.pairs[i];
 
+            let pairsDropped = false;
+
             // Drop any pairs that do not enclose the cursor.
             //
             // Iterating in reverse is faster, since the pairs in each cluster are ordered from least 
@@ -361,19 +387,18 @@ export class Tracker {
                 if (anchor.isBeforeOrEqual(cluster[j].open) || anchor.isAfter(cluster[j].close)) {
                     cluster.pop()?.decoration?.dispose();
                     this.pairCount -= 1;
+                    pairsDropped = true;
                 } else {
                     break;
                 }
             }
 
-            // Ensure that the pair nearest to the cursor is always decorated.
-            //
-            // This step is necessary just in case the previous nearest pair was dropped and we need 
-            // to decorate the new nearest pair.
-            if (cluster.length > 0 && !cluster[cluster.length - 1].decoration) {
-                this.decorationQueue.enqueue(cluster[cluster.length - 1]);
+            // If pairs were dropped from the cluster but the cluster still contains pairs afterwards, 
+            // then there is a new nearest pair and so we have to decorate it.
+            if (pairsDropped && cluster.length > 0) {
+                this.decorator.set();
             }
-            
+
             // If this cursor has moved out of a possible dead key autoclosing pair, then that dead
             // key autoclosing pair is no longer possible, since the two stage process involved in 
             // autoclosing a dead key autoclosing pair has been interrupted.
@@ -739,13 +764,11 @@ export class Tracker {
                 // nearest to the cursor) is enclosed by all the other pairs in the cluster. 
                 newCluster.push(newPair);
             } 
-            
-            // Ensure that the pair nearest to the cursor is always decorated.
-            // 
-            // This step is necessary just in case the nearest pair has changed and we need to 
-            // decorate the new nearest pair.
-            if (newCluster.length > 0 && !newCluster[newCluster.length - 1].decoration) {
-                this.decorationQueue.enqueue(newCluster[newCluster.length - 1]);
+
+            // If the previous nearest pair was deleted or if a new pair was added, then there is a
+            // new nearest pair and we should therefore apply decorations.
+            if ((deleted.length > 0 && deleted[deleted.length - 1]) || newPair) {
+                this.decorator.set();
             }
             
             this.pairCount = this.pairCount + newCluster.length - cluster.length;
@@ -856,7 +879,7 @@ export class Tracker {
         this._hasLineOfSight.stale = true;
         this.onDidUpdateHasPairsEmitter.fire(undefined);
         this.onDidUpdateHasLineOfSightEmitter.fire(undefined);
-        this.decorationQueue.clear();
+        this.decorator.clear();
     }
 
     /**
@@ -866,6 +889,7 @@ export class Tracker {
         this.clear();
         this.onDidUpdateHasPairsEmitter.dispose();
         this.onDidUpdateHasLineOfSightEmitter.dispose();
+        this.decorator.dispose();
     }
 
     /** 
@@ -884,7 +908,10 @@ export class Tracker {
             });
         }
 
-        return { pairs: reordered, decorationOptions: this.decorationQueue.decorationOptions };
+        // So that the decoration options cannot be mutated by whoever requested the snapshot.
+        freeze(this._decorationOptions);
+
+        return { pairs: reordered, decorationOptions: this._decorationOptions };
     }
 
 }
@@ -913,6 +940,62 @@ function shift(stack: ContentChangeStack, position: Position): Position {
         stack.vertCarry,
         position.line === stack.horzCarry.affectsLine ? stack.horzCarry.value : 0
     );
+}
+
+
+/**
+ * Decorate the closing side of a pair.
+ */
+function decorate(
+    editor:            TextEditor,
+    pair:              Pair,
+    decorationOptions: Unchecked<DecorationRenderOptions>
+) {
+    pair.decoration = window.createTextEditorDecorationType(decorationOptions.cast());
+    editor.setDecorations(pair.decoration, [ new Range(pair.close, pair.close.translate(0, 1)) ]);
+};
+
+/**
+ * Deep freeze an object.
+ */
+function freeze(obj: any): void {
+    if (obj === 'object' && obj !== null) {
+        Reflect.ownKeys(obj).forEach(key => freeze(Reflect.get(obj, key)));
+        Object.freeze(obj);
+    }
+}
+
+/** 
+ * A pair that is being tracked for a cursor.
+ * 
+ * A `Pair` is a live object that is constantly updated until the pair is dropped. 
+ * 
+ * # Indices
+ * 
+ * Both `line` and `character` indices in a `Position` are zero-based. Furthermore, `character` 
+ * indices are in units of UTF-16 code units, which notably does not have the same units as the 
+ * column number shown in the bottom right of vscode, as the latter corresponds to the physical 
+ * width of characters in the editor.
+ */
+interface Pair {
+
+    /**
+     * The position of the opening side of this pair.
+     */
+    open: Position,
+
+    /**
+     * The position of the closing side of this pair.
+     */
+    close: Position,
+
+    /**
+     * The decoration applied to the closing side of this pair. 
+     * 
+     * `undefined` if this pair is undecorated. 
+     */
+    decoration: TextEditorDecorationType | undefined;
+
 }
 
 /**
