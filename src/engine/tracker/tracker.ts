@@ -468,6 +468,10 @@ export class Tracker {
                 }
             }
 
+            // --------------------------------
+            // STEP 2 - Check for autoclosing pair.
+            // --------------------------------
+            //
             // There are three kinds of autoclosing pairs:
             //
             //   1. Regular
@@ -522,16 +526,9 @@ export class Tracker {
             //   the closing side (for instance, the first one would insert `{` before the selected 
             //   text and the second would insert `}` after the selected text).
             //  
-            // Within the next three steps, we will be checking for insertion of the first two kinds 
-            // of pairs. However, we will not be checking for wrap around autoclosing pairs due to 
-            // the complexity involved in tracking them. 
-
-            // --------------------------------
-            // STEP 2 - Check for opening side of a Type-1 dead key autoclosing pair.
-            // --------------------------------
-
-            // A possible dead key autoclosing pair detected for this cursor.
-            let newPossibleDeadKeyPair: PossibleDeadKeyPair | undefined;
+            // Within this step, we will be checking for the first two kinds of autoclosing pairs. 
+            // We will not be checking for wrap around autoclosing pairs due to the complexity 
+            // involved in tracking them. 
 
             // Pop the stack until the content change at the top of the stack is one that ends at or 
             // after the cursor.
@@ -539,6 +536,11 @@ export class Tracker {
                 stack.pop();
             }
 
+            // A possible dead key autoclosing pair detected for this cursor.
+            let newPossibleDeadKeyPair: PossibleDeadKeyPair | undefined;
+
+            // Check for opening side of a Type-1 dead key autoclosing pair.
+            //
             // If the content change currently at the top of the stack ends at the cursor and replaces 
             // exactly one character of text before the cursor, then it could possibly be the first 
             // event involved in the two event autoclosing of a Type-1 dead key autoclosing pair. 
@@ -569,11 +571,7 @@ export class Tracker {
                 }
             }
 
-            // --------------------------------
-            // STEP 3 - Check insertion at cursor.
-            // --------------------------------
-
-            // A new pair that is detected.
+            // A new confirmed autoclosing pair.
             //
             // Note that the opening and closing positions of this new pair (if detected) is already 
             // finalized.
@@ -584,11 +582,14 @@ export class Tracker {
             // a replacement that ends at the cursor, then we skip it.
             //
             // Since content changes do not overlap, the next content change after this must begin
-            // at or after the cursor, and could possibly be the insertion we are looking for.
+            // at or after the cursor, and could possibly be an insertion at the cursor.
             if (stack.top?.range.end.isEqual(cursor.anchor) && stack.top.range.start.isBefore(cursor.anchor)) {
                 stack.pop();
             }
 
+            // Check for regular autoclosing pair or closing side of either type of dead key autoclosing 
+            // pair.
+            //
             // If the content change currently at the top of the stack that begins and ends at the 
             // cursor (i.e. a text insertion at the cursor), then it is the first content change that
             // begins at the cursor and could be the insertion of:
@@ -655,7 +656,6 @@ export class Tracker {
 
                     // Check for closing side of a dead key autoclosing pair.
                     if (stack.top.text === this.possibleDeadKeyPairs[i]?.pair[1]) {
-
                         newPair = { 
                             open:       newAnchor.translate(0, -1),
                             close:      newAnchor,
@@ -672,7 +672,7 @@ export class Tracker {
             }
 
             // --------------------------------
-            // STEP 4 - Shift (or delete) the closing side of pairs. 
+            // STEP 3 - Shift (or delete) the closing side of pairs. 
             // --------------------------------
             //
             // This step processes the closing sides of pairs in this cluster. Pairs which have been 
@@ -718,7 +718,7 @@ export class Tracker {
             }
 
             // --------------------------------
-            // STEP 5 - Complete the new cluster.
+            // STEP 4 - Complete the new cluster.
             // --------------------------------
             
             // Filter out all the deleted pairs.
