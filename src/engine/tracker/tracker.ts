@@ -999,6 +999,6 @@ type Snapshot = {
 
     pairs: { open: Position, close: Position, isDecorated: boolean }[][],
 
-    readonly decorationOptions: Unchecked<DecorationRenderOptions>
+    decorationOptions: Readonly<Unchecked<DecorationRenderOptions>>
 
 }
