@@ -71,25 +71,6 @@ export class Tracker {
      * content change had occurred.
      */
     private possibleDeadKeyPairs: (PossibleDeadKeyPair | undefined)[];
-
-    /**
-     * For each cursor, the length of the range that has line-of-sight to the nearest pair's closing 
-     * side.
-     * 
-     * This array is parallel to `cursors`.
-     * 
-     * If the value for a cursor is `-1` that means that the value is stale and requires recalculating. 
-     * However, if the corresponding cluster does not have pairs, then whatever its value is in this 
-     * array is rubbish.
-     * 
-     * # Why this Array Exists
-     * 
-     * To calculate line-of-sight, we have to get text from vscode, which can be slow. Thus, to 
-     * reduce the number of times we have to do it, whenever we get text from vscode, we cache the
-     * length of the range that has line-of-sight here, such that if the range has not changed, we
-     * do not have to recalculate it.
-     */
-    private lineOfSightLengths: number[];
     
     /**
      * The total number of pairs that are being tracked.
@@ -106,14 +87,19 @@ export class Tracker {
     /**
      * Notifies listeners of `onDidUpdateHasPairs`.
      */
-    private readonly onDidUpdateHasPairsEmitter = new EventEmitter<boolean>();
+    private readonly onDidUpdateHasPairsEmitter = new EventEmitter<undefined>();
 
     /**
      * Subscribe to be notified when the `hasPairs` property has been updated.
      */
-    public get onDidUpdateHasPairs(): Event<boolean> {
+    public get onDidUpdateHasPairs(): Event<undefined> {
         return this.onDidUpdateHasPairsEmitter.event;
     }
+
+    /**
+     * We only recalculate this value when necessary since the calculation could be expensive.
+     */
+    private _hasLineOfSight = { stale: true, value: false };
 
     /** 
      * A value which is `true` only if a leap is possible in the owning text editor.
@@ -128,38 +114,36 @@ export class Tracker {
      * nearest pair is empty or consists of only whitespace.
      */
     public get hasLineOfSight(): boolean {
-        return this.hasPairs 
-        && this.cursors.every(cursor => cursor.anchor.isEqual(cursor.active))
-        && this.lineOfSightLengths.some((_, i, self) => {
-            if (this.pairs[i].length > 0) {
-                const nearestPair = this.pairs[i][this.pairs[i].length -1];
-
-                // If a length value is stale, recalculate it by finding the length of whitespace 
-                // before the closing side of the nearest pair.
-                if (self[i] === -1) {
-                    const encloseRange = new Range(nearestPair.open.translate(0, 1), nearestPair.close);
-                    const enclosedText = this.owner.document.getText(encloseRange);
-                    self[i] = enclosedText.length - enclosedText.trimRight().length;
-                }
-
-                const lineOfSightStart = nearestPair.close.translate(0, -self[i]);
-                const lineOfSightRange = new Range(lineOfSightStart, nearestPair.close);
-                return lineOfSightRange.contains(this.cursors[i].anchor);
-            } else {
-                return false;
-            }
-        });
+        if (this._hasLineOfSight.stale) {
+            const value = this.hasPairs 
+                       && this.cursors.every(cursor => cursor.anchor.isEqual(cursor.active))
+                       && this.pairs.some((cluster, i) => {
+                            if (cluster.length > 0) {
+                                const anchor       = this.cursors[i].anchor;
+                                const nearestPair  = cluster[cluster.length - 1];
+                                const rangeBetween = new Range(anchor, nearestPair.close);
+                                return !this.owner.document.getText(rangeBetween).trim();
+                            } else {
+                                return false;
+                            }
+                        });
+            this._hasLineOfSight = { stale: false, value };
+        }
+        return this._hasLineOfSight.value;
     }
 
     /**
      * Notifies listeners of `onDidUpdateHasLineOfSight`.
+     * 
+     * Note that we do not send the updated value when firing this event, because then we don't have
+     * to calculate the updated value when no one is listening.
      */
-    private readonly onDidUpdateHasLineOfSightEmitter = new EventEmitter<boolean>();
+    private readonly onDidUpdateHasLineOfSightEmitter = new EventEmitter<undefined>();
 
     /**
      * Subscribe to be notified when the `hasLineOfSight` property has been updated.
      */
-    public get onDidUpdateHasLineOfSight(): Event<boolean> {
+    public get onDidUpdateHasLineOfSight(): Event<undefined> {
         return this.onDidUpdateHasLineOfSightEmitter.event;
     }
 
@@ -288,7 +272,6 @@ export class Tracker {
         this.cursors              = sortCursors(this.owner.selections);
         this.pairs                = Array(this.cursors.length).fill([]);
         this.possibleDeadKeyPairs = Array(this.cursors.length).fill(undefined);
-        this.lineOfSightLengths   = Array(this.cursors.length).fill(-1);
     }
 
     /** 
@@ -375,16 +358,6 @@ export class Tracker {
                 this.pairs[i++].forEach(pair => pair.decoration?.dispose());
             }
 
-            // The array of line-of-sight range lengths is parallel to `cursors`, and so should 
-            // always have the same length as it.
-            if (this.lineOfSightLengths.length < newCursors.length) {
-                for (let i = this.lineOfSightLengths.length; i < newCursors.length; ++i) {
-                    this.lineOfSightLengths.push(-1);
-                }
-            } else {
-                this.lineOfSightLengths.length = newCursors.length;
-            }
-
             // The array of possible dead key autoclosing pairs is parallel to `cursors`, and so 
             // should always have the same length as it.
             this.possibleDeadKeyPairs.length = newCursors.length;
@@ -427,16 +400,8 @@ export class Tracker {
                 }
             }
 
-            if (pairsDropped) {
-
-                // If pairs were dropped then the line-of-sight range has changed for this cursor.
-                this.lineOfSightLengths[i] = -1;
-
-                // If pairs were dropped and there are still pairs remaining, then there is a new
-                // nearest pair and we should decorate it.
-                if (cluster.length > 0) {
-                    this.decorator.set();
-                }
+            if (pairsDropped && cluster.length > 0) {
+                this.decorator.set();
             }
 
             // If this cursor has moved out of a possible dead key autoclosing pair, then that dead
@@ -449,14 +414,15 @@ export class Tracker {
         }
 
         if (this.hasPairs !== prevHasPairs) {
-            this.onDidUpdateHasPairsEmitter.fire(this.hasPairs);
+            this.onDidUpdateHasPairsEmitter.fire(undefined);
         }
 
         // The `hasLineOfSight` property can only change if there were previously pairs, since 
         // cursor changes never introduce new pairs. If there were previously no pairs, then the
         // `hasLineOfSight` property would have been `false` then and continue to be `false` now.
         if (prevHasPairs) {
-            this.onDidUpdateHasLineOfSightEmitter.fire(this.hasLineOfSight);
+            this._hasLineOfSight.stale = true;
+            this.onDidUpdateHasLineOfSightEmitter.fire(undefined);
         }
     }
 
@@ -531,11 +497,6 @@ export class Tracker {
                     pair.decoration?.dispose();
                     deleted[j] = true;
                     this.pairCount -= 1;
-
-                    // If the nearest pair was dropped, then the line-of-sight range has changed.
-                    if (j === cluster.length - 1) {
-                        this.lineOfSightLengths[i] = -1;
-                    }
                 }
             }
 
@@ -604,15 +565,6 @@ export class Tracker {
             // Pop the stack until the content change at the top of the stack is one that ends at or 
             // after the cursor.
             while (stack.top?.range.end.isBefore(cursor.anchor)) {
-                
-                // If after STEP 1, the nearest pair has not been deleted, then we know that there
-                // are no content changes that overlap the nearest pair's opening side. Thus, any
-                // content changes we encounter here must have occurred within the original range
-                // enclosed by the nearest pair, which means the line-of-sight range is affected.
-                if (deleted.length > 0 && !deleted[deleted.length - 1]) {
-                    this.lineOfSightLengths[i] = -1;
-                }
-
                 stack.pop();
             }
 
@@ -664,10 +616,6 @@ export class Tracker {
             // Since content changes do not overlap, the next content change after this must begin
             // at or after the cursor, and could possibly be an insertion at the cursor.
             if (stack.top?.range.end.isEqual(cursor.anchor) && stack.top.range.start.isBefore(cursor.anchor)) {
-
-                // A text replacement here could affect the line-of-sight range.
-                this.lineOfSightLengths[i] = -1;
-
                 stack.pop();
             }
 
@@ -774,17 +722,6 @@ export class Tracker {
                 // Pop the content change stack until a content change that ends after this pair's 
                 // closing side is encountered.
                 while (stack.top?.range.end.isBeforeOrEqual(cluster[j].close)) {
-
-                    if (j === cluster.length - 1) {
-
-                        // Given that after STEP 2, the content change stack was advanced until the 
-                        // top of the stack contains the first content change that begins at or after 
-                        // the cursor, any content change we encounter here must be one that occurred
-                        // within the original range enclosed by the original nearest pair, thus the
-                        // line-of-sight range is affected.
-                        this.lineOfSightLengths[i] = -1;
-                    }
-
                     stack.pop();
                 }
 
@@ -811,11 +748,6 @@ export class Tracker {
                 cluster[j].decoration?.dispose();
                 deleted[j] = true;
                 this.pairCount -= 1;
-
-                // If the nearest pair was dropped, then the line-of-sight range has changed.
-                if (j === cluster.length - 1) {
-                    this.lineOfSightLengths[i] = -1;
-                }
             }
 
             // --------------------------------
@@ -848,10 +780,6 @@ export class Tracker {
 
                 // The newly added pair is the new nearest pair, thus it needs to be decorated.
                 this.decorator.set();    
-
-                // If a new pair is added, then the line-of-sight range is empty, since the new pair
-                // encloses nothing.
-                this.lineOfSightLengths[i] = 0;
             } 
 
             // Save a new possible dead key autoclosing pair.
@@ -864,13 +792,14 @@ export class Tracker {
         };
 
         if (this.hasPairs !== prevHasPairs) {
-            this.onDidUpdateHasPairsEmitter.fire(this.hasPairs);
+            this.onDidUpdateHasPairsEmitter.fire(undefined);
         }
 
         // If there are now pairs, or if there are now no pairs but previously there were, then the
         // `hasLineOfSight` property could have changed.
         if (this.hasPairs || prevHasPairs) {
-            this.onDidUpdateHasLineOfSightEmitter.fire(this.hasLineOfSight);
+            this._hasLineOfSight.stale = true;
+            this.onDidUpdateHasLineOfSightEmitter.fire(undefined);
         }
     }
     
@@ -955,8 +884,9 @@ export class Tracker {
         }
         this.possibleDeadKeyPairs?.forEach((_, i, self) => self[i] = undefined);
         this.pairCount = 0;
-        this.onDidUpdateHasPairsEmitter.fire(false);
-        this.onDidUpdateHasLineOfSightEmitter.fire(false);
+        this._hasLineOfSight.stale = true;
+        this.onDidUpdateHasPairsEmitter.fire(undefined);
+        this.onDidUpdateHasLineOfSightEmitter.fire(undefined);
         this.decorator.clear();
     }
 
