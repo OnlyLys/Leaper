@@ -207,11 +207,11 @@ export class Engine {
         const activeTextEditor = window.activeTextEditor;
         const activeTracker    = activeTextEditor ? this.trackers.get(activeTextEditor): undefined;
         if (activeTracker) {
-            this.activeTrackerHasPairsWatcher = activeTracker.onDidUpdateHasPairs(() => 
-                this.inLeaperModeContext.set(activeTracker.hasPairs)
+            this.activeTrackerHasPairsWatcher = activeTracker.onDidUpdateHasPairs(
+                (newValue) => this.inLeaperModeContext.set(newValue)
             );
-            this.activeTrackerHasLineOfSightWatcher = activeTracker.onDidUpdateHasLineOfSight(() => 
-                this.hasLineOfSightContext.set(activeTracker.hasLineOfSight)
+            this.activeTrackerHasLineOfSightWatcher = activeTracker.onDidUpdateHasLineOfSight(
+                (newValue) => this.hasLineOfSightContext.set(newValue)
             );
             this.inLeaperModeContext.set(activeTracker.hasPairs);
             this.hasLineOfSightContext.set(activeTracker.hasLineOfSight);
