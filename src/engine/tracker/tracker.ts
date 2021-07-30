@@ -67,7 +67,7 @@ export class Tracker {
      * in the bottom right of vscode, as the latter corresponds to the physical width of characters 
      * in the editor.
      * 
-     * # Storing Indices for Optimization
+     * # Optimization: Storing Indices Instead of Objects
      * 
      * You might ask why we store indices instead of `Position` objects to represent the positions 
      * of the sides of a pair. A previous implementation of this class stored (for each pair) two 
@@ -78,7 +78,7 @@ export class Tracker {
      * instead.
      * 
      * *With manual measurements by inserting 20 consecutive pairs at 20 cursors, the runtime of 
-     * each `notifyContentChanges` call averages at around 1.5ms to 2ms with the current 'flat'
+     * each `notifyContentChanges` call averaged at around 1.5ms to 2ms with the current 'flat'
      * implementation, while it averaged at around 4ms with the previous 'nested' implementation.
      */
     private pairs: number[][];
@@ -830,6 +830,10 @@ export class Tracker {
             const prevNearestDropped = cluster.length > 0 ? cluster[cluster.length - 4] === -1 : false;
 
             // Filter out all the deleted pairs.
+            //
+            // OPTIMIZATION NOTE: I tried filtering the cluster and decorations array in place but 
+            // did not see performance improvements, so I have left it as is, where a new array is 
+            // allocated to store the result of the filtering.
             const newCluster     = cluster.filter(index => index >= 0);
             const newDecorations = decorations.filter((_, i) => cluster[i * 4] >= 0);
 
