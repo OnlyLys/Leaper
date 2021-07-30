@@ -201,16 +201,12 @@ class ExecutorFull {
         // Wait in case the engine has not caught up.
         await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
 
-        // Convert the actual pairs to the standardized form for comparison.
-        const actual = getSnapshot(viewColumn).pairs.map(cluster => 
-            cluster.map(pair => {
-                const open  = [pair.open.line,  pair.open.character];
-                const close = [pair.close.line, pair.close.character];
-                return { open, close };
-            })
+        // Strip the `isDecorated` flag from the actual pairs since we are not checking decorations.
+        const actual = getSnapshot(viewColumn).pairs.map(cluster =>
+            cluster.map(({ open, close }) => ({ open, close }))
         );
 
-        // Convert the expected pairs to the standardized form for comparison.
+        // Convert the expected pairs to the form of the actual pairs for comparison.
         const expect: { open: CompactPosition, close: CompactPosition }[][] = _expect.map(cluster => {
             if (cluster === 'None') {
                 return [];
@@ -248,14 +244,8 @@ class ExecutorFull {
         // Wait in case the engine has not caught up.
         await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
 
-        // Convert the actual pairs to the standardized form for comparison.
-        const actual = getSnapshot(viewColumn).pairs.map(cluster => 
-            cluster.map(pair => {
-                const open  = [pair.open.line,  pair.open.character];
-                const close = [pair.close.line, pair.close.character];
-                return { open, close, isDecorated: pair.isDecorated };
-            })
-        );
+        // The actual pairs to compare against.
+        const actual = getSnapshot(viewColumn).pairs;
 
         // Convert the expected pairs to the same form as the actual pairs.
         const expect: CompactPair[][] = _expect.map(cluster => {
