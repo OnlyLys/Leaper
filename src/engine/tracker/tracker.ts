@@ -55,7 +55,7 @@ export class Tracker {
      * Each array of `Pair`s is called a cluster, and it contains the pairs being tracked for the
      * corresponding cursor. The pairs in a cluster are always ordered from least to most nested
      * and always enclose the corresponding cursor.
-      */
+     */
     private pairs: Pair[][];
 
     /**
@@ -116,12 +116,17 @@ export class Tracker {
     public get hasLineOfSight(): boolean {
         if (this._hasLineOfSight.stale) {
             const value = this.hasPairs 
-                       && this.cursors.every(cursor => cursor.anchor.isEqual(cursor.active))
+                       && this.cursors.every(cursor => cursor.isEmpty)
                        && this.pairs.some((cluster, i) => {
                             if (cluster.length > 0) {
-                                const anchor       = this.cursors[i].anchor;
+                                const cursor       = this.cursors[i];
                                 const nearestPair  = cluster[cluster.length - 1];
-                                const rangeBetween = new Range(anchor, nearestPair.close);
+                                const rangeBetween = new Range(
+                                    cursor.anchorLine, 
+                                    cursor.anchorChar, 
+                                    nearestPair.closeLine, 
+                                    nearestPair.closeChar
+                                );
                                 return !this.owner.document.getText(rangeBetween).trim();
                             } else {
                                 return false;
@@ -330,12 +335,12 @@ export class Tracker {
 
                 // Cursors which are only in the previous sorted cursors array are cursors which
                 // have been removed, thus we drop their pairs.
-                while (i < this.cursors.length && this.cursors[i].anchor.isBefore(newCursor.anchor)) {
+                while (i < this.cursors.length && compareAnchors(this.cursors[i], newCursor) < 0) {
                     this.pairCount -= this.pairs[i].length;
                     this.pairs[i++].forEach(pair => pair.decoration?.dispose());
                 }
 
-                if (i < this.cursors.length && this.cursors[i].anchor.isEqual(newCursor.anchor)) {
+                if (i < this.cursors.length && compareAnchors(this.cursors[i], newCursor) === 0) {
 
                     // If a new cursor matches a previous cursor, that means the cursor survived the
                     // cursor change operation, and so we bring forward its cluster.
@@ -377,7 +382,7 @@ export class Tracker {
         // Note that here we use the anchor of a cursor to decide whether or not it has moved out of 
         // a pair. The choice of using a cursor's anchor makes sense as we do not want to untrack a 
         // cursor's pairs if the user is just making a selection from within a pair to outside of it.
-        for (const [i, { anchor }] of this.cursors.entries()) {
+        for (const [i, cursor] of this.cursors.entries()) {
 
             // The pairs being tracked for this cursor.
             const cluster = this.pairs[i];
@@ -391,7 +396,8 @@ export class Tracker {
             // that encloses the cursor, since we know that the remaining pairs also enclose the 
             // cursor.
             for (let j = cluster.length - 1; j >= 0; --j) {
-                if (anchor.isBeforeOrEqual(cluster[j].open) || anchor.isAfter(cluster[j].close)) {
+                const pair = cluster[j];
+                if (compareAnchorWithPairOpen(cursor, pair) <= 0 || compareAnchorWithPairClose(cursor, pair) > 0) {
                     cluster.pop()?.decoration?.dispose();
                     this.pairCount -= 1;
                     pairsDropped = true;
@@ -407,8 +413,11 @@ export class Tracker {
             // If this cursor has moved out of a possible dead key autoclosing pair, then that dead
             // key autoclosing pair is no longer possible, since the two stage process involved in 
             // autoclosing a dead key autoclosing pair has been interrupted.
-            if (!this.possibleDeadKeyPairs[i]?.close.isEqual(anchor)) {
-                this.possibleDeadKeyPairs[i] = undefined;
+            if (this.possibleDeadKeyPairs[i]) {
+                const possible = this.possibleDeadKeyPairs[i] as PossibleDeadKeyPair;
+                if (comparePositions(possible.closeLine, possible.closeChar, cursor.anchorLine, cursor.anchorChar)) {
+                    this.possibleDeadKeyPairs[i] = undefined;
+                }
             }
             
         }
@@ -477,11 +486,11 @@ export class Tracker {
 
                 // Pop the content change stack until a content change that ends after this pair's 
                 // opening side is encountered.
-                while (stack.top?.range.end.isBeforeOrEqual(pair.open)) {
+                while (stack.top && compareVscodePositionWithPairOpen(stack.top.range.end, pair) <= 0) {
                     stack.pop();
                 }
 
-                if (!stack.top || stack.top.range.start.isAfter(pair.open)) {
+                if (!stack.top || compareVscodePositionWithPairOpen(stack.top.range.start, pair) > 0) {
 
                     // We get here when the stack is empty or if the content change currently at 
                     // the top of the stack begins after the opening side of this pair. In either 
@@ -489,7 +498,9 @@ export class Tracker {
                     //
                     // We apply the accumulated carry values to find the position of the opening 
                     // side of this pair after the content changes have been applied.
-                    pair.open = shift(stack, pair.open);
+                    const [newOpenLine, newOpenChar] = shift(stack, pair.openLine, pair.openChar);
+                    pair.openLine = newOpenLine;
+                    pair.openChar = newOpenChar;
                 } else {
 
                     // We get here when the content change at the top of the stack has overwritten
@@ -564,7 +575,7 @@ export class Tracker {
 
             // Pop the stack until the content change at the top of the stack is one that ends at or 
             // after the cursor.
-            while (stack.top?.range.end.isBefore(cursor.anchor)) {
+            while (stack.top && compareVscodePositionWithAnchor(stack.top.range.end, cursor) < 0) {
                 stack.pop();
             }
 
@@ -585,21 +596,21 @@ export class Tracker {
             // after the cursor, so none of them could possibly replace a character before the cursor.
             if (
                 stack.top?.rangeLength === 1
-                && stack.top.range.end.isEqual(cursor.anchor)
+                && compareVscodePositionWithAnchor(stack.top.range.end, cursor) === 0 
                 && stack.top.text.length === 1
-                && cursor.anchor.character > 0
-                && cursor.anchor.isEqual(cursor.active)
+                && cursor.anchorChar > 0
+                && cursor.isEmpty
             ) {
                 const match = this._detectedPairs.find(pair => pair[0] === stack.top?.text);
                 if (match) {
 
                     // Cursor position after all prior content changes have been applied.
-                    const newAnchor = shift(stack, cursor.anchor);
+                    const [newAnchorLine, newAnchorChar] = shift(stack, cursor.anchorLine, cursor.anchorChar);
 
                     // A content change that replaces one character of text right before the 
                     // cursor with the opening character of a pair is possibly the first content 
                     // change involved in the autoclosing of a Type-1 dead key autoclosing pair.
-                    newPossibleDeadKeyPair = { pair: match, close: newAnchor };
+                    newPossibleDeadKeyPair = new PossibleDeadKeyPair(match, newAnchorLine, newAnchorChar);
                 }
             }
 
@@ -615,7 +626,11 @@ export class Tracker {
             //
             // Since content changes do not overlap, the next content change after this must begin
             // at or after the cursor, and could possibly be an insertion at the cursor.
-            if (stack.top?.range.end.isEqual(cursor.anchor) && stack.top.range.start.isBefore(cursor.anchor)) {
+            if (
+                stack.top 
+                && compareVscodePositionWithAnchor(stack.top.range.end, cursor) === 0
+                && stack.top.rangeLength > 0
+            ) {
                 stack.pop();
             }
 
@@ -651,13 +666,14 @@ export class Tracker {
             //     subsequent insertions to not end up inserting text at the cursor.
             //
             if (
-                stack.top?.range.start.isEqual(cursor.anchor) 
+                stack.top
+                && compareVscodePositionWithAnchor(stack.top.range.end, cursor) === 0
                 && stack.top.range.isEmpty
-                && cursor.anchor.isEqual(cursor.active)
+                && cursor.isEmpty
             ) {
 
-                // Cursor position after all prior content changes have been applied.
-                const newAnchor = shift(stack, cursor.anchor);
+                // The cursor's anchor position after all prior content changes have been applied.
+                const [newAnchorLine, newAnchorChar] = shift(stack, cursor.anchorLine, cursor.anchorChar);
 
                 if (stack.top.text.length === 2 && this._detectedPairs.includes(stack.top.text)) {
     
@@ -672,11 +688,8 @@ export class Tracker {
                     // rely on a subsequent `Tracker.notifySelectionChanges` call to untrack a pasted 
                     // pair, meaning in practice we should not have issues by not being able to 
                     // distinguish between the two.
-                    newPair = { 
-                        open:       newAnchor,
-                        close:      newAnchor.translate(0, 1),
-                        decoration: undefined
-                    };
+                    newPair = new Pair(newAnchorLine, newAnchorChar, newAnchorLine, newAnchorChar + 1);
+
                 } else if (stack.top.text.length === 1) {
                     
                     // When the autoclosing pair is a pair that has the same character on both sides
@@ -688,17 +701,13 @@ export class Tracker {
 
                     // Check for closing side of a dead key autoclosing pair.
                     if (stack.top.text === this.possibleDeadKeyPairs[i]?.pair[1]) {
-                        newPair = { 
-                            open:       newAnchor.translate(0, -1),
-                            close:      newAnchor,
-                            decoration: undefined
-                        };
+                        newPair = new Pair(newAnchorLine, newAnchorChar - 1, newAnchorLine, newAnchorChar);
                     }
 
                     // Check for opening side of a possible Type-2 autoclosing pair.
                     const match = this._detectedPairs.find(pair => pair[0] === stack.top?.text);
                     if (match) {
-                        newPossibleDeadKeyPair = { pair: match, close: newAnchor.translate(0, 1) };
+                        newPossibleDeadKeyPair = new PossibleDeadKeyPair(match, newAnchorLine, newAnchorChar + 1);
                     }
                 }
             }
@@ -721,11 +730,11 @@ export class Tracker {
 
                 // Pop the content change stack until a content change that ends after this pair's 
                 // closing side is encountered.
-                while (stack.top?.range.end.isBeforeOrEqual(cluster[j].close)) {
+                while (stack.top && compareVscodePositionWithPairClose(stack.top.range.end, cluster[j]) <= 0) {
                     stack.pop();
                 }
 
-                if (!stack.top || stack.top.range.start.isAfter(cluster[j].close)) {
+                if (!stack.top || compareVscodePositionWithPairClose(stack.top.range.start, cluster[j]) > 0) {
 
                     // We get here when the stack is empty or if the content change currently at 
                     // the top of the stack begins after the closing side of this pair. In either 
@@ -733,11 +742,13 @@ export class Tracker {
                     //
                     // We apply the accumulated carry values to find the position of the closing 
                     // side of this pair after the content changes have been applied.
-                    cluster[j].close = shift(stack, cluster[j].close);
+                    const [newCloseLine, newCloseChar] = shift(stack, cluster[j].closeLine,  cluster[j].closeChar);
+                    cluster[j].closeLine = newCloseLine;
+                    cluster[j].closeChar = newCloseChar;
 
                     // We only keep pairs that end up with sides on the same line, since we want 
                     // multi-line text insertion between pairs to invalidate them.
-                    if (cluster[j].open.line === cluster[j].close.line) {
+                    if (cluster[j].openLine === cluster[j].closeLine) {
                         continue;
                     }
                 } 
@@ -753,7 +764,7 @@ export class Tracker {
             // --------------------------------
             // STEP 4 - Complete the new cluster.
             // --------------------------------
-            
+
             // Filter out all the deleted pairs.
             this.pairs[i] = cluster.filter((_, j) => !deleted[j]);
 
@@ -789,6 +800,7 @@ export class Tracker {
             // key autoclosing pair is always meant for the next call of the enclosing method and 
             // not the current one.
             this.possibleDeadKeyPairs[i] = newPossibleDeadKeyPair;
+
         };
 
         if (this.hasPairs !== prevHasPairs) {
@@ -840,19 +852,27 @@ export class Tracker {
         // the pairs in this tracker were synchronized to the cursors last seen, which might (at this 
         // point in time) be slightly behind the current cursors of the owning text editor.
         const result: (Selection | undefined)[] = Array(this.cursors.length).fill(undefined);
-        for (const [i, { anchor, active, originalIndex }] of this.cursors.entries()) {
-            const cluster = this.pairs[i];
-            if (cluster.length > 0) {
+        for (let i = 0; i < this.cursors.length; ++i) {
+            if (this.pairs[i].length > 0) {
 
                 // For each cursor that has pairs being tracked for it, move the cursor out of the
                 // nearest pair. This is the 'leap'.
-                const nearestPair     = cluster[cluster.length - 1];
-                const posAfterLeap    = nearestPair.close.translate(0, 1);
-                result[originalIndex] = new Selection(posAfterLeap, posAfterLeap);
+                const nearestPair = this.pairs[i][this.pairs[i].length - 1];
+                result[this.cursors[i].originalIndex] = new Selection(
+                    nearestPair.closeLine, 
+                    nearestPair.closeChar + 1,
+                    nearestPair.closeLine, 
+                    nearestPair.closeChar + 1,
+                );
             } else {
 
                 // Cursors which do not have pairs to leap out of are left alone.
-                result[originalIndex] = new Selection(anchor, active);
+                result[this.cursors[i].originalIndex] = new Selection(
+                    this.cursors[i].anchorLine, 
+                    this.cursors[i].anchorChar,
+                    this.cursors[i].activeLine, 
+                    this.cursors[i].activeChar
+                );
             }
         }
 
@@ -912,7 +932,11 @@ export class Tracker {
         const reordered = Array(this.pairs.length).fill(undefined);
         for (const [i, cluster] of this.pairs.entries()) {
             reordered[this.cursors[i].originalIndex] = cluster.map(pair => {
-                return { open: pair.open, close: pair.close, isDecorated: !!pair.decoration };
+                return { 
+                    open: new Position(pair.openLine, pair.openChar), 
+                    close: new Position(pair.closeLine, pair.closeChar), 
+                    isDecorated: !!pair.decoration 
+            };
             });
         }
 
@@ -936,20 +960,19 @@ export class Tracker {
  * already in sorted order.
  */
 function sortCursors(unsorted: ReadonlyArray<Selection>): TaggedCursor[] {
-    return unsorted.map(({ anchor, active }, originalIndex) => ({ anchor, active, originalIndex }))
-                   .sort((a, b) => a.anchor.compareTo(b.anchor));
+    return unsorted.map((selection, i) => new TaggedCursor(selection , i))
+                   .sort(compareAnchors);
 }
 
 /**
  * Shift a position with the carry values of a stack.
  */
-function shift(stack: ContentChangeStack, position: Position): Position {
-    return position.translate(
-        stack.vertCarry,
-        position.line === stack.horzCarry.affectsLine ? stack.horzCarry.value : 0
-    );
+function shift(stack: ContentChangeStack, line: number, char: number): [number, number] {
+    return [
+        line + stack.vertCarry, 
+        char + (line === stack.horzCarry.affectsLine ? stack.horzCarry.value : 0)
+    ];
 }
-
 
 /**
  * Decorate the closing side of a pair.
@@ -960,7 +983,7 @@ function decorate(
     decorationOptions: Unchecked<DecorationRenderOptions>
 ) {
     pair.decoration = window.createTextEditorDecorationType(decorationOptions.cast());
-    editor.setDecorations(pair.decoration, [ new Range(pair.close, pair.close.translate(0, 1)) ]);
+    editor.setDecorations(pair.decoration, [ new Range(pair.closeLine, pair.closeChar, pair.closeLine, pair.closeChar + 1) ]);
 };
 
 /**
@@ -980,46 +1003,86 @@ function freeze(obj: any): void {
  * 
  * # Indices
  * 
- * Both `line` and `character` indices in a `Position` are zero-based. Furthermore, `character` 
- * indices are in units of UTF-16 code units, which notably does not have the same units as the 
- * column number shown in the bottom right of vscode, as the latter corresponds to the physical 
- * width of characters in the editor.
+ * Both line and character indices are zero-based. Furthermore, character indices are in units of 
+ * UTF-16 code units, which notably does not have the same units as the column number shown in the 
+ * bottom right of vscode, as the latter corresponds to the physical width of characters in the editor.
+ * 
+ * # Optimization Note
+ * 
+ * You might ask why we store indices instead of `Position` objects. That is because using nested
+ * objects can be up to 2 times slower probably due to the pointer indirection involved. Since we 
+ * want to minimise latency, we store indicies directly instead.
  */
-interface Pair {
+class Pair {
 
     /**
-     * The position of the opening side of this pair.
+     * Line index of the opening side of this pair.
      */
-    open: Position,
+    openLine: number;
 
     /**
-     * The position of the closing side of this pair.
+     * Character index of the opening side of this pair.
      */
-    close: Position,
+    openChar: number;
+
+    /**
+     * Line index of the closing side of this pair.
+     */
+    closeLine: number;
+
+    /**
+     * Character index of the closing side of this pair.
+     */
+    closeChar: number;
 
     /**
      * The decoration applied to the closing side of this pair. 
      * 
      * `undefined` if this pair is undecorated. 
      */
-    decoration: TextEditorDecorationType | undefined;
+    decoration: TextEditorDecorationType | undefined = undefined;
+
+    /**
+     * The pair will be initialized without decorations.
+     */
+    public constructor(openLine: number, openChar: number, closeLine: number, closeChar: number) {
+        this.openLine  = openLine;
+        this.openChar  = openChar;
+        this.closeLine = closeLine;
+        this.closeChar = closeChar;
+    }
 
 }
 
 /**
  * A cursor tagged with its original index.
  */
-interface TaggedCursor extends Pick<Selection, 'anchor' | 'active'> {
+class TaggedCursor {
 
     /**
-     * The anchor position of this cursor.
+     * Line index of the anchor position of this cursor.
      */
-    readonly anchor: Position,
+    readonly anchorLine: number;
 
     /**
-     * The active position of this cursor.
+     * Character index of the anchor position of this cursor.
      */
-    readonly active: Position,
+    readonly anchorChar: number;
+
+    /**
+     * Line index of the active position of this cursor.
+     */
+    readonly activeLine: number;
+
+    /**
+     * Character index of the active position of this cursor.
+     */
+    readonly activeChar: number;
+
+    /**
+     * Whether this cursor's selection is empty.
+     */
+    readonly isEmpty: boolean;
 
     /** 
      * The index of this cursor before it was sorted. 
@@ -1027,25 +1090,96 @@ interface TaggedCursor extends Pick<Selection, 'anchor' | 'active'> {
      * In other words, this is the index of this cursor in the `selections` array of the owning
      * text editor.
      */
-    readonly originalIndex: number
+    readonly originalIndex: number;
+
+    public constructor(selection: Selection, originalIndex: number) {
+        this.anchorLine    = selection.anchor.line;
+        this.anchorChar    = selection.anchor.character;
+        this.activeLine    = selection.active.line;
+        this.activeChar    = selection.active.character;
+        this.isEmpty       = selection.isEmpty;
+        this.originalIndex = originalIndex;
+    }
 
 }
 
 /**
  * A possible dead key autoclosing pair.
  */
-interface PossibleDeadKeyPair {
+class PossibleDeadKeyPair {
 
     /**
      * The string representation of the pair.
      */
-    readonly pair: string,
+    readonly pair: string;
 
     /**
-     * The expected position of the closing side of the pair.
+     * The expected line index of the closing side of this pair.
      */
-    readonly close: Position
+    readonly closeLine: number;
 
+    /** 
+     * The expected character index of the closing side of this pair.
+    */
+    readonly closeChar: number;
+
+    public constructor(pair: string, closeLine: number, closeChar: number) {
+        this.pair      = pair;
+        this.closeLine = closeLine;
+        this.closeChar = closeChar;
+    }
+
+}
+
+/**
+ * Compare two positions.
+ * 
+ * Returns `0` if they are equal, `-1` if position `a` is less than position `b`, and `1` if position
+ * `a` is greater than position `b`.
+ */
+function comparePositions(aLine: number, aChar: number, bLine: number, bChar: number): number {
+    return aLine === bLine ? aChar - bChar : aLine - bLine; 
+}
+
+/**
+ * Compare the anchor positions of two cursors.
+ */
+function compareAnchors(a: TaggedCursor, b: TaggedCursor): number {
+    return comparePositions(a.anchorLine, a.anchorChar, b.anchorLine, b.anchorChar);
+}
+
+/**
+ * Compare a vscode `Position` with the anchor position of a cursor.
+ */
+function compareVscodePositionWithAnchor(position: Position, cursor: TaggedCursor): number {
+    return comparePositions(position.line, position.character, cursor.anchorLine, cursor.anchorChar);
+}
+
+/**
+ * Compare a vscode `Position` with the opening position of a pair.
+ */
+function compareVscodePositionWithPairOpen(position: Position, pair: Readonly<Pair>): number {
+    return comparePositions(position.line, position.character, pair.openLine, pair.openChar);
+}
+
+/**
+ * Compare a vscode `Position` with the closing position of a pair.
+ */
+function compareVscodePositionWithPairClose(position: Position, pair: Readonly<Pair>): number {
+    return comparePositions(position.line, position.character, pair.closeLine, pair.closeChar);
+}
+
+/**
+ * Compare the anchor position of a cursor with the opening position of a pair.
+ */
+function compareAnchorWithPairOpen(cursor: TaggedCursor, pair: Readonly<Pair>): number {
+    return comparePositions(cursor.anchorLine, cursor.anchorChar, pair.openLine, pair.openChar);
+}
+/**
+ * Compare the anchor position of a cursor with the closing position of a pair.
+ */
+function compareAnchorWithPairClose(cursor: TaggedCursor, pair: Readonly<Pair>): number {
+    return comparePositions(cursor.anchorLine, cursor.anchorChar, pair.closeLine, pair.closeChar);
 }
 
 /**
