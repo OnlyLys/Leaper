@@ -332,7 +332,7 @@ class ExecutorFull {
         // Wait in case the engine has not caught up.
         await waitFor(ExecutorFull.PRE_ENGINE_QUERY_DELAY_MS);
 
-        const actual  = getSnapshot(viewColumn).decorationOptions.cast();
+        const actual  = getSnapshot(viewColumn).decorationOptions;
         const expect = { ..._expect,  rangeBehavior: DecorationRangeBehavior.ClosedClosed };
         this.assertEq(actual, expect, 'Decoration Options Mismatch');
     }

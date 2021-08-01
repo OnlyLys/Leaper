@@ -3,7 +3,76 @@
 The following document contains supplementary notes on important changes made to
 the code. 
 
-## 0.9.3 -> 0.10.0 _(Work in Progress)_
+## 0.11.0-beta.3 -> 0.11.0-beta.4
+
+## Reusing Decoration Types
+
+Currently, whenever a pair is decorated, a new `TextEditorDecorationType` is
+instanced. Then, when the pair is undecorated, its `TextEditorDecorationType`
+is dropped. 
+
+Since instancing a new decoration type costs around 0.5ms, I had an idea that 
+maybe decorations from dropped pairs can be set to decorate null ranges:
+
+    editor.setDecorations(decoration, []);
+
+then stored in a pool that can later be retrieved from when decorating new pairs. 
+The idea was that reusing decoration types could save us from the 0.5ms time 
+taken to instance one.
+
+However, by manually comparing the amount of time taken to decorate a position 
+with a decoration type retrieved from a pool vs creating a new decoration type 
+from scratch, it seemed like there was no performance improvement:
+
+    decorate by retrieving from pool:  0.6789369992911816 ms
+    decorate by retrieving from pool:  0.634842999279499 ms
+    decorate by retrieving from pool:  0.658016998320818 ms
+    decorate by retrieving from pool:  0.6434799991548061 ms
+    decorate by retrieving from pool:  0.5732450000941753 ms
+    decorate by retrieving from pool:  0.7447330020368099 ms
+    decorate by retrieving from pool:  0.665742002427578 ms
+    decorate by retrieving from pool:  0.6850089989602566 ms
+    decorate by retrieving from pool:  0.7093450017273426 ms
+    remove by decorating no range, then store in pool:  0.5795160010457039 ms
+    remove by decorating no range, then store in pool:  0.9345750026404858 ms
+    remove by decorating no range, then store in pool:  0.6641089990735054 ms
+    remove by decorating no range, then store in pool:  0.6162470020353794 ms
+    remove by decorating no range, then store in pool:  0.7164979986846447 ms
+    remove by decorating no range, then store in pool:  0.6222779974341393 ms
+    remove by decorating no range, then store in pool:  0.7220389991998672 ms
+    remove by decorating no range, then store in pool:  0.47427599877119064 ms
+    remove by decorating no range, then store in pool:  0.6519349999725819 ms
+
+    decorate with new decoration type:  0.46376699954271317 ms
+    decorate with new decoration type:  0.7454859986901283 ms
+    decorate with new decoration type:  0.5048360005021095 ms
+    decorate with new decoration type:  0.407320000231266 ms
+    decorate with new decoration type:  0.7279230020940304 ms
+    decorate with new decoration type:  0.508993998169899 ms
+    decorate with new decoration type:  0.7470490001142025 ms
+    decorate with new decoration type:  0.7198680005967617 ms
+    decorate with new decoration type:  0.743282999843359 ms
+    decorate with new decoration type:  0.5121800005435944 ms
+    remove by disposing it:  0.46718399971723557 ms
+    remove by disposing it:  0.5211669988930225 ms
+    remove by disposing it:  0.4489790014922619 ms
+    remove by disposing it:  0.41823000088334084 ms
+    remove by disposing it:  0.48559900000691414 ms
+    remove by disposing it:  0.46394699811935425 ms
+    remove by disposing it:  0.49022800102829933 ms
+    remove by disposing it:  0.4493799991905689 ms
+    remove by disposing it:  0.44654500111937523 ms
+
+Through further testing, I was able to determine that even though instancing a 
+new decoration type costs around 0.5ms, the `setDecorations` call using the newly
+instanced decoration type is much faster. On average, decorating a position with
+a newly instanced decoration type only costs around 0.1ms more than reusing a 
+decoration type, which means that while it is slower, it is not so slow that we
+prefer to use a pool, since using a pool means that we cannot just dispose of
+unnecessary decorations, but rather have to set them to decorate null ranges 
+which costs much more than just disposing them.
+
+## 0.9.3 -> 0.10.0
 
 ### Improvement of Engine Code
 
