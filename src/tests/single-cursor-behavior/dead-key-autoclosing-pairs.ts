@@ -61,6 +61,203 @@ const ONLY_DEAD_KEY_AUTOCLOSING_PAIRS_TEST_CASE = new TestCase({
         await executor.assertCursors([ [0, 37] ]);
     }
 });
+
+const MIXTURE_OF_REGULAR_AND_DEAD_KEY_AUTOCLOSING_PAIRS_TEST_CASE = new TestCase({
+    name: 'Mixture of Regular and Dead Key Autoclosing Pairs',
+    prelude: async (executor) => {
+        await executor.openFile('./workspace-0/text.ts');
+
+        // Set up the initial document state as:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = 
+        // }             ^(cursor)
+        // ```
+        await executor.typeText('function main() {\nconst w = \'🌍\';\nconst x = ');
+    },
+    task: async (executor) => {
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ ]
+        // }               ^(cursor)
+        // ```
+        await executor.typeText('[ ');
+        await executor.assertPairs([ { line: 2, sides: [14, 16] } ]);
+        await executor.assertCursors([ [2, 16] ]);
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ ""]
+        // }                ^(cursor)
+        // ```
+        await executor.insertDeadKeyAutoclosingPair({ deadKey: '¨', pair: '""' });
+        await executor.assertPairs([ { line: 2, sides: [14, 16, 17, 18] } ]);
+        await executor.assertCursors([ [2, 17] ]);
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ "Hello"]
+        // }                     ^(cursor)
+        // ```
+        await executor.typeText('Hello');
+        await executor.assertPairs([ { line: 2, sides: [14, 16, 22, 23] } ]);
+        await executor.assertCursors([ [2, 22] ]);
+        
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ "Hello"]
+        // }                      ^(cursor)
+        // ```
+        await executor.leap();
+        await executor.assertPairs([ { line: 2, sides: [14, 23] } ]);
+        await executor.assertCursors([ [2, 23] ]);
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ "Hello", ]
+        // }                        ^(cursor)
+        // ```
+        await executor.typeText(', ');
+        await executor.assertPairs([ { line: 2, sides: [14, 25] } ]);
+        await executor.assertCursors([ [2, 25] ]);
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ "Hello", '']
+        // }                         ^(cursor)
+        // ```
+        await executor.insertDeadKeyAutoclosingPair({ deadKey: '´', pair: "''" });
+        await executor.assertPairs([ { line: 2, sides: [14, 25, 26, 27] } ]);
+        await executor.assertCursors([ [2, 26] ]);
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ "Hello", 'World']
+        // }                              ^(cursor)
+        // ```
+        await executor.typeText('World');
+        await executor.assertPairs([ { line: 2, sides: [14, 25, 31, 32] } ]);
+        await executor.assertCursors([ [2, 31] ]);
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ "Hello", 'World']
+        // }                               ^(cursor)
+        // ```
+        await executor.leap();
+        await executor.assertPairs([ { line: 2, sides: [14, 32] } ]);
+        await executor.assertCursors([ [2, 32] ]);
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ "Hello", 'World', ]
+        // }                                 ^(cursor)
+        // ```
+        await executor.typeText(', ');
+        await executor.assertPairs([ { line: 2, sides: [14, 34] } ]);
+        await executor.assertCursors([ [2, 34] ]);
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ "Hello", 'World', ``]
+        // }                                  ^(cursor)
+        // ```
+        await executor.insertDeadKeyAutoclosingPair({ deadKey: "`", pair: "``"   });
+        await executor.assertPairs([ { line: 2, sides: [14, 34, 35, 36] } ]);
+        await executor.assertCursors([ [2, 35] ]);
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ "Hello", 'World', `${w}`]
+        // }                                     ^(cursor)
+        // ```
+        await executor.typeText('${w');
+        await executor.assertPairs([ { line: 2, sides: [14, 34, 36, 38, 39, 40] } ]);
+        await executor.assertCursors([ [2, 38] ]);
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ "Hello", 'World', `${w}`]
+        // }                                       ^(cursor)
+        // ```
+        await executor.leap(2);
+        await executor.assertPairs([ { line: 2, sides: [14, 40] } ]);
+        await executor.assertCursors([ [2, 40] ]);
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ "Hello", 'World', `${w}` ]
+        // }                                        ^(cursor)
+        // ```
+        await executor.typeText(' ');
+        await executor.assertPairs([ { line: 2, sides: [14, 41] } ]);
+        await executor.assertCursors([ [2, 41] ]);
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ "Hello", 'World', `${w}` ]
+        // }                                         ^(cursor)
+        // ```
+        await executor.leap();
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [2, 42] ]);
+
+        // Document state after:
+        //
+        // ```
+        // function main() {
+        //     const w = '🌍';
+        //     const x = [ "Hello", 'World', `${w}` ]
+        // }                                        ^(cursor)
+        // ```
+        await executor.typeText(';');
+        await executor.assertPairs([ 'None' ]);
+        await executor.assertCursors([ [2, 43] ]);
     }
 });
 
@@ -71,5 +268,6 @@ export const SINGLE_CURSOR_DEAD_KEY_AUTOCLOSING_PAIRS_TEST_GROUP = new TestGroup
     'Dead Key Autoclosing Pairs',
     [
         ONLY_DEAD_KEY_AUTOCLOSING_PAIRS_TEST_CASE,
+        MIXTURE_OF_REGULAR_AND_DEAD_KEY_AUTOCLOSING_PAIRS_TEST_CASE
     ]
 );
