@@ -880,10 +880,12 @@ export class Tracker {
     }
     
     /** 
-     * If possible, move all cursors out of their respective nearest pairs.
+     * Move all cursors out of their respective nearest pairs.
      * 
-     * This method call only succeeds if there is _line-of-sight_. For what 'line-of-sight' means,
-     * please see the `hasLineOfSight` property. Nothing is done if there is no line-of-sight.
+     * Cursors which do not have a nearest pair to leap out of are left alone.
+     * 
+     * This method call only succeeds if the `hasLineOfSight` property is `true` at the moment this
+     * method is called. Nothing is done otherwise.
      */
     public leap(): void {
 
