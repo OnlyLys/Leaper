@@ -262,7 +262,7 @@ const MIXTURE_OF_REGULAR_AND_DEAD_KEY_AUTOCLOSING_PAIRS_TEST_CASE = new TestCase
 });
 
 /**
- * Check whether dead key autoclosing pairs correctly detected.
+ * Check whether dead key autoclosing pairs are correctly detected for single cursors.
  */
 export const SINGLE_CURSOR_DEAD_KEY_AUTOCLOSING_PAIRS_TEST_GROUP = new TestGroup(
     'Dead Key Autoclosing Pairs',
