@@ -488,20 +488,11 @@ class ExecutorFull {
 
         // After the opening character has been sorted out, the closing character will be inserted
         // in a content change event that follows.
-        await activeTextEditor.edit(builder => {
-            activeTextEditor.selections.forEach(({ anchor }) => builder.replace(anchor, pair[1]));
-        });
-
-        // The last step we just did which inserted the closing sides of pairs will have caused each 
-        // cursor to expand into a selection, where the anchor is within the pairs but the active is 
-        // outside them. However, the pair we autoclosed should still be tracked, since the engine 
-        // uses a cursor's anchor as the basis for whether or not a cursor is enclosed by a pair. 
-        // 
-        // Cursors being expanded after the closing side is inserted is different from vscode's 
-        // behavior where the cursor is not expanded after the insertion, so our simulation here
-        // does not exactly reflect the way vscode does things. However, we can get close by 
-        // cancelling the selection here.
-        await this.moveCursors('left');
+        //
+        // When vscode inserts the closing side of the dead key autoclosing pair, it does so without
+        // moving the cursor. We can emulate that behavior by inserting the closing side of the pair
+        // as a snippet.
+        await activeTextEditor.insertSnippet(new SnippetString(`$0${pair[1]}`));
 
         await waitFor(ExecutorFull.POST_REPETITION_DELAY_MS);
     }
