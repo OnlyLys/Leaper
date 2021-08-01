@@ -457,17 +457,16 @@ class ExecutorFull {
      * closing side when an opening side (which has the same character) is inserted, since vscode 
      * only does that for pairs that it has autoclosed.
      */
-    public async simulateDeadKeyAutoclosingPairInsertion(
-        simulate: { deadKey: "´", pair: "''"   }    // Type-1.
-                | { deadKey: "¨", pair: "\"\"" }    // Type-1.
-                | { deadKey: "`", pair: "``"   }    // Type-2.
+    public async insertDeadKeyAutoclosingPair(
+        { deadKey, pair }: { deadKey: "´", pair: "''"   }    // Type-1.
+                         | { deadKey: "¨", pair: "\"\"" }    // Type-1.
+                         | { deadKey: "`", pair: "``"   }    // Type-2.
     ): Promise<void> {
-        const activeTextEditor  = getVisibleTextEditor(ViewColumn.Active);
-        const { deadKey, pair } = simulate;
+        const activeTextEditor = getVisibleTextEditor(ViewColumn.Active);
 
         if (activeTextEditor.selections.some(cursor => !cursor.isEmpty)) {
             throw new Error('Cursors must be empty!');
-        }
+        } 
 
         // Simulate the dead key preview being inserted.
         await activeTextEditor.edit(builder => {
@@ -478,7 +477,7 @@ class ExecutorFull {
         // will be replaced if it is different than the opening character of the pair. 
         //
         // The dead key preview is left alone if it is the same as the opening character of the pair.
-        if (simulate.deadKey !== simulate.pair[0]) {
+        if (deadKey !== pair[0]) {
             await activeTextEditor.edit(builder => {
                 activeTextEditor.selections.forEach(({ anchor }) => 
                     builder.replace(new Range(anchor.translate(0, -1), anchor), pair[0])
